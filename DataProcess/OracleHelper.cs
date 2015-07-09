@@ -8,13 +8,13 @@ using Oracle.DataAccess.Types;
 
 namespace DataProcess
 {
-    public class DataBaseHelper
+    public class OracleHelper
     {
         // The Oracle Connection
         private OracleConnection conn = new OracleConnection();
 
         // Method ================================================================
-        public DataBaseHelper(string connStr)
+        public OracleHelper(string connStr)
         {
             conn.ConnectionString = connStr;
         }

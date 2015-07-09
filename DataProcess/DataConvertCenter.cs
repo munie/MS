@@ -25,15 +25,15 @@ namespace DataProcess
             sckListener.clientMessage += new ClientMessageEventHandler(sckListener_clientMessage);
 
             // Load plugins
-            LoadPlugins();
+            LoadDataHandlePlugins();
         }
 
-        private void LoadPlugins()
+        private void LoadDataHandlePlugins()
         {
             try {
-                // Get all files in directory "plugins"
+                // Get all files in directory "DataHandles"
                 string appPath = System.AppDomain.CurrentDomain.BaseDirectory;
-                string[] files = Directory.GetFiles(appPath + @"\plugins");
+                string[] files = Directory.GetFiles(appPath + @"\DataHandles");
 
                 // Load dll files one by one
                 foreach (string file in files) {
