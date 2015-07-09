@@ -19,17 +19,17 @@ namespace TransferStation
         public MainFrom(AsyncSocketListener sl)
         {
             sckListener = sl;
-            sckListener.clientConnect += new AsyncSocketListener.ClientConnectEventHandler(sckListener_clientConnect);
-            sckListener.clientDisconn += new AsyncSocketListener.ClientDisconnEventHandler(sckListener_clientDisconn);
-            sckListener.clientMessage += new AsyncSocketListener.ClientMessageEventHandler(sckListener_clientMessage);
+            sckListener.clientConnect += new ClientConnectEventHandler(sckListener_clientConnect);
+            sckListener.clientDisconn += new ClientDisconnEventHandler(sckListener_clientDisconn);
+            sckListener.clientMessage += new ClientMessageEventHandler(sckListener_clientMessage);
 
             InitializeComponent();
         }
 
-        private void sckListener_clientConnect(object sender, AsyncSocketListener.ClientEventArgs e)
+        private void sckListener_clientConnect(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new AsyncSocketListener.ClientConnectEventHandler(sckListener_clientConnect),
+                this.Invoke(new ClientConnectEventHandler(sckListener_clientConnect),
                     new object[] { sender, e });
                 return;
             }
@@ -45,10 +45,10 @@ namespace TransferStation
             lstClient.Items.Add(item);
         }
 
-        private void sckListener_clientDisconn(object sender, AsyncSocketListener.ClientEventArgs e)
+        private void sckListener_clientDisconn(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new AsyncSocketListener.ClientDisconnEventHandler(sckListener_clientDisconn),
+                this.Invoke(new ClientDisconnEventHandler(sckListener_clientDisconn),
                     new object[] { sender, e });
                 return;
             }
@@ -60,10 +60,10 @@ namespace TransferStation
             }
         }
 
-        private void sckListener_clientMessage(object sender, AsyncSocketListener.ClientEventArgs e)
+        private void sckListener_clientMessage(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new AsyncSocketListener.ClientMessageEventHandler(sckListener_clientMessage),
+                this.Invoke(new ClientMessageEventHandler(sckListener_clientMessage),
                     new object[] { sender, e });
                 return;
             }

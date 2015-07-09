@@ -8,58 +8,50 @@ using System.Threading;
 
 namespace MnnSocket
 {
-    public partial class AsyncSocketListener
+    // Definiton of Delegate and it's EventArgs
+    public delegate void ListenerStartedEventHandler(object sender, EventArgs e);
+    public delegate void ListenerStoppedEventHandler(object sender, EventArgs e);
+    public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
+    public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
+    public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
+    public class ClientEventArgs : EventArgs
     {
-        #region internal definition =================================================================
-        // Client State object for reading client data asynchronously
-        private class ClientState
+        public ClientEventArgs(EndPoint ep, string message)
         {
-            // Client  socket.
-            public Socket workSocket = null;
-            // Size of receive buffer.
-            public const int BufferSize = 2048;
-            // Receive buffer.
-            public byte[] buffer = new byte[BufferSize];
-            // Received data string.
-            public StringBuilder sb = new StringBuilder();
+            ipEndPoint = (IPEndPoint)ep;
+            data = message;
         }
 
-        public delegate void ListenerStartedEventHandler(object sender, EventArgs e);
-        public delegate void ListenerStoppedEventHandler(object sender, EventArgs e);
-        public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
-        public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
-        public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
-
-        public class ClientEventArgs : EventArgs
+        public ClientEventArgs(IPEndPoint ep, string message)
         {
-            public ClientEventArgs(EndPoint ep, string message)
-            {
-                ipEndPoint = (IPEndPoint)ep;
-                data = message;
-            }
-
-            public ClientEventArgs(IPEndPoint ep, string message)
-            {
-                ipEndPoint = ep;
-                data = message;
-            }
-
-            public IPEndPoint ipEndPoint { get; set; }
-
-            public string data { get; set; }
+            ipEndPoint = ep;
+            data = message;
         }
-        #endregion ==================================================================================
+
+        public IPEndPoint ipEndPoint { get; set; }
+        public string data { get; set; }
     }
 
-    public partial class AsyncSocketListener
+    // Definition for recording connected client's state
+    class ClientState
     {
-        #region variables ===========================================================================
-        // Message receive event
-        public event ListenerStartedEventHandler listenerStarted;
-        public event ListenerStoppedEventHandler listenerStopped;
-        public event ClientConnectEventHandler clientConnect;
-        public event ClientDisconnEventHandler clientDisconn;
-        public event ClientMessageEventHandler clientMessage;
+        // Client  socket.
+        public Socket workSocket = null;
+        // Size of receive buffer.
+        public const int BufferSize = 2048;
+        // Receive buffer.
+        public byte[] buffer = new byte[BufferSize];
+        // Received data string.
+        public StringBuilder sb = new StringBuilder();
+    }
+    
+    // Main Definition
+    public class AsyncSocketListener
+    {
+        // Constructor
+        public AsyncSocketListener()
+        {
+        }
 
         // Asynchrous Scoket Listener & Listener Thread & State
         private Socket listener = null;
@@ -68,13 +60,15 @@ namespace MnnSocket
 
         // List of ClientState
         private List<ClientState> clientState = new List<ClientState>();
-        #endregion ==================================================================================
 
+        // Message receive event
+        public event ListenerStartedEventHandler listenerStarted;
+        public event ListenerStoppedEventHandler listenerStopped;
+        public event ClientConnectEventHandler clientConnect;
+        public event ClientDisconnEventHandler clientDisconn;
+        public event ClientMessageEventHandler clientMessage;
 
-        public AsyncSocketListener()
-        {
-        }
-
+        // methods ================================================================
         public void Start(int port)
         {
             if (listenerThreadState == true)
