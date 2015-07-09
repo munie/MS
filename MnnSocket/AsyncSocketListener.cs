@@ -16,16 +16,16 @@ namespace MnnSocket
     public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
     public class ClientEventArgs : EventArgs
     {
-        public ClientEventArgs(EndPoint ep, string message)
+        public ClientEventArgs(EndPoint ep, string msg)
         {
             ipEndPoint = (IPEndPoint)ep;
-            data = message;
+            data = msg;
         }
 
-        public ClientEventArgs(IPEndPoint ep, string message)
+        public ClientEventArgs(IPEndPoint ep, string msg)
         {
             ipEndPoint = ep;
-            data = message;
+            data = msg;
         }
 
         public IPEndPoint ipEndPoint { get; set; }
@@ -48,11 +48,6 @@ namespace MnnSocket
     // Main Definition
     public class AsyncSocketListener
     {
-        // Constructor
-        public AsyncSocketListener()
-        {
-        }
-
         // Asynchrous Scoket Listener & Listener Thread & State
         private Socket listener = null;
         private Thread listenerThread = null;
@@ -68,7 +63,12 @@ namespace MnnSocket
         public event ClientDisconnEventHandler clientDisconn;
         public event ClientMessageEventHandler clientMessage;
 
-        // methods ================================================================
+        // Methods ================================================================
+        // Constructor
+        public AsyncSocketListener()
+        {
+        }
+
         public void Start(int port)
         {
             if (listenerThreadState == true)

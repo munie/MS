@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace TransferStation
 {
@@ -15,8 +16,13 @@ namespace TransferStation
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            // Create socket listener
+
+            // Create socket listener & Start user interface model
             MnnSocket.AsyncSocketListener sckListener = new MnnSocket.AsyncSocketListener();
+
+            // Start data processing model
+            DataProcess.DataConvertCenter center = new DataProcess.DataConvertCenter(sckListener);
+
             Application.Run(new MainFrom(sckListener));
         }
     }

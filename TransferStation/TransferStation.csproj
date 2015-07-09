@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -67,6 +68,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -78,6 +82,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataProcess\DataProcess.csproj">
+      <Project>{1C09918B-E585-46EB-9161-4B19B685E997}</Project>
+      <Name>DataProcess</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MnnSocket\MnnSocket.csproj">
       <Project>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</Project>
       <Name>MnnSocket</Name>

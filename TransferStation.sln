@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransferStation", "Transfer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnSocket", "MnnSocket\MnnSocket.csproj", "{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataProcess", "DataProcess\DataProcess.csproj", "{1C09918B-E585-46EB-9161-4B19B685E997}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|x86.ActiveCfg = Release|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1C09918B-E585-46EB-9161-4B19B685E997}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
