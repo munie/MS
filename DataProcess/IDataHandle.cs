@@ -7,6 +7,8 @@ namespace DataProcess
 {
     public interface IDataHandle
     {
+        string GetIdentify();
+
         string Handle(string msg);
     }
 }

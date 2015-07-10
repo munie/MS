@@ -69,17 +69,15 @@ namespace DataProcess
         public DataTable Query(string sql)
         {
             DataTable dt = new DataTable();
-            OracleDataAdapter adapter = new OracleDataAdapter(sql, conn.ConnectionString);
 
             try {
-                adapter.Fill(dt);
-                return dt;
+                using(OracleDataAdapter adapter = new OracleDataAdapter(sql, conn.ConnectionString)) {
+                    adapter.Fill(dt);
+                    return dt;
+                }
             }
             catch (Exception) {
                 throw;
-            }
-            finally {
-                adapter.Dispose();
             }
         }
 
@@ -99,18 +97,36 @@ namespace DataProcess
                     cmd.Parameters.Add(param);
                 }
             }
-            OracleDataAdapter adapter = new OracleDataAdapter(cmd);
 
             try {
-                adapter.Fill(dt);
-                return dt;
+                using (OracleDataAdapter adapter = new OracleDataAdapter(cmd)) {
+                    adapter.Fill(dt);
+                    return dt;
+                }
             }
             catch (Exception) {
                 throw;
             }
-            finally {
-                adapter.Dispose();
-            }
+        }
+
+        public DataRow QueryRow(string sql)
+        {
+            DataTable dt = Query(sql);
+
+            if (dt.Rows.Count > 0)
+                return dt.Rows[0];
+            else
+                return null;
+        }
+
+        public DataRow QueryRow(string sql, string[] paramArr, object[] valArr)
+        {
+            DataTable dt = Query(sql, paramArr, valArr);
+
+            if (dt.Rows.Count > 0)
+                return dt.Rows[0];
+            else
+                return null;
         }
     }
 }

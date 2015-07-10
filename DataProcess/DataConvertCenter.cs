@@ -61,10 +61,17 @@ namespace DataProcess
         {
             try {
                 foreach (object dataHandle in dataHandleTable) {
+                    object retValue;
                     Type t = dataHandle.GetType();
-                    MethodInfo Handle = t.GetMethod("Handle");
-                    object retValue = Handle.Invoke(dataHandle, new object[] { e.data });
-                    string s = (string)retValue;
+
+                    MethodInfo GetIdentify = t.GetMethod("GetIdentify");
+                    retValue = GetIdentify.Invoke(dataHandle, null);
+
+                    if (((string)retValue).Equals("QXZ")) {
+                        MethodInfo Handle = t.GetMethod("Handle");
+                        retValue = Handle.Invoke(dataHandle, new object[] { e.data });
+                        // ...
+                    }
                 }
             }
             catch (Exception ex) {
