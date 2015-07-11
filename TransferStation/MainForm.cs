@@ -37,7 +37,7 @@ namespace TransferStation
             //AsyncSocketListener.ClientEventArgs args = e as AsyncSocketListener.ClientEventArgs;
 
             ListViewItem item = new ListViewItem();
-            item.SubItems[0].Text = e.ipEndPoint.ToString();
+            item.SubItems[0].Text = e.clientEP.ToString();
             item.SubItems.Add(DateTime.Now.ToString());
             item.SubItems.Add(Guid.NewGuid().ToString("N"));
             item.SubItems.Add("-");
@@ -54,7 +54,7 @@ namespace TransferStation
             }
 
             for (int i = 0; i < lstClient.Items.Count; i++) {
-                if (lstClient.Items[i].SubItems[0].Text == e.ipEndPoint.ToString()) {
+                if (lstClient.Items[i].SubItems[0].Text == e.clientEP.ToString()) {
                     lstClient.Items.Remove(lstClient.Items[i]);
                 }
             }
@@ -68,7 +68,7 @@ namespace TransferStation
                 return;
             }
 
-            txtMsg.AppendText("(" + e.ipEndPoint.ToString() + " " + DateTime.Now.ToString() + ")：");
+            txtMsg.AppendText("(" + e.clientEP.ToString() + " " + DateTime.Now.ToString() + ")：");
             txtMsg.AppendText(e.data + "\r\n");
         }
 
@@ -94,19 +94,41 @@ namespace TransferStation
 
         private void btnStartListen_Click(object sender, EventArgs e)
         {
-            // Start socket listener
-            sckListener.Start(Convert.ToInt32(txtPort.Text));
+            List<IPEndPoint> ep = null;
+            IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (IPAddress ip in ipAddr) {
+                if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
+                    ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text))};
+                    //ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)),
+                    //    new IPEndPoint(ip, 5963), new IPEndPoint(ip, 5962)};
+                    break;
+                }
+            }
 
+            // Start socket listener
+            sckListener.Start(ep);
+
+            txtPort.Enabled = false;
             btnStartListen.Enabled = false;
             btnStopListen.Enabled = true;
         }
 
         private void btnStopListen_Click(object sender, EventArgs e)
         {
-            sckListener.Stop();
+            List<IPEndPoint> ep = null;
+            IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (IPAddress ip in ipAddr) {
+                if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
+                    ep = new List<IPEndPoint>() { new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)) };
+                    break;
+                }
+            }
+
+            sckListener.Stop(ep);
 
             lstClient.Items.Clear();
 
+            txtPort.Enabled = true;
             btnStartListen.Enabled = true;
             btnStopListen.Enabled = false;
         }

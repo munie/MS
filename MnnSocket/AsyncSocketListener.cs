@@ -8,31 +8,58 @@ using System.Threading;
 
 namespace MnnSocket
 {
-    // Definiton of Delegate and it's EventArgs
-    public delegate void ListenerStartedEventHandler(object sender, EventArgs e);
-    public delegate void ListenerStoppedEventHandler(object sender, EventArgs e);
+    // Definiton of Delegate for listener and client
+    public delegate void ListenerStartedEventHandler(object sender, ListenerEventArgs e);
+    public delegate void ListenerStoppedEventHandler(object sender, ListenerEventArgs e);
     public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
     public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
     public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
+
+    // EventArgs for listener and client Event
+    public class ListenerEventArgs : EventArgs
+    {
+        public ListenerEventArgs(EndPoint ep)
+        {
+            listenEP = (IPEndPoint)ep;
+        }
+        public ListenerEventArgs(IPEndPoint ep)
+        {
+            listenEP = ep;
+        }
+
+        public IPEndPoint listenEP { get; set; }
+    }
     public class ClientEventArgs : EventArgs
     {
         public ClientEventArgs(EndPoint ep, string msg)
         {
-            ipEndPoint = (IPEndPoint)ep;
+            clientEP = (IPEndPoint)ep;
             data = msg;
         }
-
         public ClientEventArgs(IPEndPoint ep, string msg)
         {
-            ipEndPoint = ep;
+            clientEP = ep;
             data = msg;
         }
 
-        public IPEndPoint ipEndPoint { get; set; }
+        public IPEndPoint clientEP { get; set; }
         public string data { get; set; }
     }
 
-    // Definition for recording connected client's state
+    /// <summary>
+    /// Definition for pursuing listener's state
+    /// </summary>
+    class ListenerState
+    {
+        // Listen Socket
+        public Socket listenSocket = null;
+        // Run the listen function
+        public Thread Thread = null;
+    }
+
+    /// <summary>
+    /// Definition for recording connected client's state
+    /// </summary>
     class ClientState
     {
         // Client  socket.
@@ -45,13 +72,18 @@ namespace MnnSocket
         public StringBuilder sb = new StringBuilder();
     }
     
-    // Main Definition
+    /// <summary>
+    /// A asynchronous socket listener, which can listen at multiple IPEndPoint.
+    /// </summary>
     public class AsyncSocketListener
     {
-        // Asynchrous Scoket Listener & Listener Thread & State
-        private Socket listener = null;
-        private Thread listenerThread = null;
+        // Constructor
+        public AsyncSocketListener()
+        {
+        }
 
+        // List of ListenerState
+        private List<ListenerState> listenerState = new List<ListenerState>();
         // List of ClientState
         private List<ClientState> clientState = new List<ClientState>();
 
@@ -63,80 +95,167 @@ namespace MnnSocket
         public event ClientMessageEventHandler clientMessage;
 
         // Methods ================================================================
-        // Constructor
-        public AsyncSocketListener()
+        /// <summary>
+        /// Start AsyncSocketListener
+        /// </summary>
+        /// <param name="localEPs"></param>
+        /// <exception cref="System.ApplicationException"></exception>
+        /// <exception cref="System.Net.Sockets.SocketException"></exception>
+        /// <exception cref="System.ObjectDisposedException"></exception>
+        public void Start(List<IPEndPoint> localEPs)
         {
-        }
+            // If eps in localEPs are unique to each other
+            for (int i = 0; i < localEPs.Count - 1; i++) {
+                for (int j = i + 1; j < localEPs.Count; j++) {
+                    if (localEPs[i].Equals(localEPs[j]))
+                        throw new ApplicationException("The eps in localEPs are not unique to each other.");
+                }
+            }
 
-        public void Start(int port)
-        {
-            if (listenerThread == null) {
-                listenerThread = new Thread(new ParameterizedThreadStart(ListeningThread));
-                listenerThread.IsBackground = true;
-                listenerThread.Start(port);
+            lock (listenerState) {
+                // Verify IPEndPoints
+                foreach (ListenerState lstState in listenerState) {
+                    if (localEPs.Contains(lstState.listenSocket.LocalEndPoint) == true)
+                        //ports.Remove(state.port);
+                        throw new ApplicationException("Another AsyncSocketListener is listening at "
+                            + lstState.listenSocket.LocalEndPoint.ToString() + ".");
+                }
+
+                // Instantiate ListenerState & Start listening
+                foreach (IPEndPoint ep in localEPs) {
+                    ListenerState lstState = new ListenerState();
+                    listenerState.Add(lstState);
+
+                    // Initialize Socket
+                    lstState.listenSocket = new Socket(AddressFamily.InterNetwork,
+                        SocketType.Stream, ProtocolType.Tcp);
+                    lstState.listenSocket.Bind(ep);
+                    lstState.listenSocket.Listen(100);
+
+                    // Create a thread for running listenSocket
+                    lstState.Thread = new Thread(new ParameterizedThreadStart(ListeningThread));
+                    lstState.Thread.IsBackground = true;
+                    lstState.Thread.Start(lstState);
+                }
             }
         }
 
+        /// <summary>
+        /// Stop all AsyncSocketListener
+        /// </summary>
         public void Stop()
         {
-            // Stop listener & The ListeningThread will stop by its exception automaticlly
-            listener.Dispose();
+            lock (this) {
+                foreach (ListenerState lstState in listenerState) {
+                    // Stop listener & The ListeningThread will stop by its exception automaticlly
+                    lstState.listenSocket.Dispose();
 
-            // Stop all client socket & Clear the clientState
-            foreach (ClientState state in clientState) {
-                state.workSocket.Shutdown(SocketShutdown.Both);
-                state.workSocket.Dispose();
+                    // Ensure to abort the ListeningThread
+                    lstState.Thread.Abort();
+                    lstState.Thread.Join();
+                    lstState.Thread = null;
+                }
+                listenerState.Clear();
+
+                // Stop all client socket & Clear the clientState
+                foreach (ClientState cltState in clientState) {
+                    cltState.workSocket.Shutdown(SocketShutdown.Both);
+                    cltState.workSocket.Dispose();
+                }
+                clientState.Clear();
             }
-            clientState.Clear();
-
-            // Ensure to abort the ListeningThread
-            listenerThread.Abort();
-            listenerThread.Join();
-            listenerThread = null;
         }
 
-        private void ListeningThread(object port)
+        /// <summary>
+        /// Stop specified AsyncSocketListener
+        /// </summary>
+        /// <param name="localEPs"></param>
+        /// <exception cref="System.ApplicationException"></exception>
+        public void Stop(List<IPEndPoint> localEPs)
         {
-            try {
-                // Establish the local endpoint for the socket.
-                // The DNS name of the computer
-                // running the listener is "host.contoso.com".
-                IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
-                IPEndPoint localEndPoint = new IPEndPoint(ipAddr[0], (int)port);
-                foreach (IPAddress ip in ipAddr) {
-                    if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                        localEndPoint.Address = ip;
-                        break;
+            // If eps in localEPs are unique to each other
+            for (int i = 0; i < localEPs.Count - 1; i++) {
+                for (int j = i + 1; j < localEPs.Count; j++) {
+                    if (localEPs[i].Equals(localEPs[j]))
+                        throw new ApplicationException("The eps in localEPs are not unique to each other.");
+                }
+            }
+
+            lock (this) {
+                // Verify IPEndPoints
+                foreach (IPEndPoint ep in localEPs) {
+                    bool argsVerify = false;
+                    foreach (ListenerState lstState in listenerState) {
+                        if (ep.Equals(lstState.listenSocket.LocalEndPoint)) {
+                            argsVerify = true;
+                            break;
+                        }
+                    }
+                    if (argsVerify == false)
+                        throw new ApplicationException("Specified localEP is not at listening.");
+                    argsVerify = false;
+                }
+
+                // Stop listener and its thread & Remove it from listenerState
+                foreach (IPEndPoint ep in localEPs) {
+                    foreach (ListenerState lstState in listenerState) {
+                        if (ep.Equals(lstState.listenSocket.LocalEndPoint)) {
+                            // Stop listener & The ListeningThread will stop by its exception automaticlly
+                            lstState.listenSocket.Dispose();
+
+                            // Ensure to abort the ListeningThread
+                            lstState.Thread.Abort();
+                            lstState.Thread.Join();
+                            lstState.Thread = null;
+
+                            // Remove lstState from listenerState
+                            listenerState.Remove(lstState);
+
+                            // Skip for loop, So the forehead "listenerState.Remove" meothod is right.
+                            break;
+                        }
                     }
                 }
 
-                // Create a TCP/IP socket.
-                listener = new Socket(AddressFamily.InterNetwork,
-                    SocketType.Stream, ProtocolType.Tcp);
+                // If listenerState is clear, then Stop all client socket & Clear the clientState
+                if (listenerState.Count == 0) {
+                    // Stop all client socket & Clear the clientState
+                    foreach (ClientState cltState in clientState) {
+                        cltState.workSocket.Shutdown(SocketShutdown.Both);
+                        cltState.workSocket.Dispose();
+                    }
+                    clientState.Clear();
+                }
+            }
+        }
 
-                // Bind the socket to the local endpoint and listen for incoming connections.
-                listener.Bind(localEndPoint);
-                listener.Listen(100);
+        private void ListeningThread(object args)
+        {
+            ListenerState lstState = args as ListenerState;
+            IPEndPoint epBackup = (IPEndPoint)lstState.listenSocket.LocalEndPoint;
 
+            try {
                 /// ** Report listenerStarted event
                 if (listenerStarted != null)
-                    listenerStarted(this, null);
+                    listenerStarted(this, new ListenerEventArgs(epBackup));
 
                 while (true) {
                     // Start an asynchronous socket to listen for connections.
                     // Get the socket that handles the client request.
-                    Socket handler = listener.Accept();
+                    Socket handler = lstState.listenSocket.Accept();
 
                     // Create the state object.
-                    ClientState state = new ClientState();
-                    state.workSocket = handler;
+                    ClientState cltState = new ClientState();
+                    cltState.workSocket = handler;
 
                     // Start receive message from client
-                    handler.BeginReceive(state.buffer, 0, ClientState.BufferSize, 0,
-                        new AsyncCallback(ReadCallback), state);
+                    handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
+                        new AsyncCallback(ReadCallback), cltState);
 
                     // Add handler to ClientState
-                    clientState.Add(state);
+                    lock (clientState) {
+                        clientState.Add(cltState);
+                    }
 
                     /// ** Report clientConnect event
                     if (clientConnect != null)
@@ -144,9 +263,17 @@ namespace MnnSocket
                 }
             }
             catch (Exception ex) {
+                lock (listenerState) {
+                    // Remove lstState form listenerState
+                    if (listenerState.Contains(lstState)) {
+                        lstState.listenSocket.Dispose();
+                        listenerState.Remove(lstState);
+                    }
+                }
+
                 /// ** Report listenerStopped event
                 if (listenerStopped != null)
-                    listenerStopped(this, null);
+                    listenerStopped(this, new ListenerEventArgs(epBackup));
 
                 Console.WriteLine(ex.ToString());
             }
@@ -156,28 +283,28 @@ namespace MnnSocket
         {
             // Retrieve the state object and the handler socket
             // from the asynchronous state object.
-            ClientState state = (ClientState)ar.AsyncState;
-            Socket handler = state.workSocket;
+            ClientState cltState = (ClientState)ar.AsyncState;
+            IPEndPoint epBackup = (IPEndPoint)cltState.workSocket.RemoteEndPoint;
 
             try {
                 // Read data from the client socket. 
-                int bytesRead = handler.EndReceive(ar);
+                int bytesRead = cltState.workSocket.EndReceive(ar);
 
                 if (bytesRead > 0) {
                     // There  might be more data, so store the data received so far.
-                    state.sb.Append(UTF8Encoding.Default.GetString(
-                        state.buffer, 0, bytesRead));
+                    cltState.sb.Append(UTF8Encoding.Default.GetString(
+                        cltState.buffer, 0, bytesRead));
 
                     /// ** Report clientMessage event
                     if (clientMessage != null)
-                        clientMessage(this, new ClientEventArgs(handler.RemoteEndPoint, state.sb.ToString()));
+                        clientMessage(this, new ClientEventArgs(cltState.workSocket.RemoteEndPoint, cltState.sb.ToString()));
 
                     // Then clear the StringBuilder
-                    state.sb.Clear();
+                    cltState.sb.Clear();
 
                     // Restart receive message from client
-                    handler.BeginReceive(state.buffer, 0, ClientState.BufferSize, 0,
-                        new AsyncCallback(ReadCallback), state);
+                    cltState.workSocket.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
+                        new AsyncCallback(ReadCallback), cltState);
                 }
                 else {
                     // Just for closing the client socket, so the ErrorCode is Shutdown
@@ -185,17 +312,18 @@ namespace MnnSocket
                 }
             }
             catch (SocketException ex) {
-                // Save the RemoteEndPoint of closing handler
-                EndPoint ep = handler.RemoteEndPoint;
-
                 // Close socket of client & remove it form clientState
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Dispose();
-                clientState.Remove(state);
+                lock (clientState) {
+                    if (clientState.Contains(cltState)) {
+                        cltState.workSocket.Shutdown(SocketShutdown.Both);
+                        cltState.workSocket.Dispose();
+                        clientState.Remove(cltState);
+                    }
+                }
 
                 /// ** Report clientDisconn event
                 if (clientDisconn != null)
-                    clientDisconn(this, new ClientEventArgs(ep, null));
+                    clientDisconn(this, new ClientEventArgs(epBackup, null));
 
                 Console.WriteLine(ex.ToString());
             }
@@ -204,13 +332,15 @@ namespace MnnSocket
             }
         }
 
-        public void Send(EndPoint ep, string data)
+        public void Send(IPEndPoint ep, string data)
         {
-            foreach (ClientState state in clientState) {
-                if (state.workSocket.RemoteEndPoint.Equals(ep)) {
-                    state.workSocket.BeginSend(UTF8Encoding.Default.GetBytes(data), 0,
-                       UTF8Encoding.Default.GetBytes(data).Length, 0,
-                       new AsyncCallback(SendCallback), state.workSocket);
+            lock (clientState) {
+                foreach (ClientState cltState in clientState) {
+                    if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
+                        cltState.workSocket.BeginSend(UTF8Encoding.Default.GetBytes(data), 0,
+                           UTF8Encoding.Default.GetBytes(data).Length, 0,
+                           new AsyncCallback(SendCallback), cltState.workSocket);
+                    }
                 }
             }
         }
@@ -229,19 +359,21 @@ namespace MnnSocket
             }
         }
 
-        public void CloseClient(EndPoint ep)
+        public void CloseClient(IPEndPoint ep)
         {
-            // Find target from clientState
-            foreach (ClientState state in clientState) {
-                // Remove & Close this state
-                if (state.workSocket.RemoteEndPoint.Equals(ep)) {
-                    clientState.Remove(state);
-                    state.workSocket.Shutdown(SocketShutdown.Both);
-                    state.workSocket.Dispose();
+            lock (clientState) {
+                // Find target from clientState
+                foreach (ClientState cltState in clientState) {
+                    // Remove & Close this state
+                    if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
+                        cltState.workSocket.Shutdown(SocketShutdown.Both);
+                        cltState.workSocket.Dispose();
+                        clientState.Remove(cltState);
 
-                    /// ** Report clientDisconn event
-                    if (clientDisconn != null)
-                        clientDisconn(this, new ClientEventArgs(ep, null));
+                        /// ** Report clientDisconn event
+                        if (clientDisconn != null)
+                            clientDisconn(this, new ClientEventArgs(ep, null));
+                    }
                 }
             }
         }
