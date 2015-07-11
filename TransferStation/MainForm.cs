@@ -182,5 +182,22 @@ namespace TransferStation
                 //Program.writeLog(ex);
             //}
         }
+
+        private void txtIP_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // 特殊键(含空格), 不处理 & 非数字键, 放弃该输入 
+            // 32及以下属于特殊字符
+            if ((int)e.KeyChar != 8 &&
+                (int)e.KeyChar != 46 &&
+                !char.IsDigit(e.KeyChar))
+                e.Handled = true;
+        }
+
+        private void txtPort_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if ((int)e.KeyChar != 8 & !char.IsDigit(e.KeyChar))    
+                e.Handled = true;
+        }
+
     }
 }

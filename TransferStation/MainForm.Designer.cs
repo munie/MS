@@ -61,6 +61,7 @@
             this.txtIP.Name = "txtIP";
             this.txtIP.Size = new System.Drawing.Size(140, 21);
             this.txtIP.TabIndex = 2;
+            this.txtIP.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtIP_KeyPress);
             // 
             // txtPort
             // 
@@ -68,6 +69,7 @@
             this.txtPort.Name = "txtPort";
             this.txtPort.Size = new System.Drawing.Size(76, 21);
             this.txtPort.TabIndex = 3;
+            this.txtPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtPort_KeyPress);
             // 
             // txtMsg
             // 
