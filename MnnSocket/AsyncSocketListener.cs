@@ -51,7 +51,6 @@ namespace MnnSocket
         // Asynchrous Scoket Listener & Listener Thread & State
         private Socket listener = null;
         private Thread listenerThread = null;
-        private bool listenerThreadState = false;
 
         // List of ClientState
         private List<ClientState> clientState = new List<ClientState>();
@@ -71,30 +70,29 @@ namespace MnnSocket
 
         public void Start(int port)
         {
-            if (listenerThreadState == true)
-                return;
-
-            listenerThread = new Thread(new ParameterizedThreadStart(ListeningThread));
-            listenerThread.IsBackground = true;
-            listenerThread.Start(port);
-
-            listenerThreadState = true;
+            if (listenerThread == null) {
+                listenerThread = new Thread(new ParameterizedThreadStart(ListeningThread));
+                listenerThread.IsBackground = true;
+                listenerThread.Start(port);
+            }
         }
 
         public void Stop()
         {
-            if (listenerThreadState == false)
-                return;
-
-            listenerThread.Abort();
+            // Stop listener & The ListeningThread will stop by its exception automaticlly
             listener.Dispose();
+
+            // Stop all client socket & Clear the clientState
             foreach (ClientState state in clientState) {
                 state.workSocket.Shutdown(SocketShutdown.Both);
                 state.workSocket.Dispose();
             }
             clientState.Clear();
 
-            listenerThreadState = false;
+            // Ensure to abort the ListeningThread
+            listenerThread.Abort();
+            listenerThread.Join();
+            listenerThread = null;
         }
 
         private void ListeningThread(object port)
