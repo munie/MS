@@ -19,9 +19,12 @@ namespace TransferStation
         public MainFrom(AsyncSocketListener sl)
         {
             sckListener = sl;
-            sckListener.clientConnect += new ClientConnectEventHandler(sckListener_clientConnect);
-            sckListener.clientDisconn += new ClientDisconnEventHandler(sckListener_clientDisconn);
-            sckListener.clientMessage += new ClientMessageEventHandler(sckListener_clientMessage);
+            sckListener.clientConnect += sckListener_clientConnect;
+            sckListener.clientDisconn += sckListener_clientDisconn;
+            sckListener.clientMessage += sckListener_clientMessage;
+            //sckListener.clientConnect += new ClientConnectEventHandler(sckListener_clientConnect);
+            //sckListener.clientDisconn += new ClientDisconnEventHandler(sckListener_clientDisconn);
+            //sckListener.clientMessage += new ClientMessageEventHandler(sckListener_clientMessage);
 
             InitializeComponent();
         }
@@ -29,7 +32,7 @@ namespace TransferStation
         private void sckListener_clientConnect(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new ClientConnectEventHandler(sckListener_clientConnect),
+                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientConnect),
                     new object[] { sender, e });
                 return;
             }
@@ -48,7 +51,7 @@ namespace TransferStation
         private void sckListener_clientDisconn(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new ClientDisconnEventHandler(sckListener_clientDisconn),
+                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientDisconn),
                     new object[] { sender, e });
                 return;
             }
@@ -63,7 +66,7 @@ namespace TransferStation
         private void sckListener_clientMessage(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new ClientMessageEventHandler(sckListener_clientMessage),
+                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientMessage),
                     new object[] { sender, e });
                 return;
             }
@@ -98,9 +101,9 @@ namespace TransferStation
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text))};
-                    //ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)),
-                    //    new IPEndPoint(ip, 5963), new IPEndPoint(ip, 5962)};
+                    //ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text))};
+                    ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)),
+                        new IPEndPoint(ip, 5963), new IPEndPoint(ip, 5962)};
                     break;
                 }
             }
@@ -124,7 +127,9 @@ namespace TransferStation
                 }
             }
 
-            sckListener.Stop(ep);
+            //sckListener.Stop(ep);
+            sckListener.Stop();
+            sckListener.CloseClient();
 
             lstClient.Items.Clear();
 

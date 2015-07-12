@@ -4,16 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Threading;
 
 namespace MnnSocket
 {
     // Definiton of Delegate for listener and client
-    public delegate void ListenerStartedEventHandler(object sender, ListenerEventArgs e);
-    public delegate void ListenerStoppedEventHandler(object sender, ListenerEventArgs e);
-    public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
-    public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
-    public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
+    //public delegate void ListenerStartedEventHandler(object sender, ListenerEventArgs e);
+    //public delegate void ListenerStoppedEventHandler(object sender, ListenerEventArgs e);
+    //public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
+    //public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
+    //public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
 
     // EventArgs for listener and client Event
     public class ListenerEventArgs : EventArgs
@@ -51,6 +52,8 @@ namespace MnnSocket
     /// </summary>
     class ListenerState
     {
+        // Listen IPEndPoint
+        public IPEndPoint listenEP = null;
         // Listen Socket
         public Socket listenSocket = null;
         // Run the listen function
@@ -62,7 +65,9 @@ namespace MnnSocket
     /// </summary>
     class ClientState
     {
-        // Client  socket.
+        // Client IPEndPoint
+        public IPEndPoint clientEP = null;
+        // Client Socket.
         public Socket workSocket = null;
         // Size of receive buffer.
         public const int BufferSize = 2048;
@@ -88,11 +93,17 @@ namespace MnnSocket
         private List<ClientState> clientState = new List<ClientState>();
 
         // Message receive event
-        public event ListenerStartedEventHandler listenerStarted;
-        public event ListenerStoppedEventHandler listenerStopped;
-        public event ClientConnectEventHandler clientConnect;
-        public event ClientDisconnEventHandler clientDisconn;
-        public event ClientMessageEventHandler clientMessage;
+        //public event ListenerStartedEventHandler listenerStarted;
+        //public event ListenerStoppedEventHandler listenerStopped;
+        //public event ClientConnectEventHandler clientConnect;
+        //public event ClientDisconnEventHandler clientDisconn;
+        //public event ClientMessageEventHandler clientMessage;
+
+        public event EventHandler<ListenerEventArgs> listenerStarted;
+        public event EventHandler<ListenerEventArgs> listenerStopped;
+        public event EventHandler<ClientEventArgs> clientConnect;
+        public event EventHandler<ClientEventArgs> clientDisconn;
+        public event EventHandler<ClientEventArgs> clientMessage;
 
         // Methods ================================================================
         /// <summary>
@@ -112,19 +123,23 @@ namespace MnnSocket
                 }
             }
 
-            lock (listenerState) {
-                // Verify IPEndPoints
-                foreach (ListenerState lstState in listenerState) {
-                    if (localEPs.Contains(lstState.listenSocket.LocalEndPoint) == true)
-                        //ports.Remove(state.port);
-                        throw new ApplicationException("Another AsyncSocketListener is listening at "
-                            + lstState.listenSocket.LocalEndPoint.ToString() + ".");
+            // Verify IPEndPoints
+            IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            foreach (IPEndPoint localEP in localEPs) {
+                foreach (IPEndPoint globalEP in globalEPs) {
+                    if (localEP.Equals(globalEP))
+                        throw new ApplicationException(localEP.ToString() + "is in listening.");
                 }
+            }
 
+            lock (listenerState) {
                 // Instantiate ListenerState & Start listening
                 foreach (IPEndPoint ep in localEPs) {
                     ListenerState lstState = new ListenerState();
                     listenerState.Add(lstState);
+
+                    // Initialize the listenEP field of ListenerState
+                    lstState.listenEP = ep;
 
                     // Initialize Socket
                     lstState.listenSocket = new Socket(AddressFamily.InterNetwork,
@@ -145,24 +160,16 @@ namespace MnnSocket
         /// </summary>
         public void Stop()
         {
-            lock (this) {
+            lock (listenerState) {
                 foreach (ListenerState lstState in listenerState) {
                     // Stop listener & The ListeningThread will stop by its exception automaticlly
                     lstState.listenSocket.Dispose();
 
                     // Ensure to abort the ListeningThread
                     lstState.Thread.Abort();
-                    lstState.Thread.Join();
+                    //lstState.Thread.Join();   //死锁
                     lstState.Thread = null;
                 }
-                listenerState.Clear();
-
-                // Stop all client socket & Clear the clientState
-                foreach (ClientState cltState in clientState) {
-                    cltState.workSocket.Shutdown(SocketShutdown.Both);
-                    cltState.workSocket.Dispose();
-                }
-                clientState.Clear();
             }
         }
 
@@ -181,7 +188,7 @@ namespace MnnSocket
                 }
             }
 
-            lock (this) {
+            lock (listenerState) {
                 // Verify IPEndPoints
                 foreach (IPEndPoint ep in localEPs) {
                     bool argsVerify = false;
@@ -196,7 +203,7 @@ namespace MnnSocket
                     argsVerify = false;
                 }
 
-                // Stop listener and its thread & Remove it from listenerState
+                // Stop listener and its thread & The thread will remove its ListenerState
                 foreach (IPEndPoint ep in localEPs) {
                     foreach (ListenerState lstState in listenerState) {
                         if (ep.Equals(lstState.listenSocket.LocalEndPoint)) {
@@ -205,26 +212,12 @@ namespace MnnSocket
 
                             // Ensure to abort the ListeningThread
                             lstState.Thread.Abort();
-                            lstState.Thread.Join();
+                            //lstState.Thread.Join();   //死锁
                             lstState.Thread = null;
 
-                            // Remove lstState from listenerState
-                            listenerState.Remove(lstState);
-
-                            // Skip for loop, So the forehead "listenerState.Remove" meothod is right.
                             break;
                         }
                     }
-                }
-
-                // If listenerState is clear, then Stop all client socket & Clear the clientState
-                if (listenerState.Count == 0) {
-                    // Stop all client socket & Clear the clientState
-                    foreach (ClientState cltState in clientState) {
-                        cltState.workSocket.Shutdown(SocketShutdown.Both);
-                        cltState.workSocket.Dispose();
-                    }
-                    clientState.Clear();
                 }
             }
         }
@@ -232,12 +225,11 @@ namespace MnnSocket
         private void ListeningThread(object args)
         {
             ListenerState lstState = args as ListenerState;
-            IPEndPoint epBackup = (IPEndPoint)lstState.listenSocket.LocalEndPoint;
 
             try {
                 /// ** Report listenerStarted event
                 if (listenerStarted != null)
-                    listenerStarted(this, new ListenerEventArgs(epBackup));
+                    listenerStarted(this, new ListenerEventArgs((IPEndPoint)lstState.listenSocket.LocalEndPoint));
 
                 while (true) {
                     // Start an asynchronous socket to listen for connections.
@@ -246,6 +238,7 @@ namespace MnnSocket
 
                     // Create the state object.
                     ClientState cltState = new ClientState();
+                    cltState.clientEP = (IPEndPoint)handler.RemoteEndPoint;
                     cltState.workSocket = handler;
 
                     // Start receive message from client
@@ -259,10 +252,13 @@ namespace MnnSocket
 
                     /// ** Report clientConnect event
                     if (clientConnect != null)
-                        clientConnect(this, new ClientEventArgs(handler.RemoteEndPoint, null));
+                        clientConnect(this, new ClientEventArgs(cltState.clientEP, null));
                 }
             }
             catch (Exception ex) {
+                // Backup the listenEP for "Report listenerStopped event"
+                IPEndPoint epBackup = lstState.listenEP;
+
                 lock (listenerState) {
                     // Remove lstState form listenerState
                     if (listenerState.Contains(lstState)) {
@@ -284,7 +280,6 @@ namespace MnnSocket
             // Retrieve the state object and the handler socket
             // from the asynchronous state object.
             ClientState cltState = (ClientState)ar.AsyncState;
-            IPEndPoint epBackup = (IPEndPoint)cltState.workSocket.RemoteEndPoint;
 
             try {
                 // Read data from the client socket. 
@@ -297,7 +292,7 @@ namespace MnnSocket
 
                     /// ** Report clientMessage event
                     if (clientMessage != null)
-                        clientMessage(this, new ClientEventArgs(cltState.workSocket.RemoteEndPoint, cltState.sb.ToString()));
+                        clientMessage(this, new ClientEventArgs(cltState.clientEP, cltState.sb.ToString()));
 
                     // Then clear the StringBuilder
                     cltState.sb.Clear();
@@ -311,13 +306,18 @@ namespace MnnSocket
                     throw new SocketException((int)SocketError.Shutdown);
                 }
             }
-            catch (SocketException ex) {
+            //catch (SocketException ex) {
+            //}
+            catch (Exception ex) {
+                // Backup the listenEP for "Report listenerStopped event"
+                IPEndPoint epBackup = cltState.clientEP;
+
                 // Close socket of client & remove it form clientState
                 lock (clientState) {
                     if (clientState.Contains(cltState)) {
-                        cltState.workSocket.Shutdown(SocketShutdown.Both);
-                        cltState.workSocket.Dispose();
-                        clientState.Remove(cltState);
+                            //cltState.workSocket.Shutdown(SocketShutdown.Both);    // 已经调用Dispose()将引起内存访问错误
+                            cltState.workSocket.Dispose();
+                            clientState.Remove(cltState);
                     }
                 }
 
@@ -325,9 +325,6 @@ namespace MnnSocket
                 if (clientDisconn != null)
                     clientDisconn(this, new ClientEventArgs(epBackup, null));
 
-                Console.WriteLine(ex.ToString());
-            }
-            catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
             }
         }
@@ -359,20 +356,28 @@ namespace MnnSocket
             }
         }
 
+        public void CloseClient()
+        {
+            lock (clientState) {
+                // Stop all client socket
+                foreach (ClientState cltState in clientState) {
+                    //cltState.workSocket.Shutdown(SocketShutdown.Both);
+                    cltState.workSocket.Dispose();
+                }
+            }
+        }
+
         public void CloseClient(IPEndPoint ep)
         {
             lock (clientState) {
                 // Find target from clientState
                 foreach (ClientState cltState in clientState) {
-                    // Remove & Close this state
+                    // Close this state & The ReadCallback will remove its ClientState
                     if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
-                        cltState.workSocket.Shutdown(SocketShutdown.Both);
+                        //cltState.workSocket.Shutdown(SocketShutdown.Both);
                         cltState.workSocket.Dispose();
-                        clientState.Remove(cltState);
 
-                        /// ** Report clientDisconn event
-                        if (clientDisconn != null)
-                            clientDisconn(this, new ClientEventArgs(ep, null));
+                        break;
                     }
                 }
             }
@@ -381,6 +386,19 @@ namespace MnnSocket
         public void GetStatus()
         {
 
+        }
+
+        public Socket GetSocket(IPEndPoint ep)
+        {
+            lock (clientState) {
+                foreach (ClientState cltState in clientState) {
+                    if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
+                        return cltState.workSocket;
+                    }
+                }
+
+                return null;
+            }
         }
     }
 }
