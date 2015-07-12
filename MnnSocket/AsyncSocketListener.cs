@@ -9,14 +9,10 @@ using System.Threading;
 
 namespace MnnSocket
 {
-    // Definiton of Delegate for listener and client
-    //public delegate void ListenerStartedEventHandler(object sender, ListenerEventArgs e);
-    //public delegate void ListenerStoppedEventHandler(object sender, ListenerEventArgs e);
-    //public delegate void ClientConnectEventHandler(object sender, ClientEventArgs e);
-    //public delegate void ClientDisconnEventHandler(object sender, ClientEventArgs e);
-    //public delegate void ClientMessageEventHandler(object sender, ClientEventArgs e);
+    /// <summary>
+    /// EventArgs for listener events like "listenerStarted"
+    /// </summary>
 
-    // EventArgs for listener and client Event
     public class ListenerEventArgs : EventArgs
     {
         public ListenerEventArgs(EndPoint ep)
@@ -30,6 +26,10 @@ namespace MnnSocket
 
         public IPEndPoint listenEP { get; set; }
     }
+
+    /// <summary>
+    /// EventArgs for client events like "clientConnect"
+    /// </summary>
     public class ClientEventArgs : EventArgs
     {
         public ClientEventArgs(EndPoint ep, string msg)
@@ -83,22 +83,14 @@ namespace MnnSocket
     public class AsyncSocketListener
     {
         // Constructor
-        public AsyncSocketListener()
-        {
-        }
+        public AsyncSocketListener() { }
 
         // List of ListenerState
         private List<ListenerState> listenerState = new List<ListenerState>();
         // List of ClientState
         private List<ClientState> clientState = new List<ClientState>();
 
-        // Message receive event
-        //public event ListenerStartedEventHandler listenerStarted;
-        //public event ListenerStoppedEventHandler listenerStopped;
-        //public event ClientConnectEventHandler clientConnect;
-        //public event ClientDisconnEventHandler clientDisconn;
-        //public event ClientMessageEventHandler clientMessage;
-
+        // Events of listener and client
         public event EventHandler<ListenerEventArgs> listenerStarted;
         public event EventHandler<ListenerEventArgs> listenerStopped;
         public event EventHandler<ClientEventArgs> clientConnect;
@@ -229,7 +221,7 @@ namespace MnnSocket
             try {
                 /// ** Report listenerStarted event
                 if (listenerStarted != null)
-                    listenerStarted(this, new ListenerEventArgs((IPEndPoint)lstState.listenSocket.LocalEndPoint));
+                    listenerStarted(this, new ListenerEventArgs(lstState.listenEP));
 
                 while (true) {
                     // Start an asynchronous socket to listen for connections.
@@ -256,9 +248,6 @@ namespace MnnSocket
                 }
             }
             catch (Exception ex) {
-                // Backup the listenEP for "Report listenerStopped event"
-                IPEndPoint epBackup = lstState.listenEP;
-
                 lock (listenerState) {
                     // Remove lstState form listenerState
                     if (listenerState.Contains(lstState)) {
@@ -269,7 +258,7 @@ namespace MnnSocket
 
                 /// ** Report listenerStopped event
                 if (listenerStopped != null)
-                    listenerStopped(this, new ListenerEventArgs(epBackup));
+                    listenerStopped(this, new ListenerEventArgs(lstState.listenEP));
 
                 Console.WriteLine(ex.ToString());
             }
@@ -309,9 +298,6 @@ namespace MnnSocket
             //catch (SocketException ex) {
             //}
             catch (Exception ex) {
-                // Backup the listenEP for "Report listenerStopped event"
-                IPEndPoint epBackup = cltState.clientEP;
-
                 // Close socket of client & remove it form clientState
                 lock (clientState) {
                     if (clientState.Contains(cltState)) {
@@ -323,12 +309,17 @@ namespace MnnSocket
 
                 /// ** Report clientDisconn event
                 if (clientDisconn != null)
-                    clientDisconn(this, new ClientEventArgs(epBackup, null));
+                    clientDisconn(this, new ClientEventArgs(cltState.clientEP, null));
 
                 Console.WriteLine(ex.ToString());
             }
         }
 
+        /// <summary>
+        /// Send data to specified EP
+        /// </summary>
+        /// <param name="ep"></param>
+        /// <param name="data"></param>
         public void Send(IPEndPoint ep, string data)
         {
             lock (clientState) {
@@ -356,6 +347,9 @@ namespace MnnSocket
             }
         }
 
+        /// <summary>
+        /// Close all socket of Client
+        /// </summary>
         public void CloseClient()
         {
             lock (clientState) {
@@ -367,6 +361,10 @@ namespace MnnSocket
             }
         }
 
+        /// <summary>
+        /// Close specified socket of Client
+        /// </summary>
+        /// <param name="ep"></param>
         public void CloseClient(IPEndPoint ep)
         {
             lock (clientState) {
@@ -383,11 +381,18 @@ namespace MnnSocket
             }
         }
 
+        /// <summary>
+        /// Get Status of listeners and clients
+        /// </summary>
         public void GetStatus()
         {
-
         }
 
+        /// <summary>
+        /// Get Socket specified EP
+        /// </summary>
+        /// <param name="ep"></param>
+        /// <returns></returns>
         public Socket GetSocket(IPEndPoint ep)
         {
             lock (clientState) {

@@ -16,15 +16,18 @@ namespace TransferStation
     {
         AsyncSocketListener sckListener = null;
 
-        public MainFrom(AsyncSocketListener sl)
+        public MainFrom()
         {
-            sckListener = sl;
+
+            // Create socket listener & Start user interface model
+            sckListener = new AsyncSocketListener();
+
+            // Start data processing model
+            DataProcess.DataConvertCenter center = new DataProcess.DataConvertCenter(sckListener);
+
             sckListener.clientConnect += sckListener_clientConnect;
             sckListener.clientDisconn += sckListener_clientDisconn;
             sckListener.clientMessage += sckListener_clientMessage;
-            //sckListener.clientConnect += new ClientConnectEventHandler(sckListener_clientConnect);
-            //sckListener.clientDisconn += new ClientDisconnEventHandler(sckListener_clientDisconn);
-            //sckListener.clientMessage += new ClientMessageEventHandler(sckListener_clientMessage);
 
             InitializeComponent();
         }
@@ -36,8 +39,6 @@ namespace TransferStation
                     new object[] { sender, e });
                 return;
             }
-
-            //AsyncSocketListener.ClientEventArgs args = e as AsyncSocketListener.ClientEventArgs;
 
             ListViewItem item = new ListViewItem();
             item.SubItems[0].Text = e.clientEP.ToString();

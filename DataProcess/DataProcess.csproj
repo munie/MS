@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataUtils.cs" />
     <Compile Include="OracleHelper.cs" />
     <Compile Include="DataConvertCenter.cs" />
     <Compile Include="IDataHandle.cs" />
