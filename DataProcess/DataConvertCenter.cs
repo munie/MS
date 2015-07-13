@@ -45,14 +45,17 @@ namespace DataProcess
 
                         // Instantiate every class derived "IDataHandle" from this dll
                         string dataHandleKey;
-                        object dataHandleInstance;
+                        dynamic dataHandleInstance;
                         foreach (Type t in types) {
                             if (t.GetInterface("IDataHandle") != null) {
+                                dataHandleInstance = Activator.CreateInstance(t);
+                                dataHandleKey = dataHandleInstance.GetIdentify();
+                                /*
                                 dataHandleInstance = asm.CreateInstance(t.FullName);
                                 MethodInfo GetIdentify = t.GetMethod("GetIdentify");
                                 dataHandleKey = (string)GetIdentify.Invoke(dataHandleInstance, null);
+                                 * */
                                 dataHandleTable.Add(dataHandleKey, dataHandleInstance);
-                                //dataHandleTable.Add(asm.CreateInstance(t.FullName));
                             }
                         }
                     }
@@ -68,17 +71,21 @@ namespace DataProcess
             try {
                 IDictionary<string, string> dc = DataUtils.AnalyzeString(e.data);
 
-                object dataHandle = null;
+                dynamic dataHandle = null;
 
-                if (dataHandleTable.ContainsKey(dc["HT"])) {
-                    if (dataHandleTable.TryGetValue(dc["HT"], out dataHandle)) {
+                if (dataHandleTable.ContainsKey(dc["HT"].Substring(0, 1))) {
+                    if (dataHandleTable.TryGetValue(dc["HT"].Substring(0, 1), out dataHandle)) {
                         object retValue;
+                        /*
                         Type t = dataHandle.GetType();
 
                         MethodInfo Handle = t.GetMethod("Handle");
-                        retValue = Handle.Invoke(dataHandle, new object[] { e.data });
-                        if (retValue != null)
-                            sckListener.Send(e.clientEP, (string)retValue);
+                        retValue = Handle.Invoke(dataHandle, new object[] { e.data, sckListener.GetSocket(e.clientEP) });
+                        //if (retValue != null)
+                        //    sckListener.Send(e.clientEP, (string)retValue);
+                         * */
+
+                        retValue = dataHandle.Handle(e.data, sckListener.GetSocket(e.clientEP));
                     }
                 }
 

@@ -9,6 +9,6 @@ namespace DataProcess
     {
         string GetIdentify();
 
-        string Handle(string msg);
+        string Handle(string msg, System.Net.Sockets.Socket socket);
     }
 }
