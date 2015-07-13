@@ -71,13 +71,18 @@ namespace DataProcess
             DataTable dt = new DataTable();
 
             try {
-                using(OracleDataAdapter adapter = new OracleDataAdapter(sql, conn.ConnectionString)) {
+                conn.Open();
+
+                using(OracleDataAdapter adapter = new OracleDataAdapter(sql, conn)) {
                     adapter.Fill(dt);
                     return dt;
                 }
             }
             catch (Exception) {
                 throw;
+            }
+            finally {
+                conn.Close();
             }
         }
 
@@ -99,6 +104,8 @@ namespace DataProcess
             }
 
             try {
+                conn.Open();
+
                 using (OracleDataAdapter adapter = new OracleDataAdapter(cmd)) {
                     adapter.Fill(dt);
                     return dt;
@@ -106,6 +113,9 @@ namespace DataProcess
             }
             catch (Exception) {
                 throw;
+            }
+            finally {
+                conn.Close();
             }
         }
 

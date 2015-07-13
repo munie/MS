@@ -8,15 +8,18 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Diagnostics;
 using MnnSocket;
+using TransferStationUtils;
 
 namespace TransferStation
 {
-    public partial class MainFrom : Form
+    public partial class MainForm : Form
     {
         AsyncSocketListener sckListener = null;
 
-        public MainFrom()
+        public MainForm()
         {
 
             // Create socket listener & Start user interface model
@@ -27,7 +30,8 @@ namespace TransferStation
 
             sckListener.clientConnect += sckListener_clientConnect;
             sckListener.clientDisconn += sckListener_clientDisconn;
-            sckListener.clientMessage += sckListener_clientMessage;
+            sckListener.clientReadMsg += sckListener_clientReadMsg;
+            sckListener.clientSendMsg += sckListener_clientSendMsg;
 
             InitializeComponent();
         }
@@ -41,7 +45,7 @@ namespace TransferStation
             }
 
             ListViewItem item = new ListViewItem();
-            item.SubItems[0].Text = e.clientEP.ToString();
+            item.SubItems[0].Text = e.remoteEP.ToString();
             item.SubItems.Add(DateTime.Now.ToString());
             item.SubItems.Add(Guid.NewGuid().ToString("N"));
             item.SubItems.Add("-");
@@ -58,26 +62,51 @@ namespace TransferStation
             }
 
             for (int i = 0; i < lstClient.Items.Count; i++) {
-                if (lstClient.Items[i].SubItems[0].Text == e.clientEP.ToString()) {
+                if (lstClient.Items[i].SubItems[0].Text == e.remoteEP.ToString()) {
                     lstClient.Items.Remove(lstClient.Items[i]);
                 }
             }
         }
 
-        private void sckListener_clientMessage(object sender, ClientEventArgs e)
+        private void sckListener_clientReadMsg(object sender, ClientEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientMessage),
+                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientReadMsg),
                     new object[] { sender, e });
                 return;
             }
 
-            txtMsg.AppendText("(" + e.clientEP.ToString() + " " + DateTime.Now.ToString() + ")：");
-            txtMsg.AppendText(e.data + "\r\n");
+            if (txtMsg.Text.Length >= 5 * 1024)
+                txtMsg.Clear();
+
+            string logFormat = e.remoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.data;
+
+            txtMsg.AppendText(logFormat + "\r\n");
+            LogRecord.WriteInfoLog(logFormat);
+        }
+
+        private void sckListener_clientSendMsg(object sender, ClientEventArgs e)
+        {
+            if (this.InvokeRequired) {
+                this.Invoke(new EventHandler<ClientEventArgs>(sckListener_clientSendMsg),
+                    new object[] { sender, e });
+                return;
+            }
+
+            string logFormat = e.remoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + e.data;
+
+            txtMsg.AppendText(logFormat + "\r\n");
+            LogRecord.WriteInfoLog(logFormat);
         }
 
         private void MainFrom_Load(object sender, EventArgs e)
         {
+            Assembly asm = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
+
+            this.Text = string.Format("{0} {1}.{2} - Powered By {3}",
+                fvi.ProductName, fvi.ProductMajorPart, fvi.ProductMinorPart, fvi.CompanyName);     
+
             lstClient.Columns.Add("IP", 155, HorizontalAlignment.Center);
             lstClient.Columns.Add("连接时间", 159, HorizontalAlignment.Center);
             lstClient.Columns.Add("全局标识", 276, HorizontalAlignment.Center);
@@ -90,10 +119,22 @@ namespace TransferStation
                 }
             }
 
-            txtPort.Text = "5964";
+            txtPort.Text = "3006";
 
             txtIP.Enabled = false;
             btnStopListen.Enabled = false;
+        }
+
+        private void MainFrom_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            string psward = Microsoft.VisualBasic.Interaction.InputBox("请输入密码", "密码框", "", 200, 200);
+            if (psward != "zjhtht") {
+                MessageBox.Show("密码错误");
+                e.Cancel = true;
+            }
+            else {
+                e.Cancel = false;
+            }
         }
 
         private void btnStartListen_Click(object sender, EventArgs e)
@@ -102,23 +143,29 @@ namespace TransferStation
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    //ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text))};
-                    ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)),
-                        new IPEndPoint(ip, 5963), new IPEndPoint(ip, 5962)};
+                    ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text))};
+                    //ep = new List<IPEndPoint>() {new IPEndPoint(ip, Convert.ToInt32(txtPort.Text)),
+                    //    new IPEndPoint(ip, 5963), new IPEndPoint(ip, 5962)};
                     break;
                 }
             }
 
-            // Start socket listener
-            sckListener.Start(ep);
+            try {
+                // Start socket listener
+                sckListener.Start(ep);
 
-            txtPort.Enabled = false;
-            btnStartListen.Enabled = false;
-            btnStopListen.Enabled = true;
+                txtPort.Enabled = false;
+                btnStartListen.Enabled = false;
+                btnStopListen.Enabled = true;
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "启动监听失败");
+            }
         }
 
         private void btnStopListen_Click(object sender, EventArgs e)
         {
+            /*
             List<IPEndPoint> ep = null;
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
@@ -129,6 +176,7 @@ namespace TransferStation
             }
 
             //sckListener.Stop(ep);
+             * */
             sckListener.Stop();
             sckListener.CloseClient();
 

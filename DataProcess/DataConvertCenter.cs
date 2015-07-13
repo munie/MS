@@ -15,7 +15,7 @@ namespace DataProcess
         {
             // Initialize field sckListener
             sckListener = sl;
-            sckListener.clientMessage += sckListener_clientMessage;
+            sckListener.clientReadMsg += sckListener_clientReadMsg;
 
             // Load plugins
             LoadDataHandlePlugins();
@@ -24,7 +24,7 @@ namespace DataProcess
         // Socket
         public AsyncSocketListener sckListener = null;
         // List of IDataHandle
-        private Dictionary<string, object> dataHandleTable = new Dictionary<string, object>();
+        private Dictionary<int, object> dataHandleTable = new Dictionary<int, object>();
 
         // Methods ==============================================================================
         private void LoadDataHandlePlugins()
@@ -44,7 +44,7 @@ namespace DataProcess
                         Type[] types = asm.GetTypes();
 
                         // Instantiate every class derived "IDataHandle" from this dll
-                        string dataHandleKey;
+                        int dataHandleKey;
                         dynamic dataHandleInstance;
                         foreach (Type t in types) {
                             if (t.GetInterface("IDataHandle") != null) {
@@ -66,15 +66,18 @@ namespace DataProcess
             }
         }
 
-        private void sckListener_clientMessage(object sender, ClientEventArgs e)
+        private void sckListener_clientReadMsg(object sender, ClientEventArgs e)
         {
+            if (e.data.StartsWith("|") == false)
+                return;
+
             try {
                 IDictionary<string, string> dc = DataUtils.AnalyzeString(e.data);
 
                 dynamic dataHandle = null;
 
-                if (dataHandleTable.ContainsKey(dc["HT"].Substring(0, 1))) {
-                    if (dataHandleTable.TryGetValue(dc["HT"].Substring(0, 1), out dataHandle)) {
+                if (dataHandleTable.ContainsKey(e.localEP.Port)) {
+                    if (dataHandleTable.TryGetValue(e.localEP.Port, out dataHandle)) {
                         object retValue;
                         /*
                         Type t = dataHandle.GetType();
@@ -85,7 +88,7 @@ namespace DataProcess
                         //    sckListener.Send(e.clientEP, (string)retValue);
                          * */
 
-                        retValue = dataHandle.Handle(e.data, sckListener.GetSocket(e.clientEP));
+                        retValue = dataHandle.Handle(e.data, sckListener.GetSocket(e.remoteEP));
                     }
                 }
 

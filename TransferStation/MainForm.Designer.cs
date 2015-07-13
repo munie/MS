@@ -1,6 +1,6 @@
 ﻿namespace TransferStation
 {
-    partial class MainFrom
+    partial class MainForm
     {
         /// <summary>
         /// 必需的设计器变量。
@@ -113,7 +113,7 @@
             this.btnStopListen.UseVisualStyleBackColor = true;
             this.btnStopListen.Click += new System.EventHandler(this.btnStopListen_Click);
             // 
-            // MainFrom
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -127,9 +127,10 @@
             this.Controls.Add(this.labPort);
             this.Controls.Add(this.labIP);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
-            this.Name = "MainFrom";
+            this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "中转站";
+            this.Text = "MainForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainFrom_FormClosing);
             this.Load += new System.EventHandler(this.MainFrom_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

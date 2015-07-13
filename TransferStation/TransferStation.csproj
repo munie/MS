@@ -34,10 +34,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ARMSoft.FlexibleTreeView, Version=4.2.0.0, Culture=neutral, PublicKeyToken=a0f39221011ef811" />
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,6 +61,7 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -89,6 +92,10 @@
     <ProjectReference Include="..\MnnSocket\MnnSocket.csproj">
       <Project>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</Project>
       <Name>MnnSocket</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TransferStationUtils\TransferStationUtils.csproj">
+      <Project>{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}</Project>
+      <Name>TransferStationUtils</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -7,7 +7,7 @@ namespace DataProcess
 {
     public interface IDataHandle
     {
-        string GetIdentify();
+        int GetIdentify();
 
         string Handle(string msg, System.Net.Sockets.Socket socket);
     }
