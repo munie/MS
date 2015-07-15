@@ -8,6 +8,20 @@ using MnnSocket;
 
 namespace DataProcess
 {
+    public class HandleResultEventArgs : EventArgs
+    {
+        public HandleResultEventArgs( System.Net.IPEndPoint ep, string ccid, string name)
+        {
+            EP = ep;
+            CCID = ccid;
+            Name = name;
+        }
+
+        public System.Net.IPEndPoint EP { get; set; }
+        public string CCID { get; set; }
+        public string Name { get; set; }
+    }
+
     class DataHandleState
     {
         public string Name { get; set; }
@@ -34,6 +48,8 @@ namespace DataProcess
         private List<DataHandleState> dataHandleTable = new List<DataHandleState>();
         //private Dictionary<int, object> dataHandleTable = new Dictionary<int, object>();
 
+        public EventHandler<HandleResultEventArgs> HandleResult;
+
         // Methods ==============================================================================
         private void LoadDataHandlePlugins()
         {
@@ -54,20 +70,23 @@ namespace DataProcess
 
         private void sckListener_ClientReadMsg(object sender, ClientEventArgs e)
         {
-            if (e.data.StartsWith("|") == false)
+            if (e.Data.StartsWith("|") == false)
                 return;
 
             try {
-                IDictionary<string, string> dc = DataUtils.AnalyzeString(e.data);
+                IDictionary<string, string> dc = DataUtils.AnalyzeString(e.Data);
 
                 dynamic dataHandle = null;
                 object retValue;
 
                 lock (dataHandleTable) {
-                    var subset = from s in dataHandleTable where s.Port.Equals(e.localEP.Port) select s;
+                    var subset = from s in dataHandleTable where s.Port.Equals(e.LocalEP.Port) select s;
                     if (subset.Count() != 0) {
                         dataHandle = subset.First().Instance;
-                        retValue = dataHandle.Handle(e.data, sckListener.GetSocket(e.remoteEP));
+                        retValue = dataHandle.Handle(e.Data, sckListener.GetSocket(e.RemoteEP));
+
+                        if (HandleResult != null && retValue != null)
+                            HandleResult(this, new HandleResultEventArgs(e.RemoteEP, (string)retValue, ""));
                     }
                     /*
                     if (dataHandleTable.ContainsKey(e.localEP.Port)) {

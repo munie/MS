@@ -33,6 +33,8 @@ namespace TransferStation
             sckListener.ClientReadMsg += sckListener_ClientReadMsg;
             sckListener.ClientSendMsg += sckListener_ClientSendMsg;
 
+            dataCenter.HandleResult += dataCenter_HandleResult;
+
             InitializeComponent();
         }
 
@@ -105,7 +107,7 @@ namespace TransferStation
                 return;
             }
 
-            var subset = from s in stationTable where s.Port.Equals(e.listenEP.Port) select s;
+            var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.State = "已启动";
             }
@@ -121,7 +123,7 @@ namespace TransferStation
                 return;
             }
 
-            var subset = from s in stationTable where s.Port.Equals(e.listenEP.Port) select s;
+            var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.State = "未启动";
             }
@@ -138,10 +140,9 @@ namespace TransferStation
             }
 
             ListViewItem item = new ListViewItem();
-            item.SubItems[0].Text = e.remoteEP.ToString();
-            item.SubItems.Add(e.localEP.Port.ToString());
+            item.SubItems[0].Text = e.RemoteEP.ToString();
+            item.SubItems.Add(e.LocalEP.Port.ToString());
             item.SubItems.Add(DateTime.Now.ToString());
-            item.SubItems.Add(Guid.NewGuid().ToString("N"));
             item.SubItems.Add("-");
 
             lstClient.Items.Add(item);
@@ -156,7 +157,7 @@ namespace TransferStation
             }
 
             for (int i = 0; i < lstClient.Items.Count; i++) {
-                if (lstClient.Items[i].SubItems[0].Text.Equals(e.remoteEP.ToString())) {
+                if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
                     lstClient.Items.Remove(lstClient.Items[i]);
                 }
             }
@@ -173,7 +174,7 @@ namespace TransferStation
             if (txtMsg.Text.Length >= 5 * 1024)
                 txtMsg.Clear();
 
-            string logFormat = e.remoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.data;
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.Data;
 
             txtMsg.AppendText(logFormat + "\r\n");
             LogRecord.WriteInfoLog(logFormat);
@@ -187,10 +188,27 @@ namespace TransferStation
                 return;
             }
 
-            string logFormat = e.remoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + e.data;
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + e.Data;
 
             txtMsg.AppendText(logFormat + "\r\n");
             LogRecord.WriteInfoLog(logFormat);
+        }
+
+        private void dataCenter_HandleResult(object sender, DataProcess.HandleResultEventArgs e)
+        {
+            if (this.InvokeRequired) {
+                this.Invoke(new EventHandler<DataProcess.HandleResultEventArgs>(dataCenter_HandleResult),
+                    new object[] { sender, e });
+                return;
+            }
+
+            lock (lstClient) {
+                for (int i = 0; i < lstClient.Items.Count; i++) {
+                    if (lstClient.Items[i].SubItems[0].Text.Equals(e.EP.ToString()))
+                        lstClient.Items[i].SubItems[3].Text = e.CCID;
+                    
+                }
+            }
         }
 
         private void stationTable_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -234,8 +252,7 @@ namespace TransferStation
             lstClient.Columns.Add("基站IP", 155, HorizontalAlignment.Center);
             lstClient.Columns.Add("监听端口", 80, HorizontalAlignment.Center);
             lstClient.Columns.Add("连接时间", 159, HorizontalAlignment.Center);
-            lstClient.Columns.Add("全局标识", 276, HorizontalAlignment.Center);
-            lstClient.Columns.Add("CCID", 235, HorizontalAlignment.Center);
+            lstClient.Columns.Add("CCID", 180, HorizontalAlignment.Center);
 
             btnStopListen.Enabled = false;
         }

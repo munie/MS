@@ -12,19 +12,18 @@ namespace MnnSocket
     /// <summary>
     /// EventArgs for listener events like "listenerStarted"
     /// </summary>
-
     public class ListenerEventArgs : EventArgs
     {
         public ListenerEventArgs(EndPoint ep)
         {
-            listenEP = (IPEndPoint)ep;
+            ListenEP = (IPEndPoint)ep;
         }
         public ListenerEventArgs(IPEndPoint ep)
         {
-            listenEP = ep;
+            ListenEP = ep;
         }
 
-        public IPEndPoint listenEP { get; set; }
+        public IPEndPoint ListenEP { get; set; }
     }
 
     /// <summary>
@@ -34,20 +33,20 @@ namespace MnnSocket
     {
         public ClientEventArgs(EndPoint lep, EndPoint rep, string msg)
         {
-            localEP = (IPEndPoint)lep;
-            remoteEP = (IPEndPoint)rep;
-            data = msg;
+            LocalEP = (IPEndPoint)lep;
+            RemoteEP = (IPEndPoint)rep;
+            Data = msg;
         }
         public ClientEventArgs(IPEndPoint lep, IPEndPoint rep, string msg)
         {
-            localEP = lep;
-            remoteEP = rep;
-            data = msg;
+            LocalEP = lep;
+            RemoteEP = rep;
+            Data = msg;
         }
 
-        public IPEndPoint localEP { get; set; }
-        public IPEndPoint remoteEP { get; set; }
-        public string data { get; set; }
+        public IPEndPoint LocalEP { get; set; }
+        public IPEndPoint RemoteEP { get; set; }
+        public string Data { get; set; }
     }
 
     /// <summary>

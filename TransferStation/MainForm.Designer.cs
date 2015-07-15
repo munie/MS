@@ -35,12 +35,12 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.工具ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.载入新模块ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dgvStation = new System.Windows.Forms.DataGridView();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.发送命令ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭连接ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.载入新模块ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvStation)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
@@ -53,7 +53,7 @@
             this.txtMsg.Multiline = true;
             this.txtMsg.Name = "txtMsg";
             this.txtMsg.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtMsg.Size = new System.Drawing.Size(576, 185);
+            this.txtMsg.Size = new System.Drawing.Size(579, 185);
             this.txtMsg.TabIndex = 4;
             // 
             // lstClient
@@ -61,7 +61,7 @@
             this.lstClient.Font = new System.Drawing.Font("黑体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lstClient.Location = new System.Drawing.Point(265, 41);
             this.lstClient.Name = "lstClient";
-            this.lstClient.Size = new System.Drawing.Size(576, 222);
+            this.lstClient.Size = new System.Drawing.Size(579, 222);
             this.lstClient.TabIndex = 5;
             this.lstClient.UseCompatibleStateImageBehavior = false;
             this.lstClient.View = System.Windows.Forms.View.Details;
@@ -94,7 +94,7 @@
             this.工具ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(853, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(856, 24);
             this.menuStrip1.TabIndex = 8;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -111,6 +111,13 @@
             this.工具ToolStripMenuItem.Name = "工具ToolStripMenuItem";
             this.工具ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
             this.工具ToolStripMenuItem.Text = "工具";
+            // 
+            // 载入新模块ToolStripMenuItem
+            // 
+            this.载入新模块ToolStripMenuItem.Name = "载入新模块ToolStripMenuItem";
+            this.载入新模块ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.载入新模块ToolStripMenuItem.Text = "载入新模块";
+            this.载入新模块ToolStripMenuItem.Click += new System.EventHandler(this.载入新模块ToolStripMenuItem_Click);
             // 
             // dgvStation
             // 
@@ -131,19 +138,19 @@
             this.发送命令ToolStripMenuItem,
             this.关闭连接ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(153, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(119, 48);
             // 
             // 发送命令ToolStripMenuItem
             // 
             this.发送命令ToolStripMenuItem.Name = "发送命令ToolStripMenuItem";
-            this.发送命令ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.发送命令ToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.发送命令ToolStripMenuItem.Text = "发送命令";
             this.发送命令ToolStripMenuItem.Click += new System.EventHandler(this.发送命令ToolStripMenuItem_Click);
             // 
             // 关闭连接ToolStripMenuItem
             // 
             this.关闭连接ToolStripMenuItem.Name = "关闭连接ToolStripMenuItem";
-            this.关闭连接ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.关闭连接ToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.关闭连接ToolStripMenuItem.Text = "关闭连接";
             this.关闭连接ToolStripMenuItem.Click += new System.EventHandler(this.关闭连接ToolStripMenuItem_Click);
             // 
@@ -151,18 +158,11 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // 载入新模块ToolStripMenuItem
-            // 
-            this.载入新模块ToolStripMenuItem.Name = "载入新模块ToolStripMenuItem";
-            this.载入新模块ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.载入新模块ToolStripMenuItem.Text = "载入新模块";
-            this.载入新模块ToolStripMenuItem.Click += new System.EventHandler(this.载入新模块ToolStripMenuItem_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(853, 479);
+            this.ClientSize = new System.Drawing.Size(856, 479);
             this.Controls.Add(this.dgvStation);
             this.Controls.Add(this.btnStopListen);
             this.Controls.Add(this.btnStartListen);
