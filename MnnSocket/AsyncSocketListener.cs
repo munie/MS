@@ -96,12 +96,12 @@ namespace MnnSocket
         private List<ClientState> clientState = new List<ClientState>();
 
         // Events of listener and client
-        public event EventHandler<ListenerEventArgs> listenerStarted;
-        public event EventHandler<ListenerEventArgs> listenerStopped;
-        public event EventHandler<ClientEventArgs> clientConnect;
-        public event EventHandler<ClientEventArgs> clientDisconn;
-        public event EventHandler<ClientEventArgs> clientReadMsg;
-        public event EventHandler<ClientEventArgs> clientSendMsg;
+        public event EventHandler<ListenerEventArgs> ListenerStarted;
+        public event EventHandler<ListenerEventArgs> ListenerStopped;
+        public event EventHandler<ClientEventArgs> ClientConnect;
+        public event EventHandler<ClientEventArgs> ClientDisconn;
+        public event EventHandler<ClientEventArgs> ClientReadMsg;
+        public event EventHandler<ClientEventArgs> ClientSendMsg;
 
         // Methods ================================================================
         /// <summary>
@@ -219,9 +219,9 @@ namespace MnnSocket
             ListenerState lstState = args as ListenerState;
 
             try {
-                /// ** Report listenerStarted event
-                if (listenerStarted != null)
-                    listenerStarted(this, new ListenerEventArgs(lstState.listenEP));
+                /// ** Report ListenerStarted event
+                if (ListenerStarted != null)
+                    ListenerStarted(this, new ListenerEventArgs(lstState.listenEP));
 
                 while (true) {
                     // Start an asynchronous socket to listen for connections.
@@ -243,9 +243,9 @@ namespace MnnSocket
                         clientState.Add(cltState);
                     }
 
-                    /// ** Report clientConnect event
-                    if (clientConnect != null)
-                        clientConnect(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
+                    /// ** Report ClientConnect event
+                    if (ClientConnect != null)
+                        ClientConnect(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
                 }
             }
             catch (Exception ex) {
@@ -257,9 +257,9 @@ namespace MnnSocket
                     }
                 }
 
-                /// ** Report listenerStopped event
-                if (listenerStopped != null)
-                    listenerStopped(this, new ListenerEventArgs(lstState.listenEP));
+                /// ** Report ListenerStopped event
+                if (ListenerStopped != null)
+                    ListenerStopped(this, new ListenerEventArgs(lstState.listenEP));
 
                 Console.WriteLine(ex.ToString());
             }
@@ -280,9 +280,9 @@ namespace MnnSocket
                     cltState.sb.Append(UTF8Encoding.Default.GetString(
                         cltState.buffer, 0, bytesRead));
 
-                    /// ** Report clientReadMsg event
-                    if (clientReadMsg != null)
-                        clientReadMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, cltState.sb.ToString()));
+                    /// ** Report ClientReadMsg event
+                    if (ClientReadMsg != null)
+                        ClientReadMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, cltState.sb.ToString()));
 
                     // Then clear the StringBuilder
                     cltState.sb.Clear();
@@ -308,9 +308,9 @@ namespace MnnSocket
                     }
                 }
 
-                /// ** Report clientDisconn event
-                if (clientDisconn != null)
-                    clientDisconn(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
+                /// ** Report ClientDisconn event
+                if (ClientDisconn != null)
+                    ClientDisconn(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
 
                 Console.WriteLine(ex.ToString());
             }
@@ -330,9 +330,9 @@ namespace MnnSocket
                            UTF8Encoding.Default.GetBytes(data).Length, 0,
                            new AsyncCallback(SendCallback), cltState);
 
-                    /// ** Report clientSendMsg event
-                    if (clientSendMsg != null)
-                        clientSendMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, data));
+                    /// ** Report ClientSendMsg event
+                    if (ClientSendMsg != null)
+                        ClientSendMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, data));
                     }
                 }
             }
@@ -377,7 +377,7 @@ namespace MnnSocket
                 // Find target from clientState
                 foreach (ClientState cltState in clientState) {
                     // Close this state & The ReadCallback will remove its ClientState
-                    if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
+                    if (cltState.remoteEP.Equals(ep)) {
                         //cltState.workSocket.Shutdown(SocketShutdown.Both);
                         cltState.workSocket.Dispose();
 
