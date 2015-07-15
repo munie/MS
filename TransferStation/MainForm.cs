@@ -362,6 +362,9 @@ namespace TransferStation
 
         private void 载入新模块ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            this.openFileDialog1.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            this.openFileDialog1.FileName = "";
+
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK) {
                 try {
                     dataCenter.LoadSpecialPlugins(this.openFileDialog1.FileName);
