@@ -126,6 +126,8 @@ namespace TransferStation
             var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.State = "未启动";
+
+                sckListener.CloseClientByListener(e.ListenEP);
             }
 
             dgvStation.Refresh();
@@ -145,7 +147,9 @@ namespace TransferStation
             item.SubItems.Add(DateTime.Now.ToString());
             item.SubItems.Add("-");
 
-            lstClient.Items.Add(item);
+            lock (lstClient.Items) {
+                lstClient.Items.Add(item);
+            }
         }
 
         private void sckListener_ClientDisconn(object sender, ClientEventArgs e)
@@ -156,9 +160,11 @@ namespace TransferStation
                 return;
             }
 
-            for (int i = 0; i < lstClient.Items.Count; i++) {
-                if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
-                    lstClient.Items.Remove(lstClient.Items[i]);
+            lock (lstClient.Items) {
+                for (int i = 0; i < lstClient.Items.Count; i++) {
+                    if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
+                        lstClient.Items.Remove(lstClient.Items[i]);
+                    }
                 }
             }
         }
@@ -316,7 +322,9 @@ namespace TransferStation
             sckListener.Stop();
             sckListener.CloseClient();
 
-            lstClient.Items.Clear();
+            lock (lstClient.Items) {
+                lstClient.Items.Clear();
+            }
 
             btnStartListen.Enabled = true;
             btnStopListen.Enabled = false;
@@ -343,20 +351,24 @@ namespace TransferStation
                 return;
             }
 
-            for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
-                string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
+            lock (lstClient.Items) {
+                for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
+                    string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
 
-                sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
-                    sendmsg);
+                    sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
+                        sendmsg);
+                }
             }
         }
 
         private void 关闭连接ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
-                string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
+            lock (lstClient.Items) {
+                for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
+                    string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
 
-                sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                    sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                }
             }
         }
 

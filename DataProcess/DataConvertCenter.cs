@@ -8,28 +8,40 @@ using MnnSocket;
 
 namespace DataProcess
 {
-    public class HandleResultEventArgs : EventArgs
+    public partial class DataConvertCenter
     {
-        public HandleResultEventArgs( System.Net.IPEndPoint ep, string ccid, string name)
+        class DataHandleState
         {
-            EP = ep;
-            CCID = ccid;
-            Name = name;
+            public string Name { get; set; }
+            public int Port { get; set; }
+            public object Instance { get; set; }
         }
 
-        public System.Net.IPEndPoint EP { get; set; }
-        public string CCID { get; set; }
-        public string Name { get; set; }
+        class ProxyObject : MarshalByRefObject
+        {
+            Assembly assembly = null;
+            public void LoadAssembly()
+            {
+                assembly = Assembly.LoadFile(@"TestDLL.dll");
+            }
+            public bool Invoke(string fullClassName, string methodName, params Object[] args)
+            {
+                if (assembly == null)
+                    return false;
+                Type tp = assembly.GetType(fullClassName);
+                if (tp == null)
+                    return false;
+                MethodInfo method = tp.GetMethod(methodName);
+                if (method == null)
+                    return false;
+                Object obj = Activator.CreateInstance(tp);
+                method.Invoke(obj, args);
+                return true;
+            }
+        }
     }
 
-    class DataHandleState
-    {
-        public string Name { get; set; }
-        public int Port { get; set; }
-        public object Instance { get; set; }
-    }
-
-    public class DataConvertCenter
+    public partial class DataConvertCenter
     {
         // Constructor
         public DataConvertCenter(AsyncSocketListener sl)
@@ -193,29 +205,6 @@ namespace DataProcess
             }
 
             return dc;
-        }
-    }
-
-    class ProxyObject : MarshalByRefObject
-    {
-        Assembly assembly = null;
-        public void LoadAssembly()
-        {
-            assembly = Assembly.LoadFile(@"TestDLL.dll");
-        }
-        public bool Invoke(string fullClassName, string methodName, params Object[] args)
-        {
-            if (assembly == null)
-                return false;
-            Type tp = assembly.GetType(fullClassName);
-            if (tp == null)
-                return false;
-            MethodInfo method = tp.GetMethod(methodName);
-            if (method == null)
-                return false;
-            Object obj = Activator.CreateInstance(tp);
-            method.Invoke(obj, args);
-            return true;
         }
     }
 

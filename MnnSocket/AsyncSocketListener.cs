@@ -9,82 +9,45 @@ using System.Threading;
 
 namespace MnnSocket
 {
-    /// <summary>
-    /// EventArgs for listener events like "listenerStarted"
-    /// </summary>
-    public class ListenerEventArgs : EventArgs
+    public partial class AsyncSocketListener
     {
-        public ListenerEventArgs(EndPoint ep)
+        /// <summary>
+        /// Definition for pursuing listener's state
+        /// </summary>
+        class ListenerState
         {
-            ListenEP = (IPEndPoint)ep;
-        }
-        public ListenerEventArgs(IPEndPoint ep)
-        {
-            ListenEP = ep;
-        }
-
-        public IPEndPoint ListenEP { get; set; }
-    }
-
-    /// <summary>
-    /// EventArgs for client events like "clientConnect"
-    /// </summary>
-    public class ClientEventArgs : EventArgs
-    {
-        public ClientEventArgs(EndPoint lep, EndPoint rep, string msg)
-        {
-            LocalEP = (IPEndPoint)lep;
-            RemoteEP = (IPEndPoint)rep;
-            Data = msg;
-        }
-        public ClientEventArgs(IPEndPoint lep, IPEndPoint rep, string msg)
-        {
-            LocalEP = lep;
-            RemoteEP = rep;
-            Data = msg;
+            // Listen IPEndPoint
+            public IPEndPoint listenEP = null;
+            // Listen Socket
+            public Socket listenSocket = null;
+            // Run the listen function
+            public Thread Thread = null;
         }
 
-        public IPEndPoint LocalEP { get; set; }
-        public IPEndPoint RemoteEP { get; set; }
-        public string Data { get; set; }
-    }
-
-    /// <summary>
-    /// Definition for pursuing listener's state
-    /// </summary>
-    class ListenerState
-    {
-        // Listen IPEndPoint
-        public IPEndPoint listenEP = null;
-        // Listen Socket
-        public Socket listenSocket = null;
-        // Run the listen function
-        public Thread Thread = null;
-    }
-
-    /// <summary>
-    /// Definition for recording connected client's state
-    /// </summary>
-    class ClientState
-    {
-        // Listen Socket's IPEndPoint
-        public IPEndPoint localEP = null;
-        // Accept result's IPEndPoint
-        public IPEndPoint remoteEP = null;
-        // Client Socket.
-        public Socket workSocket = null;
-        // Size of receive buffer.
-        public const int BufferSize = 2048;
-        // Receive buffer.
-        public byte[] buffer = new byte[BufferSize];
-        // Received data string.
-        public StringBuilder sb = new StringBuilder();
+        /// <summary>
+        /// Definition for recording connected client's state
+        /// </summary>
+        class ClientState
+        {
+            // Listen Socket's IPEndPoint
+            public IPEndPoint localEP = null;
+            // Accept result's IPEndPoint
+            public IPEndPoint remoteEP = null;
+            // Client Socket.
+            public Socket workSocket = null;
+            // Size of receive buffer.
+            public const int BufferSize = 2048;
+            // Receive buffer.
+            public byte[] buffer = new byte[BufferSize];
+            // Received data string.
+            public StringBuilder sb = new StringBuilder();
+        }
     }
     
     /// <summary>
     /// A asynchronous socket listener, which can listen at multiple IPEndPoint.
     /// </summary>
-    public class AsyncSocketListener
+    public partial class AsyncSocketListener
     {
         // Constructor
         public AsyncSocketListener() { }
@@ -233,6 +196,10 @@ namespace MnnSocket
                     cltState.remoteEP = (IPEndPoint)handler.RemoteEndPoint;
                     cltState.workSocket = handler;
 
+                    /// @@ 第一次收到数据后，才会进入ReadCallback。
+                    /// @@ 所以在没有收到数据前，线程被迫中止，将进入ReadCallback，并使EndReceive产生异常
+                    /// @@ 由于ReadCallback在出现异常时，自动关闭client Socket连接，所有本线程Accept的连接都将断开并删除
+                    /// @@ 暂时想不出解决办法
                     // Start receive message from client
                     handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
                         new AsyncCallback(ReadCallback), cltState);
@@ -369,7 +336,7 @@ namespace MnnSocket
         /// <summary>
         /// Close specified socket of Client
         /// </summary>
-        /// <param name="ep"></param>
+        /// <param name="remoteEP"></param>
         public void CloseClient(IPEndPoint ep)
         {
             lock (clientState) {
@@ -381,6 +348,24 @@ namespace MnnSocket
                         cltState.workSocket.Dispose();
 
                         break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Close all client socket accepted by specified localEP
+        /// </summary>
+        /// <param name="localEP"></param>
+        public void CloseClientByListener(IPEndPoint listenerEP)
+        {
+            lock (clientState) {
+                // Find target from clientState
+                foreach (ClientState cltState in clientState) {
+                    // Close this state & The ReadCallback will remove its ClientState
+                    if (cltState.localEP.Equals(listenerEP)) {
+                        //cltState.workSocket.Shutdown(SocketShutdown.Both);
+                        cltState.workSocket.Dispose();
                     }
                 }
             }
