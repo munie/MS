@@ -12,7 +12,7 @@ namespace DataProcess
     {
         class DataHandleState
         {
-            public string Name { get; set; }
+            public string File { get; set; }
             public int Port { get; set; }
             public object Instance { get; set; }
         }
@@ -147,8 +147,10 @@ namespace DataProcess
             FileInfo fileInfo = new FileInfo(file);
 
             // Verify file
+            if (fileInfo.Extension.ToLower().Equals(".dll") == false)
+                throw new ApplicationException("Assembly isn't a dll file.");
             foreach (var item in dataHandleTable) {
-                if (item.Name.Equals(fileInfo.Name))
+                if (item.Equals(fileInfo.Name))
                     throw new ApplicationException("Assembly is already loaded.");
             }
 
@@ -173,9 +175,9 @@ namespace DataProcess
                     lock (dataHandleTable) {
                         dataHandleTable.Add(new DataHandleState()
                         {
-                            Name = fileInfo.Name,
+                            File = file,
                             Port = dataHandleKey,
-                            Instance = dataHandleInstance
+                            Instance = dataHandleInstance,
                         });
                     }
                 }
@@ -196,12 +198,12 @@ namespace DataProcess
             Console.ReadLine(); 
         }
 
-        public Dictionary<string, int> GetHandleStatus()
+        public Dictionary<int, string> GetDataHandleStatus()
         {
-            Dictionary<string, int> dc = new Dictionary<string, int>();
+            Dictionary<int, string> dc = new Dictionary<int, string>();
 
             foreach (var item in dataHandleTable) {
-                dc.Add(item.Name, item.Port);
+                dc.Add(item.Port, item.File);
             }
 
             return dc;

@@ -55,15 +55,17 @@ namespace TransferStation
 
         private void initailizeStationSetting()
         {
-            Dictionary<string, int> handleStatus = dataCenter.GetHandleStatus();
+            Dictionary<int, string> dataHandleStatus = dataCenter.GetDataHandleStatus();
 
-            foreach (var item in handleStatus) {
+            foreach (var item in dataHandleStatus) {
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
                 stationTable.Add(new StationSetting
                 {
-                    Name = item.Key,
-                    Port = item.Value,
+                    Port = item.Key,
                     IsActive = false,
-                    State = "未启动"
+                    State = "未启动",
+                    NameChinese = fvi.ProductName,
+                    Name = fvi.InternalName
                 });
             }
 
@@ -79,9 +81,12 @@ namespace TransferStation
             dgvStation.Columns[2].HeaderText = "状态";
             dgvStation.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             dgvStation.Columns[2].ReadOnly = true;
-            dgvStation.Columns[3].HeaderText = "模块名称";
+            dgvStation.Columns[3].HeaderText = "模块名";
             dgvStation.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             dgvStation.Columns[3].ReadOnly = true;
+            dgvStation.Columns[4].HeaderText = "文件名";
+            dgvStation.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            dgvStation.Columns[4].ReadOnly = true;
         }
 
         private Dictionary<string, string> ConfigTranslate(string str)
@@ -385,20 +390,22 @@ namespace TransferStation
                     MessageBox.Show(ex.Message, "Error");
                 }
 
-                Dictionary<string, int> handleStatus = dataCenter.GetHandleStatus();
-                List<string> names = new List<string>();
+                Dictionary<int, string> dataHandleStatus = dataCenter.GetDataHandleStatus();
+                List<int> ports = new List<int>();
 
                 foreach (var item in stationTable)
-                    names.Add(item.Name);
-                var subset = from s in handleStatus where !names.Contains(s.Key) select s;
+                    ports.Add(item.Port);
+                var subset = from s in dataHandleStatus where !ports.Contains(s.Key) select s;
 
                 foreach (var item in subset) {
+                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
                     stationTable.Add(new StationSetting
                     {
-                        Name = item.Key,
-                        Port = item.Value,
+                        Port = item.Key,
                         IsActive = false,
-                        State = "未启动"
+                        State = "未启动",
+                        NameChinese = fvi.ProductName,
+                        Name = fvi.InternalName
                     });
                 }
             }

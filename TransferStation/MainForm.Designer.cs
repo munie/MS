@@ -49,19 +49,19 @@
             // txtMsg
             // 
             this.txtMsg.Font = new System.Drawing.Font("黑体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.txtMsg.Location = new System.Drawing.Point(265, 282);
+            this.txtMsg.Location = new System.Drawing.Point(281, 282);
             this.txtMsg.Multiline = true;
             this.txtMsg.Name = "txtMsg";
             this.txtMsg.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtMsg.Size = new System.Drawing.Size(579, 185);
+            this.txtMsg.Size = new System.Drawing.Size(563, 185);
             this.txtMsg.TabIndex = 4;
             // 
             // lstClient
             // 
             this.lstClient.Font = new System.Drawing.Font("黑体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lstClient.Location = new System.Drawing.Point(265, 41);
+            this.lstClient.Location = new System.Drawing.Point(281, 41);
             this.lstClient.Name = "lstClient";
-            this.lstClient.Size = new System.Drawing.Size(579, 222);
+            this.lstClient.Size = new System.Drawing.Size(563, 222);
             this.lstClient.TabIndex = 5;
             this.lstClient.UseCompatibleStateImageBehavior = false;
             this.lstClient.View = System.Windows.Forms.View.Details;
@@ -79,7 +79,7 @@
             // 
             // btnStopListen
             // 
-            this.btnStopListen.Location = new System.Drawing.Point(138, 41);
+            this.btnStopListen.Location = new System.Drawing.Point(142, 41);
             this.btnStopListen.Name = "btnStopListen";
             this.btnStopListen.Size = new System.Drawing.Size(109, 23);
             this.btnStopListen.TabIndex = 7;
@@ -129,7 +129,7 @@
             this.dgvStation.Name = "dgvStation";
             this.dgvStation.RowTemplate.Height = 23;
             this.dgvStation.ShowRowErrors = false;
-            this.dgvStation.Size = new System.Drawing.Size(235, 385);
+            this.dgvStation.Size = new System.Drawing.Size(263, 385);
             this.dgvStation.TabIndex = 9;
             // 
             // contextMenuStrip1
@@ -164,9 +164,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(856, 479);
             this.Controls.Add(this.dgvStation);
-            this.Controls.Add(this.btnStopListen);
-            this.Controls.Add(this.btnStartListen);
             this.Controls.Add(this.lstClient);
+            this.Controls.Add(this.btnStartListen);
+            this.Controls.Add(this.btnStopListen);
             this.Controls.Add(this.txtMsg);
             this.Controls.Add(this.menuStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;

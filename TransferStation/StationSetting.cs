@@ -29,6 +29,8 @@ namespace TransferStation
 
         public string State { get; set; }
 
+        public string NameChinese { get; set; }
+
         public string Name { get; set; }
 
     }
