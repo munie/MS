@@ -31,10 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Oracle.DataAccess.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
@@ -45,9 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataUtils.cs" />
-    <Compile Include="HandleResultEventArgs.cs" />
-    <Compile Include="OracleHelper.cs" />
+    <Compile Include="DataHandleSuccessEventArgs.cs" />
     <Compile Include="DataConvertCenter.cs" />
     <Compile Include="IDataHandle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

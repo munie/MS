@@ -8,8 +8,8 @@
     <ProjectGuid>{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TransferStationUtils</RootNamespace>
-    <AssemblyName>TransferStationUtils</AssemblyName>
+    <RootNamespace>MnnUtils</RootNamespace>
+    <AssemblyName>MnnUtils</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

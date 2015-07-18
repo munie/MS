@@ -5,9 +5,9 @@ using System.Text;
 
 namespace DataProcess
 {
-    public class HandleResultEventArgs : EventArgs
+    public class DataHandleSuccessEventArgs : EventArgs
     {
-        public HandleResultEventArgs(System.Net.IPEndPoint ep, string ccid, string name)
+        public DataHandleSuccessEventArgs(System.Net.IPEndPoint ep, string ccid, string name)
         {
             EP = ep;
             CCID = ccid;

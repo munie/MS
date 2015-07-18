@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnSocket", "MnnSocket\MnnS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataProcess", "DataProcess\DataProcess.csproj", "{1C09918B-E585-46EB-9161-4B19B685E997}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransferStationUtils", "TransferStationUtils\TransferStationUtils.csproj", "{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnUtils", "MnnUtils\MnnUtils.csproj", "{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

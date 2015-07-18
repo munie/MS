@@ -94,9 +94,9 @@
       <Project>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</Project>
       <Name>MnnSocket</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TransferStationUtils\TransferStationUtils.csproj">
+    <ProjectReference Include="..\MnnUtils\MnnUtils.csproj">
       <Project>{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}</Project>
-      <Name>TransferStationUtils</Name>
+      <Name>MnnUtils</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

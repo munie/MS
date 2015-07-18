@@ -60,7 +60,7 @@ namespace DataProcess
         private List<DataHandleState> dataHandleTable = new List<DataHandleState>();
         //private Dictionary<int, object> dataHandleTable = new Dictionary<int, object>();
 
-        public EventHandler<HandleResultEventArgs> HandleResult;
+        public EventHandler<DataHandleSuccessEventArgs> DataHandleSuccess;
 
         // Methods ==============================================================================
         private void LoadDataHandlePlugins()
@@ -82,14 +82,9 @@ namespace DataProcess
 
         private void sckListener_ClientReadMsg(object sender, ClientEventArgs e)
         {
-            if (e.Data.StartsWith("|") == false)
-                return;
-
             try {
-                IDictionary<string, string> dc = DataUtils.AnalyzeString(e.Data);
-
                 dynamic dataHandle = null;
-                object retValue;
+                object retValue = null;
 
                 lock (dataHandleTable) {
                     var subset = from s in dataHandleTable where s.Port.Equals(e.LocalEP.Port) select s;
@@ -97,8 +92,8 @@ namespace DataProcess
                         dataHandle = subset.First().Instance;
                         retValue = dataHandle.Handle(e.Data, sckListener.GetSocket(e.RemoteEP));
 
-                        if (HandleResult != null && retValue != null)
-                            HandleResult(this, new HandleResultEventArgs(e.RemoteEP, (string)retValue, ""));
+                        if (DataHandleSuccess != null && retValue != null)
+                            DataHandleSuccess(this, new DataHandleSuccessEventArgs(e.RemoteEP, (string)retValue, ""));
                     }
                     /*
                     if (dataHandleTable.ContainsKey(e.localEP.Port)) {

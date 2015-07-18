@@ -12,7 +12,8 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Configuration;
 using MnnSocket;
-using TransferStationUtils;
+using MnnUtils;
+using DataProcess;
 
 namespace TransferStation
 {
@@ -24,7 +25,7 @@ namespace TransferStation
             sckListener = new AsyncSocketListener();
 
             // Start data processing model
-            dataCenter = new DataProcess.DataConvertCenter(sckListener);
+            dataCenter = new DataConvertCenter(sckListener);
 
             sckListener.ListenerStarted += sckListener_ListenerStarted;
             sckListener.ListenerStopped += sckListener_ListenerStopped;
@@ -33,13 +34,13 @@ namespace TransferStation
             sckListener.ClientReadMsg += sckListener_ClientReadMsg;
             sckListener.ClientSendMsg += sckListener_ClientSendMsg;
 
-            dataCenter.HandleResult += dataCenter_HandleResult;
+            dataCenter.DataHandleSuccess += dataCenter_DataHandleSuccess;
 
             InitializeComponent();
         }
 
         private AsyncSocketListener sckListener = null;
-        private DataProcess.DataConvertCenter dataCenter = null;
+        private DataConvertCenter dataCenter = null;
         private BindingList<StationSetting> stationTable = new BindingList<StationSetting>();
 
         // Methods ============================================================================
@@ -205,10 +206,10 @@ namespace TransferStation
             LogRecord.WriteInfoLog(logFormat);
         }
 
-        private void dataCenter_HandleResult(object sender, DataProcess.HandleResultEventArgs e)
+        private void dataCenter_DataHandleSuccess(object sender, DataHandleSuccessEventArgs e)
         {
             if (this.InvokeRequired) {
-                this.Invoke(new EventHandler<DataProcess.HandleResultEventArgs>(dataCenter_HandleResult),
+                this.Invoke(new EventHandler<DataHandleSuccessEventArgs>(dataCenter_DataHandleSuccess),
                     new object[] { sender, e });
                 return;
             }
@@ -245,10 +246,12 @@ namespace TransferStation
                     sckListener.Stop(ep);
             }
             catch (ApplicationException ex) {
-                Console.WriteLine(ex.ToString());
+                LogRecord.writeLog(ex);
+                //Console.WriteLine(ex.ToString());
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                LogRecord.writeLog(ex);
+                //Console.WriteLine(ex.ToString());
             }
         }
 
@@ -307,6 +310,7 @@ namespace TransferStation
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "启动监听失败");
+                LogRecord.writeLog(ex);
             }
         }
 
@@ -388,6 +392,7 @@ namespace TransferStation
                 }
                 catch (ApplicationException ex) {
                     MessageBox.Show(ex.Message, "Error");
+                    LogRecord.writeLog(ex);
                 }
 
                 Dictionary<int, string> dataHandleStatus = dataCenter.GetDataHandleStatus();
