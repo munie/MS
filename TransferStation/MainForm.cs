@@ -240,7 +240,11 @@ namespace TransferStation
             }
 
             try {
-                if (ss.IsActive)
+                if (ss.IsPermitListen && ss.ListenState.Equals("已启动") ||
+                    !ss.IsPermitListen && ss.ListenState.Equals("未启动"))
+                    return;
+
+                if (ss.IsPermitListen)
                     sckListener.Start(ep);
                 else
                     sckListener.Stop(ep);

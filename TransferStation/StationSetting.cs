@@ -12,22 +12,22 @@ namespace TransferStation
 
         public int Port { get; set; }
 
-        private bool isActive;
-        public bool IsActive
+        private bool isPermitListen;
+        public bool IsPermitListen
         {
             get
             {
-                return isActive;
+                return isPermitListen;
             }
             set
             {
-                isActive = value;
+                isPermitListen = value;
                 if (PropertyChanged != null)
                     PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IsActive"));
             }
         }
 
-        public string State { get; set; }
+        public string ListenState { get; set; }
 
         public string NameChinese { get; set; }
 
