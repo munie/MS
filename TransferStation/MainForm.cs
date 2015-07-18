@@ -63,8 +63,8 @@ namespace TransferStation
                 stationTable.Add(new StationSetting
                 {
                     Port = item.Key,
-                    IsActive = false,
-                    State = "未启动",
+                    IsPermitListen = false,
+                    ListenState = "未启动",
                     NameChinese = fvi.ProductName,
                     Name = fvi.InternalName
                 });
@@ -115,7 +115,7 @@ namespace TransferStation
 
             var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
-                item.State = "已启动";
+                item.ListenState = "已启动";
             }
 
             dgvStation.Refresh();
@@ -131,7 +131,7 @@ namespace TransferStation
 
             var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
-                item.State = "未启动";
+                item.ListenState = "未启动";
 
                 sckListener.CloseClientByListener(e.ListenEP);
             }
@@ -298,7 +298,7 @@ namespace TransferStation
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
                     foreach (StationSetting item in stationTable) {
-                        if (item.IsActive)
+                        if (item.IsPermitListen)
                             ep.Add(new IPEndPoint(ip, item.Port));
                     }
                     break;
@@ -411,8 +411,8 @@ namespace TransferStation
                     stationTable.Add(new StationSetting
                     {
                         Port = item.Key,
-                        IsActive = false,
-                        State = "未启动",
+                        IsPermitListen = false,
+                        ListenState = "未启动",
                         NameChinese = fvi.ProductName,
                         Name = fvi.InternalName
                     });
