@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DataProcess
+namespace MnnPlugin
 {
     public interface IDataHandle
     {
-        int GetIdentify();
+        int GetIdentity();
 
-        string Handle(string msg, System.Net.Sockets.Socket socket);
+        string Handle(string msg);
     }
 }

@@ -11,9 +11,10 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Diagnostics;
 using System.Configuration;
+using System.IO;
 using MnnSocket;
 using MnnUtils;
-using DataProcess;
+using MnnPlugin;
 
 namespace TransferStation
 {
@@ -21,27 +22,12 @@ namespace TransferStation
     {
         public MainForm()
         {
-            // Create socket listener & Start user interface model
-            sckListener = new AsyncSocketListener();
-
-            // Start data processing model
-            dataCenter = new DataConvertCenter(sckListener);
-
-            sckListener.ListenerStarted += sckListener_ListenerStarted;
-            sckListener.ListenerStopped += sckListener_ListenerStopped;
-            sckListener.ClientConnect += sckListener_ClientConnect;
-            sckListener.ClientDisconn += sckListener_ClientDisconn;
-            sckListener.ClientReadMsg += sckListener_ClientReadMsg;
-            sckListener.ClientSendMsg += sckListener_ClientSendMsg;
-
-            dataCenter.DataHandleSuccess += dataCenter_DataHandleSuccess;
-
             InitializeComponent();
         }
 
         private AsyncSocketListener sckListener = null;
-        private DataConvertCenter dataCenter = null;
-        private BindingList<StationSetting> stationTable = new BindingList<StationSetting>();
+        private DataHandlerManager dataHandleManager = null;
+        private BindingList<StationState> stationTable = new BindingList<StationState>();
 
         // Methods ============================================================================
 
@@ -54,13 +40,40 @@ namespace TransferStation
                 fvi.ProductName, fvi.ProductMajorPart, fvi.ProductMinorPart, fvi.CompanyName);   
         }
 
-        private void initailizeStationSetting()
+        private void initailizeAsyncSocketListener()
         {
-            Dictionary<int, string> dataHandleStatus = dataCenter.GetDataHandleStatus();
+            // Create socket listener & Start user interface model
+            sckListener = new AsyncSocketListener();
+
+            sckListener.ListenerStarted += sckListener_ListenerStarted;
+            sckListener.ListenerStopped += sckListener_ListenerStopped;
+            sckListener.ClientConnect += sckListener_ClientConnect;
+            sckListener.ClientDisconn += sckListener_ClientDisconn;
+            sckListener.ClientReadMsg += sckListener_ClientReadMsg;
+            sckListener.ClientSendMsg += sckListener_ClientSendMsg;
+        }
+
+        private void initailizeDataHandleManager()
+        {
+            // Start data processing model
+            dataHandleManager = new DataHandlerManager();
+
+            // Get all files in directory "DataHandles"
+            string appPath = System.AppDomain.CurrentDomain.BaseDirectory;
+            string[] files = Directory.GetFiles(appPath + @"\DataHandles");
+
+            // Load dll files one by one
+            foreach (string file in files)
+                dataHandleManager.LoadPlugin(file);
+        }
+
+        private void initailizeStationState()
+        {
+            Dictionary<int, string> dataHandleStatus = dataHandleManager.GetDataHandleStatus();
 
             foreach (var item in dataHandleStatus) {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
-                stationTable.Add(new StationSetting
+                stationTable.Add(new StationState
                 {
                     Port = item.Key,
                     IsPermitListen = false,
@@ -70,7 +83,7 @@ namespace TransferStation
                 });
             }
 
-            StationSetting.PropertyChanged += stationTable_PropertyChanged;
+            StationState.PropertyChanged += stationTable_PropertyChanged;
 
             dgvStation.DataSource = stationTable;
             //dgvStation.DataBindings.Add("DataSource", this, "stationTable", false, DataSourceUpdateMode.OnPropertyChanged);
@@ -88,19 +101,6 @@ namespace TransferStation
             dgvStation.Columns[4].HeaderText = "文件名";
             dgvStation.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             dgvStation.Columns[4].ReadOnly = true;
-        }
-
-        private Dictionary<string, string> ConfigTranslate(string str)
-        {
-            Dictionary<string, string> dct = new Dictionary<string, string>();
-
-            string[] strSplit = str.Split(";".ToArray());
-            foreach (string s in strSplit) {
-                string[] sSplit = s.Split("=".ToArray());
-                dct.Add(sSplit[0], sSplit[1]);
-            }
-
-            return dct;
         }
 
         // Events for AsyncSocketListener =====================================================
@@ -132,9 +132,9 @@ namespace TransferStation
             var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.ListenState = "未启动";
-
-                sckListener.CloseClientByListener(e.ListenEP);
             }
+
+            sckListener.CloseClientByListener(e.ListenEP);
 
             dgvStation.Refresh();
         }
@@ -153,9 +153,7 @@ namespace TransferStation
             item.SubItems.Add(DateTime.Now.ToString());
             item.SubItems.Add("-");
 
-            lock (lstClient.Items) {
-                lstClient.Items.Add(item);
-            }
+            lstClient.Items.Add(item);
         }
 
         private void sckListener_ClientDisconn(object sender, ClientEventArgs e)
@@ -166,11 +164,9 @@ namespace TransferStation
                 return;
             }
 
-            lock (lstClient.Items) {
-                for (int i = 0; i < lstClient.Items.Count; i++) {
-                    if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
-                        lstClient.Items.Remove(lstClient.Items[i]);
-                    }
+            for (int i = 0; i < lstClient.Items.Count; i++) {
+                if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
+                    lstClient.Items.Remove(lstClient.Items[i]);
                 }
             }
         }
@@ -190,6 +186,37 @@ namespace TransferStation
 
             txtMsg.AppendText(logFormat + "\r\n");
             LogRecord.WriteInfoLog(logFormat);
+
+
+            /// 调用数据处理插件 ======================================================
+            object retValue = dataHandleManager.Invoke(e.LocalEP.Port, "IDataHandle", "Handle", new object[] { e.Data });
+            if (retValue != null)
+                sckListener.Send(e.RemoteEP, (string)retValue);
+             
+            /// @@ 没有办法的办法，必须删改
+            string[] str = e.Data.Split("|".ToArray());
+            foreach (var item in str) {
+            if (item.StartsWith("CCID=")) {
+                    // 更新CCID
+                    for (int i = 0; i < lstClient.Items.Count; i++) {
+                        if (lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
+                            lstClient.Items[i].SubItems[3].Text = item.Substring(5);
+                            break;
+                        }
+                    }
+
+                    // 基站不会自动断开前一次连接...相同CCID的连上来后，断开前面的连接
+                    for (int i = 0; i < lstClient.Items.Count; i++) {
+                        if (lstClient.Items[i].SubItems[3].Text.Equals(item.Substring(5))
+                            && !lstClient.Items[i].SubItems[0].Text.Equals(e.RemoteEP.ToString())) {
+                            string[] s = lstClient.Items[i].SubItems[0].Text.Split(":".ToArray());
+                            sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                            break;
+                        }
+                    }
+                }
+            }
+            /// @@ 没有办法的办法，必须删改
         }
 
         private void sckListener_ClientSendMsg(object sender, ClientEventArgs e)
@@ -206,29 +233,12 @@ namespace TransferStation
             LogRecord.WriteInfoLog(logFormat);
         }
 
-        private void dataCenter_DataHandleSuccess(object sender, DataHandleSuccessEventArgs e)
-        {
-            if (this.InvokeRequired) {
-                this.Invoke(new EventHandler<DataHandleSuccessEventArgs>(dataCenter_DataHandleSuccess),
-                    new object[] { sender, e });
-                return;
-            }
-
-            lock (lstClient) {
-                for (int i = 0; i < lstClient.Items.Count; i++) {
-                    if (lstClient.Items[i].SubItems[0].Text.Equals(e.EP.ToString()))
-                        lstClient.Items[i].SubItems[3].Text = e.CCID;
-                    
-                }
-            }
-        }
-
         private void stationTable_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (btnStartListen.Enabled == true)
                 return;
 
-            StationSetting ss = sender as StationSetting;
+            StationState ss = sender as StationState;
 
             List<IPEndPoint> ep = new List<IPEndPoint>();
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
@@ -251,11 +261,9 @@ namespace TransferStation
             }
             catch (ApplicationException ex) {
                 LogRecord.writeLog(ex);
-                //Console.WriteLine(ex.ToString());
             }
             catch (Exception ex) {
                 LogRecord.writeLog(ex);
-                //Console.WriteLine(ex.ToString());
             }
         }
 
@@ -264,7 +272,9 @@ namespace TransferStation
         private void MainForm_Load(object sender, EventArgs e)
         {
             initailizeWindowName();
-            initailizeStationSetting();
+            initailizeAsyncSocketListener();
+            initailizeDataHandleManager();
+            initailizeStationState();
 
             // Initialize list of client
             lstClient.Columns.Add("基站IP", 155, HorizontalAlignment.Center);
@@ -277,7 +287,7 @@ namespace TransferStation
 
         private void MainFrom_FormClosing(object sender, FormClosingEventArgs e)
         {
-
+            /*
             string psward = Microsoft.VisualBasic.Interaction.InputBox(
                 "请输入密码", "密码框", "",
                 this.Left + 200, this.Top + 150);
@@ -289,6 +299,7 @@ namespace TransferStation
             else {
                 e.Cancel = false;
             }
+             * */
         }
 
         private void btnStartListen_Click(object sender, EventArgs e)
@@ -297,7 +308,7 @@ namespace TransferStation
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    foreach (StationSetting item in stationTable) {
+                    foreach (StationState item in stationTable) {
                         if (item.IsPermitListen)
                             ep.Add(new IPEndPoint(ip, item.Port));
                     }
@@ -335,9 +346,7 @@ namespace TransferStation
             sckListener.Stop();
             sckListener.CloseClient();
 
-            lock (lstClient.Items) {
-                lstClient.Items.Clear();
-            }
+            lstClient.Items.Clear();
 
             btnStartListen.Enabled = true;
             btnStopListen.Enabled = false;
@@ -357,6 +366,25 @@ namespace TransferStation
             }
         }
 
+        private void dgvStation_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right) {
+                if (e.RowIndex >= 0) {
+                    //若行已是选中状态就不再进行设置
+                    if (dgvStation.Rows[e.RowIndex].Selected == false) {
+                        dgvStation.ClearSelection();
+                        dgvStation.Rows[e.RowIndex].Selected = true;
+                    }
+                    //只选中一行时设置活动单元格
+                    if (dgvStation.SelectedRows.Count == 1) {
+                        dgvStation.CurrentCell = dgvStation.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                    }
+                    //弹出操作菜单
+                    contextMenuStrip2.Show(MousePosition.X, MousePosition.Y);
+                }
+            }
+        }
+
         private void 发送命令ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string sendmsg = Microsoft.VisualBasic.Interaction.InputBox("请输入要发送的命令", "手动命令发送框", "!A1?", 200, 200);
@@ -364,42 +392,38 @@ namespace TransferStation
                 return;
             }
 
-            lock (lstClient.Items) {
-                for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
-                    string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
+            for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
+                string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
 
-                    sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
-                        sendmsg);
-                }
+                sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
+                    sendmsg);
             }
         }
 
         private void 关闭连接ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            lock (lstClient.Items) {
-                for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
-                    string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
+            for (int i = 0; i < lstClient.SelectedItems.Count; i++) {
+                string[] s = lstClient.SelectedItems[i].SubItems[0].Text.Split(":".ToArray());
 
-                    sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
-                }
+                sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
             }
         }
 
-        private void 载入新模块ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 载入模块ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.openFileDialog1.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             this.openFileDialog1.FileName = "";
 
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK) {
                 try {
-                    dataCenter.LoadSpecialPlugins(this.openFileDialog1.FileName);
+                    dataHandleManager.LoadPlugin(this.openFileDialog1.FileName);
                 }
                 catch (ApplicationException ex) {
                     MessageBox.Show(ex.Message, "Error");
                     LogRecord.writeLog(ex);
                 }
 
-                Dictionary<int, string> dataHandleStatus = dataCenter.GetDataHandleStatus();
+                Dictionary<int, string> dataHandleStatus = dataHandleManager.GetDataHandleStatus();
                 List<int> ports = new List<int>();
 
                 foreach (var item in stationTable)
@@ -408,7 +432,7 @@ namespace TransferStation
 
                 foreach (var item in subset) {
                     FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
-                    stationTable.Add(new StationSetting
+                    stationTable.Add(new StationState
                     {
                         Port = item.Key,
                         IsPermitListen = false,
@@ -417,6 +441,27 @@ namespace TransferStation
                         Name = fvi.InternalName
                     });
                 }
+            }
+        }
+
+        private void 卸载模块ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < dgvStation.SelectedRows.Count; i++) {
+                int port = Convert.ToInt32(dgvStation.SelectedRows[i].Cells[0].Value.ToString());
+                dataHandleManager.UnLoadPlugin(port);
+
+                List<IPEndPoint> ep = new List<IPEndPoint>();
+                IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
+                foreach (IPAddress ip in ipAddr) {
+                    if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
+                        ep.Add(new IPEndPoint(ip, port));
+                        break;
+                    }
+                }
+                if (dgvStation.SelectedRows[i].Cells[2].Value.ToString().Equals("已启动"))
+                    sckListener.Stop(ep);
+
+                dgvStation.Rows.Remove(dgvStation.SelectedRows[i]);
             }
         }
 

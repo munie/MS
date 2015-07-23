@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的常规信息通过以下
 // 特性集控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("DataProcess")]
+[assembly: AssemblyTitle("MnnPlugin")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("微软中国")]
-[assembly: AssemblyProduct("DataProcess")]
+[assembly: AssemblyProduct("MnnPlugin")]
 [assembly: AssemblyCopyright("Copyright © 微软中国 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("e4a70f99-82d8-4651-9fc3-b0c420ba21a6")]
+[assembly: Guid("d9ecc85d-3ba4-4f1a-b554-c626546df215")]
 
 // 程序集的版本信息由下面四个值组成:
 //

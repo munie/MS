@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace TransferStation
 {
-    public class StationSetting
+    public class StationState
     {
         public static event PropertyChangedEventHandler PropertyChanged;
 
