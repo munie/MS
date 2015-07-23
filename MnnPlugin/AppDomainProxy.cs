@@ -9,7 +9,7 @@ namespace MnnPlugin
     class AppDomainProxy : MarshalByRefObject
     {
         private Assembly asm = null;
-        private Dictionary<string, object> instances = new Dictionary<string, object>();
+        private Dictionary<string, object> interfaceTable = new Dictionary<string, object>();
 
         // Methods =============================================================================
         public override object InitializeLifetimeService()
@@ -26,7 +26,7 @@ namespace MnnPlugin
 
         public object Invoke(string interfaceName, string methodName, params object[] args)
         {
-            var subset = from s in instances where s.Key.Equals(interfaceName) select s;
+            var subset = from s in interfaceTable where s.Key.Equals(interfaceName) select s;
 
             // 如果实例字典中还没有指定接口对应的实例，新建之
             if (subset.Count() == 0) {
@@ -39,11 +39,11 @@ namespace MnnPlugin
                     throw new ApplicationException("Specified Interface is't in this Asembly.");
 
                 object obj = asm.CreateInstance(types.First().FullName);
-                instances.Add(interfaceName, obj);
+                interfaceTable.Add(interfaceName, obj);
             }
 
             // 此时subset.First()必存在
-            subset = from s in instances where s.Key.Equals(interfaceName) select s;
+            subset = from s in interfaceTable where s.Key.Equals(interfaceName) select s;
 
             /// ** 异常：如果方法名错误
             MethodInfo methodInfo = subset.First().Value.GetType().GetMethod(methodName);

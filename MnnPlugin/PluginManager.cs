@@ -38,7 +38,13 @@ namespace MnnPlugin
                 Assembly.GetExecutingAssembly().CodeBase,
                 typeof(AppDomainProxy).FullName);
 
-            proxy.LoadAssembly(filePath);
+            try {
+                proxy.LoadAssembly(filePath);
+            }
+            catch (Exception) {
+                AppDomain.Unload(ad);
+                throw;
+            }
 
             lock (pluginTable) {
                 pluginTable.Add(new PluginState()

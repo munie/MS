@@ -65,8 +65,26 @@ namespace TransferStation
                 string[] files = Directory.GetFiles(pluginPath);
 
                 // Load dll files one by one
-                foreach (string file in files)
-                    pluginManager.LoadPlugin(file);
+                foreach (string file in files) {
+                    string assemblyName = null;
+                    try {
+                        assemblyName = pluginManager.LoadPlugin(file);
+                    }
+                    catch (Exception ex) {
+                        LogRecord.writeLog(ex);
+                        continue;
+                    }
+
+                    // Verify modules
+                    try {
+                        pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null);
+                    }
+                    catch (Exception ex) {
+                        pluginManager.UnLoadPlugin(assemblyName);
+                        LogRecord.writeLog(ex);
+                        continue;
+                    }
+                }
             }
         }
 
@@ -78,6 +96,7 @@ namespace TransferStation
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
                 dataHandleTable.Add(new DataHandleState
                 {
+                    // 加载模块时已经验证过了
                     Port = (int)pluginManager.Invoke(item.Key, "IDataHandle", "GetIdentity", null),
                     IsPermitListen = false,
                     ListenState = "未启动",
@@ -191,12 +210,6 @@ namespace TransferStation
             LogRecord.WriteInfoLog(logFormat);
 
 
-            /// 调用数据处理插件 ======================================================
-            var subset = from s in dataHandleTable where s.Port == e.LocalEP.Port select s;
-            object retValue = pluginManager.Invoke(subset.First().FileName, "IDataHandle", "Handle", new object[] { e.Data });
-            if (retValue != null)
-                sckListener.Send(e.RemoteEP, (string)retValue);
-             
             /// @@ 没有办法的办法，必须删改
             string[] str = e.Data.Split("|".ToArray());
             foreach (var item in str) {
@@ -221,6 +234,18 @@ namespace TransferStation
                 }
             }
             /// @@ 没有办法的办法，必须删改
+
+
+            /// 调用数据处理插件 ======================================================
+            try {
+                var subset = from s in dataHandleTable where s.Port == e.LocalEP.Port select s;
+                object retValue = pluginManager.Invoke(subset.First().FileName, "IDataHandle", "Handle", new object[] { e.Data });
+                if (retValue != null)
+                    sckListener.Send(e.RemoteEP, (string)retValue);
+            }
+            catch (Exception ex) {
+                LogRecord.writeLog(ex);
+            }
         }
 
         private void sckListener_ClientSendMsg(object sender, ClientEventArgs e)
@@ -419,24 +444,37 @@ namespace TransferStation
             this.openFileDialog1.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             this.openFileDialog1.FileName = "";
 
+            string assemblyName = null;
+            int port = 0;
+
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK) {
                 try {
-                    string assemblyName = pluginManager.LoadPlugin(this.openFileDialog1.FileName);
-
-                    // 加载模块已经成功
-                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(this.openFileDialog1.FileName);
-                    dataHandleTable.Add(new DataHandleState
-                    {
-                        Port = (int)pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null),
-                        IsPermitListen = false,
-                        ListenState = "未启动",
-                        ChineseName = fvi.ProductName,
-                        FileName = assemblyName
-                    });
+                    assemblyName = pluginManager.LoadPlugin(this.openFileDialog1.FileName);
                 }
                 catch (ApplicationException ex) {
                     MessageBox.Show(ex.Message, "Error");
+                    return;
                 }
+
+                try  {	        
+		            port = (int)pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null);
+	            }
+	            catch (Exception ex) {
+		            pluginManager.UnLoadPlugin(assemblyName);
+                    MessageBox.Show(ex.Message, "Error");
+                    return;
+	            }
+
+                // 加载模块已经成功
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(this.openFileDialog1.FileName);
+                dataHandleTable.Add(new DataHandleState
+                {
+                    Port = port,
+                    IsPermitListen = false,
+                    ListenState = "未启动",
+                    ChineseName = fvi.ProductName,
+                    FileName = assemblyName
+                });
             }
         }
 
