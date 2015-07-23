@@ -8,17 +8,19 @@ namespace MnnUtils
 {
     public class LogRecord
     {
+        public static string baseDirectory = baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
         /// <summary>
         /// 写文件(错误日志)
         /// </summary>
         /// <param name="str"></param>
         public static void writeLog(string str)
         {
-            if (!Directory.Exists("ErrLog")) {
-                Directory.CreateDirectory("ErrLog");
+            if (!Directory.Exists(baseDirectory + @"\ErrLog")) {
+                Directory.CreateDirectory(baseDirectory + @"\ErrLog");
             }
 
-            using (StreamWriter sw = new StreamWriter(@"ErrLog\ErrLog" + DateTime.Now.ToString("_yyyy-MM-dd") + ".txt", true)) {
+            using (StreamWriter sw = new StreamWriter(baseDirectory + @"\ErrLog\ErrLog" + DateTime.Now.ToString("_yyyy-MM-dd") + ".txt", true)) {
                 sw.WriteLine(str);
                 sw.WriteLine("---------------------------------------------------------");
                 sw.Close();
@@ -27,11 +29,11 @@ namespace MnnUtils
 
         public static void WriteInfoLog(string str)
         {
-            if (!Directory.Exists("Log")) {
-                Directory.CreateDirectory("Log");
+            if (!Directory.Exists(baseDirectory + @"\Log")) {
+                Directory.CreateDirectory(baseDirectory + @"\Log");
             }
 
-            using (StreamWriter sw = new StreamWriter(@"Log\Log" + DateTime.Now.ToString("_yyyy-MM-dd") + ".txt", true)) {
+            using (StreamWriter sw = new StreamWriter(baseDirectory + @"\Log\Log" + DateTime.Now.ToString("_yyyy-MM-dd") + ".txt", true)) {
                 sw.WriteLine(str);
                 sw.WriteLine("---------------------------------------------------------");
                 sw.Close();
