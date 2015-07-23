@@ -254,7 +254,8 @@ namespace TransferStation
             }
 
             try {
-                if (ss.IsPermitListen && ss.ListenState.Equals("已启动") ||
+                if (ss.ListenState == null ||
+                    ss.IsPermitListen && ss.ListenState.Equals("已启动") ||
                     !ss.IsPermitListen && ss.ListenState.Equals("未启动"))
                     return;
 
@@ -424,8 +425,6 @@ namespace TransferStation
 
                     // 加载模块已经成功
                     FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(this.openFileDialog1.FileName);
-                    // 新建DataHandleState对象时，不处理静态事件
-                    DataHandleState.PropertyChanged -= dataHandleTable_PropertyChanged;
                     dataHandleTable.Add(new DataHandleState
                     {
                         Port = (int)pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null),
@@ -434,8 +433,6 @@ namespace TransferStation
                         ChineseName = fvi.ProductName,
                         FileName = assemblyName
                     });
-                    // 恢复静态事件处理
-                    DataHandleState.PropertyChanged += dataHandleTable_PropertyChanged;
                 }
                 catch (ApplicationException ex) {
                     MessageBox.Show(ex.Message, "Error");
