@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace TransferStation
 {
-    public class StationState
+    public class DataHandleState
     {
         public static event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,9 +29,9 @@ namespace TransferStation
 
         public string ListenState { get; set; }
 
-        public string NameChinese { get; set; }
+        public string ChineseName { get; set; }
 
-        public string Name { get; set; }
+        public string FileName { get; set; }
 
     }
 }

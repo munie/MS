@@ -41,8 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppDomainProxy.cs" />
-    <Compile Include="DataHandlerManager.cs" />
-    <Compile Include="IDataHandle.cs" />
+    <Compile Include="PluginManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

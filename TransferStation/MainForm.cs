@@ -26,8 +26,8 @@ namespace TransferStation
         }
 
         private AsyncSocketListener sckListener = null;
-        private DataHandlerManager dataHandleManager = null;
-        private BindingList<StationState> stationTable = new BindingList<StationState>();
+        private PluginManager pluginManager = null;
+        private BindingList<DataHandleState> dataHandleTable = new BindingList<DataHandleState>();
 
         // Methods ============================================================================
 
@@ -53,40 +53,43 @@ namespace TransferStation
             sckListener.ClientSendMsg += sckListener_ClientSendMsg;
         }
 
-        private void initailizeDataHandleManager()
+        private void initailizePluginManager()
         {
             // Start data processing model
-            dataHandleManager = new DataHandlerManager();
+            pluginManager = new PluginManager();
 
             // Get all files in directory "DataHandles"
-            string appPath = System.AppDomain.CurrentDomain.BaseDirectory;
-            string[] files = Directory.GetFiles(appPath + @"\DataHandles");
+            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
 
-            // Load dll files one by one
-            foreach (string file in files)
-                dataHandleManager.LoadPlugin(file);
+            if (Directory.Exists(pluginPath)) {
+                string[] files = Directory.GetFiles(pluginPath);
+
+                // Load dll files one by one
+                foreach (string file in files)
+                    pluginManager.LoadPlugin(file);
+            }
         }
 
-        private void initailizeStationState()
+        private void initailizeDataHandleState()
         {
-            Dictionary<int, string> dataHandleStatus = dataHandleManager.GetDataHandleStatus();
+            Dictionary<string, string> pluginStatus = pluginManager.GetPluginStatus();
 
-            foreach (var item in dataHandleStatus) {
+            foreach (var item in pluginStatus) {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
-                stationTable.Add(new StationState
+                dataHandleTable.Add(new DataHandleState
                 {
-                    Port = item.Key,
+                    Port = (int)pluginManager.Invoke(item.Key, "IDataHandle", "GetIdentity", null),
                     IsPermitListen = false,
                     ListenState = "未启动",
-                    NameChinese = fvi.ProductName,
-                    Name = fvi.InternalName
+                    ChineseName = fvi.ProductName,
+                    FileName = item.Key
                 });
             }
 
-            StationState.PropertyChanged += stationTable_PropertyChanged;
+            DataHandleState.PropertyChanged += dataHandleTable_PropertyChanged;
 
-            dgvStation.DataSource = stationTable;
-            //dgvStation.DataBindings.Add("DataSource", this, "stationTable", false, DataSourceUpdateMode.OnPropertyChanged);
+            dgvStation.DataSource = dataHandleTable;
+            //dgvStation.DataBindings.Add("DataSource", this, "dataHandleTable", false, DataSourceUpdateMode.OnPropertyChanged);
             dgvStation.Columns[0].HeaderText = "端口";
             dgvStation.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             dgvStation.Columns[0].ReadOnly = true;
@@ -113,7 +116,7 @@ namespace TransferStation
                 return;
             }
 
-            var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
+            var subset = from s in dataHandleTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.ListenState = "已启动";
             }
@@ -129,7 +132,7 @@ namespace TransferStation
                 return;
             }
 
-            var subset = from s in stationTable where s.Port.Equals(e.ListenEP.Port) select s;
+            var subset = from s in dataHandleTable where s.Port.Equals(e.ListenEP.Port) select s;
             foreach (var item in subset) {
                 item.ListenState = "未启动";
             }
@@ -189,7 +192,8 @@ namespace TransferStation
 
 
             /// 调用数据处理插件 ======================================================
-            object retValue = dataHandleManager.Invoke(e.LocalEP.Port, "IDataHandle", "Handle", new object[] { e.Data });
+            var subset = from s in dataHandleTable where s.Port == e.LocalEP.Port select s;
+            object retValue = pluginManager.Invoke(subset.First().FileName, "IDataHandle", "Handle", new object[] { e.Data });
             if (retValue != null)
                 sckListener.Send(e.RemoteEP, (string)retValue);
              
@@ -233,12 +237,12 @@ namespace TransferStation
             LogRecord.WriteInfoLog(logFormat);
         }
 
-        private void stationTable_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void dataHandleTable_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (btnStartListen.Enabled == true)
                 return;
 
-            StationState ss = sender as StationState;
+            DataHandleState ss = sender as DataHandleState;
 
             List<IPEndPoint> ep = new List<IPEndPoint>();
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
@@ -273,8 +277,8 @@ namespace TransferStation
         {
             initailizeWindowName();
             initailizeAsyncSocketListener();
-            initailizeDataHandleManager();
-            initailizeStationState();
+            initailizePluginManager();
+            initailizeDataHandleState();
 
             // Initialize list of client
             lstClient.Columns.Add("基站IP", 155, HorizontalAlignment.Center);
@@ -308,7 +312,7 @@ namespace TransferStation
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    foreach (StationState item in stationTable) {
+                    foreach (DataHandleState item in dataHandleTable) {
                         if (item.IsPermitListen)
                             ep.Add(new IPEndPoint(ip, item.Port));
                     }
@@ -416,30 +420,25 @@ namespace TransferStation
 
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK) {
                 try {
-                    dataHandleManager.LoadPlugin(this.openFileDialog1.FileName);
+                    string assemblyName = pluginManager.LoadPlugin(this.openFileDialog1.FileName);
+
+                    // 加载模块已经成功
+                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(this.openFileDialog1.FileName);
+                    // 新建DataHandleState对象时，不处理静态事件
+                    DataHandleState.PropertyChanged -= dataHandleTable_PropertyChanged;
+                    dataHandleTable.Add(new DataHandleState
+                    {
+                        Port = (int)pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null),
+                        IsPermitListen = false,
+                        ListenState = "未启动",
+                        ChineseName = fvi.ProductName,
+                        FileName = assemblyName
+                    });
+                    // 恢复静态事件处理
+                    DataHandleState.PropertyChanged += dataHandleTable_PropertyChanged;
                 }
                 catch (ApplicationException ex) {
                     MessageBox.Show(ex.Message, "Error");
-                    LogRecord.writeLog(ex);
-                }
-
-                Dictionary<int, string> dataHandleStatus = dataHandleManager.GetDataHandleStatus();
-                List<int> ports = new List<int>();
-
-                foreach (var item in stationTable)
-                    ports.Add(item.Port);
-                var subset = from s in dataHandleStatus where !ports.Contains(s.Key) select s;
-
-                foreach (var item in subset) {
-                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item.Value);
-                    stationTable.Add(new StationState
-                    {
-                        Port = item.Key,
-                        IsPermitListen = false,
-                        ListenState = "未启动",
-                        NameChinese = fvi.ProductName,
-                        Name = fvi.InternalName
-                    });
                 }
             }
         }
@@ -448,7 +447,7 @@ namespace TransferStation
         {
             for (int i = 0; i < dgvStation.SelectedRows.Count; i++) {
                 int port = Convert.ToInt32(dgvStation.SelectedRows[i].Cells[0].Value.ToString());
-                dataHandleManager.UnLoadPlugin(port);
+                pluginManager.UnLoadPlugin(dgvStation.SelectedRows[i].Cells[4].Value.ToString());
 
                 List<IPEndPoint> ep = new List<IPEndPoint>();
                 IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
