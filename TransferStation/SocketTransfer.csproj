@@ -8,8 +8,8 @@
     <ProjectGuid>{0B1F0B25-5853-44BB-ABDA-D40FAA1D62D3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TransferStation</RootNamespace>
-    <AssemblyName>TransferStation</AssemblyName>
+    <RootNamespace>SocketTransfer</RootNamespace>
+    <AssemblyName>SocketTransfer</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IDataHandle.cs" />
+    <Compile Include="LogRecord.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -70,6 +71,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="App.config">
       <SubType>Designer</SubType>
@@ -92,10 +94,6 @@
     <ProjectReference Include="..\MnnSocket\MnnSocket.csproj">
       <Project>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</Project>
       <Name>MnnSocket</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MnnUtils\MnnUtils.csproj">
-      <Project>{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}</Project>
-      <Name>MnnUtils</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

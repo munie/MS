@@ -13,10 +13,9 @@ using System.Diagnostics;
 using System.Configuration;
 using System.IO;
 using MnnSocket;
-using MnnUtils;
 using MnnPlugin;
 
-namespace TransferStation
+namespace SocketTransfer
 {
     public partial class MainForm : Form
     {

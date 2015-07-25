@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransferStation", "TransferStation\TransferStation.csproj", "{0B1F0B25-5853-44BB-ABDA-D40FAA1D62D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketTransfer", "TransferStation\SocketTransfer.csproj", "{0B1F0B25-5853-44BB-ABDA-D40FAA1D62D3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnSocket", "MnnSocket\MnnSocket.csproj", "{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnUtils", "MnnUtils\MnnUtils.csproj", "{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnPlugin", "MnnPlugin\MnnPlugin.csproj", "{0AFB7630-65E6-41EF-AC65-8A7814C6D82F}"
 EndProject
@@ -39,16 +37,6 @@ Global
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}.Release|x86.ActiveCfg = Release|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{EF9BDB07-3FFC-4F16-BEF4-FA70B341FDA5}.Release|x86.ActiveCfg = Release|Any CPU
 		{0AFB7630-65E6-41EF-AC65-8A7814C6D82F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0AFB7630-65E6-41EF-AC65-8A7814C6D82F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AFB7630-65E6-41EF-AC65-8A7814C6D82F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU

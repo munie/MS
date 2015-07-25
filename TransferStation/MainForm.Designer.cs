@@ -1,4 +1,4 @@
-﻿namespace TransferStation
+﻿namespace SocketTransfer
 {
     partial class MainForm
     {
