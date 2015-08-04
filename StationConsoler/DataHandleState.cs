@@ -1,0 +1,100 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
+
+namespace StationConsoler
+{
+    public class DataHandleState : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public static readonly string ListenStateRunning = "监听中";
+        public static readonly string ListenStateNotRunning = "未启动";
+        public static readonly string TimerStateRunning = "运行中";
+        public static readonly string TimerStateNotRunning = "未启动";
+
+        private string listenState;
+        private string timerState;
+        private int listenPort;
+        private string chineseName;
+        private string fileName;
+        private double timerInterval;
+        private string timerString;
+
+        public string ListenState
+        {
+            get { return listenState; }
+            set {
+                listenState = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ListenState"));
+            }
+        }
+        public string TimerState
+        {
+            get { return timerState; }
+            set
+            {
+                timerState = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("TimerState"));
+            }
+        }
+        public int ListenPort
+        {
+            get { return listenPort; }
+            set
+            {
+                listenPort = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("ListenPort"));
+                }
+            }
+        }
+        public string ChineseName
+        {
+            get { return chineseName; }
+            set {
+                chineseName = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ChineseName"));
+            }
+        }
+        public string FileName
+        {
+            get { return fileName; }
+            set {
+                fileName = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("FileName"));
+            }
+        }
+        public double TimerInterval
+        {
+            get { return timerInterval; }
+            set
+            {
+                timerInterval = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("TimerInterval"));
+                }
+            }
+        }
+        public string TimerString
+        {
+            get { return timerString; }
+            set
+            {
+                timerString = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("TimerString"));
+            }
+        }
+
+
+        public System.Timers.Timer Timer = null;
+    }
+}
