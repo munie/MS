@@ -167,6 +167,7 @@ namespace MnnSocket
                             // Ensure to abort the ListeningThread
                             lstState.Thread.Abort();
                             //lstState.Thread.Join();   //死锁
+                            Thread.Sleep(200);          //不死锁，却影响响应时间
                             lstState.Thread = null;
 
                             break;

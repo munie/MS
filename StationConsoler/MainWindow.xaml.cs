@@ -125,7 +125,7 @@ namespace StationConsoler
             menuItem.Header = "仅显示 " + listenPort + " " + fvi.ProductName;
             menuItem.Click += new RoutedEventHandler((s, ea) => {
                 for (int i = 0; i < clientPointTable.Count; i++) {
-                    DataGridRow row = (DataGridRow)lstClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
+                    ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
 
                     if (clientPointTable[i].AcceptedPort == listenPort) {
                         row.Visibility = System.Windows.Visibility.Visible;
@@ -136,7 +136,7 @@ namespace StationConsoler
                 }
             });
 
-            lstClientPoint.ContextMenu.Items.Add(menuItem);
+            lstViewClientPoint.ContextMenu.Items.Add(menuItem);
         }
 
         // Events for AsyncSocketListener =====================================================
@@ -194,7 +194,7 @@ namespace StationConsoler
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (txtMsg.Text.Length >= 5 * 1024)
+                if (txtMsg.Text.Length >= 20 * 1024)
                     txtMsg.Clear();
 
                 string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.Data;
@@ -255,24 +255,8 @@ namespace StationConsoler
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            dgDataHandle.ItemsSource = dataHandleTable;
-            lstClientPoint.ItemsSource = clientPointTable;
-
-            dgDataHandle.Columns[0].Header = "监听端口";
-            dgDataHandle.Columns[0].IsReadOnly = true;
-            dgDataHandle.Columns[1].Header = "监听状态";
-            dgDataHandle.Columns[1].IsReadOnly = true;
-            dgDataHandle.Columns[2].Header = "定时器状态";
-            dgDataHandle.Columns[2].IsReadOnly = true;
-            dgDataHandle.Columns[3].Header = "模块名";
-            dgDataHandle.Columns[3].IsReadOnly = true;
-            dgDataHandle.Columns[4].Header = "文件名";
-            dgDataHandle.Columns[4].IsReadOnly = true;
-            //dgDataHandle.Columns[4].Visibility = Visibility.Hidden;
-            dgDataHandle.Columns[5].Header = "定时器时间";
-            dgDataHandle.Columns[5].IsReadOnly = false;
-            dgDataHandle.Columns[6].Header = "定时器命令";
-            dgDataHandle.Columns[6].IsReadOnly = false;
+            lstViewClientPoint.ItemsSource = clientPointTable;
+            lstViewDataHandle.ItemsSource = dataHandleTable;
 
             TextBlock blockNow = new TextBlock();
             TextBlock blockSpan = new TextBlock();
@@ -299,7 +283,7 @@ namespace StationConsoler
 
         private void MenuItem_StartListen_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in dgDataHandle.SelectedItems) {
+            foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
@@ -323,7 +307,7 @@ namespace StationConsoler
 
         private void MenuItem_StopListen_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in dgDataHandle.SelectedItems) {
+            foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
@@ -361,7 +345,7 @@ namespace StationConsoler
         {
             List<DataHandleState> handles = new List<DataHandleState>();
 
-            foreach (var item in dgDataHandle.SelectedItems) {
+            foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
@@ -391,7 +375,7 @@ namespace StationConsoler
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in dgDataHandle.SelectedItems) {
+            foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
@@ -425,7 +409,7 @@ namespace StationConsoler
 
         private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in dgDataHandle.SelectedItems) {
+            foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
@@ -446,7 +430,7 @@ namespace StationConsoler
                 return;
             }
 
-            foreach (var item in lstClientPoint.SelectedItems) {
+            foreach (var item in lstViewClientPoint.SelectedItems) {
                 ClientPoint client = item as ClientPoint;
 
                 if (client == null)
@@ -465,7 +449,7 @@ namespace StationConsoler
 
         private void MenuItem_CloseClient_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstClientPoint.SelectedItems) {
+            foreach (var item in lstViewClientPoint.SelectedItems) {
                 ClientPoint client = item as ClientPoint;
 
                 if (client == null)
@@ -478,8 +462,8 @@ namespace StationConsoler
         
         private void MenuItem_ShowClient_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < lstClientPoint.Items.Count; i++) {
-                DataGridRow row = (DataGridRow)lstClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
+            for (int i = 0; i < lstViewClientPoint.Items.Count; i++) {
+                ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
                 row.Visibility = System.Windows.Visibility.Visible;
             }
         }
