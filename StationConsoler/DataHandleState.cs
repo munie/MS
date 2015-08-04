@@ -11,19 +11,30 @@ namespace StationConsoler
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public static readonly string ListenStateRunning = "监听中";
+        public static readonly string ListenStateRunning = "已启动";
         public static readonly string ListenStateNotRunning = "未启动";
         public static readonly string TimerStateRunning = "运行中";
-        public static readonly string TimerStateNotRunning = "未启动";
+        public static readonly string TimerStateNotRunning = "未运行";
 
+        private int listenPort;
         private string listenState;
         private string timerState;
-        private int listenPort;
         private string chineseName;
         private string fileName;
         private double timerInterval;
         private string timerString;
 
+        public int ListenPort
+        {
+            get { return listenPort; }
+            set
+            {
+                listenPort = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("ListenPort"));
+                }
+            }
+        }
         public string ListenState
         {
             get { return listenState; }
@@ -41,17 +52,6 @@ namespace StationConsoler
                 timerState = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerState"));
-            }
-        }
-        public int ListenPort
-        {
-            get { return listenPort; }
-            set
-            {
-                listenPort = value;
-                if (PropertyChanged != null) {
-                    PropertyChanged(this, new PropertyChangedEventArgs("ListenPort"));
-                }
             }
         }
         public string ChineseName

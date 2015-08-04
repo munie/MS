@@ -112,8 +112,8 @@ namespace StationConsoler
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             dataHandleTable.Add(new DataHandleState
             {
-                ListenState = DataHandleState.ListenStateNotRunning,
                 ListenPort = listenPort,
+                ListenState = DataHandleState.ListenStateNotRunning,
                 ChineseName = fvi.ProductName,
                 FileName = assemblyName,
                 TimerState = DataHandleState.TimerStateNotRunning,
@@ -258,11 +258,11 @@ namespace StationConsoler
             dgDataHandle.ItemsSource = dataHandleTable;
             lstClientPoint.ItemsSource = clientPointTable;
 
-            dgDataHandle.Columns[0].Header = "监听状态";
+            dgDataHandle.Columns[0].Header = "监听端口";
             dgDataHandle.Columns[0].IsReadOnly = true;
-            dgDataHandle.Columns[1].Header = "定时器状态";
+            dgDataHandle.Columns[1].Header = "监听状态";
             dgDataHandle.Columns[1].IsReadOnly = true;
-            dgDataHandle.Columns[2].Header = "监听端口";
+            dgDataHandle.Columns[2].Header = "定时器状态";
             dgDataHandle.Columns[2].IsReadOnly = true;
             dgDataHandle.Columns[3].Header = "模块名";
             dgDataHandle.Columns[3].IsReadOnly = true;
@@ -345,6 +345,18 @@ namespace StationConsoler
             }
         }
 
+        private void MenuItem_Load_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+
+            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            openFileDialog.FileName = "";
+
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                LoadPlugin(openFileDialog.FileName);
+            }
+        }
+
         private void MenuItem_Unload_Click(object sender, RoutedEventArgs e)
         {
             List<DataHandleState> handles = new List<DataHandleState>();
@@ -374,18 +386,6 @@ namespace StationConsoler
                 }
 
                 dataHandleTable.Remove(item);
-            }
-        }
-
-        private void MenuItem_Load_Click(object sender, RoutedEventArgs e)
-        {
-            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
-
-            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
-            openFileDialog.FileName = "";
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
-                LoadPlugin(openFileDialog.FileName);
             }
         }
 

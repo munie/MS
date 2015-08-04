@@ -15,14 +15,14 @@
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <DataGrid Name="dgDataHandle" Margin="5" Grid.Row="1" Grid.Column="1" FontSize="12">
+        <DataGrid Name="dgDataHandle" Margin="5" Grid.Row="1" Grid.Column="1" CanUserAddRows="False" CanUserDeleteRows="False">
             <DataGrid.ContextMenu>
                 <ContextMenu Name="dgDataHandleMenu" StaysOpen="true">
                     <MenuItem Header="启动监听" Click="MenuItem_StartListen_Click"/>
                     <MenuItem Header="关闭监听" Click="MenuItem_StopListen_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="卸载模块" Click="MenuItem_Unload_Click"/>
                     <MenuItem Header="加载模块" Click="MenuItem_Load_Click"/>
+                    <MenuItem Header="卸载模块" Click="MenuItem_Unload_Click"/>
                     <Separator></Separator>
                     <MenuItem Header="启动定时器" Click="MenuItem_StartTimer_Click"/>
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
@@ -30,7 +30,7 @@
             </DataGrid.ContextMenu>
         </DataGrid>
 
-        <DataGrid Name="lstClientPoint" Grid.Row="2" Grid.Column="1" Margin="5">
+        <DataGrid Name="lstClientPoint" Grid.Row="2" Grid.Column="1" Margin="5" CanUserAddRows="False" CanUserDeleteRows="False">
             <DataGrid.ContextMenu>
                 <ContextMenu Name="lstClientPointMenu" StaysOpen="true">
                     <MenuItem Header="发送命令" Click="MenuItem_SendCommand_Click"/>
