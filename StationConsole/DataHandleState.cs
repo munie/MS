@@ -5,7 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 
-namespace StationConsoler
+namespace StationConsole
 {
     public class DataHandleState : INotifyPropertyChanged
     {
@@ -22,7 +22,7 @@ namespace StationConsoler
         private string chineseName;
         private string fileName;
         private double timerInterval;
-        private string timerString;
+        private string timerCommand;
 
         public int ListenPort
         {
@@ -83,14 +83,14 @@ namespace StationConsoler
                 }
             }
         }
-        public string TimerString
+        public string TimerCommand
         {
-            get { return timerString; }
+            get { return timerCommand; }
             set
             {
-                timerString = value;
+                timerCommand = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("TimerString"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
             }
         }
 

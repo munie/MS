@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnPlugin", "MnnPlugin\MnnP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketTransfer", "SocketTransfer\SocketTransfer.csproj", "{0B1F0B25-5853-44BB-ABDA-D40FAA1D62D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationConsoler", "StationConsoler\StationConsoler.csproj", "{C39F4B50-C1D3-4A3D-AD6E-29A18FA64FE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationConsole", "StationConsole\StationConsole.csproj", "{C39F4B50-C1D3-4A3D-AD6E-29A18FA64FE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,4 @@
-﻿<Window x:Class="StationConsoler.MainWindow"
+﻿<Window x:Class="StationConsole.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="553" Width="987" Loaded="Window_Loaded" xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" xmlns:dxwui="http://schemas.devexpress.com/winfx/2008/xaml/windowsui" WindowStartupLocation="CenterScreen">
@@ -31,7 +31,7 @@
                     <GridViewColumn Header="定时器时间" Width="80"
                                     DisplayMemberBinding="{Binding TimerInterval}" />
                     <GridViewColumn Header="定时器命令" Width="80"
-                                    DisplayMemberBinding="{Binding TimerString}" />
+                                    DisplayMemberBinding="{Binding TimerCommand}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
@@ -39,9 +39,10 @@
                     <MenuItem Header="启动监听" Click="MenuItem_StartListen_Click"/>
                     <MenuItem Header="关闭监听" Click="MenuItem_StopListen_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="加载模块" Click="MenuItem_Load_Click"/>
-                    <MenuItem Header="卸载模块" Click="MenuItem_Unload_Click"/>
+                    <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
+                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>
                     <Separator></Separator>
+                    <MenuItem Header="设置定时器" Click="MenuItem_SetTimer_Click"/>
                     <MenuItem Header="启动定时器" Click="MenuItem_StartTimer_Click"/>
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
                 </ContextMenu>

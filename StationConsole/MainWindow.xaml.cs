@@ -22,7 +22,7 @@ using System.Threading;
 using MnnSocket;
 using MnnPlugin;
 
-namespace StationConsoler
+namespace StationConsole
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -118,7 +118,7 @@ namespace StationConsoler
                 FileName = assemblyName,
                 TimerState = DataHandleState.TimerStateNotRunning,
                 TimerInterval = 0,
-                TimerString = "",
+                TimerCommand = "",
             });
 
             MenuItem menuItem = new MenuItem();
@@ -276,11 +276,6 @@ namespace StationConsoler
             timer.Start();
         }
 
-        void timer_Tick(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private void MenuItem_StartListen_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
@@ -329,7 +324,7 @@ namespace StationConsoler
             }
         }
 
-        private void MenuItem_Load_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
 
@@ -341,7 +336,7 @@ namespace StationConsoler
             }
         }
 
-        private void MenuItem_Unload_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
         {
             List<DataHandleState> handles = new List<DataHandleState>();
 
@@ -370,6 +365,37 @@ namespace StationConsoler
                 }
 
                 dataHandleTable.Remove(item);
+
+                foreach (var i in lstViewClientPoint.ContextMenu.Items)
+	            {
+                    MenuItem menuItem = i as MenuItem;
+
+                    if (menuItem != null && menuItem.Header.ToString().Contains(item.ListenPort.ToString())) {
+                        lstViewClientPoint.ContextMenu.Items.Remove(menuItem);
+                        break;
+                    }
+	            }
+            }
+        }
+
+        private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
+        {
+            InputDialog input = new InputDialog();
+            input.Owner = this;
+            input.Title = "定时器设置";
+            input.textBlock1.Text = "命令";
+            input.textBlock2.Text = "时间间隔";
+            if (input.ShowDialog() == true) {
+                foreach (var item in lstViewDataHandle.SelectedItems) {
+                    DataHandleState dataHandle = item as DataHandleState;
+
+                    if (dataHandle == null)
+                        return;
+
+                    dataHandle.TimerCommand = input.textBox1.Text;
+                    if (input.textBox2.Text != "")
+                        dataHandle.TimerInterval = int.Parse(input.textBox2.Text);
+                }
             }
         }
 
@@ -381,7 +407,7 @@ namespace StationConsoler
                 if (dataHandle == null)
                     continue;
 
-                if (dataHandle.TimerInterval <= 0 || dataHandle.TimerString == "")
+                if (dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
                 dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval);
@@ -392,7 +418,7 @@ namespace StationConsoler
                             try {
                                 string[] str = clientPoint.IpAddress.Split(":".ToArray());
                                 sckListener.Send(new IPEndPoint(IPAddress.Parse(str[0]), Convert.ToInt32(str[1])),
-                                    dataHandle.TimerString);
+                                    dataHandle.TimerCommand);
                             }
                             catch (Exception ex) {
                                 LogRecord.writeLog(ex);
@@ -425,24 +451,29 @@ namespace StationConsoler
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            string sendmsg = Microsoft.VisualBasic.Interaction.InputBox("请输入要发送的命令", "手动命令发送框", "!A1?", 200, 200);
-            if (sendmsg == "") {
-                return;
-            }
+            InputDialog input = new InputDialog();
+            input.Owner = this;
+            input.Title = "发送命令";
+            input.textBlock1.Text = "命令";
+            input.textBlock2.Text = "时间间隔";
+            input.textBlock2.IsEnabled = false;
+            input.textBox2.IsEnabled = false;
+            input.textBox1.Focus();
+            if (input.ShowDialog() == true) {
+                foreach (var item in lstViewClientPoint.SelectedItems) {
+                    ClientPoint client = item as ClientPoint;
 
-            foreach (var item in lstViewClientPoint.SelectedItems) {
-                ClientPoint client = item as ClientPoint;
+                    if (client == null)
+                        return;
 
-                if (client == null)
-                    return;
-
-                try {
-                    string[] s = client.IpAddress.Split(":".ToArray());
-                    sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
-                        sendmsg);
-                }
-                catch (Exception ex) {
-                    LogRecord.writeLog(ex);
+                    try {
+                        string[] s = client.IpAddress.Split(":".ToArray());
+                        sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
+                            input.textBox1.Text);
+                    }
+                    catch (Exception ex) {
+                        LogRecord.writeLog(ex);
+                    }
                 }
             }
         }

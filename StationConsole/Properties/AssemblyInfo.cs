@@ -7,11 +7,11 @@ using System.Windows;
 // 有关程序集的常规信息通过以下
 // 特性集控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("StationConsoler")]
+[assembly: AssemblyTitle("StationConsole")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("航天恒通")]
-[assembly: AssemblyProduct("StationConsoler")]
+[assembly: AssemblyProduct("StationConsole")]
 [assembly: AssemblyCopyright("Copyright © 航天恒通 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
