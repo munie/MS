@@ -11,10 +11,10 @@ namespace StationConsole
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public static readonly string ListenStateRunning = "已启动";
-        public static readonly string ListenStateNotRunning = "未启动";
-        public static readonly string TimerStateRunning = "运行中";
-        public static readonly string TimerStateNotRunning = "未运行";
+        public static readonly string ListenStateStarted = "已启动";
+        public static readonly string ListenStateStoped = "未启动";
+        public static readonly string TimerStateStarted = "运行中";
+        public static readonly string TimerStateStoped = "未运行";
 
         private int listenPort;
         private string listenState;

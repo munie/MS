@@ -40,5 +40,14 @@ namespace StationConsole
             Regex re = new Regex("[^0-9.-]+");
             e.Handled = re.IsMatch(e.Text);
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+                this.DialogResult = false;
+
+            if (e.Key == Key.Enter)
+                this.DialogResult = true;
+        }
     }
 }

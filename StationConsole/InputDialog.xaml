@@ -1,7 +1,7 @@
 ﻿<Window x:Class="StationConsole.InputDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="InputDialog" Height="227" Width="372" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+        Title="InputDialog" Height="227" Width="372" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" KeyDown="Window_KeyDown">
     <Canvas Background="AntiqueWhite">
         <TextBlock Height="23" HorizontalAlignment="Left" Name="textBlock1" Text="TextBlock" VerticalAlignment="Top" Canvas.Left="30" Canvas.Top="36" />
         <TextBlock Height="23" Name="textBlock2" Text="TextBlock" Canvas.Left="30" Canvas.Top="76" />

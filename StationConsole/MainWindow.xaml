@@ -39,12 +39,12 @@
                     <MenuItem Header="启动监听" Click="MenuItem_StartListen_Click"/>
                     <MenuItem Header="关闭监听" Click="MenuItem_StopListen_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
-                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>
-                    <Separator></Separator>
                     <MenuItem Header="设置定时器" Click="MenuItem_SetTimer_Click"/>
                     <MenuItem Header="启动定时器" Click="MenuItem_StartTimer_Click"/>
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
+                    <Separator></Separator>
+                    <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
+                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
@@ -67,7 +67,7 @@
                     <MenuItem Header="发送命令" Click="MenuItem_SendCommand_Click"/>
                     <MenuItem Header="关闭连接" Click="MenuItem_CloseClient_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="显示所有" Click="MenuItem_ShowClient_Click"/>
+                    <MenuItem x:Name="clientPointShowModeMenu" Header="显示方式"></MenuItem>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
@@ -76,7 +76,7 @@
 
         <StatusBar Name="statusBar" Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Bottom">
             <StatusBarItem>
-                <TextBlock>Ready</TextBlock>
+                <TextBlock x:Name="clientPointShowModeStatus">Ready</TextBlock>
             </StatusBarItem>
         </StatusBar>
     </Grid>
