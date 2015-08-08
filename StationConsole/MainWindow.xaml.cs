@@ -124,14 +124,16 @@ namespace StationConsole
             MenuItem menuItem = new MenuItem();
             menuItem.Header = "仅显示 " + listenPort + " " + fvi.ProductName;
             menuItem.Click += new RoutedEventHandler((s, ea) => {
-                for (int i = 0; i < clientPointTable.Count; i++) {
-                    ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
+                lock (clientPointTable) {
+                    for (int i = 0; i < clientPointTable.Count; i++) {
+                        ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
 
-                    if (clientPointTable[i].AcceptedPort == listenPort) {
-                        row.Visibility = System.Windows.Visibility.Visible;
-                    }
-                    else {
-                        row.Visibility = System.Windows.Visibility.Collapsed;
+                        if (clientPointTable[i].AcceptedPort == listenPort) {
+                            row.Visibility = System.Windows.Visibility.Visible;
+                        }
+                        else {
+                            row.Visibility = System.Windows.Visibility.Collapsed;
+                        }
                     }
                 }
             });
@@ -171,22 +173,26 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
-                clientPointTable.Add(clientPoint);
+                lock (clientPointTable) {
+                    clientPointTable.Add(clientPoint);
+                }
             }));
         }
 
         private void sckListener_ClientDisconn(object sender, ClientEventArgs e)
         {
-            var subfirst = (from s in clientPointTable
-                            where s.IpAddress.Equals(e.RemoteEP.ToString())
-                            select s).First();
+            lock (clientPointTable) {
+                var subfirst = (from s in clientPointTable
+                                where s.IpAddress.Equals(e.RemoteEP.ToString())
+                                select s).First();
 
-            if (subfirst != null) {
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    // set value for ObservableCollection object 
-                    clientPointTable.Remove(subfirst);
-                }));
+                if (subfirst != null) {
+                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        // set value for ObservableCollection object 
+                        clientPointTable.Remove(subfirst);
+                    }));
+                }
             }
         }
 
@@ -209,18 +215,20 @@ namespace StationConsole
             foreach (var item in str) {
                 if (item.StartsWith("CCID=")) {
                     // 更新CCID
-                    foreach (var client in clientPointTable) {
-                        if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
-                            client.CCID = item.Substring(5);
+                    lock (clientPointTable) {
+                        foreach (var client in clientPointTable) {
+                            if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
+                                client.CCID = item.Substring(5);
+                            }
                         }
-                    }
 
-                    // 基站不会自动断开前一次连接...相同CCID的连上来后，断开前面的连接
-                    foreach (var client in clientPointTable) {
-                        if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString())) {
-                            string[] s = client.IpAddress.Split(":".ToArray());
-                            sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
-                            break;
+                        // 基站不会自动断开前一次连接...相同CCID的连上来后，断开前面的连接
+                        foreach (var client in clientPointTable) {
+                            if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString())) {
+                                string[] s = client.IpAddress.Split(":".ToArray());
+                                sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                                break;
+                            }
                         }
                     }
                 }
@@ -296,7 +304,12 @@ namespace StationConsole
                     }
                 }
 
-                sckListener.Start(ep);
+                try {
+                    sckListener.Start(ep);
+                }
+                catch (Exception ex) {
+                    LogRecord.writeLog(ex);
+                }
             }
         }
 
@@ -414,18 +427,20 @@ namespace StationConsole
 
                 dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval);
                 dataHandle.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
-                    foreach (var clientPoint in clientPointTable) {
-                        if (clientPoint.AcceptedPort == dataHandle.ListenPort) {
+                    lock (clientPointTable) {
+                        foreach (var clientPoint in clientPointTable) {
+                            if (clientPoint.AcceptedPort == dataHandle.ListenPort) {
 
-                            try {
-                                string[] str = clientPoint.IpAddress.Split(":".ToArray());
-                                sckListener.Send(new IPEndPoint(IPAddress.Parse(str[0]), Convert.ToInt32(str[1])),
-                                    dataHandle.TimerCommand);
-                            }
-                            catch (Exception ex) {
-                                LogRecord.writeLog(ex);
-                            }
+                                try {
+                                    string[] str = clientPoint.IpAddress.Split(":".ToArray());
+                                    sckListener.Send(new IPEndPoint(IPAddress.Parse(str[0]), Convert.ToInt32(str[1])),
+                                        dataHandle.TimerCommand);
+                                }
+                                catch (Exception ex) {
+                                    LogRecord.writeLog(ex);
+                                }
 
+                            }
                         }
                     }
                 });
