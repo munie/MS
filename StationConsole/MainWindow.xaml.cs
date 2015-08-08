@@ -362,6 +362,7 @@ namespace StationConsole
                         }
                     }
                     sckListener.Stop(ep);
+                    item.Timer.Stop();
                 }
 
                 dataHandleTable.Remove(item);
