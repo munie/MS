@@ -408,7 +408,8 @@ namespace StationConsole
                 if (dataHandle == null)
                     continue;
 
-                if (dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
+                if (dataHandle.Timer != null ||
+                    dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
                 dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval);

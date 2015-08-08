@@ -54,7 +54,7 @@
                 <GridView>
                     <GridViewColumn Header="基站IP" Width="120"
                                     DisplayMemberBinding="{Binding IpAddress}" />
-                    <GridViewColumn Header="本地端口" Width="55"
+                    <GridViewColumn Header="本地端口" Width="60"
                                     DisplayMemberBinding="{Binding AcceptedPort}" />
                     <GridViewColumn Header="创建时间" Width="140"
                                     DisplayMemberBinding="{Binding ConnectTime}" />
