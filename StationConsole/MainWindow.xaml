@@ -28,7 +28,7 @@
                                     DisplayMemberBinding="{Binding ChineseName}" />
                     <GridViewColumn Header="文件名"
                                     DisplayMemberBinding="{Binding FileName}" />
-                    <GridViewColumn Header="定时器时间" Width="80"
+                    <GridViewColumn Header="定时器时间(秒)" Width="100"
                                     DisplayMemberBinding="{Binding TimerInterval}" />
                     <GridViewColumn Header="定时器命令" Width="80"
                                     DisplayMemberBinding="{Binding TimerCommand}" />
@@ -52,9 +52,9 @@
         <ListView x:Name="lstViewClientPoint" Margin="5" Grid.Row="2" Grid.Column="1">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="基站IP" Width="120"
+                    <GridViewColumn Header="客户端IP" Width="130"
                                     DisplayMemberBinding="{Binding IpAddress}" />
-                    <GridViewColumn Header="本地端口" Width="60"
+                    <GridViewColumn Header="本地端口" Width="70"
                                     DisplayMemberBinding="{Binding AcceptedPort}" />
                     <GridViewColumn Header="创建时间" Width="140"
                                     DisplayMemberBinding="{Binding ConnectTime}" />

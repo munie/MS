@@ -21,7 +21,7 @@ namespace StationConsole
         private string timerState;
         private string chineseName;
         private string fileName;
-        private double timerInterval;
+        private double timerInterval;       // 单位为秒，启动定时器时需乘1000
         private string timerCommand;
 
         public int ListenPort

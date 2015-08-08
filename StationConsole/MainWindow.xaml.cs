@@ -394,17 +394,12 @@ namespace StationConsole
                 if (dataHandle.ListenState == DataHandleState.ListenStateStoped)
                     continue;
 
-                // 一般不会出现异常，心里安慰而已
-                try {
-                    List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
-                    sckListener.Stop(ep);
-                    dataHandle.ListenState = DataHandleState.ListenStateStoped;
-                    // 同时关闭对应客户端
-                    sckListener.CloseClientByListener(ep.First());
-                }
-                catch (Exception ex) {
-                    MessageBox.Show(ex.Message, "Error");
-                }
+                // 逻辑上讲，不会出现异常
+                List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
+                sckListener.Stop(ep);
+                dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                // 同时关闭对应客户端
+                sckListener.CloseClientByListener(ep.First());
             }
         }
 
@@ -420,7 +415,7 @@ namespace StationConsole
                     dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
-                dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval);
+                dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval * 1000);
                 dataHandle.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
                     lock (clientPointTable) {
                         foreach (var clientPoint in clientPointTable) {
@@ -479,7 +474,7 @@ namespace StationConsole
 
                     dataHandle.TimerCommand = input.textBox1.Text;
                     if (input.textBox2.Text != "")
-                        dataHandle.TimerInterval = int.Parse(input.textBox2.Text);
+                        dataHandle.TimerInterval = double.Parse(input.textBox2.Text);
                 }
             }
         }
