@@ -230,7 +230,7 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                LogRecord.WriteInfoLog(logFormat);
+                //LogRecord.WriteInfoLog(logFormat);
 
                 /// @@ 没有办法的办法，必须删改
                 string[] str = e.Data.Split("|".ToArray());
@@ -259,10 +259,10 @@ namespace StationConsole
 
                 /// 调用数据处理插件 ======================================================
                 try {
-                    var subset = from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s;
-                    //object retValue = pluginManager.Invoke(subset.First().FileName, "IDataHandle", "Handle", new object[] { e.Data });
-                    //if (retValue != null)
-                    //    sckListener.Send(e.RemoteEP, (string)retValue);
+                    var subFirst = (from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
+                    object retValue = pluginManager.Invoke(subFirst.FileName, "IDataHandle", "Handle", new object[] { e.Data });
+                    if (retValue != null)
+                        sckListener.Send(e.RemoteEP, (string)retValue);
                 }
                 catch (Exception ex) {
                     LogRecord.writeLog(ex);
