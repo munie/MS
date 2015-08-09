@@ -86,11 +86,12 @@ namespace StationConsole
 
         private void LoadPlugin(string filePath)
         {
-            DataHandleState dataHandle = new DataHandleState();
             int listenPort = 0;
+            DataHandleState dataHandle = new DataHandleState();
+            dataHandle.Plugin = new PluginItem();
 
             try {
-                dataHandle.Load(filePath);
+                dataHandle.Plugin.Load(filePath);
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
@@ -98,36 +99,34 @@ namespace StationConsole
             }
 
             try {
-                listenPort = (int)dataHandle.Invoke("IDataHandle", "GetIdentity", null);
+                listenPort = (int)dataHandle.Plugin.Invoke("IDataHandle", "GetIdentity", null);
             }
             catch (Exception ex) {
-                dataHandle.UnLoad();
+                dataHandle.Plugin.UnLoad();
                 MessageBox.Show(ex.Message, "Error");
                 return;
             }
 
             // 加载模块已经成功
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
+            dataHandle.Listener = new AsyncSocketListenerItem();
+            dataHandle.Timer = new System.Timers.Timer();
 
             dataHandle.ListenPort = listenPort;
             dataHandle.ListenState = DataHandleState.ListenStateStoped;
-            dataHandle.ChineseName = fvi.ProductName;
-            dataHandle.FileName = dataHandle.AssemblyName;
+            dataHandle.ChineseName = FileVersionInfo.GetVersionInfo(filePath).ProductName;
+            dataHandle.FileName = dataHandle.Plugin.AssemblyName;
             dataHandle.TimerState = DataHandleState.TimerStateStoped;
             dataHandle.TimerInterval = 0;
             dataHandle.TimerCommand = "";
 
-            dataHandle.Listener = new AsyncSocketListenerItem();
             dataHandle.Listener.ClientConnect += SocketListener_ClientConnect;
             dataHandle.Listener.ClientDisconn += SocketListener_ClientDisconn;
             dataHandle.Listener.ClientReadMsg += SocketListener_ClientReadMsg;
             dataHandle.Listener.ClientSendMsg += SocketListener_ClientSendMsg;
 
-            dataHandle.Timer = new System.Timers.Timer();
-
             // 加入 table
             listenerManager.Items.Add(dataHandle.Listener);
-            pluginManager.Items.Add(dataHandle);
+            pluginManager.Items.Add(dataHandle.Plugin);
             dataHandleTable.Add(dataHandle);
         }
 
@@ -149,11 +148,11 @@ namespace StationConsole
             }
 
             // 卸载模块
-            dataHandle.UnLoad();
+            dataHandle.Plugin.UnLoad();
 
             // 移出 table
             listenerManager.Items.Remove(dataHandle.Listener);
-            pluginManager.Items.Remove(dataHandle);
+            pluginManager.Items.Remove(dataHandle.Plugin);
             dataHandleTable.Remove(dataHandle);
         }
 
@@ -290,7 +289,7 @@ namespace StationConsole
                 try {
                     var subFirst = (from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
 
-                    object retValue = subFirst.Invoke("IDataHandle", "Handle", new object[] { e.Data });
+                    object retValue = subFirst.Plugin.Invoke("IDataHandle", "Handle", new object[] { e.Data });
                     if (retValue != null)
                         subFirst.Listener.Send(e.RemoteEP, (string)retValue);
                 }
