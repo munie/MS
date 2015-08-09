@@ -94,6 +94,7 @@ namespace StationConsole
             }
         }
 
-        public System.Timers.Timer Timer = null;
+        public MnnSocket.AsyncSocketListenerItem Listener { get; set; }
+        public System.Timers.Timer Timer { get; set; }
     }
 }

@@ -35,16 +35,15 @@ namespace StationConsole
 
             InitailizeWindowName();
             InitailizeIPAddress();
-            InitailizeAsyncSocketListener();
-            InitailizePluginManager();
 
+            LoadPluginFromDirectory();
             UpdateClientPointMenu();
         }
 
         private IPAddress ipAddress = null;
 
-        private AsyncSocketListener sckListener = null;
-        private PluginManager pluginManager = null;
+        private AsyncSocketListenerManager listenerManager = new AsyncSocketListenerManager();
+        private PluginManager pluginManager = new PluginManager();
 
         private ObservableCollection<DataHandleState> dataHandleTable = new ObservableCollection<DataHandleState>();
         private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
@@ -71,22 +70,8 @@ namespace StationConsole
             }
         }
 
-        private void InitailizeAsyncSocketListener()
+        private void LoadPluginFromDirectory()
         {
-            // Create socket listener & Start user interface model
-            sckListener = new AsyncSocketListener();
-
-            sckListener.ClientConnect += sckListener_ClientConnect;
-            sckListener.ClientDisconn += sckListener_ClientDisconn;
-            sckListener.ClientReadMsg += sckListener_ClientReadMsg;
-            sckListener.ClientSendMsg += sckListener_ClientSendMsg;
-        }
-
-        private void InitailizePluginManager()
-        {
-            // Start data processing model
-            pluginManager = new PluginManager();
-
             // Get all files in directory "DataHandles"
             string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
 
@@ -131,8 +116,17 @@ namespace StationConsole
             dataHandle.TimerState = DataHandleState.TimerStateStoped;
             dataHandle.TimerInterval = 0;
             dataHandle.TimerCommand = "";
+
+            dataHandle.Listener = new AsyncSocketListenerItem();
+            dataHandle.Listener.ClientConnect += SocketListener_ClientConnect;
+            dataHandle.Listener.ClientDisconn += SocketListener_ClientDisconn;
+            dataHandle.Listener.ClientReadMsg += SocketListener_ClientReadMsg;
+            dataHandle.Listener.ClientSendMsg += SocketListener_ClientSendMsg;
+
             dataHandle.Timer = new System.Timers.Timer();
 
+            // 加入 table
+            listenerManager.Items.Add(dataHandle.Listener);
             pluginManager.Items.Add(dataHandle);
             dataHandleTable.Add(dataHandle);
         }
@@ -141,11 +135,11 @@ namespace StationConsole
         {
             // 关闭端口
             if (dataHandle.ListenState == DataHandleState.ListenStateStarted) {
-                List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
-                sckListener.Stop(ep);
-                dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                // 逻辑上讲，不会出现异常
+                dataHandle.Listener.Stop();
                 // 同时关闭对应客户端
-                sckListener.CloseClientByListener(ep.First());
+                dataHandle.Listener.CloseClient();
+                dataHandle.ListenState = DataHandleState.ListenStateStoped;
             }
 
             // 关闭定时器
@@ -158,6 +152,7 @@ namespace StationConsole
             dataHandle.UnLoad();
 
             // 移出 table
+            listenerManager.Items.Remove(dataHandle.Listener);
             pluginManager.Items.Remove(dataHandle);
             dataHandleTable.Remove(dataHandle);
         }
@@ -190,11 +185,14 @@ namespace StationConsole
                 menuItem.Click += new RoutedEventHandler((s, ea) =>
                 {
                     MenuItem m = s as MenuItem;
+                    System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("[0-9]+");
+                    System.Text.RegularExpressions.Match match = regex.Match(m.Header.ToString());
+
                     lock (clientPointTable) {
                         for (int i = 0; i < clientPointTable.Count; i++) {
                             ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
 
-                            if (clientPointTable[i].AcceptedPort == item.ListenPort) {
+                            if (clientPointTable[i].AcceptedPort == Convert.ToInt32(match.Value)) {
                                 row.Visibility = System.Windows.Visibility.Visible;
                             }
                             else {
@@ -210,9 +208,9 @@ namespace StationConsole
             }
         }
 
-        // Events for AsyncSocketListener =====================================================
+        // Events for AsyncSocketListenerItem =================================================
 
-        private void sckListener_ClientConnect(object sender, ClientEventArgs e)
+        private void SocketListener_ClientConnect(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -230,7 +228,7 @@ namespace StationConsole
             }));
         }
 
-        private void sckListener_ClientDisconn(object sender, ClientEventArgs e)
+        private void SocketListener_ClientDisconn(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -246,7 +244,7 @@ namespace StationConsole
             }));
         }
 
-        private void sckListener_ClientReadMsg(object sender, ClientEventArgs e)
+        private void SocketListener_ClientReadMsg(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -263,8 +261,9 @@ namespace StationConsole
                 string[] str = e.Data.Split("|".ToArray());
                 foreach (var item in str) {
                     if (item.StartsWith("CCID=")) {
+
                         lock (clientPointTable) {
-                            // 更新CCID
+                            // 从客户表中找到与远程ip地址相同的条目，更新CCID
                             foreach (var client in clientPointTable) {
                                 if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
                                     client.CCID = item.Substring(5);
@@ -273,13 +272,16 @@ namespace StationConsole
 
                             // 基站不会自动断开前一次连接...相同CCID的连上来后，断开前面的连接
                             foreach (var client in clientPointTable) {
-                                if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString())) {
+                                // 1.CCID相同 2.远程IP地址不相同 3.本地端口相同
+                                if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString()) &&
+                                    client.AcceptedPort.Equals(e.LocalEP.Port)) {
                                     string[] s = client.IpAddress.Split(":".ToArray());
-                                    sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                                    listenerManager.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
                                     break;
                                 }
                             }
                         }
+
                     }
                 }
                 /// @@ 没有办法的办法，必须删改
@@ -287,11 +289,10 @@ namespace StationConsole
                 /// 调用数据处理插件 ======================================================
                 try {
                     var subFirst = (from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
-                    //var subset = from s in pluginManager.Items where s.AssemblyGuid.Equals(subFirst) select s;
 
                     object retValue = subFirst.Invoke("IDataHandle", "Handle", new object[] { e.Data });
                     if (retValue != null)
-                        sckListener.Send(e.RemoteEP, (string)retValue);
+                        subFirst.Listener.Send(e.RemoteEP, (string)retValue);
                 }
                 catch (Exception ex) {
                     LogRecord.writeLog(ex);
@@ -299,7 +300,7 @@ namespace StationConsole
             }));
         }
 
-        private void sckListener_ClientSendMsg(object sender, ClientEventArgs e)
+        private void SocketListener_ClientSendMsg(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -369,21 +370,19 @@ namespace StationConsole
             UpdateClientPointMenu();
         }
 
-        private void MenuItem_StartListen_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
                     continue;
-
                 if (dataHandle.ListenState == DataHandleState.ListenStateStarted)
                     continue;
 
                 // 端口可能已经被其他程序监听
                 try {
-                    List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
-                    sckListener.Start(ep);
+                    dataHandle.Listener.Start(new IPEndPoint(ipAddress, dataHandle.ListenPort));
                     dataHandle.ListenState = DataHandleState.ListenStateStarted;
                 }
                 catch (Exception ex) {
@@ -392,23 +391,47 @@ namespace StationConsole
             }
         }
 
-        private void MenuItem_StopListen_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
                 DataHandleState dataHandle = item as DataHandleState;
 
                 if (dataHandle == null)
                     continue;
-
                 if (dataHandle.ListenState == DataHandleState.ListenStateStoped)
                     continue;
 
                 // 逻辑上讲，不会出现异常
-                List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
-                sckListener.Stop(ep);
-                dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                dataHandle.Listener.Stop();
                 // 同时关闭对应客户端
-                sckListener.CloseClientByListener(ep.First());
+                dataHandle.Listener.CloseClient();
+                dataHandle.ListenState = DataHandleState.ListenStateStoped;
+            }
+        }
+
+        private void MenuItem_SetListener_Click(object sender, RoutedEventArgs e)
+        {
+            InputDialog input = new InputDialog();
+            input.Owner = this;
+            input.Title = "设置监听端口";
+            input.textBlock1.Text = "其他";
+            input.textBlock2.Text = "端口";
+            input.textBlock1.IsEnabled = false;
+            input.textBox1.IsEnabled = false;
+            input.textBox2.Focus();
+
+            if (input.ShowDialog() == false)
+                return;
+
+            foreach (var item in lstViewDataHandle.SelectedItems) {
+                DataHandleState dataHandle = item as DataHandleState;
+
+                if (dataHandle == null)
+                    continue;
+                if (dataHandle.ListenState == DataHandleState.ListenStateStarted)
+                    continue;
+
+                dataHandle.ListenPort = Convert.ToInt32(input.textBox2.Text);
             }
         }
 
@@ -419,28 +442,17 @@ namespace StationConsole
 
                 if (dataHandle == null)
                     continue;
-
                 if (dataHandle.TimerState == DataHandleState.TimerStateStarted ||
                     dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
                 dataHandle.Timer.Interval = dataHandle.TimerInterval * 1000;
                 dataHandle.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
-                    lock (clientPointTable) {
-                        foreach (var clientPoint in clientPointTable) {
-                            if (clientPoint.AcceptedPort == dataHandle.ListenPort) {
-
-                                try {
-                                    string[] str = clientPoint.IpAddress.Split(":".ToArray());
-                                    sckListener.Send(new IPEndPoint(IPAddress.Parse(str[0]), Convert.ToInt32(str[1])),
-                                        dataHandle.TimerCommand);
-                                }
-                                catch (Exception ex) {
-                                    LogRecord.writeLog(ex);
-                                }
-
-                            }
-                        }
+                    try {
+                        dataHandle.Listener.Send(dataHandle.TimerCommand);
+                    }
+                    catch (Exception ex) {
+                        LogRecord.writeLog(ex);
                     }
                 });
 
@@ -456,7 +468,6 @@ namespace StationConsole
 
                 if (dataHandle == null)
                     continue;
-
                 if (dataHandle.TimerState == DataHandleState.TimerStateStoped)
                     continue;
 
@@ -469,22 +480,26 @@ namespace StationConsole
         {
             InputDialog input = new InputDialog();
             input.Owner = this;
-            input.Title = "定时器设置";
+            input.Title = "设置定时器";
             input.textBlock1.Text = "命令";
             input.textBlock2.Text = "时间间隔";
             input.textBox1.Text = "!A0#";
             input.textBox2.Focus();
-            if (input.ShowDialog() == true) {
-                foreach (var item in lstViewDataHandle.SelectedItems) {
-                    DataHandleState dataHandle = item as DataHandleState;
 
-                    if (dataHandle == null)
-                        continue;
+            if (input.ShowDialog() == false)
+                return;
 
-                    dataHandle.TimerCommand = input.textBox1.Text;
-                    if (input.textBox2.Text != "")
-                        dataHandle.TimerInterval = double.Parse(input.textBox2.Text);
-                }
+            foreach (var item in lstViewDataHandle.SelectedItems) {
+                DataHandleState dataHandle = item as DataHandleState;
+
+                if (dataHandle == null)
+                    continue;
+                if (dataHandle.TimerState == DataHandleState.TimerStateStarted)
+                    continue;
+
+                dataHandle.TimerCommand = input.textBox1.Text;
+                if (input.textBox2.Text != "")
+                    dataHandle.TimerInterval = double.Parse(input.textBox2.Text);
             }
         }
 
@@ -500,21 +515,23 @@ namespace StationConsole
             input.textBox1.Text = "!A0#";
             input.textBox1.Focus();
             input.textBox1.Select(input.textBox1.Text.Length, 0);
-            if (input.ShowDialog() == true) {
-                foreach (var item in lstViewClientPoint.SelectedItems) {
-                    ClientPoint client = item as ClientPoint;
 
-                    if (client == null)
-                        continue;
+            if (input.ShowDialog() == false)
+                return;
 
-                    try {
-                        string[] s = client.IpAddress.Split(":".ToArray());
-                        sckListener.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
-                            input.textBox1.Text);
-                    }
-                    catch (Exception ex) {
-                        LogRecord.writeLog(ex);
-                    }
+            foreach (var item in lstViewClientPoint.SelectedItems) {
+                ClientPoint client = item as ClientPoint;
+
+                if (client == null)
+                    continue;
+
+                try {
+                    string[] s = client.IpAddress.Split(":".ToArray());
+                    listenerManager.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
+                        input.textBox1.Text);
+                }
+                catch (Exception ex) {
+                    LogRecord.writeLog(ex);
                 }
             }
         }
@@ -528,7 +545,7 @@ namespace StationConsole
                     continue;
 
                 string[] s = client.IpAddress.Split(":".ToArray());
-                sckListener.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                listenerManager.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
             }
         }
 

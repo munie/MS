@@ -36,12 +36,13 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="启动监听" Click="MenuItem_StartListen_Click"/>
-                    <MenuItem Header="关闭监听" Click="MenuItem_StopListen_Click"/>
+                    <MenuItem Header="启动监听" Click="MenuItem_StartListener_Click"/>
+                    <MenuItem Header="关闭监听" Click="MenuItem_StopListener_Click"/>
+                    <MenuItem Header="设置监听端口" Click="MenuItem_SetListener_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="设置定时器" Click="MenuItem_SetTimer_Click"/>
                     <MenuItem Header="启动定时器" Click="MenuItem_StartTimer_Click"/>
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
+                    <MenuItem Header="设置定时器" Click="MenuItem_SetTimer_Click"/>
                     <Separator></Separator>
                     <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
                     <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>

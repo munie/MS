@@ -40,7 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncSocketListener.cs" />
+    <Compile Include="AsyncSocketListenerManager.cs" />
+    <Compile Include="AsyncSocketListenerItem.cs" />
     <Compile Include="AsyncSocketSender.cs" />
     <Compile Include="ClientEventArgs.cs" />
     <Compile Include="ListenerEventArgs.cs" />
