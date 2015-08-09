@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace StationConsole
 {
-    public class DataHandleState : INotifyPropertyChanged
+    public class DataHandleState : MnnPlugin.PluginItem, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -93,7 +93,6 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
             }
         }
-
 
         public System.Timers.Timer Timer = null;
     }

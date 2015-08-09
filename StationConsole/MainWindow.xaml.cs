@@ -94,45 +94,72 @@ namespace StationConsole
                 string[] files = Directory.GetFiles(pluginPath);
 
                 // Load dll files one by one
-                foreach (string file in files)
-                    LoadPlugin(file);
+                foreach (var item in files)
+                    LoadPlugin(item);
             }
         }
 
         private void LoadPlugin(string filePath)
         {
-            string assemblyName = null;
+            DataHandleState dataHandle = new DataHandleState();
             int listenPort = 0;
 
             try {
-                assemblyName = pluginManager.LoadPlugin(filePath);
+                dataHandle.Load(filePath);
             }
-            catch (ApplicationException ex) {
+            catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
                 return;
             }
 
             try {
-                listenPort = (int)pluginManager.Invoke(assemblyName, "IDataHandle", "GetIdentity", null);
+                listenPort = (int)dataHandle.Invoke("IDataHandle", "GetIdentity", null);
             }
             catch (Exception ex) {
-                pluginManager.UnLoadPlugin(assemblyName);
+                dataHandle.UnLoad();
                 MessageBox.Show(ex.Message, "Error");
                 return;
             }
 
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
-            dataHandleTable.Add(new DataHandleState
-            {
-                ListenPort = listenPort,
-                ListenState = DataHandleState.ListenStateStoped,
-                ChineseName = fvi.ProductName,
-                FileName = assemblyName,
-                TimerState = DataHandleState.TimerStateStoped,
-                TimerInterval = 0,
-                TimerCommand = "",
-            });
+
+            dataHandle.ListenPort = listenPort;
+            dataHandle.ListenState = DataHandleState.ListenStateStoped;
+            dataHandle.ChineseName = fvi.ProductName;
+            dataHandle.FileName = dataHandle.AssemblyName;
+            dataHandle.TimerState = DataHandleState.TimerStateStoped;
+            dataHandle.TimerInterval = 0;
+            dataHandle.TimerCommand = "";
+            dataHandle.Timer = new System.Timers.Timer();
+
+            pluginManager.Items.Add(dataHandle);
+            dataHandleTable.Add(dataHandle);
+        }
+
+        private void UnLoadPlugin(DataHandleState dataHandle)
+        {
+            // 关闭端口
+            if (dataHandle.ListenState == DataHandleState.ListenStateStarted) {
+                List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, dataHandle.ListenPort) };
+                sckListener.Stop(ep);
+                dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                // 同时关闭对应客户端
+                sckListener.CloseClientByListener(ep.First());
+            }
+
+            // 关闭定时器
+            if (dataHandle.TimerState == DataHandleState.TimerStateStarted) {
+                dataHandle.Timer.Stop();
+                dataHandle.TimerState = DataHandleState.TimerStateStoped;
+            }
+
+            // 卸载模块
+            dataHandle.UnLoad();
+
+            // 移出 table
+            pluginManager.Items.Remove(dataHandle);
+            dataHandleTable.Remove(dataHandle);
         }
 
         private void UpdateClientPointMenu()
@@ -260,7 +287,9 @@ namespace StationConsole
                 /// 调用数据处理插件 ======================================================
                 try {
                     var subFirst = (from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
-                    object retValue = pluginManager.Invoke(subFirst.FileName, "IDataHandle", "Handle", new object[] { e.Data });
+                    //var subset = from s in pluginManager.Items where s.AssemblyGuid.Equals(subFirst) select s;
+
+                    object retValue = subFirst.Invoke("IDataHandle", "Handle", new object[] { e.Data });
                     if (retValue != null)
                         sckListener.Send(e.RemoteEP, (string)retValue);
                 }
@@ -333,28 +362,8 @@ namespace StationConsole
             }
 
             // 卸载操作
-            foreach (var item in handles) {
-                // 关闭端口
-                if (item.ListenState == DataHandleState.ListenStateStarted) {
-                    List<IPEndPoint> ep = new List<IPEndPoint>() { new IPEndPoint(ipAddress, item.ListenPort) };
-                    sckListener.Stop(ep);
-                    item.ListenState = DataHandleState.ListenStateStoped;
-                    // 同时关闭对应客户端
-                    sckListener.CloseClientByListener(ep.First());
-                }
-
-                // 关闭定时器
-                if (item.TimerState == DataHandleState.TimerStateStarted) {
-                    item.Timer.Stop();
-                    item.TimerState = DataHandleState.TimerStateStoped;
-                }
-
-                // 卸载模块
-                pluginManager.UnLoadPlugin(item.FileName);
-
-                // 移出 table
-                dataHandleTable.Remove(item);
-            }
+            foreach (var item in handles)
+                UnLoadPlugin(item);
 
             // 更新菜单
             UpdateClientPointMenu();
@@ -415,7 +424,7 @@ namespace StationConsole
                     dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
-                dataHandle.Timer = new System.Timers.Timer(dataHandle.TimerInterval * 1000);
+                dataHandle.Timer.Interval = dataHandle.TimerInterval * 1000;
                 dataHandle.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
                     lock (clientPointTable) {
                         foreach (var clientPoint in clientPointTable) {
