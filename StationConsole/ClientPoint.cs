@@ -12,6 +12,7 @@ namespace StationConsole
 
         private string ipAddress;
         private int acceptedPort;
+        private string acceptedName;
         private DateTime connectTime;
         private string ccid;
 
@@ -32,6 +33,16 @@ namespace StationConsole
                 acceptedPort = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("AcceptedPort"));
+            }
+        }
+        public string AcceptedName
+        {
+            get { return acceptedName; }
+            set
+            {
+                acceptedName = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("AcceptedName"));
             }
         }
         public DateTime ConnectTime

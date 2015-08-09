@@ -24,6 +24,8 @@ using MnnPlugin;
 
 namespace StationConsole
 {
+    public class ClientPointTable : ObservableCollection<ClientPoint> { }
+
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -37,7 +39,6 @@ namespace StationConsole
             InitailizeIPAddress();
 
             LoadPluginFromDirectory();
-            UpdateClientPointMenu();
         }
 
         private IPAddress ipAddress = null;
@@ -46,7 +47,7 @@ namespace StationConsole
         private PluginManager pluginManager = new PluginManager();
 
         private ObservableCollection<DataHandleState> dataHandleTable = new ObservableCollection<DataHandleState>();
-        private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
+        //private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
 
         // Methods ============================================================================
 
@@ -156,57 +157,6 @@ namespace StationConsole
             dataHandleTable.Remove(dataHandle);
         }
 
-        private void UpdateClientPointMenu()
-        {
-            clientPointShowModeMenu.Items.Clear();
-
-            MenuItem menuItem = new MenuItem();
-            menuItem.Header = "全部显示";
-            menuItem.Click += new RoutedEventHandler((s, ea) =>
-            {
-                MenuItem m = s as MenuItem;
-
-                for (int i = 0; i < lstViewClientPoint.Items.Count; i++) {
-                    ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
-                    row.Visibility = System.Windows.Visibility.Visible;
-                }
-
-                clientPointShowModeStatus.Text = m.Header.ToString();
-            });
-
-            clientPointShowModeMenu.Items.Add(menuItem);
-            Separator separator = new Separator();
-            clientPointShowModeMenu.Items.Add(separator);
-
-            foreach (var item in dataHandleTable) {
-                menuItem = new MenuItem();
-                menuItem.Header = "仅显示 " + item.ListenPort + "" + item.ChineseName;
-                menuItem.Click += new RoutedEventHandler((s, ea) =>
-                {
-                    MenuItem m = s as MenuItem;
-                    System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("[0-9]+");
-                    System.Text.RegularExpressions.Match match = regex.Match(m.Header.ToString());
-
-                    lock (clientPointTable) {
-                        for (int i = 0; i < clientPointTable.Count; i++) {
-                            ListViewItem row = (ListViewItem)lstViewClientPoint.ItemContainerGenerator.ContainerFromIndex(i);
-
-                            if (clientPointTable[i].AcceptedPort == Convert.ToInt32(match.Value)) {
-                                row.Visibility = System.Windows.Visibility.Visible;
-                            }
-                            else {
-                                row.Visibility = System.Windows.Visibility.Collapsed;
-                            }
-                        }
-                    }
-
-                    clientPointShowModeStatus.Text = m.Header.ToString();
-                });
-
-                clientPointShowModeMenu.Items.Add(menuItem);
-            }
-        }
-
         // Events for AsyncSocketListenerItem =================================================
 
         private void SocketListener_ClientConnect(object sender, ClientEventArgs e)
@@ -214,13 +164,19 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
+                string acceptedName = (from s in dataHandleTable
+                                      where s.ListenPort == e.LocalEP.Port
+                                      select s.ChineseName).First();
+
                 ClientPoint clientPoint = new ClientPoint();
 
                 clientPoint.IpAddress = e.RemoteEP.ToString();
                 clientPoint.AcceptedPort = e.LocalEP.Port;
+                clientPoint.AcceptedName = acceptedName;
                 clientPoint.ConnectTime = DateTime.Now;
                 clientPoint.CCID = "";
 
+                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                 lock (clientPointTable) {
                     clientPointTable.Add(clientPoint);
                 }
@@ -232,6 +188,7 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
+                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                 lock (clientPointTable) {
                     var subfirst = (from s in clientPointTable
                                     where s.IpAddress.Equals(e.RemoteEP.ToString())
@@ -261,6 +218,7 @@ namespace StationConsole
                 foreach (var item in str) {
                     if (item.StartsWith("CCID=")) {
 
+                        ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                         lock (clientPointTable) {
                             // 从客户表中找到与远程ip地址相同的条目，更新CCID
                             foreach (var client in clientPointTable) {
@@ -315,11 +273,13 @@ namespace StationConsole
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            lstViewClientPoint.ItemsSource = clientPointTable;
+            //lstViewClientPoint.ItemsSource = clientPointTable;
             lstViewDataHandle.ItemsSource = dataHandleTable;
 
             // 运行时间
+            TextBlock blockTimeNow = new TextBlock();
             TextBlock blockTimeRun = new TextBlock();
+            statusBar.Items.Add(blockTimeNow);
             statusBar.Items.Add(blockTimeRun);
 
             DateTime startTime = DateTime.Now;
@@ -328,6 +288,7 @@ namespace StationConsole
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += new EventHandler((s, ea) =>
             {
+                blockTimeNow.Text = DateTime.Now.ToString();
                 blockTimeRun.Text = "运行时间 " + DateTime.Now.Subtract(startTime).ToString(@"dd\-hh\:mm\:ss");
             });
             timer.Start();
@@ -342,9 +303,6 @@ namespace StationConsole
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 LoadPlugin(openFileDialog.FileName);
-
-            // 更新菜单
-            UpdateClientPointMenu();
         }
 
         private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
@@ -364,9 +322,6 @@ namespace StationConsole
             // 卸载操作
             foreach (var item in handles)
                 UnLoadPlugin(item);
-
-            // 更新菜单
-            UpdateClientPointMenu();
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
