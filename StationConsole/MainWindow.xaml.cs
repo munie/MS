@@ -286,14 +286,6 @@ namespace StationConsole
             lstViewDataHandle.ItemsSource = dataHandleTable;
 
             // 运行时间
-            TextBlock blockTimeRun = new TextBlock();
-            TextBlock blockMemory = new TextBlock();
-            TextBlock blockMemoryDiff = new TextBlock();
-            statusBar.Items.Add(blockTimeRun);
-            statusBar.Items.Add(blockMemory);
-            statusBar.Items.Add(blockMemoryDiff);
-
-            blockMemory.Text = "0";
             DateTime startTime = DateTime.Now;
 
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();

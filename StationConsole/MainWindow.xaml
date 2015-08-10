@@ -104,7 +104,7 @@
                                     DisplayMemberBinding="{Binding IpAddress}" />
                     <GridViewColumn Header="本地端口" Width="70"
                                     DisplayMemberBinding="{Binding AcceptedPort}" />
-                    <GridViewColumn Header="创建时间" Width="140"
+                    <GridViewColumn Header="创建时间" Width="150"
                                     DisplayMemberBinding="{Binding ConnectTime}" />
                     <GridViewColumn Header="CCID" Width="160"
                                     DisplayMemberBinding="{Binding CCID}" />
@@ -125,6 +125,15 @@
         <StatusBar Name="statusBar" Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Bottom">
             <StatusBarItem>
                 <TextBlock>Ready</TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock x:Name="blockTimeRun"></TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock x:Name="blockMemory">0</TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock x:Name="blockMemoryDiff" Width="40">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
                 <TextBlock x:Name="currentClientCount">0</TextBlock>
