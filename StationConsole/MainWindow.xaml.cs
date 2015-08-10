@@ -165,6 +165,9 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
+                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
+                historyClientOpenCount.Text = (Convert.ToInt32(historyClientOpenCount.Text) + 1).ToString();
+
                 var subset = from s in dataHandleTable
                             where s.ListenPort == e.LocalEP.Port
                             select s.ChineseName;
@@ -178,8 +181,8 @@ namespace StationConsole
                 clientPoint.ConnectTime = DateTime.Now;
                 clientPoint.CCID = "";
 
-                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                 lock (clientPointTableLock) {
+                    ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                     clientPointTable.Add(clientPoint);
                 }
             }));
@@ -190,8 +193,11 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
-                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
+                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
+
                 lock (clientPointTableLock) {
+                    ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                     var subset = from s in clientPointTable
                                     where s.IpAddress.Equals(e.RemoteEP.ToString())
                                     select s;
@@ -208,7 +214,6 @@ namespace StationConsole
             {
                 if (txtMsg.Text.Length >= 20 * 1024) {
                     txtMsg.Clear();
-                    txtMsg.Text = "";
                 }
 
                 string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.Data;
@@ -222,8 +227,8 @@ namespace StationConsole
                 foreach (var item in str) {
                     if (item.StartsWith("CCID=")) {
 
-                        ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                         lock (clientPointTableLock) {
+                            ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
                             // 从客户表中找到与远程ip地址相同的条目，更新CCID
                             foreach (var client in clientPointTable) {
                                 if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
