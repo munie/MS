@@ -75,7 +75,6 @@
     <Compile Include="InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LogRecord.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -109,13 +108,9 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnPlugin\MnnPlugin.csproj">
-      <Project>{0AFB7630-65E6-41EF-AC65-8A7814C6D82F}</Project>
-      <Name>MnnPlugin</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MnnSocket\MnnSocket.csproj">
-      <Project>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</Project>
-      <Name>MnnSocket</Name>
+    <ProjectReference Include="..\Mnn\Mnn.csproj">
+      <Project>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</Project>
+      <Name>Mnn</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

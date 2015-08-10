@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 
-namespace MnnSocket
+namespace Mnn.MnnSocket
 {
     public class AsyncSocketListenerManager
     {

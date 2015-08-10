@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace MnnSocket
+namespace Mnn.MnnSocket
 {
     /// <summary>
     /// EventArgs for listener events like "listenerStarted"

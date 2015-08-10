@@ -6,8 +6,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
+using Mnn.MnnUtil;
 
-namespace MnnSocket
+namespace Mnn.MnnSocket
 {
     public partial class AsyncSocketListenerItem : IDisposable
     {
@@ -25,9 +26,9 @@ namespace MnnSocket
             // Size of receive buffer.
             public const int BufferSize = 8192;
             // Receive buffer.
-            public byte[] buffer = new byte[BufferSize];
+            public byte[] buffer = null;
             // Received data string.
-            public StringBuilder sb = new StringBuilder();
+            public StringBuilder sb = null;
         }
     }
 
@@ -127,14 +128,23 @@ namespace MnnSocket
                     cltState.localEP = (IPEndPoint)handler.LocalEndPoint;
                     cltState.remoteEP = (IPEndPoint)handler.RemoteEndPoint;
                     cltState.workSocket = handler;
+                    cltState.buffer = new byte[ClientState.BufferSize];
+                    cltState.sb = new StringBuilder();
 
                     /// @@ 第一次收到数据后，才会进入ReadCallback。
                     /// @@ 所以在没有收到数据前，线程被迫中止，将进入ReadCallback，并使EndReceive产生异常
                     /// @@ 由于ReadCallback在出现异常时，自动关闭client Socket连接，所有本线程Accept的连接都将断开并删除
                     /// @@ 暂时想不出解决办法
                     // Start receive message from client
-                    handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
-                        new AsyncCallback(ReadCallback), cltState);
+                    try {
+                        handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
+                            new AsyncCallback(ReadCallback), cltState);
+                    }
+                    catch (Exception ex) {
+                        cltState.workSocket.Dispose();
+                        Logger.WriteException(ex);
+                        continue;
+                    }
 
                     // Add handler to ClientState
                     lock (clientStateTable) {
@@ -153,7 +163,7 @@ namespace MnnSocket
                 if (ListenerStopped != null)
                     ListenerStopped(this, new ListenerEventArgs(item.listenEP));
 
-                Console.WriteLine(ex.ToString());
+                Logger.WriteException(ex);
             }
         }
 
@@ -204,7 +214,7 @@ namespace MnnSocket
                 if (ClientDisconn != null)
                     ClientDisconn(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
 
-                Console.WriteLine(ex.ToString());
+                Logger.WriteException(ex);
             }
         }
 
@@ -260,7 +270,7 @@ namespace MnnSocket
                 int bytesSent = cltState.workSocket.EndSend(ar);
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Logger.WriteException(ex);
             }
         }
 

@@ -18,9 +18,9 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
-using System.Threading;
-using MnnSocket;
-using MnnPlugin;
+using Mnn.MnnPlugin;
+using Mnn.MnnSocket;
+using Mnn.MnnUtil;
 
 namespace StationConsole
 {
@@ -48,6 +48,7 @@ namespace StationConsole
 
         private ObservableCollection<DataHandleState> dataHandleTable = new ObservableCollection<DataHandleState>();
         //private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
+        private string clientPointTableLock = "";
 
         // Methods ============================================================================
 
@@ -164,9 +165,10 @@ namespace StationConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // set value for ObservableCollection object 
-                string acceptedName = (from s in dataHandleTable
-                                      where s.ListenPort == e.LocalEP.Port
-                                      select s.ChineseName).First();
+                var subset = from s in dataHandleTable
+                            where s.ListenPort == e.LocalEP.Port
+                            select s.ChineseName;
+                string acceptedName = subset.Count() != 0 ? subset.First() : "";
 
                 ClientPoint clientPoint = new ClientPoint();
 
@@ -177,7 +179,7 @@ namespace StationConsole
                 clientPoint.CCID = "";
 
                 ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
-                lock (clientPointTable) {
+                lock (clientPointTableLock) {
                     clientPointTable.Add(clientPoint);
                 }
             }));
@@ -189,13 +191,13 @@ namespace StationConsole
             {
                 // set value for ObservableCollection object 
                 ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
-                lock (clientPointTable) {
-                    var subfirst = (from s in clientPointTable
+                lock (clientPointTableLock) {
+                    var subset = from s in clientPointTable
                                     where s.IpAddress.Equals(e.RemoteEP.ToString())
-                                    select s).First();
+                                    select s;
 
-                    if (subfirst != null)
-                        clientPointTable.Remove(subfirst);
+                    if (subset.Count() != 0)
+                        clientPointTable.Remove(subset.First());
                 }
             }));
         }
@@ -204,8 +206,10 @@ namespace StationConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (txtMsg.Text.Length >= 20 * 1024)
+                if (txtMsg.Text.Length >= 20 * 1024) {
                     txtMsg.Clear();
+                    txtMsg.Text = "";
+                }
 
                 string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.Data;
 
@@ -219,7 +223,7 @@ namespace StationConsole
                     if (item.StartsWith("CCID=")) {
 
                         ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
-                        lock (clientPointTable) {
+                        lock (clientPointTableLock) {
                             // 从客户表中找到与远程ip地址相同的条目，更新CCID
                             foreach (var client in clientPointTable) {
                                 if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
@@ -252,7 +256,7 @@ namespace StationConsole
                         subFirst.Listener.Send(e.RemoteEP, (string)retValue);
                 }
                 catch (Exception ex) {
-                    LogRecord.writeLog(ex);
+                    Logger.WriteException(ex);
                 }
             }));
         }
@@ -265,7 +269,7 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                LogRecord.WriteInfoLog(logFormat);
+                Logger.Write(logFormat);
             }));
         }
 
@@ -277,19 +281,29 @@ namespace StationConsole
             lstViewDataHandle.ItemsSource = dataHandleTable;
 
             // 运行时间
-            TextBlock blockTimeNow = new TextBlock();
             TextBlock blockTimeRun = new TextBlock();
-            statusBar.Items.Add(blockTimeNow);
+            TextBlock blockMemory = new TextBlock();
+            TextBlock blockMemoryDiff = new TextBlock();
             statusBar.Items.Add(blockTimeRun);
+            statusBar.Items.Add(blockMemory);
+            statusBar.Items.Add(blockMemoryDiff);
 
+            blockMemory.Text = "0";
             DateTime startTime = DateTime.Now;
 
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += new EventHandler((s, ea) =>
             {
-                blockTimeNow.Text = DateTime.Now.ToString();
                 blockTimeRun.Text = "运行时间 " + DateTime.Now.Subtract(startTime).ToString(@"dd\-hh\:mm\:ss");
+
+                long memory = GC.GetTotalMemory(false) / 1000;
+                long diff = memory - Convert.ToInt32(blockMemory.Text);
+                blockMemory.Text = memory.ToString();
+                if (diff >= 0)
+                    blockMemoryDiff.Text = "+" + diff;
+                else
+                    blockMemoryDiff.Text = "-" + diff;
             });
             timer.Start();
         }
@@ -406,7 +420,7 @@ namespace StationConsole
                         dataHandle.Listener.Send(dataHandle.TimerCommand);
                     }
                     catch (Exception ex) {
-                        LogRecord.writeLog(ex);
+                        Logger.WriteException(ex);
                     }
                 });
 
@@ -485,7 +499,7 @@ namespace StationConsole
                         input.textBox1.Text);
                 }
                 catch (Exception ex) {
-                    LogRecord.writeLog(ex);
+                    Logger.WriteException(ex);
                 }
             }
         }

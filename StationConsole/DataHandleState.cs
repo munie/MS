@@ -94,8 +94,8 @@ namespace StationConsole
             }
         }
 
-        public MnnPlugin.PluginItem Plugin { get; set; }
-        public MnnSocket.AsyncSocketListenerItem Listener { get; set; }
+        public Mnn.MnnPlugin.PluginItem Plugin { get; set; }
+        public Mnn.MnnSocket.AsyncSocketListenerItem Listener { get; set; }
         public System.Timers.Timer Timer { get; set; }
     }
 }

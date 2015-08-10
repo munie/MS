@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{554F1D48-F41A-4A23-A1E4-05A7F4058AB7}</ProjectGuid>
+    <ProjectGuid>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MnnSocket</RootNamespace>
-    <AssemblyName>MnnSocket</AssemblyName>
+    <RootNamespace>Mnn</RootNamespace>
+    <AssemblyName>Mnn</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -40,11 +40,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncSocketListenerManager.cs" />
-    <Compile Include="AsyncSocketListenerItem.cs" />
-    <Compile Include="AsyncSocketSender.cs" />
-    <Compile Include="ClientEventArgs.cs" />
-    <Compile Include="ListenerEventArgs.cs" />
+    <Compile Include="MnnPlugin\AppDomainProxy.cs" />
+    <Compile Include="MnnPlugin\PluginItem.cs" />
+    <Compile Include="MnnPlugin\PluginManager.cs" />
+    <Compile Include="MnnSocket\AsyncSocketListenerItem.cs" />
+    <Compile Include="MnnSocket\AsyncSocketListenerManager.cs" />
+    <Compile Include="MnnSocket\AsyncSocketSender.cs" />
+    <Compile Include="MnnSocket\ClientEventArgs.cs" />
+    <Compile Include="MnnSocket\ListenerEventArgs.cs" />
+    <Compile Include="MnnUtil\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

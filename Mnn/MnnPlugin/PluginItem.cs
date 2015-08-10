@@ -5,7 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace MnnPlugin
+namespace Mnn.MnnPlugin
 {
     public class PluginItem
     {

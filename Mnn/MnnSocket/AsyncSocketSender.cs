@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 
-namespace MnnSocket
+namespace Mnn.MnnSocket
 {
     public class AsyncSocketSender
     {
