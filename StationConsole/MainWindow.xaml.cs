@@ -101,7 +101,7 @@ namespace StationConsole
             }
 
             try {
-                listenPort = (int)dataHandle.Plugin.Invoke("IDataHandle", "GetIdentity", null);
+                listenPort = (int)dataHandle.Plugin.Invoke("IDataHandle", "GetDefaultListenPort", null);
             }
             catch (Exception ex) {
                 dataHandle.Plugin.UnLoad();
