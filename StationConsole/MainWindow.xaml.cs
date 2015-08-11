@@ -181,8 +181,8 @@ namespace StationConsole
                 clientPoint.ConnectTime = DateTime.Now;
                 clientPoint.CCID = "";
 
-                lock (clientPointTableLock) {
-                    ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                lock (clientPointTable) {
                     clientPointTable.Add(clientPoint);
                 }
             }));
@@ -196,8 +196,8 @@ namespace StationConsole
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
                 historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
 
-                lock (clientPointTableLock) {
-                    ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                lock (clientPointTable) {
                     var subset = from s in clientPointTable
                                     where s.IpAddress.Equals(e.RemoteEP.ToString())
                                     select s;
@@ -220,15 +220,15 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                //LogRecord.WriteInfoLog(logFormat);
+                //Logger.Write(logFormat);
 
                 /// @@ 没有办法的办法，必须删改
                 string[] str = e.Data.Split("|".ToArray());
                 foreach (var item in str) {
                     if (item.StartsWith("CCID=")) {
 
-                        lock (clientPointTableLock) {
-                            ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                        ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                        lock (clientPointTable) {
                             // 从客户表中找到与远程ip地址相同的条目，更新CCID
                             foreach (var client in clientPointTable) {
                                 if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
@@ -274,7 +274,7 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                Logger.Write(logFormat);
+                //Logger.Write(logFormat);
             }));
         }
 

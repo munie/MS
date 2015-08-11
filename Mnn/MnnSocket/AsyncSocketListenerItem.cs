@@ -123,37 +123,37 @@ namespace Mnn.MnnSocket
                     // Get the socket that handles the client request.
                     Socket handler = item.listenSocket.Accept();
 
-                    // Create the state object.
-                    ClientState cltState = new ClientState();
-                    cltState.localEP = (IPEndPoint)handler.LocalEndPoint;
-                    cltState.remoteEP = (IPEndPoint)handler.RemoteEndPoint;
-                    cltState.workSocket = handler;
-                    cltState.buffer = new byte[ClientState.BufferSize];
-                    cltState.sb = new StringBuilder();
-
-                    /// @@ 第一次收到数据后，才会进入ReadCallback。
-                    /// @@ 所以在没有收到数据前，线程被迫中止，将进入ReadCallback，并使EndReceive产生异常
-                    /// @@ 由于ReadCallback在出现异常时，自动关闭client Socket连接，所有本线程Accept的连接都将断开并删除
-                    /// @@ 暂时想不出解决办法
-                    // Start receive message from client
-                    try {
-                        handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
-                            new AsyncCallback(ReadCallback), cltState);
-                    }
-                    catch (Exception ex) {
-                        cltState.workSocket.Dispose();
-                        Logger.WriteException(ex);
-                        continue;
-                    }
-
-                    // Add handler to ClientState
                     lock (clientStateTable) {
-                        clientStateTable.Add(cltState);
-                    }
+                        // Create the state object.
+                        ClientState cltState = new ClientState();
+                        cltState.localEP = (IPEndPoint)handler.LocalEndPoint;
+                        cltState.remoteEP = (IPEndPoint)handler.RemoteEndPoint;
+                        cltState.workSocket = handler;
+                        cltState.buffer = new byte[ClientState.BufferSize];
+                        cltState.sb = new StringBuilder();
 
-                    /// ** Report ClientConnect event
-                    if (ClientConnect != null)
-                        ClientConnect(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
+                        /// @@ 第一次收到数据后，才会进入ReadCallback。
+                        /// @@ 所以在没有收到数据前，线程被迫中止，将进入ReadCallback，并使EndReceive产生异常
+                        /// @@ 由于ReadCallback在出现异常时，自动关闭client Socket连接，所有本线程Accept的连接都将断开并删除
+                        /// @@ 暂时想不出解决办法
+                        // Start receive message from client
+                        try {
+                            handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
+                                new AsyncCallback(ReadCallback), cltState);
+                        }
+                        catch (Exception ex) {
+                            cltState.workSocket.Dispose();
+                            Logger.WriteException(ex);
+                            continue;
+                        }
+
+                        // Add handler to ClientState
+                        clientStateTable.Add(cltState);
+
+                        /// ** Report ClientConnect event
+                        if (ClientConnect != null)
+                            ClientConnect(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
+                    }
                 }
             }
             catch (Exception ex) {
