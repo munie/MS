@@ -57,8 +57,13 @@ namespace StationConsole
             // Format Main Form's Name
             Assembly asm = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
-            this.Title = string.Format("{0} {1}.{2} - Powered By {3}",
-                fvi.ProductName, fvi.ProductMajorPart, fvi.ProductMinorPart, fvi.CompanyName);
+            this.Title = string.Format("{0} {1}.{2}.{3}-{4} - Powered By {5}",
+                fvi.ProductName,
+                fvi.ProductMajorPart,
+                fvi.ProductMinorPart,
+                fvi.ProductBuildPart,
+                fvi.ProductPrivatePart,
+                fvi.CompanyName);
         }
 
         private void InitailizeIPAddress()
