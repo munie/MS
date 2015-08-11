@@ -48,7 +48,6 @@ namespace StationConsole
 
         private ObservableCollection<DataHandleState> dataHandleTable = new ObservableCollection<DataHandleState>();
         //private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
-        private string clientPointTableLock = "";
 
         // Methods ============================================================================
 
