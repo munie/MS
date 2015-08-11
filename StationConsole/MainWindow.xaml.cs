@@ -196,21 +196,14 @@ namespace StationConsole
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
                 historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
 
-                for (int i = 0; ; ++i ) {
-                    lock (clientPointTableLock) {
-                        ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
-                        var subset = from s in clientPointTable
-                                     where s.IpAddress.Equals(e.RemoteEP.ToString())
-                                     select s;
+                lock (clientPointTableLock) {
+                    ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+                    var subset = from s in clientPointTable
+                                    where s.IpAddress.Equals(e.RemoteEP.ToString())
+                                    select s;
 
-                        if (subset.Count() != 0) {
-                            clientPointTable.Remove(subset.First());
-                            break;
-                        }
-
-                        if (i == 2)
-                            break;
-                    }
+                    if (subset.Count() != 0)
+                        clientPointTable.Remove(subset.First());
                 }
             }));
         }
