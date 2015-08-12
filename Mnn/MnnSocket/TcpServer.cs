@@ -15,6 +15,7 @@ namespace Mnn.MnnSocket
     {
         // listen socket
         private Socket server;
+        private bool isEnableServer;
         // listen & accept sockets
         private ArrayList socketList = new ArrayList();
         // buffer for reading
@@ -47,7 +48,7 @@ namespace Mnn.MnnSocket
                 server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 server.Bind(ep);
                 server.Listen(100);
-                socketList.Add(server);
+                isEnableServer = true;
 
                 /// ** Report ListenerStarted event
                 if (ListenerStarted != null)
@@ -55,11 +56,21 @@ namespace Mnn.MnnSocket
 
                 while (true) {
                     ArrayList list = (ArrayList)socketList.Clone();
+                    if (isEnableServer == true)
+                        list.Add(server);
+
                     if (list.Count == 0)
                         break;
 
-                    Socket.Select(list, null, null, -1);
-                    HandleSelect(list);
+                    try {
+                        Socket.Select(list, null, null, -1);
+                    }
+                    catch (Exception) {
+                        Thread.Sleep(50);
+                        continue;
+                    }
+
+                    HandleSelect(list, ep);
                 }
 
                 /// ** Report ListenerStopped event
@@ -75,7 +86,7 @@ namespace Mnn.MnnSocket
         /// The complex logic for handling select
         /// </summary>
         /// <param name="list"></param>
-        private void HandleSelect(ArrayList list)
+        private void HandleSelect(ArrayList list, IPEndPoint ep)
         {
             lock (socketList) {
                 foreach (Socket item in list) {
@@ -91,7 +102,6 @@ namespace Mnn.MnnSocket
 
                         }
                         catch (Exception) {
-                            socketList.Remove(item);
                             item.Dispose();
                         }
                         continue;
@@ -109,13 +119,14 @@ namespace Mnn.MnnSocket
 
                         /// ** Report ClientConnect event
                         if (ClientDisconn != null)
-                            ClientDisconn(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, null));
+                            ClientDisconn(this, new ClientEventArgs(ep, item.RemoteEndPoint, null));
 
+                        item.Dispose();
                     }
                     else {
                         /// ** Report ClientReadMsg event
                         if (ClientReadMsg != null)
-                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint,
+                            ClientReadMsg(this, new ClientEventArgs(ep, item.RemoteEndPoint,
                                                             UTF8Encoding.Default.GetString(readbuffer, 0, bytesRead)));
                     }
                 }
@@ -128,9 +139,10 @@ namespace Mnn.MnnSocket
         public void Stop()
         {
             // Close server
-            server.Close(1);
+            server.Close();
+            isEnableServer = false;
 
-            // Close clients, there're no server in socketList now
+            // Close clients
             CloseClient();
         }
 
@@ -142,9 +154,6 @@ namespace Mnn.MnnSocket
         {
             lock (socketList) {
                 foreach (Socket item in socketList) {
-                    if (item == server)
-                        continue;
-
                     item.Send(UTF8Encoding.Default.GetBytes(data), 0, UTF8Encoding.Default.GetBytes(data).Length, 0);
 
                     /// ** Report ClientSendMsg event
@@ -183,15 +192,8 @@ namespace Mnn.MnnSocket
         {
             lock (socketList) {
                 // Stop all client socket
-                foreach (Socket item in socketList) {
-                    if (item == server)
-                        continue;
-
-                    try {
-                        item.Shutdown(SocketShutdown.Both);
-                    }
-                    catch (Exception) { }
-                }
+                foreach (Socket item in socketList)
+                    item.Shutdown(SocketShutdown.Both);
             }
         }
 
