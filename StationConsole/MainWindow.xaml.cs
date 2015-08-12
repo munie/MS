@@ -43,9 +43,6 @@ namespace StationConsole
 
         private IPAddress ipAddress = null;
 
-        private AsyncSocketListenerManager listenerManager = new AsyncSocketListenerManager();
-        private PluginManager pluginManager = new PluginManager();
-
         private ObservableCollection<DataHandleState> dataHandleTable = new ObservableCollection<DataHandleState>();
         //private ObservableCollection<ClientPoint> clientPointTable = new ObservableCollection<ClientPoint>();
 
@@ -114,7 +111,7 @@ namespace StationConsole
             }
 
             // 加载模块已经成功
-            dataHandle.Listener = new AsyncSocketListenerItem();
+            dataHandle.Listener = new TcpServer();
             dataHandle.Timer = new System.Timers.Timer();
 
             dataHandle.ListenPort = listenPort;
@@ -131,8 +128,6 @@ namespace StationConsole
             dataHandle.Listener.ClientSendMsg += SocketListener_ClientSendMsg;
 
             // 加入 table
-            listenerManager.Items.Add(dataHandle.Listener);
-            pluginManager.Items.Add(dataHandle.Plugin);
             dataHandleTable.Add(dataHandle);
         }
 
@@ -157,8 +152,6 @@ namespace StationConsole
             dataHandle.Plugin.UnLoad();
 
             // 移出 table
-            listenerManager.Items.Remove(dataHandle.Listener);
-            pluginManager.Items.Remove(dataHandle.Plugin);
             dataHandleTable.Remove(dataHandle);
         }
 
@@ -227,8 +220,8 @@ namespace StationConsole
                 //Logger.Write(logFormat);
 
                 /// @@ 没有办法的办法，必须删改
-                string[] str = e.Data.Split("|".ToArray());
-                foreach (var item in str) {
+                string[] strMsg = e.Data.Split("|".ToArray());
+                foreach (var item in strMsg) {
                     if (item.StartsWith("CCID=")) {
 
                         ClientPointTable clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
@@ -245,8 +238,11 @@ namespace StationConsole
                                 // 1.CCID相同 2.远程IP地址不相同 3.本地端口相同
                                 if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString()) &&
                                     client.AcceptedPort.Equals(e.LocalEP.Port)) {
-                                    string[] s = client.IpAddress.Split(":".ToArray());
-                                    listenerManager.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                                    string[] strTmp = client.IpAddress.Split(":".ToArray());
+
+                                    var subset = from s in dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
+                                    if (subset.Count() != 0)
+                                        subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
                                     break;
                                 }
                             }
@@ -495,9 +491,12 @@ namespace StationConsole
                     continue;
 
                 try {
-                    string[] s = client.IpAddress.Split(":".ToArray());
-                    listenerManager.Send(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])),
-                        input.textBox1.Text);
+                    string[] strTmp = client.IpAddress.Split(":".ToArray());
+
+                    var subset = from s in dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
+                    if (subset.Count() != 0)
+                        subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])), input.textBox1.Text);
+                        
                 }
                 catch (Exception ex) {
                     Logger.WriteException(ex);
@@ -513,8 +512,11 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                string[] s = client.IpAddress.Split(":".ToArray());
-                listenerManager.CloseClient(new IPEndPoint(IPAddress.Parse(s[0]), Convert.ToInt32(s[1])));
+                string[] strTmp = client.IpAddress.Split(":".ToArray());
+
+                var subset = from s in dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
+                if (subset.Count() != 0)
+                    subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
             }
         }
 

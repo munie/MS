@@ -48,6 +48,7 @@
     <Compile Include="MnnSocket\AsyncSocketSender.cs" />
     <Compile Include="MnnSocket\ClientEventArgs.cs" />
     <Compile Include="MnnSocket\ListenerEventArgs.cs" />
+    <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnUtil\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
