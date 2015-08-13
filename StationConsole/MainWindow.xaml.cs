@@ -91,29 +91,17 @@ namespace StationConsole
         {
             int listenPort = 0;
             DataHandleState dataHandle = new DataHandleState();
-            dataHandle.Plugin = new PluginItem();
+            dataHandle.InitializeSource();
 
             try {
-                dataHandle.Plugin.Load(filePath);
+                listenPort = dataHandle.LoadDataHandlePlugin(filePath);
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-                return;
-            }
-
-            try {
-                listenPort = (int)dataHandle.Plugin.Invoke("IDataHandle", "GetDefaultListenPort", null);
-            }
-            catch (Exception ex) {
-                dataHandle.Plugin.UnLoad();
                 MessageBox.Show(ex.Message, "Error");
                 return;
             }
 
             // 加载模块已经成功
-            dataHandle.Listener = new TcpServer();
-            dataHandle.Timer = new System.Timers.Timer();
-
             dataHandle.ListenPort = listenPort;
             dataHandle.ListenState = DataHandleState.ListenStateStoped;
             dataHandle.ChineseName = FileVersionInfo.GetVersionInfo(filePath).ProductName;
@@ -135,21 +123,18 @@ namespace StationConsole
         {
             // 关闭端口
             if (dataHandle.ListenState == DataHandleState.ListenStateStarted) {
-                // 逻辑上讲，不会出现异常
-                dataHandle.Listener.Stop();
-                // 同时关闭对应客户端
-                dataHandle.Listener.CloseClient();
+                dataHandle.StopListener();
                 dataHandle.ListenState = DataHandleState.ListenStateStoped;
             }
 
             // 关闭定时器
             if (dataHandle.TimerState == DataHandleState.TimerStateStarted) {
-                dataHandle.Timer.Stop();
+                dataHandle.StopTimerCommand();
                 dataHandle.TimerState = DataHandleState.TimerStateStoped;
             }
 
             // 卸载模块
-            dataHandle.Plugin.UnLoad();
+            dataHandle.UnloadDataHandlePlugin();
 
             // 移出 table
             dataHandleTable.Remove(dataHandle);
@@ -217,7 +202,6 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                //Logger.Write(logFormat);
 
                 /// @@ 没有办法的办法，必须删改
                 string[] strMsg = e.Data.Split("|".ToArray());
@@ -255,12 +239,10 @@ namespace StationConsole
                 /// 调用数据处理插件 ======================================================
                 try {
                     var subFirst = (from s in dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
-
-                    object retValue = subFirst.Plugin.Invoke("IDataHandle", "Handle", new object[] { e.Data });
-                    if (retValue != null)
-                        subFirst.Listener.Send(e.RemoteEP, (string)retValue);
+                    subFirst.AppendData(e.RemoteEP, e.Data);
                 }
                 catch (Exception ex) {
+                    // 正常不会出现subFirst不存在的情况，如果出现，应该记录
                     Logger.WriteException(ex);
                 }
             }));
@@ -274,7 +256,6 @@ namespace StationConsole
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
-                //Logger.Write(logFormat);
             }));
         }
 
@@ -347,8 +328,9 @@ namespace StationConsole
 
                 // 端口可能已经被其他程序监听
                 try {
-                    dataHandle.Listener.Start(new IPEndPoint(ipAddress, dataHandle.ListenPort));
+                    dataHandle.StartListener(new IPEndPoint(ipAddress, dataHandle.ListenPort));
                     dataHandle.ListenState = DataHandleState.ListenStateStarted;
+                    dataHandle.StartHandleData();
                 }
                 catch (Exception ex) {
                     MessageBox.Show(ex.Message, "Error");
@@ -367,10 +349,9 @@ namespace StationConsole
                     continue;
 
                 // 逻辑上讲，不会出现异常
-                dataHandle.Listener.Stop();
-                // 同时关闭对应客户端
-                dataHandle.Listener.CloseClient();
+                dataHandle.StopListener();
                 dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                dataHandle.StopHandleData();
             }
         }
 
@@ -411,17 +392,7 @@ namespace StationConsole
                     dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
                     continue;
 
-                dataHandle.Timer.Interval = dataHandle.TimerInterval * 1000;
-                dataHandle.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
-                    try {
-                        dataHandle.Listener.Send(dataHandle.TimerCommand);
-                    }
-                    catch (Exception ex) {
-                        Logger.WriteException(ex);
-                    }
-                });
-
-                dataHandle.Timer.Start();
+                dataHandle.StartTimerCommand(dataHandle.TimerInterval * 1000, dataHandle.TimerCommand);
                 dataHandle.TimerState = DataHandleState.TimerStateStarted;
             }
         }
@@ -436,7 +407,7 @@ namespace StationConsole
                 if (dataHandle.TimerState == DataHandleState.TimerStateStoped)
                     continue;
 
-                dataHandle.Timer.Stop();
+                dataHandle.StopTimerCommand();
                 dataHandle.TimerState = DataHandleState.TimerStateStoped;
             }
         }
@@ -492,15 +463,12 @@ namespace StationConsole
 
                 try {
                     string[] strTmp = client.IpAddress.Split(":".ToArray());
-
                     var subset = from s in dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
                     if (subset.Count() != 0)
                         subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])), input.textBox1.Text);
                         
                 }
-                catch (Exception ex) {
-                    Logger.WriteException(ex);
-                }
+                catch (Exception) { }
             }
         }
 
