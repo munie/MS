@@ -100,7 +100,7 @@ namespace Mnn.MnnSocket
                     if (socketTable.Count == 0)
                         break;
 
-                    // 仅涉及 socketTable 的读取，在本线程内无需加锁
+                    // 只有主线程可以写 socketTable， 所以主线程的 socketTable 读取，在主线程内无需加锁
                     ArrayList list = new ArrayList(socketTable);
 
                     Socket.Select(list, null, null, 500);
@@ -121,7 +121,7 @@ namespace Mnn.MnnSocket
             lock (socketLocker) {
                 foreach (Socket item in list) {
                     // Server: accept clients
-                    if (item == server) {
+                    if (item == server && !socketRemoving.Contains(server)) {
                         try {
                             Socket client = item.Accept();
                             socketTable.Add(client);

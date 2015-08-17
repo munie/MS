@@ -125,6 +125,7 @@ namespace StationConsole
             if (dataHandle.ListenState == DataHandleState.ListenStateStarted) {
                 dataHandle.StopListener();
                 dataHandle.ListenState = DataHandleState.ListenStateStoped;
+                dataHandle.StopHandleData();
             }
 
             // 关闭定时器
