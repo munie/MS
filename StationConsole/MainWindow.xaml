@@ -100,7 +100,7 @@
             
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="客户端IP" Width="130"
+                    <GridViewColumn Header="客户端IP" Width="140"
                                     DisplayMemberBinding="{Binding IpAddress}" />
                     <GridViewColumn Header="本地端口" Width="70"
                                     DisplayMemberBinding="{Binding AcceptedPort}" />
