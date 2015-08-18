@@ -21,8 +21,9 @@ namespace StationConsole
     partial class DataHandleUnit
     {
         private Queue<ClientData> dataTable = new Queue<ClientData>();
-        private Semaphore dataSem = new Semaphore(0, 100);
+        private Semaphore dataSem = new Semaphore(0, 200);
         private Thread dataThread;
+        private bool isExitDataThread = false;
 
         public Mnn.MnnPlugin.PluginItem Plugin { get; private set; }
         public Mnn.MnnSocket.TcpServer Listener { get; set; }
@@ -44,11 +45,19 @@ namespace StationConsole
 
         public void StartHandleData()
         {
+            isExitDataThread = false;
+
             dataThread = new Thread(() =>
             {
                 try {
                     while (true) {
-                        dataSem.WaitOne();
+                        if (isExitDataThread == true) {
+                            isExitDataThread = false;
+                            break;
+                        }
+                        if (dataSem.WaitOne(500) == false)
+                            continue;
+
                         ClientData clientData;
                         lock (dataTable) {
                             clientData = dataTable.Peek();
@@ -74,7 +83,7 @@ namespace StationConsole
 
         public void StopHandleData()
         {
-            dataThread.Abort();
+            isExitDataThread = true;
             dataThread.Join();
         }
 
