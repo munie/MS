@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace StationConsole
 {
-    public class ClientPoint : INotifyPropertyChanged
+    public class ClientPointState : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

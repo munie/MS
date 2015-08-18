@@ -58,7 +58,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DataHandle\ClientPoint.cs" />
+    <Compile Include="DataHandle\ClientPointState.cs" />
     <Page Include="InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -73,6 +73,7 @@
     </Compile>
     <Compile Include="DataHandle\DataHandleState.cs" />
     <Compile Include="DataHandle\DataHandleUnit.cs" />
+    <Compile Include="DataHandle\DataLayer.cs" />
     <Compile Include="InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
