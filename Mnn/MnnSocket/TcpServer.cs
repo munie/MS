@@ -24,7 +24,7 @@ namespace Mnn.MnnSocket
         // socket locker for socketTable & socketRemoving
         private string socketLocker = "Socket Locker"; 
         // buffer for reading
-        private byte[] readBuffer = new byte[8192];
+        private byte[] readbuffer = new byte[8192];
 
         // Events of listener and client
         public event EventHandler<ListenerEventArgs> ListenerStarted;
@@ -46,6 +46,8 @@ namespace Mnn.MnnSocket
                 return inOptionValues;
             }
         }
+
+        // Methods ============================================================================
 
         /// <summary>
         /// Start TcpServer
@@ -139,7 +141,7 @@ namespace Mnn.MnnSocket
                     // Clients: read bytes from clients 
                     int bytesRead = 0;
                     try {
-                        bytesRead = item.Receive(readBuffer, 0, readBuffer.Length, 0);
+                        bytesRead = item.Receive(readbuffer, 0, readbuffer.Length, 0);
                     }
                     catch (Exception) { }
 
@@ -149,7 +151,7 @@ namespace Mnn.MnnSocket
                     else {
                         /// ** Report ClientReadMsg event
                         if (ClientReadMsg != null)
-                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readBuffer.Take(bytesRead).ToArray()));
+                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readbuffer.Take(bytesRead).ToArray()));
                     }
                 }
             }
@@ -245,7 +247,6 @@ namespace Mnn.MnnSocket
                 }
             }
         }
-
 
     }
 }

@@ -41,8 +41,6 @@ namespace StationConsole
             InitailizeOthers();
         }
 
-
-
         // Methods ============================================================================
 
         private void InitailizeWindowName()
