@@ -59,6 +59,7 @@ namespace StationConsole
 
         private void InitailizeDataLayer()
         {
+            /*
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in ipAddr) {
                 if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
@@ -66,7 +67,9 @@ namespace StationConsole
                     break;
                 }
             }
+             * */
 
+            DataLayer.ipAddress = IPAddress.Parse("0.0.0.0");
             DataLayer.dataHandleTable = new ObservableCollection<DataHandleState>();
             DataLayer.clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
         }

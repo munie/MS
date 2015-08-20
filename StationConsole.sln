@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationConsole", "StationCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mnn", "Mnn\Mnn.csproj", "{8C1BDA51-F559-4472-A895-6BF82C0A06DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpAttacker", "TcpAttacker\TcpAttacker.csproj", "{2C1C92B9-6401-49DB-A162-E185A6F5D16B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|x86.ActiveCfg = Release|Any CPU
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Debug|x86.ActiveCfg = Debug|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Debug|x86.Build.0 = Debug|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|Any CPU.ActiveCfg = Release|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|Mixed Platforms.Build.0 = Release|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|x86.ActiveCfg = Release|x86
+		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
