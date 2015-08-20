@@ -27,8 +27,6 @@ namespace Mnn.MnnSocket
             public const int BufferSize = 8192;
             // Receive buffer.
             public byte[] buffer = null;
-            // Received data string.
-            public StringBuilder sb = null;
         }
     }
 
@@ -130,7 +128,6 @@ namespace Mnn.MnnSocket
                         cltState.remoteEP = (IPEndPoint)handler.RemoteEndPoint;
                         cltState.workSocket = handler;
                         cltState.buffer = new byte[ClientState.BufferSize];
-                        cltState.sb = new StringBuilder();
 
                         /// @@ 第一次收到数据后，才会进入ReadCallback。
                         /// @@ 所以在没有收到数据前，线程被迫中止，将进入ReadCallback，并使EndReceive产生异常
@@ -178,16 +175,9 @@ namespace Mnn.MnnSocket
                 int bytesRead = cltState.workSocket.EndReceive(ar);
 
                 if (bytesRead > 0) {
-                    // There  might be more data, so store the data received so far.
-                    cltState.sb.Append(UTF8Encoding.Default.GetString(
-                        cltState.buffer, 0, bytesRead));
-
                     /// ** Report ClientReadMsg event
                     if (ClientReadMsg != null)
-                        ClientReadMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, cltState.sb.ToString()));
-
-                    // Then clear the StringBuilder
-                    cltState.sb.Clear();
+                        ClientReadMsg(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, cltState.buffer.Take(bytesRead).ToArray()));
 
                     // Restart receive message from client
                     cltState.workSocket.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
@@ -222,13 +212,11 @@ namespace Mnn.MnnSocket
         /// Send data to all EP
         /// </summary>
         /// <param name="data"></param>
-        public void Send(string data)
+        public void Send(byte[] data)
         {
             lock (clientStateTable) {
                 foreach (ClientState cltState in clientStateTable) {
-                    cltState.workSocket.BeginSend(UTF8Encoding.Default.GetBytes(data), 0,
-                        UTF8Encoding.Default.GetBytes(data).Length, 0,
-                        new AsyncCallback(SendCallback), cltState);
+                    cltState.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), cltState);
 
                     /// ** Report ClientSendMsg event
                     if (ClientSendMsg != null)
@@ -242,14 +230,12 @@ namespace Mnn.MnnSocket
         /// </summary>
         /// <param name="ep"></param>
         /// <param name="data"></param>
-        public void Send(IPEndPoint ep, string data)
+        public void Send(IPEndPoint ep, byte[] data)
         {
             lock (clientStateTable) {
                 foreach (ClientState cltState in clientStateTable) {
                     if (cltState.workSocket.RemoteEndPoint.Equals(ep)) {
-                        cltState.workSocket.BeginSend(UTF8Encoding.Default.GetBytes(data), 0,
-                           UTF8Encoding.Default.GetBytes(data).Length, 0,
-                           new AsyncCallback(SendCallback), cltState);
+                        cltState.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), cltState);
 
                         /// ** Report ClientSendMsg event
                         if (ClientSendMsg != null)

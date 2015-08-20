@@ -11,13 +11,13 @@ namespace Mnn.MnnSocket
     /// </summary>
     public class ClientEventArgs : EventArgs
     {
-        public ClientEventArgs(EndPoint lep, EndPoint rep, string msg)
+        public ClientEventArgs(EndPoint lep, EndPoint rep, byte[] msg)
         {
             LocalEP = (IPEndPoint)lep;
             RemoteEP = (IPEndPoint)rep;
             Data = msg;
         }
-        public ClientEventArgs(IPEndPoint lep, IPEndPoint rep, string msg)
+        public ClientEventArgs(IPEndPoint lep, IPEndPoint rep, byte[] msg)
         {
             LocalEP = lep;
             RemoteEP = rep;
@@ -26,6 +26,6 @@ namespace Mnn.MnnSocket
 
         public IPEndPoint LocalEP { get; set; }
         public IPEndPoint RemoteEP { get; set; }
-        public string Data { get; set; }
+        public byte[] Data { get; set; }
     }
 }

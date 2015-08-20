@@ -24,7 +24,7 @@ namespace Mnn.MnnSocket
         // socket locker for socketTable & socketRemoving
         private string socketLocker = "Socket Locker"; 
         // buffer for reading
-        private byte[] readbuffer = new byte[8192];
+        private byte[] readBuffer = new byte[8192];
 
         // Events of listener and client
         public event EventHandler<ListenerEventArgs> ListenerStarted;
@@ -139,7 +139,7 @@ namespace Mnn.MnnSocket
                     // Clients: read bytes from clients 
                     int bytesRead = 0;
                     try {
-                        bytesRead = item.Receive(readbuffer, 0, readbuffer.Length, 0);
+                        bytesRead = item.Receive(readBuffer, 0, readBuffer.Length, 0);
                     }
                     catch (Exception) { }
 
@@ -149,8 +149,7 @@ namespace Mnn.MnnSocket
                     else {
                         /// ** Report ClientReadMsg event
                         if (ClientReadMsg != null)
-                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint,
-                                                            UTF8Encoding.Default.GetString(readbuffer, 0, bytesRead)));
+                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readBuffer.Take(bytesRead).ToArray()));
                     }
                 }
             }
@@ -171,14 +170,14 @@ namespace Mnn.MnnSocket
         /// Send data to all clients
         /// </summary>
         /// <param name="data"></param>
-        public void Send(string data)
+        public void Send(byte[] data)
         {
             lock (socketLocker) {
                 foreach (Socket item in socketTable) {
                     if (item == server)
                         continue;
 
-                    item.Send(UTF8Encoding.Default.GetBytes(data), 0, UTF8Encoding.Default.GetBytes(data).Length, 0);
+                    item.Send(data, 0, data.Length, 0);
 
                     /// ** Report ClientSendMsg event
                     if (ClientSendMsg != null)
@@ -193,7 +192,7 @@ namespace Mnn.MnnSocket
         /// </summary>
         /// <param name="ep"></param>
         /// <param name="data"></param>
-        public void Send(IPEndPoint ep, string data)
+        public void Send(IPEndPoint ep, byte[] data)
         {
             lock (socketLocker) {
                 foreach (Socket item in socketTable) {
@@ -201,7 +200,7 @@ namespace Mnn.MnnSocket
                         continue;
 
                     if (item.RemoteEndPoint.Equals(ep)) {
-                        item.Send(UTF8Encoding.Default.GetBytes(data), 0, UTF8Encoding.Default.GetBytes(data).Length, 0);
+                        item.Send(data, 0, data.Length, 0);
 
                         /// ** Report ClientSendMsg event
                         if (ClientSendMsg != null)

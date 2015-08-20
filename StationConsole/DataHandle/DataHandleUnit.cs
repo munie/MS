@@ -67,7 +67,7 @@ namespace StationConsole
                         try {
                             object retValue = Plugin.Invoke("IDataHandle", "Handle", new object[] { clientData.data });
                             if (retValue != null)
-                                this.Listener.Send(clientData.ep, (string)retValue);
+                                this.Listener.Send(clientData.ep, Encoding.Default.GetBytes((string)retValue));
                         }
                         catch (Exception ex) {
                             Logger.WriteException(ex);
@@ -140,7 +140,7 @@ namespace StationConsole
             this.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
             {
                 try {
-                    this.Listener.Send(command);
+                    this.Listener.Send(Encoding.Default.GetBytes(command));
                 }
                 catch (Exception) { }
             });

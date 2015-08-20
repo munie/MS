@@ -19,7 +19,7 @@ namespace Mnn.MnnSocket
         /// </summary>
         /// <param name="ep"></param>
         /// <param name="data"></param>
-        public void Send(IPEndPoint ep, string data)
+        public void Send(IPEndPoint ep, byte[] data)
         {
             var subset = from s in Items where s.ContainClient(ep) == true select s;
 

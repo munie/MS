@@ -234,7 +234,8 @@ namespace StationConsole
                 string[] strTmp = client.IpAddress.Split(":".ToArray());
                 var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
                 if (subset.Count() != 0)
-                    subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])), msg);
+                    subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                                        Encoding.Default.GetBytes(msg));
 
             }
             catch (Exception) { }
@@ -301,17 +302,19 @@ namespace StationConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                string msg = Encoding.Default.GetString(e.Data);
+
                 if (txtMsg.Text.Length >= 20 * 1024) {
                     txtMsg.Clear();
                 }
 
-                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + e.Data;
+                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
 
                 /// @@ 没有办法的办法，必须删改
-                string[] strMsg = e.Data.Split("|".ToArray());
+                string[] strMsg = msg.Split("|".ToArray());
                 foreach (var item in strMsg) {
                     if (item.StartsWith("CCID=")) {
 
@@ -345,7 +348,7 @@ namespace StationConsole
                 /// 调用数据处理插件 ======================================================
                 try {
                     var subFirst = (from s in DataLayer.dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
-                    subFirst.AppendData(e.RemoteEP, e.Data);
+                    subFirst.AppendData(e.RemoteEP, msg);
                 }
                 catch (Exception ex) {
                     // 正常不会出现subFirst不存在的情况，如果出现，应该记录
