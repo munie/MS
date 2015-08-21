@@ -366,7 +366,7 @@ namespace StationConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + e.Data;
+                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + Encoding.GetEncoding(936).GetString(e.Data);
 
                 txtMsg.AppendText(logFormat + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
