@@ -341,7 +341,11 @@ namespace StationConsole
                                 }
                             }
                         }
-
+                    }
+                    else if (item.Contains("R=POWER OFF OK")) {
+                        var subset = from s in DataLayer.dataHandleTable where s.ListenPort == e.LocalEP.Port select s.Listener;
+                        if (subset.Count() != 0)
+                            subset.First().CloseClient(e.RemoteEP);
                     }
                 }
                 /// @@ 没有办法的办法，必须删改
