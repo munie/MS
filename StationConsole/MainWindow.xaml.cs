@@ -236,7 +236,7 @@ namespace StationConsole
                 var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
                 if (subset.Count() != 0)
                     subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                                        Encoding.Default.GetBytes(msg));
+                                        Encoding.GetEncoding(936).GetBytes(msg));
 
             }
             catch (Exception) { }
@@ -303,7 +303,7 @@ namespace StationConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                string msg = Encoding.Default.GetString(e.Data);
+                string msg = Encoding.GetEncoding(936).GetString(e.Data);
 
                 if (txtMsg.Text.Length >= 20 * 1024) {
                     txtMsg.Clear();

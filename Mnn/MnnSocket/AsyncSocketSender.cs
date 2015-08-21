@@ -17,17 +17,14 @@ namespace Mnn.MnnSocket
             SendFail = 4,
             ReadMessage = 5,
         }
-        public delegate void MessageReceiverDelegate(string s, AsyncState dealerState);
+        public delegate void MessageReceiverDelegate(byte[] data, AsyncState dealerState);
         public event MessageReceiverDelegate messageReceiver;
 
         private Socket sender;
-        private const int bufferSize = 2048;
-        private byte[] sendBuffer = new byte[bufferSize];
-        private byte[] readBuffer = new byte[bufferSize];
+        private byte[] readbuffer = new byte[8192];
+        private int sendLength;
 
-        public AsyncSocketSender()
-        {
-        }
+        // Methods ================================================================
 
         public void Connect(EndPoint endPoint)
         {
@@ -44,68 +41,20 @@ namespace Mnn.MnnSocket
                 // Complete the connection.
                 client.EndConnect(ar);
 
-                //Console.WriteLine("Socket connected to {0}",
-                //    client.RemoteEndPoint.ToString());
-
-                // Signal that the connection has been made.
-                //connectDone.Set();
-
                 // Event the one that needs to be evented.
                 if (messageReceiver != null)
-                    messageReceiver("", AsyncState.ConnectSuccess);
+                    messageReceiver(null, AsyncState.ConnectSuccess);
 
                 // start receive message
-                Array.Clear(readBuffer, 0, readBuffer.Length);
-                sender.BeginReceive(readBuffer, 0, readBuffer.Length, 0,
+                Array.Clear(readbuffer, 0, readbuffer.Length);
+                sender.BeginReceive(readbuffer, 0, readbuffer.Length, 0,
                     new AsyncCallback(ReceiveCallback), sender);
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 sender.Close();
-                sender = null;
+
                 if (messageReceiver != null)
-                    messageReceiver("", AsyncState.ConnectFail);
-                Console.WriteLine(ex.ToString());
-            }
-        }
-
-        public void DisConn()
-        {
-            sender.Shutdown(SocketShutdown.Both);
-            sender.Close();
-            sender = null;
-
-            // Event the one that needs to be evented.
-            if (messageReceiver != null)
-                messageReceiver("", AsyncState.Disconncted);
-        }
-
-        public void Send(string s)
-        {
-            Array.Clear(sendBuffer, 0, sendBuffer.Length);
-            sendBuffer = UTF8Encoding.Default.GetBytes(s);
-
-            sender.BeginSend(sendBuffer, 0, sendBuffer.Length, 0, new AsyncCallback(SendCallback), sender);
-        }
-
-        private void SendCallback(IAsyncResult ar)
-        {
-            try {
-                // Retrieve the socket from the state object.
-                Socket client = (Socket)ar.AsyncState;
-
-                // Complete sending the data to the remote device.
-                int bytesSent = client.EndSend(ar);
-
-                if (messageReceiver != null) {
-                    if (bytesSent == sendBuffer.Length)
-                        messageReceiver("", AsyncState.SendSuccess);
-                    else
-                        messageReceiver("", AsyncState.SendFail);
-                }
-
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                    messageReceiver(null, AsyncState.ConnectFail);
             }
         }
 
@@ -118,24 +67,60 @@ namespace Mnn.MnnSocket
                 int bytesRead = client.EndReceive(ar);
 
                 if (bytesRead == 0) {
-                    DisConn();
+                    Close();
                     return;
                 }
 
-                string str = UTF8Encoding.Default.GetString(readBuffer, 0, readBuffer.Length).Replace("\0", "");
-
-                if (messageReceiver != null) {
-                    messageReceiver(str, AsyncState.ReadMessage);
-                }
+                if (messageReceiver != null)
+                    messageReceiver(readbuffer.Take(bytesRead).ToArray(), AsyncState.ReadMessage);
 
                 // restart the receiver
-                Array.Clear(readBuffer, 0, readBuffer.Length);
-                sender.BeginReceive(readBuffer, 0, readBuffer.Length, 0,
+                sender.BeginReceive(readbuffer, 0, readbuffer.Length, 0,
                     new AsyncCallback(ReceiveCallback), sender);
             }
             catch (SocketException ex) {
-                DisConn();
+                Close();
                 Console.WriteLine(ex.ToString());
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        public void Close()
+        {
+            sender.Close();
+
+            // Event the one that needs to be evented.
+            if (messageReceiver != null)
+                messageReceiver(null, AsyncState.Disconncted);
+        }
+
+        public void Send(byte[] data)
+        {
+            //sendLength = data.Length;
+            //sender.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), sender);
+
+            sender.Send(data, 0, data.Length, 0);
+            if (messageReceiver != null)
+                messageReceiver(data, AsyncState.SendSuccess);
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            try {
+                // Retrieve the socket from the state object.
+                Socket client = (Socket)ar.AsyncState;
+
+                // Complete sending the data to the remote device.
+                int bytesSent = client.EndSend(ar);
+
+                if (messageReceiver != null) {
+                    if (bytesSent == sendLength)
+                        messageReceiver(null, AsyncState.SendSuccess);
+                    else
+                        messageReceiver(null, AsyncState.SendFail);
+                }
             }
             catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
