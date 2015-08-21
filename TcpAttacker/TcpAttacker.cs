@@ -13,6 +13,7 @@ namespace TcpAttacker
         private System.Timers.Timer timer;
         private bool isConnected = false;
 
+        public Encoding Coding;
         public Random Rand;
         public string Name;
         public IPEndPoint EP;
@@ -37,7 +38,7 @@ namespace TcpAttacker
                     }
                     else {
                         string data = MessageTable[Rand.Next(0, MessageTable.Count())];
-                        socketSender.Send(Encoding.Default.GetBytes(data));
+                        socketSender.Send(Coding.GetBytes(data));
                     }
                 }
                 catch (Exception) { }
@@ -48,7 +49,7 @@ namespace TcpAttacker
 
         public void Stop()
         {
-            timer.Close();
+            timer.Stop();
             if (socketSender != null)
                 socketSender.Close();
         }

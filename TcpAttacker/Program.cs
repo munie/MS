@@ -10,15 +10,20 @@ namespace TcpAttacker
 {
     class Program
     {
-        static IPAddress ipAddress;
-        static Random random = new Random();
-        static List<TcpAttacker> attackerTable = new List<TcpAttacker>();
-
         static void Main(string[] args)
         {
+            Encoding coding;
+            IPAddress ipAddress;
+            Random random = new Random();
+            List<TcpAttacker> attackerTable = new List<TcpAttacker>();
+
+
             // 读取配置文件
             XmlDocument xdoc = new XmlDocument();
             xdoc.Load("config\\message.xml");
+
+            XmlNode codingNode = xdoc.SelectSingleNode("/configuration/encoding");
+            coding = Encoding.GetEncoding(codingNode.InnerText);
 
             XmlNode ipNode = xdoc.SelectSingleNode("/configuration/ipaddress");
             ipAddress = IPAddress.Parse(ipNode.InnerText);
@@ -28,16 +33,17 @@ namespace TcpAttacker
                 int Count = Convert.ToInt32(item.Attributes["count"].InnerText);
 
                 for (int i = 0; i < Count; i++) {
-                    TcpAttacker stationInfo = new TcpAttacker();
-                    stationInfo.Rand = new Random(random.Next(0,10000));
-                    stationInfo.Name = item.Attributes["name"].Value;
-                    stationInfo.EP = new IPEndPoint(ipAddress, Convert.ToInt32(item.Attributes["port"].Value));
-                    stationInfo.Interval = 1000 * random.Next(1, Convert.ToInt32(item.Attributes["max_interval"].Value));
+                    TcpAttacker attacker = new TcpAttacker();
+                    attacker.Coding = coding;
+                    attacker.Rand = new Random(random.Next(0,10000));
+                    attacker.Name = item.Attributes["name"].Value;
+                    attacker.EP = new IPEndPoint(ipAddress, Convert.ToInt32(item.Attributes["port"].Value));
+                    attacker.Interval = 1000 * random.Next(1, Convert.ToInt32(item.Attributes["max_interval"].Value));
                     XmlNodeList msg = item.SelectNodes("message");
                     foreach (XmlNode node in msg) {
-                        stationInfo.MessageTable.Add(node.Attributes["content"].Value);
+                        attacker.MessageTable.Add(node.Attributes["content"].Value);
                     }
-                    attackerTable.Add(stationInfo);
+                    attackerTable.Add(attacker);
                 }
             }
 

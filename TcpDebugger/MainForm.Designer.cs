@@ -143,7 +143,7 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "SocketDebugger";
+            this.Text = "TcpDebugger";
             this.ResumeLayout(false);
             this.PerformLayout();
 

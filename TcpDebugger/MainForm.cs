@@ -9,38 +9,47 @@ using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Xml;
 using Mnn.MnnSocket;
 
 namespace TcpDebugger
 {
     public partial class MainForm : Form
     {
+        private Encoding coding;
+        private IPAddress ipaddress;
+        private int port;
         private AsyncSocketSender client;
 
         public MainForm()
         {
             InitializeComponent();
 
+            XmlDocument xdoc = new XmlDocument();
+            xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
+
+            XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
+            coding = Encoding.GetEncoding(node.InnerText);
+
+            node = xdoc.SelectSingleNode("/configuration/ipaddress");
+            ipaddress = IPAddress.Parse(node.InnerText);
+
+            node = xdoc.SelectSingleNode("/configuration/port");
+            port = int.Parse(node.InnerText);
+            
             client = new AsyncSocketSender();
             client.messageReceiver += new AsyncSocketSender.MessageReceiverDelegate(socketHandle);
 
-            IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
-            foreach (IPAddress ip in ipAddr) {
-                if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    txtIP.Text = ip.ToString();
-                    break;
-                }
-            }
-
-            txtPort.Text = "3006";
+            txtIP.Text = ipaddress.ToString();
+            txtPort.Text = port.ToString();
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
             IPAddress ip = IPAddress.Parse(txtIP.Text.Trim());
-            IPEndPoint endPoint = new IPEndPoint(ip, int.Parse(txtPort.Text.Trim()));
+            IPEndPoint ep = new IPEndPoint(ip, int.Parse(txtPort.Text.Trim()));
 
-            client.Connect(endPoint);
+            client.Connect(ep);
             btnConnect.Enabled = false;
         }
 
@@ -53,11 +62,11 @@ namespace TcpDebugger
         {
             if (txtSend.Text.Length != 0) {
                 //MD5 md5 = MD5.Create();
-                //byte[] hashdata = md5.ComputeHash(Encoding.GetEncoding(936).GetBytes(txtSend.Text));
-                //byte[] data = hashdata.Concat(Encoding.GetEncoding(936).GetBytes(txtSend.Text)).ToArray();
+                //byte[] hashdata = md5.ComputeHash(coding.GetBytes(txtSend.Text));
+                //byte[] data = hashdata.Concat(coding.GetBytes(txtSend.Text)).ToArray();
                 //client.Send(data);
 
-                client.Send(Encoding.GetEncoding(936).GetBytes(txtSend.Text));
+                client.Send(coding.GetBytes(txtSend.Text));
             }
         }
 
@@ -94,7 +103,7 @@ namespace TcpDebugger
                     txtMessage.AppendText("Send Failed.\n");
                     break;
                 case AsyncSocketSender.AsyncState.ReadMessage:
-                    txtMessage.AppendText("(" + txtIP.Text + " " + DateTime.Now.ToString() + ")\r\n" + Encoding.GetEncoding(936).GetString(data) + "\n");
+                    txtMessage.AppendText("(" + txtIP.Text + " " + DateTime.Now.ToString() + ")\r\n" + coding.GetString(data) + "\n");
                     break;
             }
         }
