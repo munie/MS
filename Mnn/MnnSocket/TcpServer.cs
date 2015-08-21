@@ -27,8 +27,8 @@ namespace Mnn.MnnSocket
         private byte[] readbuffer = new byte[8192];
 
         // Events of listener and client
-        public event EventHandler<ListenerEventArgs> ListenerStarted;
-        public event EventHandler<ListenerEventArgs> ListenerStopped;
+        public event EventHandler<ListenEventArgs> ListenStarted;
+        public event EventHandler<ListenEventArgs> ListenStopped;
         public event EventHandler<ClientEventArgs> ClientConnect;
         public event EventHandler<ClientEventArgs> ClientDisconn;
         public event EventHandler<ClientEventArgs> ClientReadMsg;
@@ -71,8 +71,8 @@ namespace Mnn.MnnSocket
                 socketTable.Add(server);
 
                 /// ** Report ListenerStarted event
-                if (ListenerStarted != null)
-                    ListenerStarted(this, new ListenerEventArgs(ep));
+                if (ListenStarted != null)
+                    ListenStarted(this, new ListenEventArgs(ep));
 
                 while (true) {
                     lock (socketLocker) {
@@ -83,8 +83,8 @@ namespace Mnn.MnnSocket
 
                                     if (item == server) {
                                         /// ** Report ListenerStopped event
-                                        if (ListenerStopped != null)
-                                            ListenerStopped(this, new ListenerEventArgs(item.LocalEndPoint));
+                                        if (ListenStopped != null)
+                                            ListenStopped(this, new ListenEventArgs(item.LocalEndPoint));
                                         item.Close();
                                     }
                                     else {

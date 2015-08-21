@@ -10,7 +10,7 @@ using Mnn.MnnUtil;
 
 namespace Mnn.MnnSocket
 {
-    public partial class AsyncSocketListenerItem : IDisposable
+    public partial class AsyncSocketListenItem : IDisposable
     {
         /// <summary>
         /// Definition for recording connected client's state
@@ -30,7 +30,7 @@ namespace Mnn.MnnSocket
         }
     }
 
-    public partial class AsyncSocketListenerItem : IDisposable
+    public partial class AsyncSocketListenItem : IDisposable
     {
         // Listen IPEndPoint
         private IPEndPoint listenEP = null;
@@ -43,8 +43,8 @@ namespace Mnn.MnnSocket
         private List<ClientState> clientStateTable = new List<ClientState>();
 
         // Events of listener and client
-        public event EventHandler<ListenerEventArgs> ListenerStarted;
-        public event EventHandler<ListenerEventArgs> ListenerStopped;
+        public event EventHandler<ListenEventArgs> ListenerStarted;
+        public event EventHandler<ListenEventArgs> ListenerStopped;
         public event EventHandler<ClientEventArgs> ClientConnect;
         public event EventHandler<ClientEventArgs> ClientDisconn;
         public event EventHandler<ClientEventArgs> ClientReadMsg;
@@ -109,12 +109,12 @@ namespace Mnn.MnnSocket
 
         private void ListeningThread(object args)
         {
-            AsyncSocketListenerItem item = args as AsyncSocketListenerItem;
+            AsyncSocketListenItem item = args as AsyncSocketListenItem;
 
             try {
                 /// ** Report ListenerStarted event
                 if (ListenerStarted != null)
-                    ListenerStarted(this, new ListenerEventArgs(item.listenEP));
+                    ListenerStarted(this, new ListenEventArgs(item.listenEP));
 
                 while (true) {
                     // Start an asynchronous socket to listen for connections.
@@ -158,7 +158,7 @@ namespace Mnn.MnnSocket
 
                 /// ** Report ListenerStopped event
                 if (ListenerStopped != null)
-                    ListenerStopped(this, new ListenerEventArgs(item.listenEP));
+                    ListenerStopped(this, new ListenEventArgs(item.listenEP));
 
                 Logger.WriteException(ex);
             }

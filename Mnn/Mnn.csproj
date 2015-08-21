@@ -45,11 +45,11 @@
     <Compile Include="MnnPlugin\PluginManager.cs" />
     <Compile Include="MnnSerialPort\AsyncSerailPort.cs" />
     <Compile Include="MnnSerialPort\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="MnnSocket\AsyncSocketListenerItem.cs" />
-    <Compile Include="MnnSocket\AsyncSocketListenerManager.cs" />
+    <Compile Include="MnnSocket\AsyncSocketListenItem.cs" />
+    <Compile Include="MnnSocket\AsyncSocketListenManager.cs" />
     <Compile Include="MnnSocket\AsyncSocketSender.cs" />
     <Compile Include="MnnSocket\ClientEventArgs.cs" />
-    <Compile Include="MnnSocket\ListenerEventArgs.cs" />
+    <Compile Include="MnnSocket\ListenEventArgs.cs" />
     <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnSocket\UdpServer.cs" />
     <Compile Include="MnnUtil\ExprSolve.cs" />

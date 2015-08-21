@@ -135,10 +135,10 @@ namespace StationConsole
             dataHandle.TimerInterval = 0;
             dataHandle.TimerCommand = "";
 
-            dataHandle.Listener.ClientConnect += SocketListener_ClientConnect;
-            dataHandle.Listener.ClientDisconn += SocketListener_ClientDisconn;
-            dataHandle.Listener.ClientReadMsg += SocketListener_ClientReadMsg;
-            dataHandle.Listener.ClientSendMsg += SocketListener_ClientSendMsg;
+            dataHandle.Listener.ClientConnect += Listener_ClientConnect;
+            dataHandle.Listener.ClientDisconn += Listener_ClientDisconn;
+            dataHandle.Listener.ClientReadMsg += Listener_ClientReadMsg;
+            dataHandle.Listener.ClientSendMsg += Listener_ClientSendMsg;
 
             // 加入 table
             DataLayer.dataHandleTable.Add(dataHandle);
@@ -251,9 +251,9 @@ namespace StationConsole
                 subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
         }
 
-        // Events for AsyncSocketListenerItem =================================================
+        // Events for AsyncSocketListenItem =================================================
 
-        private void SocketListener_ClientConnect(object sender, ClientEventArgs e)
+        private void Listener_ClientConnect(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -280,7 +280,7 @@ namespace StationConsole
             }));
         }
 
-        private void SocketListener_ClientDisconn(object sender, ClientEventArgs e)
+        private void Listener_ClientDisconn(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -299,7 +299,7 @@ namespace StationConsole
             }));
         }
 
-        private void SocketListener_ClientReadMsg(object sender, ClientEventArgs e)
+        private void Listener_ClientReadMsg(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -362,7 +362,7 @@ namespace StationConsole
             }));
         }
 
-        private void SocketListener_ClientSendMsg(object sender, ClientEventArgs e)
+        private void Listener_ClientSendMsg(object sender, ClientEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {

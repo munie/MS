@@ -9,9 +9,9 @@ using System.Threading;
 
 namespace Mnn.MnnSocket
 {
-    public class AsyncSocketListenerManager
+    public class AsyncSocketListenManager
     {
-        public List<AsyncSocketListenerItem> Items = new List<AsyncSocketListenerItem>();
+        public List<AsyncSocketListenItem> Items = new List<AsyncSocketListenItem>();
 
 
         /// <summary>

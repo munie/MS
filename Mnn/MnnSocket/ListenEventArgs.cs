@@ -9,13 +9,13 @@ namespace Mnn.MnnSocket
     /// <summary>
     /// EventArgs for listener events like "listenerStarted"
     /// </summary>
-    public class ListenerEventArgs : EventArgs
+    public class ListenEventArgs : EventArgs
     {
-        public ListenerEventArgs(EndPoint ep)
+        public ListenEventArgs(EndPoint ep)
         {
             ListenEP = (IPEndPoint)ep;
         }
-        public ListenerEventArgs(IPEndPoint ep)
+        public ListenEventArgs(IPEndPoint ep)
         {
             ListenEP = ep;
         }

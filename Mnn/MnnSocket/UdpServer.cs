@@ -14,8 +14,8 @@ namespace Mnn.MnnSocket
         private bool isExitThread = false;
 
         // Events of listener and client
-        public event EventHandler<ListenerEventArgs> ListenerStarted;
-        public event EventHandler<ListenerEventArgs> ListenerStopped;
+        public event EventHandler<ListenEventArgs> ListenerStarted;
+        public event EventHandler<ListenEventArgs> ListenerStopped;
         public event EventHandler<ClientEventArgs> ClientReadMsg;
         public event EventHandler<ClientEventArgs> ClientSendMsg;
 
@@ -29,7 +29,7 @@ namespace Mnn.MnnSocket
 
                 /// ** Report ListenerStarted event
                 if (ListenerStarted != null)
-                    ListenerStarted(this, new ListenerEventArgs(ep));
+                    ListenerStarted(this, new ListenEventArgs(ep));
 
                 EndPoint epClient = new IPEndPoint(IPAddress.Any, 0);
                 isExitThread = false;
@@ -51,7 +51,7 @@ namespace Mnn.MnnSocket
 
                 /// ** Report ListenerStopped event
                 if (ListenerStopped != null)
-                    ListenerStopped(this, new ListenerEventArgs(ep));
+                    ListenerStopped(this, new ListenEventArgs(ep));
             });
 
             thread.IsBackground = true;
