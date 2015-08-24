@@ -18,7 +18,7 @@
     <message command="send" content="LiangYan" />
     <message command="send" content="九天玄刹" />
     <message command="send" content="化为神雷" />
-    <message command="send" content="天威煌煌" />
+    <message command="send" content="煌煌天威" />
     <message command="send" content="以剑引之" />
   </station>
   <station name="气象" port="3006" max_interval="5" count="0">
