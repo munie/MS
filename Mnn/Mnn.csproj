@@ -40,6 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MnnAtCmd\AtCmdPipeServer.cs" />
+    <Compile Include="MnnAtCmd\AtCmdServer.cs" />
+    <Compile Include="MnnAtCmd\AtCmdSockServer.cs" />
+    <Compile Include="MnnAtCmd\AtCmdUnit.cs" />
+    <Compile Include="MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
     <Compile Include="MnnPlugin\AppDomainProxy.cs" />
     <Compile Include="MnnPlugin\PluginItem.cs" />
     <Compile Include="MnnPlugin\PluginManager.cs" />

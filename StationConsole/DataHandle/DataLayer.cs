@@ -14,5 +14,6 @@ namespace StationConsole
         public static ObservableCollection<DataHandleState> dataHandleTable;
         public static ObservableCollection<ClientPointState> clientPointTable;
 
+        public static Mnn.MnnAtCmd.AtCmdServer cmdServer;
     }
 }

@@ -21,6 +21,7 @@ using System.Collections.ObjectModel;
 using Mnn.MnnPlugin;
 using Mnn.MnnSocket;
 using Mnn.MnnUtil;
+using Mnn.MnnAtCmd;
 
 namespace StationConsole
 {
@@ -72,6 +73,11 @@ namespace StationConsole
             DataLayer.ipAddress = IPAddress.Parse("0.0.0.0");
             DataLayer.dataHandleTable = new ObservableCollection<DataHandleState>();
             DataLayer.clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
+
+            DataLayer.cmdServer = new AtCmdServer();
+            DataLayer.cmdServer.Run("CmdPipeServer",
+                                    new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3000),
+                                    CmdServer_ExecCommand);
         }
 
         private void InitailizeOthers()
@@ -249,6 +255,34 @@ namespace StationConsole
             var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
             if (subset.Count() != 0)
                 subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
+        }
+
+        // Events for CmdServer =============================================================
+
+        private byte[] CmdServer_ExecCommand(AtCmdUnit cmd)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                /// MainWindow
+                if (cmd.Schema == AtCmdUnitSchema.MainWindow) {
+                    if (cmd.Data == "close")
+                        this.Close();
+                }
+
+                /// ClientPoint
+                else if (cmd.Schema == AtCmdUnitSchema.ClientPoint) {
+                    if (cmd.Data == "close") {
+                        foreach (var item in DataLayer.clientPointTable) {
+                            if (item.CCID.Equals(cmd.ID)) {
+                                AtClientClose(item);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }));
+
+            return Encoding.ASCII.GetBytes("");
         }
 
         // Events for AsyncSocketListenItem =================================================
