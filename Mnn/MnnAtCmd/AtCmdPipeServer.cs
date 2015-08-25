@@ -53,14 +53,10 @@ namespace Mnn.MnnAtCmd
                 while (true) {
                     try {
                         pipeServerStream.Read(readbuffer, 0, readbuffer.Length);
-                        AtCmdUnit cmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                        AtCmdUnit atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
 
-                        if (ExecCommand != null) {
-                            byte[] retval = ExecCommand(cmdUnit);
-                            pipeServerStream.Write(retval, 0, retval.Length);
-                        }
-                        else
-                            pipeServerStream.WriteByte(0);
+                        if (ExecCommand != null)
+                            ExecCommand(atCmdUnit);
                     }
                     catch (InvalidOperationException ex) {
                         // From XmlSerializer when xml syntax is wrong

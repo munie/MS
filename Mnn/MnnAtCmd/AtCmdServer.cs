@@ -2,21 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
 
 namespace Mnn.MnnAtCmd
 {
     public class AtCmdServer
     {
-        private AtCmdPipeServer pipeServer = new AtCmdPipeServer();
-        private AtCmdSockServer sockServer = new AtCmdSockServer();
+        //private AtCmdPipeServer pipeServer = new AtCmdPipeServer();
+        public AtCmdSockServer sockServer = new AtCmdSockServer();
 
-        public void Run(string pipeName, System.Net.IPEndPoint ep, ExecuteAtCmdDeleagte execCommandCallback)
+        public void Run(ExecuteAtCmdDeleagte execCommandCallback)
         {
-            pipeServer.ExecCommand += execCommandCallback;
-            pipeServer.Run(pipeName);
-
             sockServer.ExecCommand += execCommandCallback;
-            sockServer.Run(ep);
+            sockServer.Run(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3005));
         }
     }
 }

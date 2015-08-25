@@ -75,9 +75,7 @@ namespace StationConsole
             DataLayer.clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
 
             DataLayer.cmdServer = new AtCmdServer();
-            DataLayer.cmdServer.Run("CmdPipeServer",
-                                    new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3000),
-                                    CmdServer_ExecCommand);
+            DataLayer.cmdServer.Run(CmdServer_ExecCommand);
         }
 
         private void InitailizeOthers()
@@ -243,7 +241,6 @@ namespace StationConsole
                 if (subset.Count() != 0)
                     subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
                                         Encoding.GetEncoding(936).GetBytes(msg));
-
             }
             catch (Exception) { }
         }
@@ -259,30 +256,28 @@ namespace StationConsole
 
         // Events for CmdServer =============================================================
 
-        private byte[] CmdServer_ExecCommand(AtCmdUnit cmd)
+        private bool CmdServer_ExecCommand(AtCmdUnit atCmdUnit)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                /// MainWindow
-                if (cmd.Schema == AtCmdUnitSchema.MainWindow) {
-                    if (cmd.Data == "close")
-                        this.Close();
-                }
+            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            //{
+            //    /// MainWindow
+            //    if (atCmdUnit.Schema == AtCmdUnitSchema.MainWindow) {
+            //        if (atCmdUnit.Data == "close")
+            //            this.Close();
+            //    }
+            //}));
 
-                /// ClientPoint
-                else if (cmd.Schema == AtCmdUnitSchema.ClientPoint) {
-                    if (cmd.Data == "close") {
-                        foreach (var item in DataLayer.clientPointTable) {
-                            if (item.CCID.Equals(cmd.ID)) {
-                                AtClientClose(item);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }));
+            /// ClientPoint
+            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientPoint) {
+                var subset = from s in DataLayer.clientPointTable where s.CCID.Equals(atCmdUnit.ID) select s;
 
-            return Encoding.ASCII.GetBytes("");
+                if (subset.Count() == 0)
+                    return false;
+
+                AtClientSendMessage(subset.First(), atCmdUnit.Data);
+            }
+
+            return true;
         }
 
         // Events for AsyncSocketListenItem =================================================
@@ -380,6 +375,11 @@ namespace StationConsole
                         var subset = from s in DataLayer.dataHandleTable where s.ListenPort == e.LocalEP.Port select s.Listener;
                         if (subset.Count() != 0)
                             subset.First().CloseClient(e.RemoteEP);
+                        return;
+                    }
+                    else if (item.Contains("HT=2")) {
+                        DataLayer.cmdServer.sockServer.Send(e.Data);
+                        return;
                     }
                 }
                 /// @@ 没有办法的办法，必须删改

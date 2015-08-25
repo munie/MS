@@ -5,5 +5,5 @@ using System.Text;
 
 namespace Mnn.MnnAtCmd
 {
-    public delegate byte[] ExecuteAtCmdDeleagte(AtCmdUnit cmd);
+    public delegate bool ExecuteAtCmdDeleagte(AtCmdUnit cmd);
 }
