@@ -7,29 +7,29 @@ using System.Net.Sockets;
 
 namespace Mnn.MnnSocket
 {
-    public class UdpServer
+    public class UdpServer : SockServer
     {
         private Socket server;
         private byte[] readbuffer = new byte[8192];
         private bool isExitThread = false;
 
         // Events of listener and client
-        public event EventHandler<ListenEventArgs> ListenerStarted;
-        public event EventHandler<ListenEventArgs> ListenerStopped;
-        public event EventHandler<ClientEventArgs> ClientReadMsg;
-        public event EventHandler<ClientEventArgs> ClientSendMsg;
+        public override event EventHandler<ListenEventArgs> ListenStarted;
+        public override event EventHandler<ListenEventArgs> ListenStopped;
+        public override event EventHandler<ClientEventArgs> ClientReadMsg;
+        public override event EventHandler<ClientEventArgs> ClientSendMsg;
 
         // Methods ============================================================================
 
-        public void Start(IPEndPoint ep)
+        public override void Start(IPEndPoint ep)
         {
             System.Threading.Thread thread = new System.Threading.Thread(() => {
                 server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 server.Bind(ep);
 
                 /// ** Report ListenerStarted event
-                if (ListenerStarted != null)
-                    ListenerStarted(this, new ListenEventArgs(ep));
+                if (ListenStarted != null)
+                    ListenStarted(this, new ListenEventArgs(ep));
 
                 EndPoint epClient = new IPEndPoint(IPAddress.Any, 0);
                 isExitThread = false;
@@ -50,20 +50,20 @@ namespace Mnn.MnnSocket
                 server.Close();
 
                 /// ** Report ListenerStopped event
-                if (ListenerStopped != null)
-                    ListenerStopped(this, new ListenEventArgs(ep));
+                if (ListenStopped != null)
+                    ListenStopped(this, new ListenEventArgs(ep));
             });
 
             thread.IsBackground = true;
             thread.Start();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             isExitThread = true;
         }
 
-        public void Send(IPEndPoint ep, byte[] data)
+        public override void Send(IPEndPoint ep, byte[] data)
         {
             server.SendTo(data, ep);
 

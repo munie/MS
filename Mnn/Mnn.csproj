@@ -41,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MnnAtCmd\AtCmdPipeServer.cs" />
-    <Compile Include="MnnAtCmd\AtCmdServer.cs" />
     <Compile Include="MnnAtCmd\AtCmdSockServer.cs" />
     <Compile Include="MnnAtCmd\AtCmdUnit.cs" />
     <Compile Include="MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
@@ -54,6 +53,7 @@
     <Compile Include="MnnSocket\AsyncSocketListenManager.cs" />
     <Compile Include="MnnSocket\AsyncSocketSender.cs" />
     <Compile Include="MnnSocket\ClientEventArgs.cs" />
+    <Compile Include="MnnSocket\SockServer.cs" />
     <Compile Include="MnnSocket\ListenEventArgs.cs" />
     <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnSocket\UdpServer.cs" />

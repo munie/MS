@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Net;
 
 namespace StationConsole
 {
-    class DataHandleState : DataHandleUnit, INotifyPropertyChanged
+    public class DataHandlePlugin : Mnn.MnnPlugin.PluginItem, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -93,5 +94,70 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
             }
         }
+
+        // Methods ============================================================================
+
+        public int LoadDataHandlePlugin(string filePath)
+        {
+            int listenPort = 0;
+
+            try {
+                this.Load(filePath);
+            }
+            catch (Exception) {
+                throw;
+            }
+
+            try {
+                listenPort = (int)this.Invoke("IDataHandle", "GetDefaultListenPort", null);
+            }
+            catch (Exception) {
+                this.UnLoad();
+                throw;
+            }
+
+            return listenPort;
+        }
+
+        public void UnloadDataHandlePlugin()
+        {
+            this.UnLoad();
+        }
+
+        public void InitializeSource()
+        {
+            this.Invoke("IDataHandle", "InitializeSource", null);
+        }
+
+        public void StartListener(IPEndPoint ep)
+        {
+            this.Invoke("IDataHandle", "StartListener", new object[] { ep });
+        }
+
+        public void StopListener()
+        {
+            this.Invoke("IDataHandle", "StopListener", null);
+        }
+
+        public void StartTimerCommand(double interval, string command)
+        {
+            this.Invoke("IDataHandle", "StartTimerCommand", new object[] { interval, command });
+        }
+
+        public void StopTimerCommand()
+        {
+            this.Invoke("IDataHandle", "StopTimerCommand", null);
+        }
+
+        public void SendClientCommand(IPEndPoint ep, byte[] data)
+        {
+            this.Invoke("IDataHandle", "SendClientCommand", new object[] { ep, data });
+        }
+
+        public void CloseClient(IPEndPoint ep)
+        {
+            this.Invoke("IDataHandle", "CloseClient", new object[] { ep });
+        }
+
     }
 }

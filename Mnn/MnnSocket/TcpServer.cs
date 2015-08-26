@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 
 namespace Mnn.MnnSocket
 {
-    public class TcpServer
+    public class TcpServer : SockServer
     {
         // listen socket
         private Socket server;
@@ -25,15 +25,6 @@ namespace Mnn.MnnSocket
         private string socketLocker = "Socket Locker"; 
         // buffer for reading
         private byte[] readbuffer = new byte[8192];
-
-        // Events of listener and client
-        public event EventHandler<ListenEventArgs> ListenStarted;
-        public event EventHandler<ListenEventArgs> ListenStopped;
-        public event EventHandler<ClientEventArgs> ClientConnect;
-        public event EventHandler<ClientEventArgs> ClientDisconn;
-        public event EventHandler<ClientEventArgs> ClientReadMsg;
-        public event EventHandler<ClientEventArgs> ClientSendMsg;
-
         private byte[] KeepAliveTime
         {
             get
@@ -47,13 +38,21 @@ namespace Mnn.MnnSocket
             }
         }
 
+        // Events of listener and client
+        public override event EventHandler<ListenEventArgs> ListenStarted;
+        public override event EventHandler<ListenEventArgs> ListenStopped;
+        public override event EventHandler<ClientEventArgs> ClientReadMsg;
+        public override event EventHandler<ClientEventArgs> ClientSendMsg;
+        public event EventHandler<ClientEventArgs> ClientConnect;
+        public event EventHandler<ClientEventArgs> ClientDisconn;
+
         // Methods ============================================================================
 
         /// <summary>
         /// Start TcpServer
         /// </summary>
         /// <param name="ep"></param>
-        public void Start(IPEndPoint ep)
+        public override void Start(IPEndPoint ep)
         {
             Thread thread = new Thread(() =>
             {
@@ -160,11 +159,36 @@ namespace Mnn.MnnSocket
         /// <summary>
         /// Stop TcpServer
         /// </summary>
-        public void Stop()
+        public override void Stop()
         {
             // Close all
             lock (socketLocker) {
                 socketRemoving.AddRange(socketTable);
+            }
+        }
+
+        /// <summary>
+        /// Send data to specified client
+        /// </summary>
+        /// <param name="ep"></param>
+        /// <param name="data"></param>
+        public override void Send(IPEndPoint ep, byte[] data)
+        {
+            lock (socketLocker) {
+                foreach (Socket item in socketTable) {
+                    if (item == server)
+                        continue;
+
+                    if (item.RemoteEndPoint.Equals(ep)) {
+                        item.Send(data, 0, data.Length, 0);
+
+                        /// ** Report ClientSendMsg event
+                        if (ClientSendMsg != null)
+                            ClientSendMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
+
+                        break;
+                    }
+                }
             }
         }
 
@@ -185,31 +209,6 @@ namespace Mnn.MnnSocket
                     if (ClientSendMsg != null)
                         ClientSendMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
 
-                }
-            }
-        }
-
-        /// <summary>
-        /// Send data to specified client
-        /// </summary>
-        /// <param name="ep"></param>
-        /// <param name="data"></param>
-        public void Send(IPEndPoint ep, byte[] data)
-        {
-            lock (socketLocker) {
-                foreach (Socket item in socketTable) {
-                    if (item == server)
-                        continue;
-
-                    if (item.RemoteEndPoint.Equals(ep)) {
-                        item.Send(data, 0, data.Length, 0);
-
-                        /// ** Report ClientSendMsg event
-                        if (ClientSendMsg != null)
-                            ClientSendMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
-
-                        break;
-                    }
                 }
             }
         }

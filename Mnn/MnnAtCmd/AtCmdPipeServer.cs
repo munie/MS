@@ -13,18 +13,19 @@ namespace Mnn.MnnAtCmd
     {
         public event ExecuteAtCmdDeleagte ExecCommand;
 
-        private string PipeName;
+        private string pipeName;
+        private int readbufferSize = 4096;
 
         // Method ====================================================================================
 
-        public void Run(string pipeName)
+        public void Run(string name)
         {
-            PipeName = pipeName;
+            pipeName = name;
 
             Thread thread = new Thread(() =>
             {
                 try {
-                    NamedPipeServerStream pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                    NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
                     pipeServer.BeginWaitForConnection(ReadCallback, pipeServer);
                 }
                 catch (Exception ex) {
@@ -44,16 +45,18 @@ namespace Mnn.MnnAtCmd
                 pipeServerStream.EndWaitForConnection(ar);
 
                 // 监听下一个PipeClient
-                NamedPipeServerStream pipeServerStreamNext = new NamedPipeServerStream(PipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                NamedPipeServerStream pipeServerStreamNext = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
                 pipeServerStreamNext.BeginWaitForConnection(ReadCallback, pipeServerStreamNext);
 
-                byte[] readbuffer = new byte[1024];
+                byte[] readbuffer = new byte[readbufferSize];
                 MemoryStream memory = new MemoryStream(readbuffer);
                 XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
                 while (true) {
                     try {
                         pipeServerStream.Read(readbuffer, 0, readbuffer.Length);
                         AtCmdUnit atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                        Array.Clear(readbuffer, 0, readbuffer.Length);
+                        memory.Position = 0;
 
                         if (ExecCommand != null)
                             ExecCommand(atCmdUnit);
@@ -71,6 +74,7 @@ namespace Mnn.MnnAtCmd
                         break;
                     }
                 }
+                memory.Close();
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);

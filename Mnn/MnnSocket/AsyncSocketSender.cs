@@ -22,7 +22,7 @@ namespace Mnn.MnnSocket
 
         private Socket sender;
         private byte[] readbuffer = new byte[8192];
-        private int sendLength;
+        private int sendLength = 0;
 
         // Methods ================================================================
 

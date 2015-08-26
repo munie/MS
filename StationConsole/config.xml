@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <encoding>gb2312</encoding>
+  <ipaddress>0.0.0.0</ipaddress>
+  
+  <atcmdserver protocol="udp" ipaddress="127.0.0.1" port="5964">
+  </atcmdserver>
+  
+  <!--
+  <atcmdserver protocol="pipe" pipename="CmdPipeServer">
+  </atcmdserver>
+  -->
+  
+</configuration>

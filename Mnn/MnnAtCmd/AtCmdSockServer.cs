@@ -9,14 +9,19 @@ using System.Xml.Serialization;
 
 namespace Mnn.MnnAtCmd
 {
-    public class AtCmdSockServer : Mnn.MnnSocket.TcpServer
+    public class AtCmdSockServer<T>
+        where T : MnnSocket.SockServer, new()
     {
         public event ExecuteAtCmdDeleagte ExecCommand;
 
+        private T sockServer;
+
         public void Run(IPEndPoint ep)
         {
-            this.Start(ep);
-            this.ClientReadMsg += Client_ReadMsg;
+            sockServer = new T();
+
+            sockServer.Start(ep);
+            sockServer.ClientReadMsg += Client_ReadMsg;
         }
 
         private void Client_ReadMsg(object sender, Mnn.MnnSocket.ClientEventArgs e)
@@ -25,44 +30,16 @@ namespace Mnn.MnnAtCmd
                 return;
 
             try {
-                if (e.Data.First() == '|') {
-                    string msg = Encoding.ASCII.GetString(e.Data);
-                    string[] msgs = msg.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                    
-                    Dictionary<string, string> dc = new Dictionary<string, string>();
-                    foreach (var item in msgs) {
-                        string[] tmp = item.Split("=".ToCharArray());
-                        dc.Add(tmp[0], tmp[1]);
-                    }
-
-                    AtCmdUnit atCmdUnit = new AtCmdUnit();
-                    atCmdUnit.Schema = AtCmdUnitSchema.ClientPoint;
-                    atCmdUnit.ID = dc["CCID"];
-                    atCmdUnit.Data = dc["mlstr"];
-
-                    if (!ExecCommand(atCmdUnit)) {
-                        string ret = "|HT=0|CCID=898602A5111356056659|error=offline";
-                        this.Send(e.RemoteEP, Encoding.ASCII.GetBytes(ret));
-                    }
-
-                    return;
-                }
-            }
-            catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
-            }
-            /*
-            try {
                 MemoryStream memory = new MemoryStream(e.Data);
                 XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
                 AtCmdUnit atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                memory.Close();
 
                 ExecCommand(atCmdUnit);
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
             }
-             * */
         }
     }
 }

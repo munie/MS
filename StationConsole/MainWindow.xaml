@@ -2,19 +2,19 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:StationConsole"
-        Title="MainWindow" Height="551" Width="980" xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" xmlns:dxwui="http://schemas.devexpress.com/winfx/2008/xaml/windowsui" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="551" Width="980" xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" xmlns:dxwui="http://schemas.devexpress.com/winfx/2008/xaml/windowsui" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Window.Resources>
         <local:ClientPointTable x:Key="clientPointTable"></local:ClientPointTable>
             <CollectionViewSource x:Key='clients' Source="{Binding Source={StaticResource clientPointTable}}">
             <CollectionViewSource.GroupDescriptions>
-                    <PropertyGroupDescription PropertyName="AcceptedName" />
+                    <PropertyGroupDescription PropertyName="LocalName" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
     </Window.Resources>
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="600*" />
-            <ColumnDefinition Width="380*" />
+            <ColumnDefinition Width="640*" />
+            <ColumnDefinition Width="340*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
@@ -101,13 +101,15 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="客户端IP" Width="140"
-                                    DisplayMemberBinding="{Binding IpAddress}" />
-                    <GridViewColumn Header="本地端口" Width="70"
-                                    DisplayMemberBinding="{Binding AcceptedPort}" />
+                                    DisplayMemberBinding="{Binding Path=RemoteIP}" />
+                    <GridViewColumn Header="本地端口" Width="65"
+                                    DisplayMemberBinding="{Binding Path=LocalPort}" />
                     <GridViewColumn Header="创建时间" Width="150"
-                                    DisplayMemberBinding="{Binding ConnectTime}" />
-                    <GridViewColumn Header="CCID" Width="160"
-                                    DisplayMemberBinding="{Binding CCID}" />
+                                    DisplayMemberBinding="{Binding Path=ConnectTime}" />
+                    <GridViewColumn Header="CCID" Width="155"
+                                    DisplayMemberBinding="{Binding Path=CCID}" />
+                    <GridViewColumn Header="名称" Width="90"
+                                    DisplayMemberBinding="{Binding Path=Name}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>

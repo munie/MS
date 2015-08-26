@@ -13,19 +13,14 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
-using Mnn.MnnPlugin;
-using Mnn.MnnSocket;
-using Mnn.MnnUtil;
-using Mnn.MnnAtCmd;
 
 namespace StationConsole
 {
-    public class ClientPointTable : ObservableCollection<ClientPointState> { }
+    class ClientPointTable : ObservableCollection<ClientPointState> { }
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -37,9 +32,7 @@ namespace StationConsole
             InitializeComponent();
 
             InitailizeWindowName();
-            InitailizeDataLayer();
-
-            InitailizeOthers();
+            InitailizeStatusBar();
         }
 
         // Methods ============================================================================
@@ -58,44 +51,9 @@ namespace StationConsole
                 fvi.CompanyName);
         }
 
-        private void InitailizeDataLayer()
+        private void InitailizeStatusBar()
         {
-            /*
-            IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
-            foreach (IPAddress ip in ipAddr) {
-                if (ip.AddressFamily.Equals(AddressFamily.InterNetwork)) {
-                    DataLayer.ipAddress = ip;
-                    break;
-                }
-            }
-             * */
-
-            DataLayer.ipAddress = IPAddress.Parse("0.0.0.0");
-            DataLayer.dataHandleTable = new ObservableCollection<DataHandleState>();
-            DataLayer.clientPointTable = (ClientPointTable)this.Resources["clientPointTable"];
-
-            DataLayer.cmdServer = new AtCmdServer();
-            DataLayer.cmdServer.Run(CmdServer_ExecCommand);
-        }
-
-        private void InitailizeOthers()
-        {
-            // 1.Get all files in directory "DataHandles"
-            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
-
-            if (Directory.Exists(pluginPath)) {
-                string[] files = Directory.GetFiles(pluginPath);
-
-                // Load dll files one by one
-                foreach (var item in files)
-                    AtLoadPlugin(item);
-            }
-
-            // 2.Data Source Binding
-            //lstViewClientPoint.ItemsSource = DataLayer.clientPointTable;
-            lstViewDataHandle.ItemsSource = DataLayer.dataHandleTable;
-
-            // 3.Display TimeRun
+            // Display TimeRun
             DateTime startTime = DateTime.Now;
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
@@ -114,175 +72,27 @@ namespace StationConsole
             timer.Start();
         }
 
-        // At Commands ========================================================================
-
-        private void AtLoadPlugin(string filePath)
+        public void AddDataHandle(DataHandlePlugin dataHandle)
         {
-            int listenPort = 0;
-            DataHandleState dataHandle = new DataHandleState();
-            dataHandle.InitializeSource();
-
-            try {
-                listenPort = dataHandle.LoadDataHandlePlugin(filePath);
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-                return;
-            }
-
-            // 加载模块已经成功
-            dataHandle.ListenPort = listenPort;
-            dataHandle.ListenState = DataHandleState.ListenStateStoped;
-            dataHandle.ChineseName = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            dataHandle.FileName = dataHandle.Plugin.AssemblyName;
-            dataHandle.TimerState = DataHandleState.TimerStateStoped;
-            dataHandle.TimerInterval = 0;
-            dataHandle.TimerCommand = "";
-
-            dataHandle.Listener.ClientConnect += Listener_ClientConnect;
-            dataHandle.Listener.ClientDisconn += Listener_ClientDisconn;
-            dataHandle.Listener.ClientReadMsg += Listener_ClientReadMsg;
-            dataHandle.Listener.ClientSendMsg += Listener_ClientSendMsg;
-
-            // 加入 table
-            DataLayer.dataHandleTable.Add(dataHandle);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (Program.DLayer.dataHandlePluginTable) {
+                    Program.DLayer.dataHandlePluginTable.Add(dataHandle);
+                }
+            }));
         }
 
-        private void AtUnLoadPlugin(DataHandleState dataHandle)
+        public void RemoveDataHandle(DataHandlePlugin dataHandle)
         {
-            // 关闭端口
-            if (dataHandle.ListenState == DataHandleState.ListenStateStarted) {
-                dataHandle.StopListener();
-                dataHandle.ListenState = DataHandleState.ListenStateStoped;
-                dataHandle.StopHandleData();
-            }
-
-            // 关闭定时器
-            if (dataHandle.TimerState == DataHandleState.TimerStateStarted) {
-                dataHandle.StopTimerCommand();
-                dataHandle.TimerState = DataHandleState.TimerStateStoped;
-            }
-
-            // 卸载模块
-            dataHandle.UnloadDataHandlePlugin();
-
-            // 移出 table
-            DataLayer.dataHandleTable.Remove(dataHandle);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (Program.DLayer.dataHandlePluginTable) {
+                    Program.DLayer.dataHandlePluginTable.Remove(dataHandle);
+                }
+            }));
         }
 
-        private void AtStartListener(DataHandleState dataHandle)
-        {
-            if (dataHandle.ListenState == DataHandleState.ListenStateStarted)
-                return;
-
-            // 端口可能已经被其他程序监听
-            try {
-                dataHandle.StartListener(new IPEndPoint(DataLayer.ipAddress, dataHandle.ListenPort));
-                dataHandle.ListenState = DataHandleState.ListenStateStarted;
-                dataHandle.StartHandleData();
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-            }
-        }
-
-        private void AtStopListener(DataHandleState dataHandle)
-        {
-            if (dataHandle.ListenState == DataHandleState.ListenStateStoped)
-                return;
-
-            // 逻辑上讲，不会出现异常
-            dataHandle.StopListener();
-            dataHandle.ListenState = DataHandleState.ListenStateStoped;
-            dataHandle.StopHandleData();
-        }
-
-        private void AtSetListener(DataHandleState dataHandle, int listenPort)
-        {
-            if (dataHandle.ListenState == DataHandleState.ListenStateStarted)
-                return;
-
-            dataHandle.ListenPort = listenPort;
-        }
-
-        private void AtStartTimer(DataHandleState dataHandle)
-        {
-            if (dataHandle.TimerState == DataHandleState.TimerStateStarted ||
-                dataHandle.TimerInterval <= 0 || dataHandle.TimerCommand == "")
-                return;
-
-            dataHandle.StartTimerCommand(dataHandle.TimerInterval * 1000, dataHandle.TimerCommand);
-            dataHandle.TimerState = DataHandleState.TimerStateStarted;
-        }
-
-        private void AtStopTimer(DataHandleState dataHandle)
-        {
-            if (dataHandle.TimerState == DataHandleState.TimerStateStoped)
-                return;
-
-            dataHandle.StopTimerCommand();
-            dataHandle.TimerState = DataHandleState.TimerStateStoped;
-        }
-
-        private void AtSetTimer(DataHandleState dataHandle, string cmd, double interval)
-        {
-            if (dataHandle.TimerState == DataHandleState.TimerStateStarted)
-                return;
-
-            dataHandle.TimerCommand = cmd;
-            dataHandle.TimerInterval = interval;
-        }
-
-        private void AtClientSendMessage(ClientPointState client, string msg)
-        {
-            try {
-                string[] strTmp = client.IpAddress.Split(":".ToArray());
-                var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
-                if (subset.Count() != 0)
-                    subset.First().Send(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                                        Encoding.GetEncoding(936).GetBytes(msg));
-            }
-            catch (Exception) { }
-        }
-
-        private void AtClientClose(ClientPointState client)
-        {
-            string[] strTmp = client.IpAddress.Split(":".ToArray());
-
-            var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
-            if (subset.Count() != 0)
-                subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
-        }
-
-        // Events for CmdServer =============================================================
-
-        private bool CmdServer_ExecCommand(AtCmdUnit atCmdUnit)
-        {
-            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            //{
-            //    /// MainWindow
-            //    if (atCmdUnit.Schema == AtCmdUnitSchema.MainWindow) {
-            //        if (atCmdUnit.Data == "close")
-            //            this.Close();
-            //    }
-            //}));
-
-            /// ClientPoint
-            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientPoint) {
-                var subset = from s in DataLayer.clientPointTable where s.CCID.Equals(atCmdUnit.ID) select s;
-
-                if (subset.Count() == 0)
-                    return false;
-
-                AtClientSendMessage(subset.First(), atCmdUnit.Data);
-            }
-
-            return true;
-        }
-
-        // Events for AsyncSocketListenItem =================================================
-
-        private void Listener_ClientConnect(object sender, ClientEventArgs e)
+        public void AddClientPoint(ClientPoint client)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -290,26 +100,22 @@ namespace StationConsole
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
                 historyClientOpenCount.Text = (Convert.ToInt32(historyClientOpenCount.Text) + 1).ToString();
 
-                var subset = from s in DataLayer.dataHandleTable
-                            where s.ListenPort == e.LocalEP.Port
-                            select s.ChineseName;
-                string acceptedName = subset.Count() != 0 ? subset.First() : "";
+                ClientPointState state = new ClientPointState(client);
+                lock (Program.DLayer.dataHandlePluginTable) {
+                    var subset = from s in Program.DLayer.dataHandlePluginTable
+                                 where s.ListenPort == client.LocalPort
+                                 select s.ChineseName;
+                    if (subset.Count() != 0)
+                        state.LocalName = subset.First();
+                }
 
-                ClientPointState clientPoint = new ClientPointState();
-
-                clientPoint.IpAddress = e.RemoteEP.ToString();
-                clientPoint.AcceptedPort = e.LocalEP.Port;
-                clientPoint.AcceptedName = acceptedName;
-                clientPoint.ConnectTime = DateTime.Now;
-                clientPoint.CCID = "";
-
-                lock (DataLayer.clientPointTable) {
-                    DataLayer.clientPointTable.Add(clientPoint);
+                lock (Program.DLayer.clientPointTable) {
+                    Program.DLayer.clientPointTable.Add(state);
                 }
             }));
         }
 
-        private void Listener_ClientDisconn(object sender, ClientEventArgs e)
+        public void RemoveClientPoint(ClientPoint client)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -317,97 +123,100 @@ namespace StationConsole
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
                 historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
 
-                lock (DataLayer.clientPointTable) {
-                    var subset = from s in DataLayer.clientPointTable
-                                    where s.IpAddress.Equals(e.RemoteEP.ToString())
-                                    select s;
+                lock (Program.DLayer.clientPointTable) {
+                    var subset = from s in Program.DLayer.clientPointTable
+                                 where s.RemoteIP.Equals(client.RemoteIP)
+                                 select s;
 
                     if (subset.Count() != 0)
-                        DataLayer.clientPointTable.Remove(subset.First());
+                        Program.DLayer.clientPointTable.Remove(subset.First());
                 }
             }));
         }
 
-        private void Listener_ClientReadMsg(object sender, ClientEventArgs e)
+        public void RemoveClientPoint(IPEndPoint ep)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                string msg = Encoding.GetEncoding(936).GetString(e.Data);
+                // set value for ObservableCollection object 
+                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
+                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
 
+                lock (Program.DLayer.clientPointTable) {
+                    var subset = from s in Program.DLayer.clientPointTable
+                                 where s.RemoteIP.Equals(ep.ToString())
+                                 select s;
+
+                    if (subset.Count() != 0)
+                        Program.DLayer.clientPointTable.Remove(subset.First());
+                }
+            }));
+        }
+
+        public void RemoveClientPoint(string ip)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // set value for ObservableCollection object 
+                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
+                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
+
+                lock (Program.DLayer.clientPointTable) {
+                    var subset = from s in Program.DLayer.clientPointTable
+                                 where s.RemoteIP.Equals(ip)
+                                 select s;
+
+                    if (subset.Count() != 0)
+                        Program.DLayer.clientPointTable.Remove(subset.First());
+                }
+            }));
+        }
+
+        public void UpdateClientPoint(ClientPoint client)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (Program.DLayer.clientPointTable) {
+                    var subset = from s in Program.DLayer.clientPointTable
+                                 where s.RemoteIP.Equals(client.RemoteIP)
+                                 select s;
+
+                    if (subset.Count() != 0) {
+                        subset.First().CCID = client.CCID;
+                        subset.First().Name = client.Name;
+                    }
+                }
+            }));
+        }
+
+        public void DisplayMessage(string msg)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 if (txtMsg.Text.Length >= 20 * 1024) {
                     txtMsg.Clear();
                 }
 
-                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
-
-                txtMsg.AppendText(logFormat + "\r\n\r\n");
-                txtMsg.ScrollToEnd();
-
-                /// @@ 没有办法的办法，必须删改
-                string[] strMsg = msg.Split("|".ToArray());
-                foreach (var item in strMsg) {
-                    if (item.StartsWith("CCID=")) {
-
-                        lock (DataLayer.clientPointTable) {
-                            // 从客户表中找到与远程ip地址相同的条目，更新CCID
-                            foreach (var client in DataLayer.clientPointTable) {
-                                if (client.IpAddress.Equals(e.RemoteEP.ToString())) {
-                                    client.CCID = item.Substring(5);
-                                }
-                            }
-
-                            // 基站不会自动断开前一次连接...相同CCID的连上来后，断开前面的连接
-                            foreach (var client in DataLayer.clientPointTable) {
-                                // 1.CCID相同 2.远程IP地址不相同 3.本地端口相同
-                                if (client.CCID.Equals(item.Substring(5)) && !client.IpAddress.Equals(e.RemoteEP.ToString()) &&
-                                    client.AcceptedPort.Equals(e.LocalEP.Port)) {
-                                    string[] strTmp = client.IpAddress.Split(":".ToArray());
-
-                                    var subset = from s in DataLayer.dataHandleTable where s.ListenPort == client.AcceptedPort select s.Listener;
-                                    if (subset.Count() != 0)
-                                        subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else if (item.Contains("R=POWER OFF OK")) {
-                        var subset = from s in DataLayer.dataHandleTable where s.ListenPort == e.LocalEP.Port select s.Listener;
-                        if (subset.Count() != 0)
-                            subset.First().CloseClient(e.RemoteEP);
-                        return;
-                    }
-                    else if (item.Contains("HT=2")) {
-                        DataLayer.cmdServer.sockServer.Send(e.Data);
-                        return;
-                    }
-                }
-                /// @@ 没有办法的办法，必须删改
-
-                /// 调用数据处理插件 ======================================================
-                try {
-                    var subFirst = (from s in DataLayer.dataHandleTable where s.ListenPort == e.LocalEP.Port select s).First();
-                    subFirst.AppendData(e.RemoteEP, msg);
-                }
-                catch (Exception ex) {
-                    // 正常不会出现subFirst不存在的情况，如果出现，应该记录
-                    Logger.WriteException(ex);
-                }
-            }));
-        }
-
-        private void Listener_ClientSendMsg(object sender, ClientEventArgs e)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + Encoding.GetEncoding(936).GetString(e.Data);
-
-                txtMsg.AppendText(logFormat + "\r\n\r\n");
+                txtMsg.AppendText(msg + "\r\n\r\n");
                 txtMsg.ScrollToEnd();
             }));
         }
 
         // Events for itself ==================================================================
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 加载 DataHandles 文件夹下的所有模块
+            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
+
+            if (Directory.Exists(pluginPath)) {
+                string[] files = Directory.GetFiles(pluginPath);
+
+                // Load dll files one by one
+                foreach (var item in files)
+                    Program.CLayer.AtLoadPlugin(item);
+            }
+        }
 
         private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
         {
@@ -417,16 +226,16 @@ namespace StationConsole
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                AtLoadPlugin(openFileDialog.FileName);
+                Program.CLayer.AtLoadPlugin(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
         {
-            List<DataHandleState> handles = new List<DataHandleState>();
+            List<DataHandlePlugin> handles = new List<DataHandlePlugin>();
 
             // 保存要卸载的模块信息
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
@@ -435,28 +244,28 @@ namespace StationConsole
 
             // 卸载操作
             foreach (var item in handles)
-                AtUnLoadPlugin(item);
+                Program.CLayer.AtUnLoadPlugin(item);
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
-                AtStartListener(dataHandle);
+                Program.CLayer.AtStartListener(dataHandle);
             }
         }
 
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
-                AtStopListener(dataHandle);
+                Program.CLayer.AtStopListener(dataHandle);
             }
         }
 
@@ -475,33 +284,33 @@ namespace StationConsole
                 return;
 
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
-                AtSetListener(dataHandle, Convert.ToInt32(input.textBox2.Text));
+                Program.CLayer.AtSetListener(dataHandle, Convert.ToInt32(input.textBox2.Text));
             }
         }
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
-                AtStartTimer(dataHandle);
+                Program.CLayer.AtStartTimer(dataHandle);
             }
         }
 
         private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
-                AtStopTimer(dataHandle);
+                Program.CLayer.AtStopTimer(dataHandle);
             }
         }
 
@@ -519,14 +328,14 @@ namespace StationConsole
                 return;
 
             foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandleState dataHandle = item as DataHandleState;
+                DataHandlePlugin dataHandle = item as DataHandlePlugin;
                 if (dataHandle == null)
                     continue;
 
                 if (input.textBox2.Text == "")
-                    AtSetTimer(dataHandle, input.textBox1.Text, dataHandle.TimerInterval);
+                    Program.CLayer.AtSetTimer(dataHandle, input.textBox1.Text, dataHandle.TimerInterval);
                 else
-                    AtSetTimer(dataHandle, input.textBox1.Text, Convert.ToDouble(input.textBox2.Text));
+                    Program.CLayer.AtSetTimer(dataHandle, input.textBox1.Text, Convert.ToDouble(input.textBox2.Text));
             }
         }
 
@@ -551,7 +360,7 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                AtClientSendMessage(client, input.textBox1.Text);
+                Program.CLayer.AtClientSendMessage(client, input.textBox1.Text);
             }
         }
 
@@ -562,9 +371,8 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                AtClientClose(client);
+                Program.CLayer.AtClientClose(client);
             }
         }
-
     }
 }
