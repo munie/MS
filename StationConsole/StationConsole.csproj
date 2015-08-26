@@ -61,6 +61,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataLayer\IDataHandle.cs" />
     <Compile Include="DataLayer\ClientPoint.cs" />
     <Compile Include="DataLayer\DataLayer.cs" />
     <Compile Include="ControlLayer\ControlLayer.cs" />
