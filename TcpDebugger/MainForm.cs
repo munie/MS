@@ -25,18 +25,27 @@ namespace TcpDebugger
         {
             InitializeComponent();
 
-            XmlDocument xdoc = new XmlDocument();
-            xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
+            // Default vaule
+            coding = Encoding.GetEncoding(936);
+            ipaddress = IPAddress.Parse("127.0.0.1");
+            port = 5964;
 
-            XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
-            coding = Encoding.GetEncoding(node.InnerText);
+            // Config value
+            try {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
 
-            node = xdoc.SelectSingleNode("/configuration/ipaddress");
-            ipaddress = IPAddress.Parse(node.InnerText);
+                XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
+                coding = Encoding.GetEncoding(node.InnerText);
 
-            node = xdoc.SelectSingleNode("/configuration/port");
-            port = int.Parse(node.InnerText);
-            
+                node = xdoc.SelectSingleNode("/configuration/ipaddress");
+                ipaddress = IPAddress.Parse(node.InnerText);
+
+                node = xdoc.SelectSingleNode("/configuration/port");
+                port = int.Parse(node.InnerText);
+            }
+            catch (Exception) { }
+   
             client = new AsyncSocketSender();
             client.messageReceiver += new AsyncSocketSender.MessageReceiverDelegate(socketHandle);
 

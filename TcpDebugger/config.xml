@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <encoding>utf-8</encoding>
+
+  <!--
+  <ipaddress>10.12.111.222</ipaddress>
+  -->
+  
+  <ipaddress>127.0.0.1</ipaddress>
+  <port>3006</port>
+</configuration>
