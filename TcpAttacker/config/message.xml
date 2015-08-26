@@ -2,7 +2,9 @@
 <configuration>
   <encoding>utf-8</encoding>
   
-  <!--<ipaddress>127.0.0.1</ipaddress>-->
+  <!--
+  <ipaddress>127.0.0.1</ipaddress>
+  -->
   <ipaddress>10.12.111.222</ipaddress>
   
   <station name="mnn" port="5964" max_interval="5" count="1000">
