@@ -20,7 +20,7 @@ using System.Collections.ObjectModel;
 
 namespace StationConsole
 {
-    class ClientPointTable : ObservableCollection<ClientPointState> { }
+    class ClientStateTable : ObservableCollection<ClientUnitState> { }
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -33,7 +33,16 @@ namespace StationConsole
 
             InitailizeWindowName();
             InitailizeStatusBar();
+
+            // Data Source Binding
+            this.serverStateTable = new ObservableCollection<ServerUnitState>();
+            this.clientStateTable = (ClientStateTable)Resources["clientStateTable"];
+            //lstViewClientPoint.ItemsSource = clientStateTable;
+            this.lstViewServer.ItemsSource = serverStateTable;
         }
+
+        private ObservableCollection<ServerUnitState> serverStateTable;
+        private ObservableCollection<ClientUnitState> clientStateTable;
 
         // Methods ============================================================================
 
@@ -72,119 +81,104 @@ namespace StationConsole
             timer.Start();
         }
 
-        public void AddDataHandle(DataHandlePlugin dataHandle)
+        public void AddServer(ServerUnit server)
         {
+            ServerUnitState state = new ServerUnitState(server);
+
+            state.ListenState = ServerUnitState.ListenStateStoped;
+            state.TimerState = ServerUnitState.TimerStateStoped;
+            state.TimerInterval = 0;
+            state.TimerCommand = "";
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (Program.DLayer.dataHandlePluginTable) {
-                    Program.DLayer.dataHandlePluginTable.Add(dataHandle);
+                lock (serverStateTable) {
+                    serverStateTable.Add(state);
                 }
             }));
         }
 
-        public void RemoveDataHandle(DataHandlePlugin dataHandle)
+        public void RemoveServer(ServerUnit server)
         {
+            string id = server.ID;
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (Program.DLayer.dataHandlePluginTable) {
-                    Program.DLayer.dataHandlePluginTable.Remove(dataHandle);
+                lock (serverStateTable) {
+                    var subset = from s in serverStateTable where s.ID.Equals(id) select s;
+
+                    if (subset.Count() != 0)
+                        serverStateTable.Remove(subset.First());
                 }
             }));
         }
 
-        public void AddClientPoint(ClientPoint client)
+        public void AddClient(ClientUnit client)
         {
+            ClientUnitState state = new ClientUnitState(client);
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                lock (this.clientStateTable) {
+                    this.clientStateTable.Add(state);
+                }
+
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
                 historyClientOpenCount.Text = (Convert.ToInt32(historyClientOpenCount.Text) + 1).ToString();
-
-                ClientPointState state = new ClientPointState(client);
-                lock (Program.DLayer.dataHandlePluginTable) {
-                    var subset = from s in Program.DLayer.dataHandlePluginTable
-                                 where s.ListenPort == client.LocalPort
-                                 select s.ChineseName;
-                    if (subset.Count() != 0)
-                        state.LocalName = subset.First();
-                }
-
-                lock (Program.DLayer.clientPointTable) {
-                    Program.DLayer.clientPointTable.Add(state);
-                }
             }));
         }
 
-        public void RemoveClientPoint(ClientPoint client)
+        public void RemoveClient(ClientUnit client)
         {
+            IPEndPoint remoteEP = client.RemoteEP;
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                lock (this.clientStateTable) {
+                    var subset = from s in this.clientStateTable where s.RemoteEP.Equals(remoteEP) select s;
+
+                    if (subset.Count() != 0)
+                        this.clientStateTable.Remove(subset.First());
+                }
+
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
                 historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-
-                lock (Program.DLayer.clientPointTable) {
-                    var subset = from s in Program.DLayer.clientPointTable
-                                 where s.RemoteIP.Equals(client.RemoteIP)
-                                 select s;
-
-                    if (subset.Count() != 0)
-                        Program.DLayer.clientPointTable.Remove(subset.First());
-                }
             }));
         }
 
-        public void RemoveClientPoint(IPEndPoint ep)
+        public void RemoveClient(IPEndPoint ep)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                lock (this.clientStateTable) {
+                    var subset = from s in this.clientStateTable where s.RemoteEP.Equals(ep) select s;
+
+                    if (subset.Count() != 0)
+                        this.clientStateTable.Remove(subset.First());
+                }
+
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
                 historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-
-                lock (Program.DLayer.clientPointTable) {
-                    var subset = from s in Program.DLayer.clientPointTable
-                                 where s.RemoteIP.Equals(ep.ToString())
-                                 select s;
-
-                    if (subset.Count() != 0)
-                        Program.DLayer.clientPointTable.Remove(subset.First());
-                }
             }));
         }
 
-        public void RemoveClientPoint(string ip)
+        public void UpdateClient(IPEndPoint ep, string fieldName, object value)
         {
+            Type t = typeof(ClientUnit);
+            PropertyInfo propertyInfo = t.GetProperty(fieldName);
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // set value for ObservableCollection object 
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
-                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-
-                lock (Program.DLayer.clientPointTable) {
-                    var subset = from s in Program.DLayer.clientPointTable
-                                 where s.RemoteIP.Equals(ip)
+                lock (this.clientStateTable) {
+                    var subset = from s in this.clientStateTable
+                                 where s.RemoteEP.Equals(ep)
                                  select s;
 
                     if (subset.Count() != 0)
-                        Program.DLayer.clientPointTable.Remove(subset.First());
-                }
-            }));
-        }
-
-        public void UpdateClientPoint(ClientPoint client)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                lock (Program.DLayer.clientPointTable) {
-                    var subset = from s in Program.DLayer.clientPointTable
-                                 where s.RemoteIP.Equals(client.RemoteIP)
-                                 select s;
-
-                    if (subset.Count() != 0) {
-                        subset.First().CCID = client.CCID;
-                        subset.First().Name = client.Name;
-                    }
+                        propertyInfo.SetValue(subset.First(), value, null);
                 }
             }));
         }
@@ -206,16 +200,11 @@ namespace StationConsole
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 加载 DataHandles 文件夹下的所有模块
-            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
-
-            if (Directory.Exists(pluginPath)) {
-                string[] files = Directory.GetFiles(pluginPath);
-
-                // Load dll files one by one
-                foreach (var item in files)
-                    Program.CLayer.AtLoadPlugin(item);
-            }
+            App.MWindow = this;
+            App.CLayer = new ControlLayer();
+            App.CLayer.InitailizeConfig();
+            App.CLayer.InitailizeServer();
+            App.CLayer.InitailizeDefaultPlugin();
         }
 
         private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
@@ -226,16 +215,16 @@ namespace StationConsole
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                Program.CLayer.AtLoadPlugin(openFileDialog.FileName);
+                App.CLayer.AtPluginLoad(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
         {
-            List<DataHandlePlugin> handles = new List<DataHandlePlugin>();
+            List<ServerUnitState> handles = new List<ServerUnitState>();
 
             // 保存要卸载的模块信息
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState dataHandle = item as ServerUnitState;
                 if (dataHandle == null)
                     continue;
 
@@ -243,29 +232,38 @@ namespace StationConsole
             }
 
             // 卸载操作
-            foreach (var item in handles)
-                Program.CLayer.AtUnLoadPlugin(item);
+            //foreach (var item in handles)
+            //    Program.CLayer.AtPluginUnload(item.FileName);
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                Program.CLayer.AtStartListener(dataHandle);
+                if (server.ListenState == ServerUnitState.ListenStateStarted)
+                    return;
+
+                App.CLayer.AtServerStart(server.ID,
+                    new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
+                server.ListenState = ServerUnitState.ListenStateStarted;
             }
         }
 
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                Program.CLayer.AtStopListener(dataHandle);
+                if (server.ListenState == ServerUnitState.ListenStateStoped)
+                    return;
+
+                App.CLayer.AtServerStop(server.ID);
+                server.ListenState = ServerUnitState.ListenStateStoped;
             }
         }
 
@@ -283,34 +281,46 @@ namespace StationConsole
             if (input.ShowDialog() == false)
                 return;
 
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                Program.CLayer.AtSetListener(dataHandle, Convert.ToInt32(input.textBox2.Text));
+                if (server.ListenState == ServerUnitState.ListenStateStarted)
+                    return;
+
+                server.Port = int.Parse(input.textBox2.Text);
             }
         }
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                Program.CLayer.AtStartTimer(dataHandle);
+                if (server.TimerState == ServerUnitState.TimerStateStarted ||
+                    server.TimerInterval <= 0 || server.TimerCommand == "")
+                    return;
+
+                App.CLayer.AtTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
+                server.TimerState = ServerUnitState.TimerStateStarted;
             }
         }
 
         private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                Program.CLayer.AtStopTimer(dataHandle);
+                if (server.TimerState == ServerUnitState.TimerStateStoped)
+                    return;
+
+                App.CLayer.AtTimerStop(server.ID);
+                server.TimerState = ServerUnitState.TimerStateStoped;
             }
         }
 
@@ -327,15 +337,17 @@ namespace StationConsole
             if (input.ShowDialog() == false)
                 return;
 
-            foreach (var item in lstViewDataHandle.SelectedItems) {
-                DataHandlePlugin dataHandle = item as DataHandlePlugin;
-                if (dataHandle == null)
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
                     continue;
 
-                if (input.textBox2.Text == "")
-                    Program.CLayer.AtSetTimer(dataHandle, input.textBox1.Text, dataHandle.TimerInterval);
-                else
-                    Program.CLayer.AtSetTimer(dataHandle, input.textBox1.Text, Convert.ToDouble(input.textBox2.Text));
+                if (server.TimerState == ServerUnitState.TimerStateStarted)
+                    return;
+
+                server.TimerCommand = input.textBox1.Text;
+                if (input.textBox2.Text != "")
+                    server.TimerInterval = Convert.ToDouble(input.textBox2.Text);
             }
         }
 
@@ -355,24 +367,25 @@ namespace StationConsole
             if (input.ShowDialog() == false)
                 return;
 
-            foreach (var item in lstViewClientPoint.SelectedItems) {
-                ClientPointState client = item as ClientPointState;
+            foreach (var item in lstViewClient.SelectedItems) {
+                ClientUnitState client = item as ClientUnitState;
                 if (client == null)
                     continue;
 
-                Program.CLayer.AtClientSendMessage(client, input.textBox1.Text);
+                App.CLayer.AtClientSendMessage(client.ServerID, client.ID, input.textBox1.Text);
             }
         }
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewClientPoint.SelectedItems) {
-                ClientPointState client = item as ClientPointState;
+            foreach (var item in lstViewClient.SelectedItems) {
+                ClientUnitState client = item as ClientUnitState;
                 if (client == null)
                     continue;
 
-                Program.CLayer.AtClientClose(client);
+                App.CLayer.AtClientClose(client.ServerID, client.ID);
             }
         }
+
     }
 }

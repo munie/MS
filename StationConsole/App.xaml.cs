@@ -12,5 +12,7 @@ namespace StationConsole
     /// </summary>
     public partial class App : Application
     {
+        public static ControlLayer CLayer;
+        public static MainWindow MWindow;
     }
 }

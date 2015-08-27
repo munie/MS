@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>StationConsole.Program</StartupObject>
+    <StartupObject>StationConsole.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -61,12 +61,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DataLayer\IDataHandle.cs" />
-    <Compile Include="DataLayer\ClientPoint.cs" />
-    <Compile Include="DataLayer\DataLayer.cs" />
+    <Compile Include="ControlLayer\AtCmdUnit.cs" />
+    <Compile Include="ControlLayer\PluginUnit.cs" />
     <Compile Include="ControlLayer\ControlLayer.cs" />
-    <Compile Include="DataLayer\ClientPointState.cs" />
-    <Compile Include="DataLayer\ClientPointUnit.cs" />
+    <Compile Include="ClientUnitState.cs" />
+    <Compile Include="ControlLayer\ClientUnit.cs" />
     <Page Include="InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -79,7 +78,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataLayer\DataHandlePlugin.cs" />
+    <Compile Include="ControlLayer\TimerUnit.cs" />
+    <Compile Include="ServerUnitState.cs" />
+    <Compile Include="ControlLayer\ServerUnit.cs" />
     <Compile Include="InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
@@ -89,7 +90,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -129,6 +129,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

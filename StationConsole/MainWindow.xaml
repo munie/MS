@@ -4,10 +4,10 @@
         xmlns:local="clr-namespace:StationConsole"
         Title="MainWindow" Height="551" Width="980" xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" xmlns:dxwui="http://schemas.devexpress.com/winfx/2008/xaml/windowsui" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Window.Resources>
-        <local:ClientPointTable x:Key="clientPointTable"></local:ClientPointTable>
-            <CollectionViewSource x:Key='clients' Source="{Binding Source={StaticResource clientPointTable}}">
+        <local:ClientStateTable x:Key="clientStateTable"></local:ClientStateTable>
+            <CollectionViewSource x:Key='clients' Source="{Binding Source={StaticResource clientStateTable}}">
             <CollectionViewSource.GroupDescriptions>
-                    <PropertyGroupDescription PropertyName="LocalName" />
+                    <PropertyGroupDescription PropertyName="ServerName" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
     </Window.Resources>
@@ -23,7 +23,7 @@
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <ListView x:Name="lstViewDataHandle" Margin="5" Grid.Row="1">
+        <ListView x:Name="lstViewServer" Margin="5" Grid.Row="1">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -31,16 +31,14 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="端口"
-                                    DisplayMemberBinding="{Binding ListenPort}" />
+                    <GridViewColumn Header="模块名" Width="90"
+                                    DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="端口" Width="50"
+                                    DisplayMemberBinding="{Binding Port}" />
                     <GridViewColumn Header="监听状态" Width="60"
                                     DisplayMemberBinding="{Binding ListenState}" />
                     <GridViewColumn Header="定时器状态" Width="80"
                                     DisplayMemberBinding="{Binding TimerState}" />
-                    <GridViewColumn Header="模块名"
-                                    DisplayMemberBinding="{Binding ChineseName}" />
-                    <GridViewColumn Header="文件名"
-                                    DisplayMemberBinding="{Binding FileName}" />
                     <GridViewColumn Header="定时器时间(秒)" Width="100"
                                     DisplayMemberBinding="{Binding TimerInterval}" />
                     <GridViewColumn Header="定时器命令" Width="80"
@@ -65,7 +63,7 @@
 
         <GridSplitter Height="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"></GridSplitter>
 
-        <ListView x:Name="lstViewClientPoint" Margin="5" Grid.Row="2" ItemsSource="{Binding Source={StaticResource clients}}">
+        <ListView x:Name="lstViewClient" Margin="5" Grid.Row="2" ItemsSource="{Binding Source={StaticResource clients}}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="left" />
@@ -101,13 +99,11 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="客户端IP" Width="140"
-                                    DisplayMemberBinding="{Binding Path=RemoteIP}" />
-                    <GridViewColumn Header="本地端口" Width="65"
-                                    DisplayMemberBinding="{Binding Path=LocalPort}" />
+                                    DisplayMemberBinding="{Binding Path=RemoteEP}" />
                     <GridViewColumn Header="创建时间" Width="150"
                                     DisplayMemberBinding="{Binding Path=ConnectTime}" />
                     <GridViewColumn Header="CCID" Width="155"
-                                    DisplayMemberBinding="{Binding Path=CCID}" />
+                                    DisplayMemberBinding="{Binding Path=ID}" />
                     <GridViewColumn Header="名称" Width="90"
                                     DisplayMemberBinding="{Binding Path=Name}" />
                 </GridView>

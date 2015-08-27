@@ -10,200 +10,513 @@ using System.Xml.Serialization;
 using System.Diagnostics;
 using System.Windows;
 using System.Xml;
-using Mnn.MnnAtCmd;
+using System.Threading;
+using Mnn.MnnSocket;
+using Mnn.MnnPlugin;
 
 namespace StationConsole
 {
-    class ControlLayer
+    public class ControlLayer
     {
-        public void Run()
+        // From config.xml
+        public Encoding coding = Encoding.Default;
+
+        private List<ServerUnit> serverTable = new List<ServerUnit>();
+        private List<ClientUnit> clientTable = new List<ClientUnit>();
+        private List<TimerUnit> timerTable = new List<TimerUnit>();
+        private List<PluginUnit> pluginTable = new List<PluginUnit>();
+
+        private ReaderWriterLock rwlock = new ReaderWriterLock();
+
+        public void InitailizeConfig()
         {
-            foreach (var item in Program.DLayer.atCmdServerConfigTable) {
-                if (item.Protocol == "udp") {
-                    AtCmdSockServer<Mnn.MnnSocket.UdpServer> sockServer =
-                        new AtCmdSockServer<Mnn.MnnSocket.UdpServer>();
-                    sockServer.ExecCommand += new ExecuteAtCmdDeleagte(AtCmdServer_ExecCommand);
-                    sockServer.Run(new IPEndPoint(IPAddress.Parse(item.IpAddress), Convert.ToInt32(item.Port)));
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\config.xml") == false) {
+                System.Windows.MessageBox.Show("未找到配置文件： config.xml");
+                return;
+            }
+
+            /// ** Initialize Start ====================================================
+            try {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\config.xml");
+
+                // coding Config
+                XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
+                coding = Encoding.GetEncoding(node.InnerText);
+
+                // Server Config
+                foreach (XmlNode item in xdoc.SelectNodes("/configuration/serverconfig/server")) {
+                    ServerUnit server = new ServerUnit();
+                    server.ID = item.Attributes["id"].Value;
+                    server.Name = item.Attributes["name"].Value;
+                    server.Type = item.Attributes["type"].Value;
+                    server.Protocol = item.Attributes["protocol"].Value;
+
+                    if (server.Protocol == "pipe") {
+                        server.PipeName = item.Attributes["pipename"].Value;
+                    }
+                    else {
+                        server.IpAddress = item.Attributes["ipaddress"].Value;
+                        server.Port = int.Parse(item.Attributes["port"].Value);
+                    }
+
+                    serverTable.Add(server);
                 }
-                else if (item.Protocol == "tcp") {
-                    AtCmdSockServer<Mnn.MnnSocket.TcpServer> sockServer =
-                        new AtCmdSockServer<Mnn.MnnSocket.TcpServer>();
-                    sockServer.ExecCommand += new ExecuteAtCmdDeleagte(AtCmdServer_ExecCommand);
-                    sockServer.Run(new IPEndPoint(IPAddress.Parse(item.IpAddress), Convert.ToInt32(item.Port)));
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+                System.Windows.MessageBox.Show("配置文件读取错误： config.xml");
+                return;
+            }
+
+            foreach (var item in serverTable) {
+                App.MWindow.AddServer(item);
+            }
+            /// ** Initialize End ====================================================
+        }
+
+        public void InitailizeServer()
+        {
+            // 启动监听
+            foreach (var item in serverTable) {
+                // Work Server
+                if (item.Type == "work") {
+                    if (item.Protocol == "tcp") {
+                        TcpServer tcp = new TcpServer();
+                        tcp.ClientConnect += WorkServer_ClientConnect;
+                        tcp.ClientDisconn += WorkServer_ClientDisconn;
+                        tcp.ClientReadMsg += WorkServer_ClientReadMsg;
+                        tcp.ClientSendMsg += WorkServer_ClientSendMsg;
+                        item.Server = tcp;
+                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
+                    }
+                    else if (item.Protocol == "udp") {
+                        item.Server = new UdpServer();
+                        item.Server.ClientReadMsg += WorkServer_ClientReadMsg;
+                        item.Server.ClientSendMsg += WorkServer_ClientSendMsg;
+                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
+                    }
                 }
-                else if (item.Protocol == "pipe") {
-                    AtCmdPipeServer pipeServer = new AtCmdPipeServer();
-                    pipeServer.ExecCommand += new ExecuteAtCmdDeleagte(AtCmdServer_ExecCommand);
-                    pipeServer.Run(item.PipeName);
+
+                // AtCmd Server
+                else if (item.Type == "atcmd") {
+                    if (item.Protocol == "udp") {
+                        item.Server = new UdpServer();
+                        item.Server.ClientReadMsg += AtCmdServer_ClientReadMsg;
+                        item.Server.ClientSendMsg += AtCmdServer_ClientSendMsg;
+                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
+                    }
+                    //else if (item.Protocol == "pipe") {
+                    //    PipeServer pipeServer = new PipeServer();
+                    //    pipeServer.ClientReadMsg += AtCmdServer_ClientReadMsg;
+                    //    //pipeServer.Start(item.PipeName);
+                    //}
+                }
+            }
+
+        }
+
+        public void InitailizeDefaultPlugin()
+        {
+            // 加载 DataHandles 文件夹下的所有模块
+            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
+
+            if (Directory.Exists(pluginPath)) {
+                string[] files = Directory.GetFiles(pluginPath);
+
+                // Load dll files one by one
+                foreach (var item in files)
+                    AtPluginLoad(item);
+            }
+        }
+
+        // Events for AsyncSocketListenItem =================================================
+
+        private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
+        {
+            ClientUnit client = new ClientUnit();
+
+            client.ID = "";
+            client.Name = "";
+            client.RemoteEP = e.RemoteEP;
+            lock (serverTable) {
+                foreach (var item in serverTable) {
+                    if (item.Port.Equals(e.LocalEP.Port)) {
+                        client.ServerID = item.ID;
+                        client.ServerName = item.Name;
+                        break;
+                    }
+                }
+            }
+            client.ConnectTime = DateTime.Now;
+
+            lock (clientTable) {
+                clientTable.Add(client);
+            }
+
+            App.MWindow.AddClient(client);
+        }
+
+        private void WorkServer_ClientDisconn(object sender, ClientEventArgs e)
+        {
+            lock (clientTable) {
+                var subset = from s in clientTable
+                             where s.RemoteEP.Equals(e.RemoteEP)
+                             select s;
+
+                if (subset.Count() != 0) {
+                    // 通知 主窗体
+                    //if (string.IsNullOrEmpty(subset.First().ID) == false)
+                        App.MWindow.RemoveClient(subset.First());
+                    // 移出 table
+                    clientTable.Remove(subset.First());
                 }
             }
         }
 
-        void AtCmdServer_ExecCommand(AtCmdUnit atCmdUnit)
+        private void WorkServer_ClientReadMsg(object sender, ClientEventArgs e)
         {
-            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientPoint && atCmdUnit.Direct == AtCmdUnitDirect.Respond)
+            string msg = coding.GetString(e.Data);
+
+            rwlock.AcquireReaderLock(100);
+            foreach (var item in pluginTable) {
+                if (msg.Contains(item.Type)) {
+                    item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                    break;
+                }
+            }
+            rwlock.ReleaseReaderLock();
+
+            // 打印至窗口
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
+            App.MWindow.DisplayMessage(logFormat);
+        }
+
+        private void WorkServer_ClientSendMsg(object sender, ClientEventArgs e)
+        {
+            // 打印至窗口
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + coding.GetString(e.Data);
+            App.MWindow.DisplayMessage(logFormat);
+            // 发送数据要写日志
+            Mnn.MnnUtil.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
+        {
+            AtCmdUnit atCmdUnit = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
+                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                }
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+            }
+
+            AtCmdServer_ExecCommand(atCmdUnit);
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
+                + "|Schema=" + atCmdUnit.Schema.ToString()
+                + "|Type=" + atCmdUnit.Type.ToString()
+                + "|ToID=" + atCmdUnit.ToID
+                + "|ToEP=" + atCmdUnit.ToEP
+                + "|Data=" + atCmdUnit.Data;
+            App.MWindow.DisplayMessage(logFormat);
+            Mnn.MnnUtil.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
+        {
+            AtCmdUnit atCmdUnit = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
+                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                }
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+            }
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
+                + "|Schema=" + atCmdUnit.Schema.ToString()
+                + "|Type=" + atCmdUnit.Type.ToString()
+                + "|ToID=" + atCmdUnit.ToID
+                + "|ToEP=" + atCmdUnit.ToEP
+                + "|Data=" + atCmdUnit.Data;
+            App.MWindow.DisplayMessage(logFormat);
+            Mnn.MnnUtil.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ExecCommand(AtCmdUnit atCmdUnit)
+        {
+            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientUnit && atCmdUnit.Direct == AtCmdUnitDirect.Request)
             {
-                if (atCmdUnit.Type == AtCmdUnitType.ClientConnect) {
-                    StringReader sr = new StringReader(atCmdUnit.Data);
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(ClientPointUnit));
-                    ClientPointUnit clientPoint = xmlFormat.Deserialize(sr) as ClientPointUnit;
-
-                    Program.MWindow.AddClientPoint(clientPoint);
+                if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateID) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
+                                item.ID = atCmdUnit.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
+                    App.MWindow.UpdateClient(
+                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                        "ID", atCmdUnit.Data);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientDisconn) {
-                    //string[] strTmp = atCmdUnit.Data.Split(":".ToArray());
-                    //Program.mainWindow.RemoveClientPoint(
-                    //    new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
-
-                    Program.MWindow.RemoveClientPoint(atCmdUnit.Data);
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateName) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
+                                item.Name = atCmdUnit.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
+                    App.MWindow.UpdateClient(
+                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                        "Name", atCmdUnit.Data);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientReadMsg ||
-                    atCmdUnit.Type == AtCmdUnitType.ClientSendMsg) {
-                    Program.MWindow.DisplayMessage(atCmdUnit.Data);
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientClose) {
+                    string ServerID = null;
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                                ServerID = item.ServerID;
+                                break;
+                            }
+                        }
+                    }
+                    if (ServerID != null)
+                        AtClientClose(ServerID, atCmdUnit.ToID);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientUpdate) {
-                    StringReader sr = new StringReader(atCmdUnit.Data);
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(ClientPointUnit));
-                    ClientPointUnit clientPoint = xmlFormat.Deserialize(sr) as ClientPointUnit;
-
-                    Program.MWindow.UpdateClientPoint(clientPoint);
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientSendMsg) {
+                    string ServerID = null;
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                                ServerID = item.ServerID;
+                                break;
+                            }
+                        }
+                    }
+                    if (ServerID != null)
+                        AtClientSendMessage(ServerID, atCmdUnit.ToID, atCmdUnit.Data);
                 }
             }
         }
 
         // At Commands ========================================================================
 
-        public void AtLoadPlugin(string filePath)
+        public void AtPluginLoad(string filePath)
         {
-            int listenPort = 0;
-            DataHandlePlugin dataHandle = new DataHandlePlugin();
+            string pluginType = null;
+            PluginItem pluginItem = new PluginItem();
 
             try {
-                listenPort = dataHandle.LoadDataHandlePlugin(filePath);
-                dataHandle.InitializeSource();
+                pluginItem.Load(filePath);
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
-                return;
+            }
+
+            try {
+                pluginType = (string)pluginItem.Invoke("IDataHandle", "GetHandleMsgType", null);
+                pluginItem.Invoke("IDataHandle", "StartHandleMsg", null);
+            }
+            catch (Exception ex) {
+                pluginItem.UnLoad();
+                MessageBox.Show(ex.Message, "Error");
             }
 
             // 加载模块已经成功
-            dataHandle.ListenPort = listenPort;
-            dataHandle.ListenState = DataHandlePlugin.ListenStateStoped;
-            dataHandle.ChineseName = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            dataHandle.FileName = dataHandle.AssemblyName;
-            dataHandle.TimerState = DataHandlePlugin.TimerStateStoped;
-            dataHandle.TimerInterval = 0;
-            dataHandle.TimerCommand = "";
+            PluginUnit pluginUnit = new PluginUnit();
+            pluginUnit.ID = pluginItem.AssemblyGuid.ToString();
+            pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
+            pluginUnit.Type = pluginType;
+            pluginUnit.FileName = pluginItem.AssemblyName;
+            pluginUnit.FilePath = filePath;
+            pluginUnit.Plugin = pluginItem;
 
             // 加入 table
-            Program.MWindow.AddDataHandle(dataHandle);
+            rwlock.AcquireWriterLock(2000);
+            pluginTable.Add(pluginUnit);
+            rwlock.ReleaseWriterLock();
         }
 
-        public void AtUnLoadPlugin(DataHandlePlugin dataHandlePlugin)
+        public void AtPluginUnload(string fileName)
         {
-            // 关闭端口
-            if (dataHandlePlugin.ListenState == DataHandlePlugin.ListenStateStarted) {
-                dataHandlePlugin.StopListener();
-                dataHandlePlugin.ListenState = DataHandlePlugin.ListenStateStoped;
+            rwlock.AcquireWriterLock(2000);
+
+            var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
+            if (subset.Count() != 0) {
+                subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
+                // 卸载模块
+                subset.First().Plugin.UnLoad();
+                // 移出 table
+                pluginTable.Remove(subset.First());
             }
 
-            // 关闭定时器
-            if (dataHandlePlugin.TimerState == DataHandlePlugin.TimerStateStarted) {
-                dataHandlePlugin.StopTimerCommand();
-                dataHandlePlugin.TimerState = DataHandlePlugin.TimerStateStoped;
-            }
-
-            // 卸载模块
-            dataHandlePlugin.UnloadDataHandlePlugin();
-
-            // 移出 table
-            Program.MWindow.RemoveDataHandle(dataHandlePlugin);
+            rwlock.ReleaseWriterLock();
         }
 
-        public void AtStartListener(DataHandlePlugin dataHandlePlugin)
+        public void AtServerStart(string serverID)
         {
-            if (dataHandlePlugin.ListenState == DataHandlePlugin.ListenStateStarted)
-                return;
+            lock (serverTable) {
+                var subset = from s in serverTable
+                             where s.ID.Equals(serverID)
+                             select s;
 
-            // 端口可能已经被其他程序监听
-            try {
-                dataHandlePlugin.StartListener(new IPEndPoint(Program.DLayer.ipAddress, dataHandlePlugin.ListenPort));
-                dataHandlePlugin.ListenState = DataHandlePlugin.ListenStateStarted;
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-            }
-        }
+                if (subset.Count() == 0)
+                    return;
 
-        public void AtStopListener(DataHandlePlugin dataHandlePlugin)
-        {
-            if (dataHandlePlugin.ListenState == DataHandlePlugin.ListenStateStoped)
-                return;
-
-            // 逻辑上讲，不会出现异常
-            dataHandlePlugin.StopListener();
-            dataHandlePlugin.ListenState = DataHandlePlugin.ListenStateStoped;
-        }
-
-        public void AtSetListener(DataHandlePlugin dataHandlePlugin, int listenPort)
-        {
-            if (dataHandlePlugin.ListenState == DataHandlePlugin.ListenStateStarted)
-                return;
-
-            dataHandlePlugin.ListenPort = listenPort;
-        }
-
-        public void AtStartTimer(DataHandlePlugin dataHandlePlugin)
-        {
-            if (dataHandlePlugin.TimerState == DataHandlePlugin.TimerStateStarted ||
-                dataHandlePlugin.TimerInterval <= 0 || dataHandlePlugin.TimerCommand == "")
-                return;
-
-            dataHandlePlugin.StartTimerCommand(dataHandlePlugin.TimerInterval * 1000, dataHandlePlugin.TimerCommand);
-            dataHandlePlugin.TimerState = DataHandlePlugin.TimerStateStarted;
-        }
-
-        public void AtStopTimer(DataHandlePlugin dataHandlePlugin)
-        {
-            if (dataHandlePlugin.TimerState == DataHandlePlugin.TimerStateStoped)
-                return;
-
-            dataHandlePlugin.StopTimerCommand();
-            dataHandlePlugin.TimerState = DataHandlePlugin.TimerStateStoped;
-        }
-
-        public void AtSetTimer(DataHandlePlugin dataHandlePlugin, string cmd, double interval)
-        {
-            if (dataHandlePlugin.TimerState == DataHandlePlugin.TimerStateStarted)
-                return;
-
-            dataHandlePlugin.TimerCommand = cmd;
-            dataHandlePlugin.TimerInterval = interval;
-        }
-
-        public void AtClientSendMessage(ClientPoint client, string msg)
-        {
-            lock (Program.DLayer.dataHandlePluginTable) {
+                // 端口可能已经被其他程序监听
                 try {
-                    string[] strTmp = client.RemoteIP.Split(":".ToArray());
-                    var subset = from s in Program.DLayer.dataHandlePluginTable where s.ListenPort == client.LocalPort select s;
+                    subset.First().Server.Start(
+                        new IPEndPoint(IPAddress.Parse(subset.First().IpAddress), subset.First().Port));
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+        public void AtServerStart(string serverID, IPEndPoint ep)
+        {
+            lock (serverTable) {
+                var subset = from s in serverTable
+                             where s.ID.Equals(serverID)
+                             select s;
+
+                if (subset.Count() == 0)
+                    return;
+
+                // 端口可能已经被其他程序监听
+                try {
+                    subset.First().Server.Start(ep);
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+        public void AtServerStop(string serverID)
+        {
+            lock (serverTable) {
+                var subset = from s in serverTable
+                             where s.ID.Equals(serverID)
+                             select s;
+
+                if (subset.Count() == 0)
+                    return;
+
+                // 逻辑上讲，不会出现异常
+                subset.First().Server.Stop();
+            }
+        }
+
+        public void AtTimerStart(string serverID, double interval, string timerCommand)
+        {
+            ServerUnit serverUnit = null;
+
+            lock (serverTable) {
+                foreach (var item in serverTable) {
+                    if (item.ID.Equals(serverID)) {
+                        serverUnit = item;
+                        break;
+                    }
+                }
+            }
+
+            if (serverUnit == null)
+                return;
+
+            TimerUnit timerUnit = new TimerUnit();
+            timerUnit.ID = serverUnit.ID;
+            timerUnit.timer = new System.Timers.Timer();
+            timerUnit.timer.Interval = interval;
+            timerUnit.timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+            {
+                try {
+                    (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
+                }
+                catch (Exception) { }
+            });
+
+            timerUnit.timer.Start();
+            lock (timerTable) { 
+                timerTable.Add(timerUnit);
+            }
+        }
+
+        public void AtTimerStop(string serverID)
+        {
+            lock (timerTable) {
+                foreach (var item in timerTable) {
+                    if (item.ID.Equals(serverID)) {
+                        item.timer.Stop();
+                        item.timer.Close();
+                        timerTable.Remove(item);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void AtClientSendMessage(string serverID, string clientID, string msg)
+        {
+            // Find IPEndPoint of Client
+            IPEndPoint ep = null;
+            lock (clientTable) {
+                var subset = from s in clientTable where s.ID.Equals(clientID) select s;
+                if (subset.Count() != 0)
+                    ep = subset.First().RemoteEP;
+            }
+            if (ep == null)
+                return;
+
+            lock (serverTable) {
+                try {
+                    var subset = from s in serverTable where s.ID.Equals(serverID) select s;
                     if (subset.Count() != 0)
-                        subset.First().SendClientCommand(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                                            Program.DLayer.coding.GetBytes(msg));
+                        subset.First().Server.Send(ep, coding.GetBytes(msg));
                 }
                 catch (Exception) { }
             }
         }
 
-        public void AtClientClose(ClientPoint client)
+        public void AtClientClose(string serverID, string clientID)
         {
-            lock (Program.DLayer.dataHandlePluginTable) {
-                string[] strTmp = client.RemoteIP.Split(":".ToArray());
-
-                var subset = from s in Program.DLayer.dataHandlePluginTable where s.ListenPort == client.LocalPort select s;
+            // Find IPEndPoint of Client
+            IPEndPoint ep = null;
+            lock (clientTable) {
+                var subset = from s in clientTable where s.ID.Equals(clientID) select s;
                 if (subset.Count() != 0)
-                    subset.First().CloseClient(new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])));
+                    ep = subset.First().RemoteEP;
+            }
+            if (ep == null)
+                return;
+
+            // Close Client
+            lock (serverTable) {
+                var subset = from s in serverTable where s.ID.Equals(serverID) select s;
+                if (subset.Count() != 0 && subset.First().Server is TcpServer) {
+                    TcpServer tcp = subset.First().Server as TcpServer;
+                    tcp.CloseClient(ep);
+                }
             }
         }
 
