@@ -40,7 +40,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MnnAtCmd\AtCmdPipeServer.cs" />
+    <Compile Include="MnnSocket\PipeServer.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MnnAtCmd\AtCmdSockServer.cs" />
     <Compile Include="MnnAtCmd\AtCmdUnit.cs" />
     <Compile Include="MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
@@ -57,6 +59,7 @@
     <Compile Include="MnnSocket\ListenEventArgs.cs" />
     <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnSocket\UdpServer.cs" />
+    <Compile Include="MnnAtCmd\AtCmdPipeServer.cs" />
     <Compile Include="MnnUtil\ExprSolve.cs" />
     <Compile Include="MnnUtil\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
