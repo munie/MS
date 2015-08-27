@@ -20,7 +20,7 @@ namespace TcpAttacker
 
 
             // 读取配置文件
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "\\config\\message.xml") == false) {
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml") == false) {
                 Console.WriteLine("Can't find message.xml at directory config...");
                 Console.WriteLine("Application will be closed in 5 seconds.");
                 System.Threading.Thread.Sleep(5000);
@@ -29,7 +29,7 @@ namespace TcpAttacker
 
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config\\message.xml");
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
 
                 XmlNode codingNode = xdoc.SelectSingleNode("/configuration/encoding");
                 coding = Encoding.GetEncoding(codingNode.InnerText);
