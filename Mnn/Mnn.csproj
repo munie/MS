@@ -40,30 +40,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MnnSocket\PipeServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MnnAtCmd\AtCmdSockServer.cs" />
-    <Compile Include="MnnAtCmd\AtCmdUnit.cs" />
-    <Compile Include="MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
+    <Compile Include="Discard\MnnAtCmd\AtCmdSockServer.cs" />
+    <Compile Include="Discard\MnnAtCmd\AtCmdUnit.cs" />
+    <Compile Include="Discard\MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
     <Compile Include="MnnPlugin\AppDomainProxy.cs" />
     <Compile Include="MnnPlugin\PluginItem.cs" />
     <Compile Include="MnnPlugin\PluginManager.cs" />
-    <Compile Include="MnnSerialPort\AsyncSerailPort.cs" />
-    <Compile Include="MnnSerialPort\AsyncSerailPortEventArgs.cs" />
+    <Compile Include="Discard\MnnSerialPort\AsyncSerailPort.cs" />
+    <Compile Include="Discard\MnnSerialPort\AsyncSerailPortEventArgs.cs" />
     <Compile Include="MnnSocket\AsyncSocketListenItem.cs" />
     <Compile Include="MnnSocket\AsyncSocketListenManager.cs" />
     <Compile Include="MnnSocket\AsyncSocketSender.cs" />
     <Compile Include="MnnSocket\ClientEventArgs.cs" />
+    <Compile Include="MnnSocket\PipeServer.cs" />
     <Compile Include="MnnSocket\SockServer.cs" />
     <Compile Include="MnnSocket\ListenEventArgs.cs" />
     <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnSocket\UdpServer.cs" />
-    <Compile Include="MnnAtCmd\AtCmdPipeServer.cs" />
+    <Compile Include="Discard\MnnAtCmd\AtCmdPipeServer.cs" />
     <Compile Include="MnnUtil\ExprSolve.cs" />
     <Compile Include="MnnUtil\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -80,10 +80,10 @@ namespace Mnn.MnnSocket
             }
             catch (SocketException ex) {
                 Close();
-                Console.WriteLine(ex.ToString());
+                Mnn.MnnUtil.Logger.WriteException(ex);
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Mnn.MnnUtil.Logger.WriteException(ex);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Mnn.MnnSocket
                 }
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Mnn.MnnUtil.Logger.WriteException(ex);
             }
         }
     }
