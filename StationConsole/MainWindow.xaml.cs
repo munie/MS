@@ -96,9 +96,7 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (serverStateTable) {
-                    serverStateTable.Add(state);
-                }
+                serverStateTable.Add(state);
             }));
         }
 
@@ -108,12 +106,10 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (serverStateTable) {
-                    var subset = from s in serverStateTable where s.ID.Equals(id) select s;
+                var subset = from s in serverStateTable where s.ID.Equals(id) select s;
 
-                    if (subset.Count() != 0)
-                        serverStateTable.Remove(subset.First());
-                }
+                if (subset.Count() != 0)
+                    serverStateTable.Remove(subset.First());
             }));
         }
 
@@ -123,9 +119,7 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (this.clientStateTable) {
-                    this.clientStateTable.Add(state);
-                }
+                this.clientStateTable.Add(state);
 
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
@@ -139,12 +133,10 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (this.clientStateTable) {
-                    var subset = from s in this.clientStateTable where s.RemoteEP.Equals(remoteEP) select s;
+                var subset = from s in this.clientStateTable where s.RemoteEP.Equals(remoteEP) select s;
 
-                    if (subset.Count() != 0)
-                        this.clientStateTable.Remove(subset.First());
-                }
+                if (subset.Count() != 0)
+                    this.clientStateTable.Remove(subset.First());
 
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
@@ -156,12 +148,10 @@ namespace StationConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (this.clientStateTable) {
-                    var subset = from s in this.clientStateTable where s.RemoteEP.Equals(ep) select s;
+                var subset = from s in this.clientStateTable where s.RemoteEP.Equals(ep) select s;
 
-                    if (subset.Count() != 0)
-                        this.clientStateTable.Remove(subset.First());
-                }
+                if (subset.Count() != 0)
+                    this.clientStateTable.Remove(subset.First());
 
                 // set value for ObservableCollection object 
                 currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
@@ -176,14 +166,12 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (this.clientStateTable) {
-                    var subset = from s in this.clientStateTable
-                                 where s.RemoteEP.Equals(ep)
-                                 select s;
+                var subset = from s in this.clientStateTable
+                                where s.RemoteEP.Equals(ep)
+                                select s;
 
-                    if (subset.Count() != 0)
-                        propertyInfo.SetValue(subset.First(), value, null);
-                }
+                if (subset.Count() != 0)
+                    propertyInfo.SetValue(subset.First(), value, null);
             }));
         }
 
@@ -194,15 +182,13 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (serverStateTable) {
-                    var subset = from s in serverStateTable where s.Name.Contains(name) select s;
+                var subset = from s in serverStateTable where s.Name.Contains(name) select s;
 
-                    if (subset.Count() == 0) {
-                        subset = from s in serverStateTable where s.Name.Contains("通用") select s;
-                    }
-
-                    subset.First().PluginSupport += fileName + "，";
+                if (subset.Count() == 0) {
+                    subset = from s in serverStateTable where s.Name.Contains("通用") select s;
                 }
+
+                subset.First().PluginSupport += fileName + "，";
             }));
         }
 
@@ -212,14 +198,12 @@ namespace StationConsole
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                lock (serverStateTable) {
-                    var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
+                var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
 
-                    if (subset.Count() == 0)
-                        return;
+                if (subset.Count() == 0)
+                    return;
 
-                    subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
-                }
+                subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
             }));
         }
 
