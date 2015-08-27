@@ -92,6 +92,7 @@ namespace StationConsole
                 state.TimerState = ServerUnitState.TimerStateDisable;
             state.TimerInterval = 0;
             state.TimerCommand = "";
+            state.PluginSupport = "";
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -186,6 +187,42 @@ namespace StationConsole
             }));
         }
 
+        public void AddPlugin(PluginUnit plugin)
+        {
+            string name = plugin.Name;
+            string fileName = plugin.FileName;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (serverStateTable) {
+                    var subset = from s in serverStateTable where s.Name.Contains(name) select s;
+
+                    if (subset.Count() == 0) {
+                        subset = from s in serverStateTable where s.Name.Contains("通用") select s;
+                    }
+
+                    subset.First().PluginSupport += fileName + "，";
+                }
+            }));
+        }
+
+        public void RemovePlugin(PluginUnit plugin)
+        {
+            string fileName = plugin.FileName;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (serverStateTable) {
+                    var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
+
+                    if (subset.Count() == 0)
+                        return;
+
+                    subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
+                }
+            }));
+        }
+
         public void DisplayMessage(string msg)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
@@ -235,8 +272,15 @@ namespace StationConsole
             }
 
             // 卸载操作
-            //foreach (var item in handles)
-            //    Program.CLayer.AtPluginUnload(item.FileName);
+            foreach (var item in handles) {
+                if (string.IsNullOrEmpty(item.PluginSupport) == true)
+                    continue;
+
+                string[] strTmp = item.PluginSupport.Split("，".ToArray(), StringSplitOptions.RemoveEmptyEntries);
+                foreach (var i in strTmp) {
+                    App.CLayer.AtPluginUnload(i);
+                }
+            }
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)

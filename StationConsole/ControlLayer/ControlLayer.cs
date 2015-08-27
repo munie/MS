@@ -320,58 +320,6 @@ namespace StationConsole
 
         // At Commands ========================================================================
 
-        public void AtPluginLoad(string filePath)
-        {
-            string pluginType = null;
-            PluginItem pluginItem = new PluginItem();
-
-            try {
-                pluginItem.Load(filePath);
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-            }
-
-            try {
-                pluginType = (string)pluginItem.Invoke("IDataHandle", "GetHandleMsgType", null);
-                pluginItem.Invoke("IDataHandle", "StartHandleMsg", null);
-            }
-            catch (Exception ex) {
-                pluginItem.UnLoad();
-                MessageBox.Show(ex.Message, "Error");
-            }
-
-            // 加载模块已经成功
-            PluginUnit pluginUnit = new PluginUnit();
-            pluginUnit.ID = pluginItem.AssemblyGuid.ToString();
-            pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            pluginUnit.Type = pluginType;
-            pluginUnit.FileName = pluginItem.AssemblyName;
-            pluginUnit.FilePath = filePath;
-            pluginUnit.Plugin = pluginItem;
-
-            // 加入 table
-            rwlock.AcquireWriterLock(2000);
-            pluginTable.Add(pluginUnit);
-            rwlock.ReleaseWriterLock();
-        }
-
-        public void AtPluginUnload(string fileName)
-        {
-            rwlock.AcquireWriterLock(2000);
-
-            var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
-            if (subset.Count() != 0) {
-                subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
-                // 卸载模块
-                subset.First().Plugin.UnLoad();
-                // 移出 table
-                pluginTable.Remove(subset.First());
-            }
-
-            rwlock.ReleaseWriterLock();
-        }
-
         public void AtServerStart(string serverID)
         {
             lock (serverTable) {
@@ -474,6 +422,63 @@ namespace StationConsole
                     }
                 }
             }
+        }
+
+        public void AtPluginLoad(string filePath)
+        {
+            string pluginType = null;
+            PluginItem plugin = new PluginItem();
+
+            try {
+                plugin.Load(filePath);
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Error");
+                return;
+            }
+
+            try {
+                pluginType = (string)plugin.Invoke("IDataHandle", "GetHandleMsgType", null);
+                plugin.Invoke("IDataHandle", "StartHandleMsg", null);
+            }
+            catch (Exception ex) {
+                plugin.UnLoad();
+                MessageBox.Show(ex.Message, "Error");
+                return;
+            }
+
+            // 加载模块已经成功
+            PluginUnit pluginUnit = new PluginUnit();
+            pluginUnit.ID = plugin.AssemblyGuid.ToString();
+            pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
+            pluginUnit.Type = pluginType;
+            pluginUnit.FileName = plugin.AssemblyName;
+            pluginUnit.FilePath = filePath;
+            pluginUnit.Plugin = plugin;
+
+            // 加入 table
+            rwlock.AcquireWriterLock(2000);
+            pluginTable.Add(pluginUnit);
+            rwlock.ReleaseWriterLock();
+
+            App.MWindow.AddPlugin(pluginUnit);
+        }
+
+        public void AtPluginUnload(string fileName)
+        {
+            rwlock.AcquireWriterLock(2000);
+
+            var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
+            if (subset.Count() != 0) {
+                subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
+                // 卸载模块
+                subset.First().Plugin.UnLoad();
+                // 移出 table
+                App.MWindow.RemovePlugin(subset.First());
+                pluginTable.Remove(subset.First());
+            }
+
+            rwlock.ReleaseWriterLock();
         }
 
         public void AtClientSendMessage(string serverID, string clientID, string msg)

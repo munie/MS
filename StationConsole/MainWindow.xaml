@@ -43,6 +43,8 @@
                                     DisplayMemberBinding="{Binding TimerInterval}" />
                     <GridViewColumn Header="定时器命令" Width="80"
                                     DisplayMemberBinding="{Binding TimerCommand}" />
+                    <GridViewColumn Header="模块支持" Width="130"
+                                    DisplayMemberBinding="{Binding PluginSupport}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
