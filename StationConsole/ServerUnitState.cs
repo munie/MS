@@ -28,6 +28,7 @@ namespace StationConsole
         public static readonly string ListenStateStoped = "未启动";
         public static readonly string TimerStateStarted = "运行中";
         public static readonly string TimerStateStoped = "未运行";
+        public static readonly string TimerStateDisable = "不支持";
 
         private string listenState;
         private string timerState;

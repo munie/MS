@@ -86,7 +86,10 @@ namespace StationConsole
             ServerUnitState state = new ServerUnitState(server);
 
             state.ListenState = ServerUnitState.ListenStateStoped;
-            state.TimerState = ServerUnitState.TimerStateStoped;
+            if (state.Protocol == "tcp")
+                state.TimerState = ServerUnitState.TimerStateStoped;
+            else
+                state.TimerState = ServerUnitState.TimerStateDisable;
             state.TimerInterval = 0;
             state.TimerCommand = "";
 
@@ -301,6 +304,7 @@ namespace StationConsole
                     continue;
 
                 if (server.TimerState == ServerUnitState.TimerStateStarted ||
+                    server.TimerState == ServerUnitState.TimerStateDisable ||
                     server.TimerInterval <= 0 || server.TimerCommand == "")
                     return;
 
@@ -316,7 +320,8 @@ namespace StationConsole
                 if (server == null)
                     continue;
 
-                if (server.TimerState == ServerUnitState.TimerStateStoped)
+                if (server.TimerState == ServerUnitState.TimerStateStoped ||
+                    server.TimerState == ServerUnitState.TimerStateDisable)
                     return;
 
                 App.CLayer.AtTimerStop(server.ID);

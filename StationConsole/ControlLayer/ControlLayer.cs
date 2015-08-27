@@ -434,7 +434,7 @@ namespace StationConsole
 
             lock (serverTable) {
                 foreach (var item in serverTable) {
-                    if (item.ID.Equals(serverID)) {
+                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
                         serverUnit = item;
                         break;
                     }
