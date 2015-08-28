@@ -31,7 +31,7 @@ namespace Mnn.MnnPlugin
             // 如果实例字典中还没有指定接口对应的实例，新建之
             if (subset.Count() == 0) {
                 var types = from s in asm.GetTypes()
-                            where s.GetInterface(interfaceName) != null
+                            where s.GetInterface(interfaceName) != null && s.IsAbstract == false
                             select s;
 
                 /// ** 异常：如果接口名错误
