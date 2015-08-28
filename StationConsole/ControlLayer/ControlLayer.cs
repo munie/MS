@@ -304,7 +304,10 @@ namespace StationConsole
             foreach (var item in pluginTable) {
                 // 水库代码太恶心，没办法的办法
                 if (item.Type != "HT=" && msg.Contains(item.Type)) {
-                    item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                    try {
+                        item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                    }
+                    catch (Exception) { }
                     IsHandled = true;
                     break;
                 }
@@ -313,7 +316,10 @@ namespace StationConsole
             if (IsHandled == false) {
                 foreach (var item in pluginTable) {
                     if (item.Type == "HT=" && msg.Contains(item.Type)) {
-                        item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                        try {
+                            item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                        }
+                        catch (Exception) { }
                         break;
                     }
                 }
@@ -486,7 +492,10 @@ namespace StationConsole
 
             var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
-                subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
+                try {
+                    subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
+                }
+                catch (Exception) { }
                 // 卸载模块
                 subset.First().Plugin.UnLoad();
                 // 移出 table
