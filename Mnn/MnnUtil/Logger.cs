@@ -12,12 +12,12 @@ namespace Mnn.MnnUtil
         public static readonly string LogDirectory = BaseDirectory + @"\Log";
         public static readonly string ErrorDirectory = BaseDirectory + @"\ErrLog";
 
-        public static void Write(string log)
+        public static void Write(string log, string prefix = @"Log")
         {
             if (!Directory.Exists(LogDirectory))
                 Directory.CreateDirectory(LogDirectory);
 
-            string fileName = LogDirectory + @"\Log_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+            string fileName = LogDirectory + prefix + "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
 
             try {
                 using (StreamWriter sw = new StreamWriter(fileName, true)) {
@@ -30,12 +30,12 @@ namespace Mnn.MnnUtil
             catch (Exception) { }
         }
 
-        public static void WriteException(Exception ex)
+        public static void WriteException(Exception ex, string prefix = @"ErrLog")
         {
             if (!Directory.Exists(ErrorDirectory))
                 Directory.CreateDirectory(ErrorDirectory);
 
-            string fileName = ErrorDirectory + @"\ErrLog_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+            string fileName = ErrorDirectory + prefix + "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
 
             try {
                 using (StreamWriter sw = new StreamWriter(fileName, true)) {
