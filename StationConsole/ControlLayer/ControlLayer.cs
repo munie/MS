@@ -312,7 +312,7 @@ namespace StationConsole
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in pluginTable) {
-                    if (item.Type == "HT=") {
+                    if (item.Type == "HT=" && msg.Contains(item.Type)) {
                         item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                         break;
                     }
