@@ -302,7 +302,8 @@ namespace StationConsole
             bool IsHandled = false;
             rwlock.AcquireReaderLock(100);
             foreach (var item in pluginTable) {
-                if (msg.Contains(item.Type)) {
+                // 水库代码太恶心，没办法的办法
+                if (item.Type != "HT=" && msg.Contains(item.Type)) {
                     item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                     IsHandled = true;
                     break;
