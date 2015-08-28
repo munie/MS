@@ -32,7 +32,7 @@ namespace StationConsole
         {
             if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\config.xml") == false) {
                 System.Windows.MessageBox.Show("未找到配置文件： config.xml");
-                return;
+                Thread.CurrentThread.Abort();
             }
 
             /// ** Initialize Start ====================================================
@@ -60,13 +60,15 @@ namespace StationConsole
                         server.Port = int.Parse(item.Attributes["port"].Value);
                     }
 
+                    server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
+                    server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
+
                     serverTable.Add(server);
                 }
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
                 System.Windows.MessageBox.Show("配置文件读取错误： config.xml");
-                return;
             }
 
             foreach (var item in serverTable) {
@@ -79,8 +81,24 @@ namespace StationConsole
         {
             // 启动监听
             foreach (var item in serverTable) {
+                // AtCmd Server
+                if (item.Type == "atcmd") {
+                    if (item.Protocol == "udp") {
+                        item.Server = new UdpServer();
+                        item.Server.ClientReadMsg += AtCmdServer_ClientReadMsg;
+                        item.Server.ClientSendMsg += AtCmdServer_ClientSendMsg;
+                        if (item.AutoRun == true)
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                    }
+                    //else if (item.Protocol == "pipe") {
+                    //    PipeServer pipeServer = new PipeServer();
+                    //    pipeServer.ClientReadMsg += AtCmdServer_ClientReadMsg;
+                    //    //pipeServer.Start(item.PipeName);
+                    //}
+                }
+
                 // Work Server
-                if (item.Type == "work") {
+                else if (item.Type == "work") {
                     if (item.Protocol == "tcp") {
                         TcpServer tcp = new TcpServer();
                         tcp.ClientConnect += WorkServer_ClientConnect;
@@ -88,29 +106,16 @@ namespace StationConsole
                         tcp.ClientReadMsg += WorkServer_ClientReadMsg;
                         tcp.ClientSendMsg += WorkServer_ClientSendMsg;
                         item.Server = tcp;
-                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
+                        if (item.AutoRun == true)
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
                     }
                     else if (item.Protocol == "udp") {
                         item.Server = new UdpServer();
                         item.Server.ClientReadMsg += WorkServer_ClientReadMsg;
                         item.Server.ClientSendMsg += WorkServer_ClientSendMsg;
-                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
+                        if (item.AutoRun == true)
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
                     }
-                }
-
-                // AtCmd Server
-                else if (item.Type == "atcmd") {
-                    if (item.Protocol == "udp") {
-                        item.Server = new UdpServer();
-                        item.Server.ClientReadMsg += AtCmdServer_ClientReadMsg;
-                        item.Server.ClientSendMsg += AtCmdServer_ClientSendMsg;
-                        //item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), int.Parse(item.Port)));
-                    }
-                    //else if (item.Protocol == "pipe") {
-                    //    PipeServer pipeServer = new PipeServer();
-                    //    pipeServer.ClientReadMsg += AtCmdServer_ClientReadMsg;
-                    //    //pipeServer.Start(item.PipeName);
-                    //}
                 }
             }
 
@@ -131,6 +136,122 @@ namespace StationConsole
         }
 
         // Events for AsyncSocketListenItem =================================================
+
+        private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
+        {
+            AtCmdUnit atCmdUnit = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
+                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                }
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+            }
+
+            AtCmdServer_ExecCommand(atCmdUnit);
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
+                + "|Schema=" + atCmdUnit.Schema.ToString()
+                + "|Type=" + atCmdUnit.Type.ToString()
+                + "|ToID=" + atCmdUnit.ToID
+                + "|ToEP=" + atCmdUnit.ToEP
+                + "|Data=" + atCmdUnit.Data;
+            App.MWindow.DisplayMessage(logFormat);
+            Mnn.MnnUtil.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
+        {
+            AtCmdUnit atCmdUnit = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
+                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                }
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+            }
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
+                + "|Schema=" + atCmdUnit.Schema.ToString()
+                + "|Type=" + atCmdUnit.Type.ToString()
+                + "|ToID=" + atCmdUnit.ToID
+                + "|ToEP=" + atCmdUnit.ToEP
+                + "|Data=" + atCmdUnit.Data;
+            App.MWindow.DisplayMessage(logFormat);
+            Mnn.MnnUtil.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ExecCommand(AtCmdUnit atCmdUnit)
+        {
+            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientUnit && atCmdUnit.Direct == AtCmdUnitDirect.Request) {
+                if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateID) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
+                                item.ID = atCmdUnit.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
+                    App.MWindow.UpdateClient(
+                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                        "ID", atCmdUnit.Data);
+                }
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateName) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
+                                item.Name = atCmdUnit.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
+                    App.MWindow.UpdateClient(
+                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                        "Name", atCmdUnit.Data);
+                }
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientClose) {
+                    string ServerID = null;
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                                ServerID = item.ServerID;
+                                break;
+                            }
+                        }
+                    }
+                    if (ServerID != null)
+                        AtClientClose(ServerID, atCmdUnit.ToID);
+                }
+                else if (atCmdUnit.Type == AtCmdUnitType.ClientSendMsg) {
+                    string ServerID = null;
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                                ServerID = item.ServerID;
+                                break;
+                            }
+                        }
+                    }
+                    if (ServerID != null)
+                        AtClientSendMessage(ServerID, atCmdUnit.ToID, atCmdUnit.Data);
+                }
+            }
+        }
 
         private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
         {
@@ -210,123 +331,6 @@ namespace StationConsole
             App.MWindow.DisplayMessage(logFormat);
             // 发送数据要写日志
             Mnn.MnnUtil.Logger.Write(logFormat);
-        }
-
-        private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
-        {
-            AtCmdUnit atCmdUnit = null;
-
-            try {
-                using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
-                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
-                }
-            }
-            catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
-            }
-
-            AtCmdServer_ExecCommand(atCmdUnit);
-
-            // 打印至窗口，写命令日志
-            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
-                + "|Schema=" + atCmdUnit.Schema.ToString()
-                + "|Type=" + atCmdUnit.Type.ToString()
-                + "|ToID=" + atCmdUnit.ToID
-                + "|ToEP=" + atCmdUnit.ToEP
-                + "|Data=" + atCmdUnit.Data;
-            App.MWindow.DisplayMessage(logFormat);
-            Mnn.MnnUtil.Logger.Write(logFormat);
-        }
-
-        private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
-        {
-            AtCmdUnit atCmdUnit = null;
-
-            try {
-                using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
-                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
-                }
-            }
-            catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
-            }
-
-            // 打印至窗口，写命令日志
-            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
-                + "|Schema=" + atCmdUnit.Schema.ToString()
-                + "|Type=" + atCmdUnit.Type.ToString()
-                + "|ToID=" + atCmdUnit.ToID
-                + "|ToEP=" + atCmdUnit.ToEP
-                + "|Data=" + atCmdUnit.Data;
-            App.MWindow.DisplayMessage(logFormat);
-            Mnn.MnnUtil.Logger.Write(logFormat);
-        }
-
-        private void AtCmdServer_ExecCommand(AtCmdUnit atCmdUnit)
-        {
-            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientUnit && atCmdUnit.Direct == AtCmdUnitDirect.Request)
-            {
-                if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateID) {
-                    // 更新逻辑层 client
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
-                                item.ID = atCmdUnit.Data;
-                                break;
-                            }
-                        }
-                    }
-                    // 更新界面 client
-                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
-                    App.MWindow.UpdateClient(
-                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                        "ID", atCmdUnit.Data);
-                }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateName) {
-                    // 更新逻辑层 client
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
-                                item.Name = atCmdUnit.Data;
-                                break;
-                            }
-                        }
-                    }
-                    // 更新界面 client
-                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
-                    App.MWindow.UpdateClient(
-                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                        "Name", atCmdUnit.Data);
-                }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientClose) {
-                    string ServerID = null;
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmdUnit.ToID)) {
-                                ServerID = item.ServerID;
-                                break;
-                            }
-                        }
-                    }
-                    if (ServerID != null)
-                        AtClientClose(ServerID, atCmdUnit.ToID);
-                }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientSendMsg) {
-                    string ServerID = null;
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmdUnit.ToID)) {
-                                ServerID = item.ServerID;
-                                break;
-                            }
-                        }
-                    }
-                    if (ServerID != null)
-                        AtClientSendMessage(ServerID, atCmdUnit.ToID, atCmdUnit.Data);
-                }
-            }
         }
 
         // At Commands ========================================================================

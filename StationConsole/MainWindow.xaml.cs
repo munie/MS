@@ -85,7 +85,10 @@ namespace StationConsole
         {
             ServerUnitState state = new ServerUnitState(server);
 
-            state.ListenState = ServerUnitState.ListenStateStoped;
+            if (state.AutoRun == true)
+                state.ListenState = ServerUnitState.ListenStateStarted;
+            else
+                state.ListenState = ServerUnitState.ListenStateStoped;
             if (state.Protocol == "tcp")
                 state.TimerState = ServerUnitState.TimerStateStoped;
             else
@@ -275,7 +278,7 @@ namespace StationConsole
                     continue;
 
                 if (server.ListenState == ServerUnitState.ListenStateStarted)
-                    return;
+                    continue;
 
                 App.CLayer.AtServerStart(server.ID,
                     new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
@@ -290,10 +293,11 @@ namespace StationConsole
                 if (server == null)
                     continue;
 
-                if (server.ListenState == ServerUnitState.ListenStateStoped)
-                    return;
+                if (server.ListenState == ServerUnitState.ListenStateStoped || server.CanStop == false)
+                    continue;
 
-                App.CLayer.AtServerStop(server.ID);
+                if (server.CanStop == true)
+                    App.CLayer.AtServerStop(server.ID);
                 server.ListenState = ServerUnitState.ListenStateStoped;
             }
         }
@@ -318,7 +322,7 @@ namespace StationConsole
                     continue;
 
                 if (server.ListenState == ServerUnitState.ListenStateStarted)
-                    return;
+                    continue;
 
                 server.Port = int.Parse(input.textBox2.Text);
             }
@@ -334,7 +338,7 @@ namespace StationConsole
                 if (server.TimerState == ServerUnitState.TimerStateStarted ||
                     server.TimerState == ServerUnitState.TimerStateDisable ||
                     server.TimerInterval <= 0 || server.TimerCommand == "")
-                    return;
+                    continue;
 
                 App.CLayer.AtTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
                 server.TimerState = ServerUnitState.TimerStateStarted;
@@ -350,7 +354,7 @@ namespace StationConsole
 
                 if (server.TimerState == ServerUnitState.TimerStateStoped ||
                     server.TimerState == ServerUnitState.TimerStateDisable)
-                    return;
+                    continue;
 
                 App.CLayer.AtTimerStop(server.ID);
                 server.TimerState = ServerUnitState.TimerStateStoped;
@@ -376,7 +380,7 @@ namespace StationConsole
                     continue;
 
                 if (server.TimerState == ServerUnitState.TimerStateStarted)
-                    return;
+                    continue;
 
                 server.TimerCommand = input.textBox1.Text;
                 if (input.textBox2.Text != "")

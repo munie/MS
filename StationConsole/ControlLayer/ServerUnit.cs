@@ -14,6 +14,8 @@ namespace StationConsole
         public virtual string IpAddress { get; set; }
         public virtual int Port { get; set; }
         public virtual string PipeName { get; set; }
+        public virtual bool AutoRun { get; set; }
+        public virtual bool CanStop { get; set; }
 
         public Mnn.MnnSocket.SockServer Server { get; set; }
     }

@@ -20,6 +20,8 @@ namespace StationConsole
             IpAddress = server.IpAddress;
             Port = server.Port;
             PipeName = server.PipeName;
+            AutoRun = server.AutoRun;
+            CanStop = server.CanStop;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
