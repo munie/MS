@@ -178,11 +178,22 @@ namespace StationConsole
         {
             string msg = coding.GetString(e.Data);
 
+            bool IsHandled = false;
             rwlock.AcquireReaderLock(100);
             foreach (var item in pluginTable) {
                 if (msg.Contains(item.Type)) {
                     item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                    IsHandled = true;
                     break;
+                }
+            }
+            // 水库代码太恶心，没办法的办法
+            if (IsHandled == false) {
+                foreach (var item in pluginTable) {
+                    if (item.Type == "HT=") {
+                        item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                        break;
+                    }
                 }
             }
             rwlock.ReleaseReaderLock();
