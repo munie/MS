@@ -54,21 +54,21 @@ namespace Mnn.MnnSocket
         /// <param name="ep"></param>
         public override void Start(IPEndPoint ep)
         {
+            // Verify IPEndPoints
+            IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            foreach (IPEndPoint globalEP in globalEPs) {
+                if (ep.Equals(globalEP))
+                    throw new ApplicationException(ep.ToString() + " is in listening.");
+            }
+
+            // Initialize the listenEP field of ListenerState
+            server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            server.Bind(ep);
+            server.Listen(100);
+            socketTable.Add(server);
+
             Thread thread = new Thread(() =>
             {
-                // Verify IPEndPoints
-                IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
-                foreach (IPEndPoint globalEP in globalEPs) {
-                    if (ep.Equals(globalEP))
-                        throw new ApplicationException(ep.ToString() + " is in listening.");
-                }
-
-                // Initialize the listenEP field of ListenerState
-                server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                server.Bind(ep);
-                server.Listen(100);
-                socketTable.Add(server);
-
                 /// ** Report ListenerStarted event
                 if (ListenStarted != null)
                     ListenStarted(this, new ListenEventArgs(ep));
