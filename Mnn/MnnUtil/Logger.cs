@@ -9,8 +9,8 @@ namespace Mnn.MnnUtil
     public class Logger
     {
         public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        public static readonly string LogDirectory = BaseDirectory + @"\Log";
-        public static readonly string ErrorDirectory = BaseDirectory + @"\ErrLog";
+        public static readonly string LogDirectory = BaseDirectory + @"\Log\";
+        public static readonly string ErrorDirectory = BaseDirectory + @"\ErrLog\";
 
         public static void Write(string log, string prefix = @"Log")
         {
