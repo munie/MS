@@ -30,6 +30,7 @@ namespace Mnn.MnnUnit
         public UnitSchema ToSchema;
         public AtCommandDataType DataType;
         public string Data;
+        public string Result;
 
         public string ToEP;
     }
