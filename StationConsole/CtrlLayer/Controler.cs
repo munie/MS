@@ -152,14 +152,20 @@ namespace StationConsole.CtrlLayer
                 Mnn.MnnUtil.Logger.WriteException(ex);
             }
 
-            if (AtCmdServer_ExecCommand(atCmd) == false && atCmd.FromSchema == UnitSchema.Plugin) {
+            bool retVal = AtCmdServer_ExecCommand(atCmd);
+
+            if (atCmd.FromSchema == UnitSchema.Plugin) {
                 lock (pluginTable) {
                     foreach (var item in pluginTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
-                                item.Plugin.Invoke("IDataHandle", "AtCmdSendFailure", new object[] { atCmd });
+                                if (retVal == true)
+                                    item.Plugin.Invoke("IDataHandle", "AtCmdSendSuccess", new object[] { atCmd });
+                                else
+                                    item.Plugin.Invoke("IDataHandle", "AtCmdSendFailure", new object[] { atCmd });
                             }
                             catch (Exception) { }
+                            break;
                         }
                     }
                 }
