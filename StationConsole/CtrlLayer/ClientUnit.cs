@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace StationConsole.ControlLayer
+namespace StationConsole.CtrlLayer
 {
-    public class ClientUnit : MnnUnit
+    public class ClientUnit : Mnn.MnnUnit.Unit
     {
         public virtual IPEndPoint RemoteEP { get; set; }
         public virtual string ServerID { get; set; }

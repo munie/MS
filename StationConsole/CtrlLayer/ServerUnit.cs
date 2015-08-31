@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole.ControlLayer
+namespace StationConsole.CtrlLayer
 {
-    public class ServerUnit : MnnUnit
+    public class ServerUnit : Mnn.MnnUnit.Unit
     {
         public virtual string ServerType { get; set; }
         public virtual string Protocol { get; set; }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole.ControlLayer
+namespace Mnn.MnnUnit
 {
     public enum AtCommandDirect
     {
@@ -25,9 +25,9 @@ namespace StationConsole.ControlLayer
         public AtCommandDirect Direct;
         public string ID;
         public string FromID;
-        public MnnUnitSchema FromSchema;
+        public UnitSchema FromSchema;
         public string ToID;
-        public MnnUnitSchema ToSchema;
+        public UnitSchema ToSchema;
         public AtCommandDataType DataType;
         public string Data;
 

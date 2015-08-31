@@ -58,6 +58,8 @@
     <Compile Include="MnnSocket\TcpServer.cs" />
     <Compile Include="MnnSocket\UdpServer.cs" />
     <Compile Include="Discard\MnnAtCmd\AtCmdPipeServer.cs" />
+    <Compile Include="MnnUnit\Unit.cs" />
+    <Compile Include="MnnUnit\AtCommand.cs" />
     <Compile Include="MnnUtil\ExprSolve.cs" />
     <Compile Include="MnnUtil\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -17,7 +17,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
-using StationConsole.ControlLayer;
+using StationConsole.CtrlLayer;
 
 namespace StationConsole
 {

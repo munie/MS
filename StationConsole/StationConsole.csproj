@@ -61,11 +61,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ControlLayer\AtCommand.cs" />
-    <Compile Include="ControlLayer\PluginUnit.cs" />
-    <Compile Include="ControlLayer\Controler.cs" />
+    <Compile Include="CtrlLayer\PluginUnit.cs" />
+    <Compile Include="CtrlLayer\Controler.cs" />
     <Compile Include="ClientUnitState.cs" />
-    <Compile Include="ControlLayer\ClientUnit.cs" />
+    <Compile Include="CtrlLayer\ClientUnit.cs" />
     <Page Include="InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -78,9 +77,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ControlLayer\MnnUnit.cs" />
     <Compile Include="ServerUnitState.cs" />
-    <Compile Include="ControlLayer\ServerUnit.cs" />
+    <Compile Include="CtrlLayer\ServerUnit.cs" />
     <Compile Include="InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>

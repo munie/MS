@@ -4,7 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
-using StationConsole.ControlLayer;
+using StationConsole.CtrlLayer;
 
 namespace StationConsole
 {

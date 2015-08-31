@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole.ControlLayer
+namespace Mnn.MnnUnit
 {
-    public enum MnnUnitSchema
+    public enum UnitSchema
     {
         Server,
         Client,
         Plugin,
     }
 
-    public class MnnUnit
+    public class Unit
     {
         public virtual string ID { get; set; }
         public virtual string Name { get; set; }
-        public virtual MnnUnitSchema Schema { get; set; }
+        public virtual UnitSchema Schema { get; set; }
     }
 }

@@ -13,8 +13,9 @@ using System.Xml;
 using System.Threading;
 using Mnn.MnnSocket;
 using Mnn.MnnPlugin;
+using Mnn.MnnUnit;
 
-namespace StationConsole.ControlLayer
+namespace StationConsole.CtrlLayer
 {
     public class Controler
     {
@@ -48,7 +49,7 @@ namespace StationConsole.ControlLayer
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
-                    server.Schema = MnnUnitSchema.Server;
+                    server.Schema = UnitSchema.Server;
                     server.ServerType = item.Attributes["type"].Value;
                     server.Protocol = item.Attributes["protocol"].Value;
 
@@ -151,7 +152,7 @@ namespace StationConsole.ControlLayer
                 Mnn.MnnUtil.Logger.WriteException(ex);
             }
 
-            if (AtCmdServer_ExecCommand(atCmd) == false && atCmd.FromSchema == MnnUnitSchema.Plugin) {
+            if (AtCmdServer_ExecCommand(atCmd) == false && atCmd.FromSchema == UnitSchema.Plugin) {
                 lock (pluginTable) {
                     foreach (var item in pluginTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
@@ -202,7 +203,7 @@ namespace StationConsole.ControlLayer
 
         private bool AtCmdServer_ExecCommand(AtCommand atCmd)
         {
-            if (atCmd.ToSchema == MnnUnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
+            if (atCmd.ToSchema == UnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
                 if (atCmd.DataType == AtCommandDataType.ClientUpdateID) {
                     // 更新逻辑层 client
                     lock (clientTable) {
@@ -274,7 +275,7 @@ namespace StationConsole.ControlLayer
 
             client.ID = "";
             client.Name = "";
-            client.Schema = MnnUnitSchema.Client;
+            client.Schema = UnitSchema.Client;
             client.RemoteEP = e.RemoteEP;
             lock (serverTable) {
                 foreach (var item in serverTable) {
@@ -481,7 +482,7 @@ namespace StationConsole.ControlLayer
             PluginUnit pluginUnit = new PluginUnit();
             pluginUnit.ID = pluginID;
             pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            pluginUnit.Schema = MnnUnitSchema.Plugin;
+            pluginUnit.Schema = UnitSchema.Plugin;
             pluginUnit.FileName = plugin.AssemblyName;
             pluginUnit.FilePath = filePath;
             pluginUnit.Plugin = plugin;

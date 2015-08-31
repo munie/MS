@@ -5,7 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Net;
-using StationConsole.ControlLayer;
+using StationConsole.CtrlLayer;
 
 namespace StationConsole
 {

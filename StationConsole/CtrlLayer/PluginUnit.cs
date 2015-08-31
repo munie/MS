@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole.ControlLayer
+namespace StationConsole.CtrlLayer
 {
-    public class PluginUnit : MnnUnit
+    public class PluginUnit : Mnn.MnnUnit.Unit
     {
         public string FileName { get; set; }
         public string FilePath { get; set; }
