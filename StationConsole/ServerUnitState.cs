@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Net;
+using StationConsole.ControlLayer;
 
 namespace StationConsole
 {
@@ -15,7 +16,7 @@ namespace StationConsole
         {
             ID = server.ID;
             Name = server.Name;
-            Type = server.Type;
+            Schema = server.Schema;
             Protocol = server.Protocol;
             IpAddress = server.IpAddress;
             Port = server.Port;
@@ -90,9 +91,9 @@ namespace StationConsole
             }
         }
 
-        public override string ID { get; set; }
-        public override string Name { get; set; }
-        public override string Type { get; set; }
+        //public override string ID { get; set; }
+        //public override string Name { get; set; }
+        public override string ServerType { get; set; }
         public override string Protocol { get; set; }
         public override string IpAddress { get; set; }
         private int port;

@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole
+namespace StationConsole.ControlLayer
 {
-    public class PluginUnit
+    public class PluginUnit : MnnUnit
     {
-        public string ID { get; set; }
-        public string Name { get; set; }
-        public string Type { get; set; }
         public string FileName { get; set; }
         public string FilePath { get; set; }
 

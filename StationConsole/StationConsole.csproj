@@ -61,9 +61,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ControlLayer\AtCmdUnit.cs" />
+    <Compile Include="ControlLayer\AtCommand.cs" />
     <Compile Include="ControlLayer\PluginUnit.cs" />
-    <Compile Include="ControlLayer\ControlLayer.cs" />
+    <Compile Include="ControlLayer\Controler.cs" />
     <Compile Include="ClientUnitState.cs" />
     <Compile Include="ControlLayer\ClientUnit.cs" />
     <Page Include="InputDialog.xaml">
@@ -78,7 +78,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ControlLayer\TimerUnit.cs" />
+    <Compile Include="ControlLayer\MnnUnit.cs" />
     <Compile Include="ServerUnitState.cs" />
     <Compile Include="ControlLayer\ServerUnit.cs" />
     <Compile Include="InputDialog.xaml.cs">

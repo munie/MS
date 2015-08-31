@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace StationConsole
+namespace StationConsole.ControlLayer
 {
-    public class ClientUnit
+    public class ClientUnit : MnnUnit
     {
-        public virtual string ID { get; set; }
-        public virtual string Name { get; set; }
         public virtual IPEndPoint RemoteEP { get; set; }
         public virtual string ServerID { get; set; }
         public virtual string ServerName { get; set; }

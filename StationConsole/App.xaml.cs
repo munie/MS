@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
+using StationConsole.ControlLayer;
 
 namespace StationConsole
 {
@@ -12,7 +13,7 @@ namespace StationConsole
     /// </summary>
     public partial class App : Application
     {
-        public static ControlLayer CLayer;
-        public static MainWindow MWindow;
+        public static Controler Ctrler;
+        public static MainWindow Mindow;
     }
 }

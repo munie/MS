@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
+using StationConsole.ControlLayer;
 
 namespace StationConsole
 {
@@ -227,11 +228,11 @@ namespace StationConsole
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            App.MWindow = this;
-            App.CLayer = new ControlLayer();
-            App.CLayer.InitailizeConfig();
-            App.CLayer.InitailizeServer();
-            App.CLayer.InitailizeDefaultPlugin();
+            App.Mindow = this;
+            App.Ctrler = new Controler();
+            App.Ctrler.InitailizeConfig();
+            App.Ctrler.InitailizeServer();
+            App.Ctrler.InitailizeDefaultPlugin();
         }
 
         private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
@@ -242,7 +243,7 @@ namespace StationConsole
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                App.CLayer.AtPluginLoad(openFileDialog.FileName);
+                App.Ctrler.AtPluginLoad(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
@@ -265,7 +266,7 @@ namespace StationConsole
 
                 string[] strTmp = item.PluginSupport.Split("，".ToArray(), StringSplitOptions.RemoveEmptyEntries);
                 foreach (var i in strTmp) {
-                    App.CLayer.AtPluginUnload(i);
+                    App.Ctrler.AtPluginUnload(i);
                 }
             }
         }
@@ -280,7 +281,7 @@ namespace StationConsole
                 if (server.ListenState == ServerUnitState.ListenStateStarted)
                     continue;
 
-                App.CLayer.AtServerStart(server.ID,
+                App.Ctrler.AtServerStart(server.ID,
                     new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
                 server.ListenState = ServerUnitState.ListenStateStarted;
             }
@@ -297,7 +298,7 @@ namespace StationConsole
                     continue;
 
                 if (server.CanStop == true)
-                    App.CLayer.AtServerStop(server.ID);
+                    App.Ctrler.AtServerStop(server.ID);
                 server.ListenState = ServerUnitState.ListenStateStoped;
             }
         }
@@ -340,7 +341,7 @@ namespace StationConsole
                     server.TimerInterval <= 0 || server.TimerCommand == "")
                     continue;
 
-                App.CLayer.AtTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
+                App.Ctrler.AtServerTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
                 server.TimerState = ServerUnitState.TimerStateStarted;
             }
         }
@@ -356,7 +357,7 @@ namespace StationConsole
                     server.TimerState == ServerUnitState.TimerStateDisable)
                     continue;
 
-                App.CLayer.AtTimerStop(server.ID);
+                App.Ctrler.AtServerTimerStop(server.ID);
                 server.TimerState = ServerUnitState.TimerStateStoped;
             }
         }
@@ -409,7 +410,7 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                App.CLayer.AtClientSendMessage(client.ServerID, client.ID, input.textBox1.Text);
+                App.Ctrler.AtClientSendMessage(client.ServerID, client.ID, input.textBox1.Text);
             }
         }
 
@@ -420,7 +421,7 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                App.CLayer.AtClientClose(client.ServerID, client.ID);
+                App.Ctrler.AtClientClose(client.ServerID, client.ID);
             }
         }
 

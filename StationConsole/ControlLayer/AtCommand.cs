@@ -3,22 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StationConsole
+namespace StationConsole.ControlLayer
 {
-    public enum AtCmdUnitDirect
+    public enum AtCommandDirect
     {
         Request,
         Respond,
     };
 
-    public enum AtCmdUnitSchema
-    {
-        MainWindow,
-        ServerUnit,
-        ClientUnit,
-    };
-
-    public enum AtCmdUnitType
+    public enum AtCommandDataType
     {
         ClientClose,
         ClientUpdateID,
@@ -27,14 +20,17 @@ namespace StationConsole
     }
 
     [Serializable]
-    public class AtCmdUnit
+    public class AtCommand
     {
-        public AtCmdUnitDirect Direct;
-        public AtCmdUnitSchema Schema;
-        public AtCmdUnitType Type;
+        public AtCommandDirect Direct;
         public string ID;
+        public string FromID;
+        public MnnUnitSchema FromSchema;
         public string ToID;
-        public string ToEP;
+        public MnnUnitSchema ToSchema;
+        public AtCommandDataType DataType;
         public string Data;
+
+        public string ToEP;
     }
 }

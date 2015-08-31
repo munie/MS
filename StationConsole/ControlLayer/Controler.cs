@@ -14,16 +14,15 @@ using System.Threading;
 using Mnn.MnnSocket;
 using Mnn.MnnPlugin;
 
-namespace StationConsole
+namespace StationConsole.ControlLayer
 {
-    public class ControlLayer
+    public class Controler
     {
         // From config.xml
         public Encoding coding = Encoding.Default;
 
         private List<ServerUnit> serverTable = new List<ServerUnit>();
         private List<ClientUnit> clientTable = new List<ClientUnit>();
-        private List<TimerUnit> timerTable = new List<TimerUnit>();
         private List<PluginUnit> pluginTable = new List<PluginUnit>();
 
         private ReaderWriterLock rwlock = new ReaderWriterLock();
@@ -49,7 +48,8 @@ namespace StationConsole
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
-                    server.Type = item.Attributes["type"].Value;
+                    server.Schema = MnnUnitSchema.Server;
+                    server.ServerType = item.Attributes["type"].Value;
                     server.Protocol = item.Attributes["protocol"].Value;
 
                     if (server.Protocol == "pipe") {
@@ -72,7 +72,7 @@ namespace StationConsole
             }
 
             foreach (var item in serverTable) {
-                App.MWindow.AddServer(item);
+                App.Mindow.AddServer(item);
             }
             /// ** Initialize End ====================================================
         }
@@ -82,7 +82,7 @@ namespace StationConsole
             // 启动监听
             foreach (var item in serverTable) {
                 // AtCmd Server
-                if (item.Type == "atcmd") {
+                if (item.ServerType == "atcmd") {
                     if (item.Protocol == "udp") {
                         item.Server = new UdpServer();
                         item.Server.ClientReadMsg += AtCmdServer_ClientReadMsg;
@@ -98,7 +98,7 @@ namespace StationConsole
                 }
 
                 // Work Server
-                else if (item.Type == "work") {
+                else if (item.ServerType == "work") {
                     if (item.Protocol == "tcp") {
                         TcpServer tcp = new TcpServer();
                         tcp.ClientConnect += WorkServer_ClientConnect;
@@ -139,39 +139,50 @@ namespace StationConsole
 
         private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
         {
-            AtCmdUnit atCmdUnit = null;
+            AtCommand atCmd = null;
 
             try {
                 using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
-                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
+                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
                 }
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
             }
 
-            AtCmdServer_ExecCommand(atCmdUnit);
+            if (AtCmdServer_ExecCommand(atCmd) == false && atCmd.FromSchema == MnnUnitSchema.Plugin) {
+                lock (pluginTable) {
+                    foreach (var item in pluginTable) {
+                        if (item.ID.Equals(atCmd.FromID)) {
+                            try {
+                                item.Plugin.Invoke("IDataHandle", "AtCmdSendFailure", new object[] { atCmd });
+                            }
+                            catch (Exception) { }
+                        }
+                    }
+                }
+            }
 
             // 打印至窗口，写命令日志
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
-                + "|Schema=" + atCmdUnit.Schema.ToString()
-                + "|Type=" + atCmdUnit.Type.ToString()
-                + "|ToID=" + atCmdUnit.ToID
-                + "|ToEP=" + atCmdUnit.ToEP
-                + "|Data=" + atCmdUnit.Data;
-            App.MWindow.DisplayMessage(logFormat);
+                + "|FromID=" + atCmd.FromID.ToString()
+                + "|ToID=" + atCmd.ToID
+                + "|ToEP=" + atCmd.ToEP
+                + "|DataType=" + atCmd.DataType.ToString()
+                + "|Data=" + atCmd.Data;
+            App.Mindow.DisplayMessage(logFormat);
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
 
         private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
         {
-            AtCmdUnit atCmdUnit = null;
+            AtCommand atCmd = null;
 
             try {
                 using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
-                    atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
+                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
                 }
             }
             catch (Exception ex) {
@@ -180,77 +191,81 @@ namespace StationConsole
 
             // 打印至窗口，写命令日志
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
-                + "|Schema=" + atCmdUnit.Schema.ToString()
-                + "|Type=" + atCmdUnit.Type.ToString()
-                + "|ToID=" + atCmdUnit.ToID
-                + "|ToEP=" + atCmdUnit.ToEP
-                + "|Data=" + atCmdUnit.Data;
-            App.MWindow.DisplayMessage(logFormat);
+                + "|FromID=" + atCmd.FromID.ToString()
+                + "|ToID=" + atCmd.ToID
+                + "|ToEP=" + atCmd.ToEP
+                + "|DataType=" + atCmd.DataType.ToString()
+                + "|Data=" + atCmd.Data;
+            App.Mindow.DisplayMessage(logFormat);
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
 
-        private void AtCmdServer_ExecCommand(AtCmdUnit atCmdUnit)
+        private bool AtCmdServer_ExecCommand(AtCommand atCmd)
         {
-            if (atCmdUnit.Schema == AtCmdUnitSchema.ClientUnit && atCmdUnit.Direct == AtCmdUnitDirect.Request) {
-                if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateID) {
+            if (atCmd.ToSchema == MnnUnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
+                if (atCmd.DataType == AtCommandDataType.ClientUpdateID) {
                     // 更新逻辑层 client
                     lock (clientTable) {
                         foreach (var item in clientTable) {
-                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
-                                item.ID = atCmdUnit.Data;
+                            if (item.RemoteEP.ToString().Equals(atCmd.ToEP)) {
+                                item.ID = atCmd.Data;
                                 break;
                             }
                         }
                     }
                     // 更新界面 client
-                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
-                    App.MWindow.UpdateClient(
+                    string[] strTmp = atCmd.ToEP.Split(":".ToArray());
+                    App.Mindow.UpdateClient(
                         new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                        "ID", atCmdUnit.Data);
+                        "ID", atCmd.Data);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientUpdateName) {
+                else if (atCmd.DataType == AtCommandDataType.ClientUpdateName) {
                     // 更新逻辑层 client
                     lock (clientTable) {
                         foreach (var item in clientTable) {
-                            if (item.RemoteEP.ToString().Equals(atCmdUnit.ToEP)) {
-                                item.Name = atCmdUnit.Data;
+                            if (item.RemoteEP.ToString().Equals(atCmd.ToEP)) {
+                                item.Name = atCmd.Data;
                                 break;
                             }
                         }
                     }
                     // 更新界面 client
-                    string[] strTmp = atCmdUnit.ToEP.Split(":".ToArray());
-                    App.MWindow.UpdateClient(
+                    string[] strTmp = atCmd.ToEP.Split(":".ToArray());
+                    App.Mindow.UpdateClient(
                         new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
-                        "Name", atCmdUnit.Data);
+                        "Name", atCmd.Data);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientClose) {
+                else if (atCmd.DataType == AtCommandDataType.ClientClose) {
                     string ServerID = null;
                     lock (clientTable) {
                         foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                            if (item.ID.Equals(atCmd.ToID)) {
                                 ServerID = item.ServerID;
                                 break;
                             }
                         }
                     }
                     if (ServerID != null)
-                        AtClientClose(ServerID, atCmdUnit.ToID);
+                        AtClientClose(ServerID, atCmd.ToID);
                 }
-                else if (atCmdUnit.Type == AtCmdUnitType.ClientSendMsg) {
+                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
                     string ServerID = null;
                     lock (clientTable) {
                         foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmdUnit.ToID)) {
+                            if (item.ID.Equals(atCmd.ToID)) {
                                 ServerID = item.ServerID;
                                 break;
                             }
                         }
                     }
                     if (ServerID != null)
-                        AtClientSendMessage(ServerID, atCmdUnit.ToID, atCmdUnit.Data);
+                        AtClientSendMessage(ServerID, atCmd.ToID, atCmd.Data);
+                    else
+                        return false;
                 }
             }
+
+            return true;
         }
 
         private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
@@ -259,6 +274,7 @@ namespace StationConsole
 
             client.ID = "";
             client.Name = "";
+            client.Schema = MnnUnitSchema.Client;
             client.RemoteEP = e.RemoteEP;
             lock (serverTable) {
                 foreach (var item in serverTable) {
@@ -275,7 +291,7 @@ namespace StationConsole
                 clientTable.Add(client);
             }
 
-            App.MWindow.AddClient(client);
+            App.Mindow.AddClient(client);
         }
 
         private void WorkServer_ClientDisconn(object sender, ClientEventArgs e)
@@ -288,7 +304,7 @@ namespace StationConsole
                 if (subset.Count() != 0) {
                     // 通知 主窗体
                     //if (string.IsNullOrEmpty(subset.First().ID) == false)
-                        App.MWindow.RemoveClient(subset.First());
+                        App.Mindow.RemoveClient(subset.First());
                     // 移出 table
                     clientTable.Remove(subset.First());
                 }
@@ -303,7 +319,7 @@ namespace StationConsole
             rwlock.AcquireReaderLock(100);
             foreach (var item in pluginTable) {
                 // 水库代码太恶心，没办法的办法
-                if (item.Type != "HT=" && msg.Contains(item.Type)) {
+                if (item.ID != "HT=" && msg.Contains(item.ID)) {
                     try {
                         item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                     }
@@ -315,7 +331,7 @@ namespace StationConsole
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in pluginTable) {
-                    if (item.Type == "HT=" && msg.Contains(item.Type)) {
+                    if (item.ID == "HT=" && msg.Contains(item.ID)) {
                         try {
                             item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                         }
@@ -328,14 +344,14 @@ namespace StationConsole
 
             // 打印至窗口
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
-            App.MWindow.DisplayMessage(logFormat);
+            App.Mindow.DisplayMessage(logFormat);
         }
 
         private void WorkServer_ClientSendMsg(object sender, ClientEventArgs e)
         {
             // 打印至窗口
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + coding.GetString(e.Data);
-            App.MWindow.DisplayMessage(logFormat);
+            App.Mindow.DisplayMessage(logFormat);
             // 发送数据要写日志
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
@@ -398,7 +414,7 @@ namespace StationConsole
             }
         }
 
-        public void AtTimerStart(string serverID, double interval, string timerCommand)
+        public void AtServerTimerStart(string serverID, double interval, string timerCommand)
         {
             ServerUnit serverUnit = null;
 
@@ -411,35 +427,27 @@ namespace StationConsole
                 }
             }
 
-            if (serverUnit == null)
+            if (serverUnit == null && !(serverUnit.Server is TcpServer))
                 return;
 
-            TimerUnit timerUnit = new TimerUnit();
-            timerUnit.ID = serverUnit.ID;
-            timerUnit.timer = new System.Timers.Timer();
-            timerUnit.timer.Interval = interval;
-            timerUnit.timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+            serverUnit.Timer = new System.Timers.Timer(interval);
+            serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
             {
                 try {
                     (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
                 }
                 catch (Exception) { }
             });
-
-            timerUnit.timer.Start();
-            lock (timerTable) { 
-                timerTable.Add(timerUnit);
-            }
+            serverUnit.Timer.Start();
         }
 
-        public void AtTimerStop(string serverID)
+        public void AtServerTimerStop(string serverID)
         {
-            lock (timerTable) {
-                foreach (var item in timerTable) {
-                    if (item.ID.Equals(serverID)) {
-                        item.timer.Stop();
-                        item.timer.Close();
-                        timerTable.Remove(item);
+            lock (serverTable) {
+                foreach (var item in serverTable) {
+                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+                        item.Timer.Stop();
+                        item.Timer.Close();
                         break;
                     }
                 }
@@ -448,7 +456,7 @@ namespace StationConsole
 
         public void AtPluginLoad(string filePath)
         {
-            string pluginType = null;
+            string pluginID = null;
             PluginItem plugin = new PluginItem();
 
             try {
@@ -460,7 +468,7 @@ namespace StationConsole
             }
 
             try {
-                pluginType = (string)plugin.Invoke("IDataHandle", "GetHandleMsgType", null);
+                pluginID = (string)plugin.Invoke("IDataHandle", "GetPluginID", null);
                 plugin.Invoke("IDataHandle", "StartHandleMsg", null);
             }
             catch (Exception ex) {
@@ -471,9 +479,9 @@ namespace StationConsole
 
             // 加载模块已经成功
             PluginUnit pluginUnit = new PluginUnit();
-            pluginUnit.ID = plugin.AssemblyGuid.ToString();
+            pluginUnit.ID = pluginID;
             pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            pluginUnit.Type = pluginType;
+            pluginUnit.Schema = MnnUnitSchema.Plugin;
             pluginUnit.FileName = plugin.AssemblyName;
             pluginUnit.FilePath = filePath;
             pluginUnit.Plugin = plugin;
@@ -483,7 +491,7 @@ namespace StationConsole
             pluginTable.Add(pluginUnit);
             rwlock.ReleaseWriterLock();
 
-            App.MWindow.AddPlugin(pluginUnit);
+            App.Mindow.AddPlugin(pluginUnit);
         }
 
         public void AtPluginUnload(string fileName)
@@ -499,7 +507,7 @@ namespace StationConsole
                 // 卸载模块
                 subset.First().Plugin.UnLoad();
                 // 移出 table
-                App.MWindow.RemovePlugin(subset.First());
+                App.Mindow.RemovePlugin(subset.First());
                 pluginTable.Remove(subset.First());
             }
 
