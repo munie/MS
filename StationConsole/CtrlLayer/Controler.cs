@@ -131,8 +131,10 @@ namespace StationConsole.CtrlLayer
                 string[] files = Directory.GetFiles(pluginPath);
 
                 // Load dll files one by one
-                foreach (var item in files)
-                    AtPluginLoad(item);
+                foreach (var item in files) {
+                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll"))
+                        AtPluginLoad(item);
+                }
             }
         }
 
@@ -150,6 +152,7 @@ namespace StationConsole.CtrlLayer
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
+                return;
             }
 
             atCmd.Result = AtCmdServer_ExecCommand(atCmd) ? "Success" : "Failure";
@@ -191,6 +194,7 @@ namespace StationConsole.CtrlLayer
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
+                return;
             }
 
             // 打印至窗口，写命令日志
