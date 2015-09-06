@@ -93,9 +93,9 @@ namespace StationConsole
 
         //public override string ID { get; set; }
         //public override string Name { get; set; }
-        public override string ServerType { get; set; }
-        public override string Protocol { get; set; }
-        public override string IpAddress { get; set; }
+        //public override string ServerType { get; set; }
+        //public override string Protocol { get; set; }
+        //public override string IpAddress { get; set; }
         private int port;
         public override int Port
         {
@@ -108,7 +108,7 @@ namespace StationConsole
                 }
             }
         }
-        public override string PipeName { get; set; }
+        //public override string PipeName { get; set; }
 
     }
 }

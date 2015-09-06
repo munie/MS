@@ -38,12 +38,16 @@ namespace StationConsole
             // Data Source Binding
             this.serverStateTable = new ObservableCollection<ServerUnitState>();
             this.clientStateTable = (ClientStateTable)Resources["clientStateTable"];
-            //lstViewClientPoint.ItemsSource = clientStateTable;
+            this.pluginStateTable = new ObservableCollection<PluginUnitState>();
+
             this.lstViewServer.ItemsSource = serverStateTable;
+            //lstViewClientPoint.ItemsSource = clientStateTable;
+            this.lstViewPlugin.ItemsSource = pluginStateTable;
         }
 
         private ObservableCollection<ServerUnitState> serverStateTable;
         private ObservableCollection<ClientUnitState> clientStateTable;
+        private ObservableCollection<PluginUnitState> pluginStateTable;
 
         // Methods ============================================================================
 
@@ -179,35 +183,58 @@ namespace StationConsole
             }));
         }
 
+        //public void AddPlugin(PluginUnit plugin)
+        //{
+        //    string name = plugin.Name;
+        //    string fileName = plugin.FileName;
+
+        //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+        //    {
+        //        var subset = from s in serverStateTable where s.Name.Contains(name) select s;
+
+        //        if (subset.Count() == 0) {
+        //            subset = from s in serverStateTable where s.Name.Contains("通用") select s;
+        //        }
+
+        //        subset.First().PluginSupport += fileName + "，";
+        //    }));
+        //}
+
+        //public void RemovePlugin(PluginUnit plugin)
+        //{
+        //    string fileName = plugin.FileName;
+
+        //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+        //    {
+        //        var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
+
+        //        if (subset.Count() == 0)
+        //            return;
+
+        //        subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
+        //    }));
+        //}
+
         public void AddPlugin(PluginUnit plugin)
         {
-            string name = plugin.Name;
-            string fileName = plugin.FileName;
+            PluginUnitState state = new PluginUnitState(plugin);
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var subset = from s in serverStateTable where s.Name.Contains(name) select s;
-
-                if (subset.Count() == 0) {
-                    subset = from s in serverStateTable where s.Name.Contains("通用") select s;
-                }
-
-                subset.First().PluginSupport += fileName + "，";
+                pluginStateTable.Add(state);
             }));
         }
 
         public void RemovePlugin(PluginUnit plugin)
         {
-            string fileName = plugin.FileName;
+            string id = plugin.ID;
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
+                var subset = from s in pluginStateTable where s.ID.Equals(id) select s;
 
-                if (subset.Count() == 0)
-                    return;
-
-                subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
+                if (subset.Count() != 0)
+                    pluginStateTable.Remove(subset.First());
             }));
         }
 

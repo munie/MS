@@ -485,12 +485,13 @@ namespace StationConsole.CtrlLayer
             }
 
             // 加载模块已经成功
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             PluginUnit pluginUnit = new PluginUnit();
             pluginUnit.ID = (string)plugin.Invoke("Mnn.MnnPlugin.IPlugin", "GetPluginID", null);
-            pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
-            pluginUnit.Schema = UnitSchema.Plugin;
-            pluginUnit.FileName = plugin.AssemblyName;
+            pluginUnit.Name = fvi.ProductName;
             pluginUnit.FilePath = filePath;
+            pluginUnit.FileName = fvi.InternalName;
+            pluginUnit.FileComment = fvi.Comments;
             pluginUnit.Plugin = plugin;
 
             // 加入 table
