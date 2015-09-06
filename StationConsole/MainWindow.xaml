@@ -44,7 +44,7 @@
                     <GridViewColumn Header="定时器命令" Width="80"
                                     DisplayMemberBinding="{Binding TimerCommand}" />
                     <GridViewColumn Header="模块支持" Width="130"
-                                    DisplayMemberBinding="{Binding PluginSupport}" />-->
+                                    DisplayMemberBinding="{Binding ModuleSupport}" />-->
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
@@ -57,13 +57,13 @@
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
                     <MenuItem Header="设置定时器" Click="MenuItem_SetTimer_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
-                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>-->
+                    <MenuItem Header="加载模块" Click="MenuItem_LoadModule_Click"/>
+                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadModule_Click"/>-->
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
 
-        <ListView x:Name="lstViewPlugin" Margin="220,5,8,5" Grid.Row="1">
+        <ListView x:Name="lstViewModule" Margin="220,5,8,5" Grid.Row="1">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="模块名" Width="120"
@@ -74,8 +74,8 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="加载模块" Click="MenuItem_LoadPlugin_Click"/>
-                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadPlugin_Click"/>
+                    <MenuItem Header="加载模块" Click="MenuItem_LoadModule_Click"/>
+                    <MenuItem Header="卸载模块" Click="MenuItem_UnloadModule_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

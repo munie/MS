@@ -5,9 +5,9 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace Mnn.MnnPlugin
+namespace Mnn.MnnModule
 {
-    public class PluginItem
+    public class ModuleItem
     {
         public Guid AssemblyGuid { get; set; }
         public string AssemblyName { get; set; }

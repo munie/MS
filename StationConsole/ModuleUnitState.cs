@@ -6,17 +6,17 @@ using System.ComponentModel;
 
 namespace StationConsole
 {
-    class PluginUnitState : CtrlLayer.PluginUnit, INotifyPropertyChanged
+    class ModuleUnitState : CtrlLayer.ModuleUnit, INotifyPropertyChanged
     {
-        public PluginUnitState() { }
-        public PluginUnitState(CtrlLayer.PluginUnit plugin)
+        public ModuleUnitState() { }
+        public ModuleUnitState(CtrlLayer.ModuleUnit module)
         {
-            ID = plugin.ID;
-            Name = plugin.Name;
+            ID = module.ID;
+            Name = module.Name;
 
-            FilePath = plugin.FilePath;
-            FileName = plugin.FileName;
-            FileComment = plugin.FileComment;
+            FilePath = module.FilePath;
+            FileName = module.FileName;
+            FileComment = module.FileComment;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

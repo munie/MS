@@ -13,7 +13,7 @@ using Mnn.MnnUnit;
 
 namespace Mnn
 {
-    public abstract class DataHandle : Mnn.MnnPlugin.IPlugin, IDataHandle
+    public abstract class DataHandle : Mnn.MnnModule.IModule, IDataHandle
     {
         class DataHandleMsg
         {
@@ -37,7 +37,7 @@ namespace Mnn
 
         // IDataHandle Interface ===================================================================
 
-        public abstract string GetPluginID();
+        public abstract string GetModuleID();
 
         public void Init()
         {
@@ -135,8 +135,8 @@ namespace Mnn
             AtCommand atCmd = new AtCommand();
             atCmd.Direct = AtCommandDirect.Request;
             atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetPluginID();
-            atCmd.FromSchema = UnitSchema.Plugin;
+            atCmd.FromID = GetModuleID();
+            atCmd.FromSchema = UnitSchema.Module;
             atCmd.ToID = ccid;
             atCmd.ToSchema = UnitSchema.Client;
             atCmd.ToEP = ep.ToString();
@@ -151,8 +151,8 @@ namespace Mnn
             AtCommand atCmd = new AtCommand();
             atCmd.Direct = AtCommandDirect.Request;
             atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetPluginID();
-            atCmd.FromSchema = UnitSchema.Plugin;
+            atCmd.FromID = GetModuleID();
+            atCmd.FromSchema = UnitSchema.Module;
             atCmd.ToID = ccid;
             atCmd.ToSchema = UnitSchema.Client;
             atCmd.ToEP = ep.ToString();
@@ -164,8 +164,8 @@ namespace Mnn
             atCmd = new AtCommand();
             atCmd.Direct = AtCommandDirect.Request;
             atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetPluginID();
-            atCmd.FromSchema = UnitSchema.Plugin;
+            atCmd.FromID = GetModuleID();
+            atCmd.FromSchema = UnitSchema.Module;
             atCmd.ToID = ccid;
             atCmd.ToSchema = UnitSchema.Client;
             atCmd.ToEP = ep.ToString();
@@ -180,8 +180,8 @@ namespace Mnn
             AtCommand atCmd = new AtCommand();
             atCmd.Direct = AtCommandDirect.Request;
             atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetPluginID();
-            atCmd.FromSchema = UnitSchema.Plugin;
+            atCmd.FromID = GetModuleID();
+            atCmd.FromSchema = UnitSchema.Module;
             atCmd.ToID = ccid;
             atCmd.ToSchema = UnitSchema.Client;
             atCmd.ToEP = ep.ToString();

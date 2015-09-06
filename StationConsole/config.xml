@@ -7,14 +7,14 @@
     <server type="atcmd" protocol="pipe" pipename="CmdPipeServer" enable="true" canstop="false" id="CmdPipeServer" name="命令 服务端" />
     <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3012" autorun="false" canstop="true" id="Common" name="通用 服务端" />
     -->
-    <server type="atcmd" protocol="udp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="Command" name="命令 服务端" />
+    <server type="atcmd" protocol="udp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="Command" name="命令 服务" />
     <!-- not modify above here -->
 
     <!-- add new server below here -->
-    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3000" autorun="false" canstop="true" id="SK" name="水库 服务端" />
-    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3002" autorun="false" canstop="true" id="ZLS" name="流量 服务端" />
-    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3006" autorun="false" canstop="true" id="QX" name="气象 服务端" />
-    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3008" autorun="false" canstop="true" id="DXS" name="地下水 服务端" />
+    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3000" autorun="false" canstop="true" id="SK" name="水库 服务" />
+    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3002" autorun="false" canstop="true" id="ZLS" name="流量 服务" />
+    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3006" autorun="false" canstop="true" id="QX" name="气象 服务" />
+    <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3008" autorun="false" canstop="true" id="DXS" name="地下水 服务" />
   </serverconfig>
 
 </configuration>

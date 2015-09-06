@@ -12,7 +12,7 @@ using System.Windows;
 using System.Xml;
 using System.Threading;
 using Mnn.MnnSocket;
-using Mnn.MnnPlugin;
+using Mnn.MnnModule;
 using Mnn.MnnUnit;
 
 namespace StationConsole.CtrlLayer
@@ -24,7 +24,7 @@ namespace StationConsole.CtrlLayer
 
         private List<ServerUnit> serverTable = new List<ServerUnit>();
         private List<ClientUnit> clientTable = new List<ClientUnit>();
-        private List<PluginUnit> pluginTable = new List<PluginUnit>();
+        private List<ModuleUnit> moduleTable = new List<ModuleUnit>();
 
         private ReaderWriterLock rwlock = new ReaderWriterLock();
 
@@ -121,18 +121,18 @@ namespace StationConsole.CtrlLayer
 
         }
 
-        public void InitailizeModulePlugin()
+        public void InitailizeDefaultModule()
         {
             // 加载 DataHandles 文件夹下的所有模块
-            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
+            string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
 
-            if (Directory.Exists(pluginPath)) {
-                string[] files = Directory.GetFiles(pluginPath);
+            if (Directory.Exists(modulePath)) {
+                string[] files = Directory.GetFiles(modulePath);
 
                 // Load dll files one by one
                 foreach (var item in files) {
                     if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll")) {
-                        AtPluginLoad(item);
+                        AtModuleLoad(item);
                     }
                 }
             }
@@ -157,12 +157,12 @@ namespace StationConsole.CtrlLayer
 
             atCmd.Result = AtCmdServer_ExecCommand(atCmd) ? "Success" : "Failure";
 
-            if (atCmd.FromSchema == UnitSchema.Plugin) {
-                lock (pluginTable) {
-                    foreach (var item in pluginTable) {
+            if (atCmd.FromSchema == UnitSchema.Module) {
+                lock (moduleTable) {
+                    foreach (var item in moduleTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
-                                item.Plugin.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
+                                item.Module.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
                             }
                             catch (Exception) { }
                             break;
@@ -324,11 +324,11 @@ namespace StationConsole.CtrlLayer
 
             bool IsHandled = false;
             rwlock.AcquireReaderLock(100);
-            foreach (var item in pluginTable) {
+            foreach (var item in moduleTable) {
                 // 水库代码太恶心，没办法的办法
                 if (item.ID != "HT=" && msg.Contains(item.ID)) {
                     try {
-                        item.Plugin.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                        item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                     }
                     catch (Exception) { }
                     IsHandled = true;
@@ -337,10 +337,10 @@ namespace StationConsole.CtrlLayer
             }
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
-                foreach (var item in pluginTable) {
+                foreach (var item in moduleTable) {
                     if (item.ID == "HT=" && msg.Contains(item.ID)) {
                         try {
-                            item.Plugin.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                            item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                         }
                         catch (Exception) { }
                         break;
@@ -461,12 +461,12 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void AtPluginLoad(string filePath)
+        public void AtModuleLoad(string filePath)
         {
-            PluginItem plugin = new PluginItem();
+            ModuleItem module = new ModuleItem();
 
             try {
-                plugin.Load(filePath);
+                module.Load(filePath);
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
@@ -474,47 +474,47 @@ namespace StationConsole.CtrlLayer
             }
 
             try {
-                plugin.Invoke("Mnn.MnnPlugin.IPlugin", "Init", null);
+                module.Invoke("Mnn.MnnModule.IModule", "Init", null);
             }
             catch (Exception ex) {
-                plugin.UnLoad();
+                module.UnLoad();
                 MessageBox.Show(ex.Message, "Error");
                 return;
             }
 
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
-            PluginUnit pluginUnit = new PluginUnit();
-            pluginUnit.ID = (string)plugin.Invoke("Mnn.MnnPlugin.IPlugin", "GetPluginID", null);
-            pluginUnit.Name = fvi.ProductName;
-            pluginUnit.FilePath = filePath;
-            pluginUnit.FileName = fvi.InternalName;
-            pluginUnit.FileComment = fvi.Comments;
-            pluginUnit.Plugin = plugin;
+            ModuleUnit moduleUnit = new ModuleUnit();
+            moduleUnit.ID = (string)module.Invoke("Mnn.MnnModule.IModule", "GetModuleID", null);
+            moduleUnit.Name = fvi.ProductName;
+            moduleUnit.FilePath = filePath;
+            moduleUnit.FileName = fvi.InternalName;
+            moduleUnit.FileComment = fvi.Comments;
+            moduleUnit.Module = module;
 
             // 加入 table
             rwlock.AcquireWriterLock(2000);
-            pluginTable.Add(pluginUnit);
+            moduleTable.Add(moduleUnit);
             rwlock.ReleaseWriterLock();
 
-            App.Mindow.AddPlugin(pluginUnit);
+            App.Mindow.AddModule(moduleUnit);
         }
 
-        public void AtPluginUnload(string fileName)
+        public void AtModuleUnload(string fileName)
         {
             rwlock.AcquireWriterLock(2000);
 
-            var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
+            var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Plugin.Invoke("Mnn.MnnPlugin.IPlugin", "Final", null);
+                    subset.First().Module.Invoke("Mnn.MnnModule.IModule", "Final", null);
                 }
                 catch (Exception) { }
                 // 卸载模块
-                subset.First().Plugin.UnLoad();
+                subset.First().Module.UnLoad();
                 // 移出 table
-                App.Mindow.RemovePlugin(subset.First());
-                pluginTable.Remove(subset.First());
+                App.Mindow.RemoveModule(subset.First());
+                moduleTable.Remove(subset.First());
             }
 
             rwlock.ReleaseWriterLock();

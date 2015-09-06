@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Mnn.MnnPlugin
+namespace Mnn.MnnModule
 {
-    public interface IPlugin
+    public interface IModule
     {
         void Init();
 
         void Final();
 
-        string GetPluginID();
+        string GetModuleID();
     }
 }

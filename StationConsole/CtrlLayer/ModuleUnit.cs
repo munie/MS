@@ -5,7 +5,7 @@ using System.Text;
 
 namespace StationConsole.CtrlLayer
 {
-    public class PluginUnit
+    public class ModuleUnit
     {
         public virtual string ID { get; set; }
         public virtual string Name { get; set; }
@@ -14,6 +14,6 @@ namespace StationConsole.CtrlLayer
         public virtual string FileName { get; set; }
         public virtual string FileComment { get; set; }
 
-        public Mnn.MnnPlugin.PluginItem Plugin { get; set; }
+        public Mnn.MnnModule.ModuleItem Module { get; set; }
     }
 }

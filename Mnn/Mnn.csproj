@@ -45,10 +45,10 @@
     <Compile Include="Discard\MnnAtCmd\AtCmdUnit.cs" />
     <Compile Include="Discard\MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
     <Compile Include="IDataHandle.cs" />
-    <Compile Include="MnnPlugin\AppDomainProxy.cs" />
-    <Compile Include="MnnPlugin\IPlugin.cs" />
-    <Compile Include="MnnPlugin\PluginItem.cs" />
-    <Compile Include="MnnPlugin\PluginManager.cs" />
+    <Compile Include="MnnModule\AppDomainProxy.cs" />
+    <Compile Include="MnnModule\IModule.cs" />
+    <Compile Include="MnnModule\ModuleItem.cs" />
+    <Compile Include="MnnModule\ModuleManager.cs" />
     <Compile Include="Discard\MnnSerialPort\AsyncSerailPort.cs" />
     <Compile Include="Discard\MnnSerialPort\AsyncSerailPortEventArgs.cs" />
     <Compile Include="MnnSocket\AsyncSocketListenItem.cs" />

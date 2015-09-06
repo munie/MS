@@ -37,7 +37,7 @@ namespace StationConsole
         private string timerState;
         private double timerInterval;       // 单位为秒，启动定时器时需乘1000
         private string timerCommand;
-        private string pluginSupport;
+        private string moduleSupport;
 
         public string ListenState
         {
@@ -80,14 +80,14 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
             }
         }
-        public string PluginSupport
+        public string ModuleSupport
         {
-            get { return pluginSupport; }
+            get { return moduleSupport; }
             set
             {
-                pluginSupport = value;
+                moduleSupport = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("PluginSupport"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("ModuleSupport"));
             }
         }
 

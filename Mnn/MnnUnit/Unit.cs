@@ -9,7 +9,7 @@ namespace Mnn.MnnUnit
     {
         Server,
         Client,
-        Plugin,
+        Module,
     }
 
     public class Unit

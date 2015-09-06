@@ -38,16 +38,16 @@ namespace StationConsole
             // Data Source Binding
             this.serverStateTable = new ObservableCollection<ServerUnitState>();
             this.clientStateTable = (ClientStateTable)Resources["clientStateTable"];
-            this.pluginStateTable = new ObservableCollection<PluginUnitState>();
+            this.moduleStateTable = new ObservableCollection<ModuleUnitState>();
 
             this.lstViewServer.ItemsSource = serverStateTable;
             //lstViewClientPoint.ItemsSource = clientStateTable;
-            this.lstViewPlugin.ItemsSource = pluginStateTable;
+            this.lstViewModule.ItemsSource = moduleStateTable;
         }
 
         private ObservableCollection<ServerUnitState> serverStateTable;
         private ObservableCollection<ClientUnitState> clientStateTable;
-        private ObservableCollection<PluginUnitState> pluginStateTable;
+        private ObservableCollection<ModuleUnitState> moduleStateTable;
 
         // Methods ============================================================================
 
@@ -100,7 +100,7 @@ namespace StationConsole
                 state.TimerState = ServerUnitState.TimerStateDisable;
             state.TimerInterval = 0;
             state.TimerCommand = "";
-            state.PluginSupport = "";
+            state.ModuleSupport = "";
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -183,10 +183,10 @@ namespace StationConsole
             }));
         }
 
-        //public void AddPlugin(PluginUnit plugin)
+        //public void AddModule(ModuleUnit module)
         //{
-        //    string name = plugin.Name;
-        //    string fileName = plugin.FileName;
+        //    string name = module.Name;
+        //    string fileName = module.FileName;
 
         //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
         //    {
@@ -196,45 +196,45 @@ namespace StationConsole
         //            subset = from s in serverStateTable where s.Name.Contains("通用") select s;
         //        }
 
-        //        subset.First().PluginSupport += fileName + "，";
+        //        subset.First().ModuleSupport += fileName + "，";
         //    }));
         //}
 
-        //public void RemovePlugin(PluginUnit plugin)
+        //public void RemoveModule(ModuleUnit module)
         //{
-        //    string fileName = plugin.FileName;
+        //    string fileName = module.FileName;
 
         //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
         //    {
-        //        var subset = from s in serverStateTable where s.PluginSupport.Contains(fileName) select s;
+        //        var subset = from s in serverStateTable where s.ModuleSupport.Contains(fileName) select s;
 
         //        if (subset.Count() == 0)
         //            return;
 
-        //        subset.First().PluginSupport = subset.First().PluginSupport.Replace(plugin.FileName + "，", "");
+        //        subset.First().ModuleSupport = subset.First().ModuleSupport.Replace(module.FileName + "，", "");
         //    }));
         //}
 
-        public void AddPlugin(PluginUnit plugin)
+        public void AddModule(ModuleUnit module)
         {
-            PluginUnitState state = new PluginUnitState(plugin);
+            ModuleUnitState state = new ModuleUnitState(module);
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                pluginStateTable.Add(state);
+                moduleStateTable.Add(state);
             }));
         }
 
-        public void RemovePlugin(PluginUnit plugin)
+        public void RemoveModule(ModuleUnit module)
         {
-            string id = plugin.ID;
+            string id = module.ID;
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var subset = from s in pluginStateTable where s.ID.Equals(id) select s;
+                var subset = from s in moduleStateTable where s.ID.Equals(id) select s;
 
                 if (subset.Count() != 0)
-                    pluginStateTable.Remove(subset.First());
+                    moduleStateTable.Remove(subset.First());
             }));
         }
 
@@ -259,10 +259,10 @@ namespace StationConsole
             App.Ctrler = new Controler();
             App.Ctrler.InitailizeConfig();
             App.Ctrler.InitailizeServer();
-            App.Ctrler.InitailizeModulePlugin();
+            App.Ctrler.InitailizeDefaultModule();
         }
 
-        private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
 
@@ -270,10 +270,10 @@ namespace StationConsole
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                App.Ctrler.AtPluginLoad(openFileDialog.FileName);
+                App.Ctrler.AtModuleLoad(openFileDialog.FileName);
         }
 
-        private void MenuItem_UnloadPlugin_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
         {
             List<ServerUnitState> handles = new List<ServerUnitState>();
 
@@ -288,12 +288,12 @@ namespace StationConsole
 
             // 卸载操作
             foreach (var item in handles) {
-                if (string.IsNullOrEmpty(item.PluginSupport) == true)
+                if (string.IsNullOrEmpty(item.ModuleSupport) == true)
                     continue;
 
-                string[] strTmp = item.PluginSupport.Split("，".ToArray(), StringSplitOptions.RemoveEmptyEntries);
+                string[] strTmp = item.ModuleSupport.Split("，".ToArray(), StringSplitOptions.RemoveEmptyEntries);
                 foreach (var i in strTmp) {
-                    App.Ctrler.AtPluginUnload(i);
+                    App.Ctrler.AtModuleUnload(i);
                 }
             }
         }
