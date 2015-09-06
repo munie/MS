@@ -635,7 +635,7 @@ namespace StationConsole.CtrlLayer
             lock (clientTable) {
                 var subset = from s in clientTable where s.ID.Equals(clientID) select s;
                 if (subset.Count() != 0) {
-                    serverID = subset.First().ID;
+                    serverID = subset.First().ServerID;
                     ep = subset.First().RemoteEP;
                 }
             }
@@ -660,7 +660,7 @@ namespace StationConsole.CtrlLayer
             lock (clientTable) {
                 var subset = from s in clientTable where s.ID.Equals(clientID) select s;
                 if (subset.Count() != 0) {
-                    serverID = subset.First().ID;
+                    serverID = subset.First().ServerID;
                     ep = subset.First().RemoteEP;
                 }
             }
