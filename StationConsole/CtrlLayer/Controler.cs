@@ -132,7 +132,7 @@ namespace StationConsole.CtrlLayer
                 // Load dll files one by one
                 foreach (var item in files) {
                     if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll")) {
-                        AtModuleLoad(item);
+                        LoadModule(item);
                     }
                 }
             }
@@ -254,7 +254,7 @@ namespace StationConsole.CtrlLayer
                         }
                     }
                     if (ServerID != null)
-                        AtClientClose(ServerID, atCmd.ToID);
+                        ClientClose(ServerID, atCmd.ToID);
                 }
                 else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
                     string ServerID = null;
@@ -267,7 +267,7 @@ namespace StationConsole.CtrlLayer
                         }
                     }
                     if (ServerID != null)
-                        AtClientSendMessage(ServerID, atCmd.ToID, atCmd.Data);
+                        ClientSendMessage(ServerID, atCmd.ToID, atCmd.Data);
                     else
                         return false;
                 }
@@ -363,9 +363,9 @@ namespace StationConsole.CtrlLayer
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
 
-        // At Commands ========================================================================
+        // public methods ========================================================================
 
-        public void AtServerStart(string serverID)
+        public void StartServer(string serverID)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -386,7 +386,7 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void AtServerStart(string serverID, IPEndPoint ep)
+        public void StartServer(string serverID, IPEndPoint ep)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -406,7 +406,7 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void AtServerStop(string serverID)
+        public void StopServer(string serverID)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -421,47 +421,47 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void AtServerTimerStart(string serverID, double interval, string timerCommand)
-        {
-            ServerUnit serverUnit = null;
+        //public void AtServerTimerStart(string serverID, double interval, string timerCommand)
+        //{
+        //    ServerUnit serverUnit = null;
 
-            lock (serverTable) {
-                foreach (var item in serverTable) {
-                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
-                        serverUnit = item;
-                        break;
-                    }
-                }
-            }
+        //    lock (serverTable) {
+        //        foreach (var item in serverTable) {
+        //            if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+        //                serverUnit = item;
+        //                break;
+        //            }
+        //        }
+        //    }
 
-            if (serverUnit == null && !(serverUnit.Server is TcpServer))
-                return;
+        //    if (serverUnit == null && !(serverUnit.Server is TcpServer))
+        //        return;
 
-            serverUnit.Timer = new System.Timers.Timer(interval);
-            serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-            {
-                try {
-                    (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
-                }
-                catch (Exception) { }
-            });
-            serverUnit.Timer.Start();
-        }
+        //    serverUnit.Timer = new System.Timers.Timer(interval);
+        //    serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+        //    {
+        //        try {
+        //            (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
+        //        }
+        //        catch (Exception) { }
+        //    });
+        //    serverUnit.Timer.Start();
+        //}
 
-        public void AtServerTimerStop(string serverID)
-        {
-            lock (serverTable) {
-                foreach (var item in serverTable) {
-                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
-                        item.Timer.Stop();
-                        item.Timer.Close();
-                        break;
-                    }
-                }
-            }
-        }
+        //public void AtServerTimerStop(string serverID)
+        //{
+        //    lock (serverTable) {
+        //        foreach (var item in serverTable) {
+        //            if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+        //                item.Timer.Stop();
+        //                item.Timer.Close();
+        //                break;
+        //            }
+        //        }
+        //    }
+        //}
 
-        public void AtModuleLoad(string filePath)
+        public void LoadModule(string filePath)
         {
             ModuleItem module = new ModuleItem();
 
@@ -488,7 +488,7 @@ namespace StationConsole.CtrlLayer
             moduleUnit.ID = (string)module.Invoke("Mnn.MnnModule.IModule", "GetModuleID", null);
             moduleUnit.Name = fvi.ProductName;
             moduleUnit.FilePath = filePath;
-            moduleUnit.FileName = fvi.InternalName;
+            moduleUnit.FileName = module.AssemblyName;
             moduleUnit.FileComment = fvi.Comments;
             moduleUnit.Module = module;
 
@@ -500,7 +500,7 @@ namespace StationConsole.CtrlLayer
             App.Mindow.AddModule(moduleUnit);
         }
 
-        public void AtModuleUnload(string fileName)
+        public void UnloadModule(string fileName)
         {
             rwlock.AcquireWriterLock(2000);
 
@@ -520,7 +520,7 @@ namespace StationConsole.CtrlLayer
             rwlock.ReleaseWriterLock();
         }
 
-        public void AtClientSendMessage(string serverID, string clientID, string msg)
+        public void ClientSendMessage(string serverID, string clientID, string msg)
         {
             // Find IPEndPoint of Client
             IPEndPoint ep = null;
@@ -542,7 +542,7 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void AtClientClose(string serverID, string clientID)
+        public void ClientClose(string serverID, string clientID)
         {
             // Find IPEndPoint of Client
             IPEndPoint ep = null;

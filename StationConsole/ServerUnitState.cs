@@ -29,15 +29,15 @@ namespace StationConsole
 
         public static readonly string ListenStateStarted = "已启动";
         public static readonly string ListenStateStoped = "未启动";
-        public static readonly string TimerStateStarted = "运行中";
-        public static readonly string TimerStateStoped = "未运行";
-        public static readonly string TimerStateDisable = "不支持";
+        //public static readonly string TimerStateStarted = "运行中";
+        //public static readonly string TimerStateStoped = "未运行";
+        //public static readonly string TimerStateDisable = "不支持";
 
         private string listenState;
-        private string timerState;
-        private double timerInterval;       // 单位为秒，启动定时器时需乘1000
-        private string timerCommand;
-        private string moduleSupport;
+        //private string timerState;
+        //private double timerInterval;       // 单位为秒，启动定时器时需乘1000
+        //private string timerCommand;
+        //private string moduleSupport;
 
         public string ListenState
         {
@@ -49,47 +49,47 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("ListenState"));
             }
         }
-        public string TimerState
-        {
-            get { return timerState; }
-            set
-            {
-                timerState = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("TimerState"));
-            }
-        }
-        public double TimerInterval
-        {
-            get { return timerInterval; }
-            set
-            {
-                timerInterval = value;
-                if (PropertyChanged != null) {
-                    PropertyChanged(this, new PropertyChangedEventArgs("TimerInterval"));
-                }
-            }
-        }
-        public string TimerCommand
-        {
-            get { return timerCommand; }
-            set
-            {
-                timerCommand = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
-            }
-        }
-        public string ModuleSupport
-        {
-            get { return moduleSupport; }
-            set
-            {
-                moduleSupport = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ModuleSupport"));
-            }
-        }
+        //public string TimerState
+        //{
+        //    get { return timerState; }
+        //    set
+        //    {
+        //        timerState = value;
+        //        if (PropertyChanged != null)
+        //            PropertyChanged(this, new PropertyChangedEventArgs("TimerState"));
+        //    }
+        //}
+        //public double TimerInterval
+        //{
+        //    get { return timerInterval; }
+        //    set
+        //    {
+        //        timerInterval = value;
+        //        if (PropertyChanged != null) {
+        //            PropertyChanged(this, new PropertyChangedEventArgs("TimerInterval"));
+        //        }
+        //    }
+        //}
+        //public string TimerCommand
+        //{
+        //    get { return timerCommand; }
+        //    set
+        //    {
+        //        timerCommand = value;
+        //        if (PropertyChanged != null)
+        //            PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
+        //    }
+        //}
+        //public string ModuleSupport
+        //{
+        //    get { return moduleSupport; }
+        //    set
+        //    {
+        //        moduleSupport = value;
+        //        if (PropertyChanged != null)
+        //            PropertyChanged(this, new PropertyChangedEventArgs("ModuleSupport"));
+        //    }
+        //}
 
         //public override string ID { get; set; }
         //public override string Name { get; set; }

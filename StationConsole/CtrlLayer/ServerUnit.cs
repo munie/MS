@@ -19,6 +19,6 @@ namespace StationConsole.CtrlLayer
         public virtual bool CanStop { get; set; }
 
         public Mnn.MnnSocket.SockServer Server { get; set; }
-        public System.Timers.Timer Timer { get; set; }
+        //public System.Timers.Timer Timer { get; set; }
     }
 }
