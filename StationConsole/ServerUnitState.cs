@@ -16,7 +16,7 @@ namespace StationConsole
         {
             ID = server.ID;
             Name = server.Name;
-            Schema = server.Schema;
+
             Protocol = server.Protocol;
             IpAddress = server.IpAddress;
             Port = server.Port;

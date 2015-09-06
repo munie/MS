@@ -13,6 +13,7 @@ namespace StationConsole
         {
             ID = plugin.ID;
             Name = plugin.Name;
+
             FilePath = plugin.FilePath;
             FileName = plugin.FileName;
             FileComment = plugin.FileComment;

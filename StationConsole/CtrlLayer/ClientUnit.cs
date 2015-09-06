@@ -6,8 +6,11 @@ using System.Net;
 
 namespace StationConsole.CtrlLayer
 {
-    public class ClientUnit : Mnn.MnnUnit.Unit
+    public class ClientUnit
     {
+        public virtual string ID { get; set; }
+        public virtual string Name { get; set; }
+
         public virtual IPEndPoint RemoteEP { get; set; }
         public virtual string ServerID { get; set; }
         public virtual string ServerName { get; set; }

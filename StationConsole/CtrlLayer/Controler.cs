@@ -49,7 +49,6 @@ namespace StationConsole.CtrlLayer
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
-                    server.Schema = UnitSchema.Server;
                     server.ServerType = item.Attributes["type"].Value;
                     server.Protocol = item.Attributes["protocol"].Value;
 
@@ -283,7 +282,6 @@ namespace StationConsole.CtrlLayer
 
             client.ID = "";
             client.Name = "";
-            client.Schema = UnitSchema.Client;
             client.RemoteEP = e.RemoteEP;
             lock (serverTable) {
                 foreach (var item in serverTable) {

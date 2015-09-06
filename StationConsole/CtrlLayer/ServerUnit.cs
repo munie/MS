@@ -5,8 +5,11 @@ using System.Text;
 
 namespace StationConsole.CtrlLayer
 {
-    public class ServerUnit : Mnn.MnnUnit.Unit
+    public class ServerUnit
     {
+        public virtual string ID { get; set; }
+        public virtual string Name { get; set; }
+
         public virtual string ServerType { get; set; }
         public virtual string Protocol { get; set; }
         public virtual string IpAddress { get; set; }

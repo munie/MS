@@ -13,12 +13,13 @@ namespace StationConsole
         public ClientUnitState() { }
         public ClientUnitState(ClientUnit client)
         {
-            id = client.ID;
-            name = client.Name;
-            remoteEP = client.RemoteEP;
-            serverID = client.ServerID;
-            serverName = client.ServerName;
-            connectTime = client.ConnectTime;
+            ID = client.ID;
+            Name = client.Name;
+
+            RemoteEP = client.RemoteEP;
+            ServerID = client.ServerID;
+            ServerName = client.ServerName;
+            ConnectTime = client.ConnectTime;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
