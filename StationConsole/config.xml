@@ -3,9 +3,11 @@
   <encoding>gb2312</encoding>
 
   <serverconfig>
-    <!--<server type="atcmd" protocol="pipe" pipename="CmdPipeServer" enable="true" canstop="false" id="CmdPipeServer" name="命令 服务端" />-->
-    <server type="atcmd" protocol="udp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="Command" name="命令 服务端" />
+    <!--
+    <server type="atcmd" protocol="pipe" pipename="CmdPipeServer" enable="true" canstop="false" id="CmdPipeServer" name="命令 服务端" />
     <server type="work" protocol="tcp" ipaddress="0.0.0.0" port="3012" autorun="false" canstop="true" id="Common" name="通用 服务端" />
+    -->
+    <server type="atcmd" protocol="udp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="Command" name="命令 服务端" />
     <!-- not modify above here -->
 
     <!-- add new server below here -->

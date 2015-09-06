@@ -122,18 +122,19 @@ namespace StationConsole.CtrlLayer
 
         }
 
-        public void InitailizeDefaultPlugin()
+        public void InitailizeModulePlugin()
         {
             // 加载 DataHandles 文件夹下的所有模块
-            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\DataHandles";
+            string pluginPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
 
             if (Directory.Exists(pluginPath)) {
                 string[] files = Directory.GetFiles(pluginPath);
 
                 // Load dll files one by one
                 foreach (var item in files) {
-                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll"))
+                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll")) {
                         AtPluginLoad(item);
+                    }
                 }
             }
         }
@@ -162,7 +163,7 @@ namespace StationConsole.CtrlLayer
                     foreach (var item in pluginTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
-                                item.Plugin.Invoke("IDataHandle", "AtCmdResult", new object[] { atCmd });
+                                item.Plugin.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
                             }
                             catch (Exception) { }
                             break;
@@ -329,7 +330,7 @@ namespace StationConsole.CtrlLayer
                 // 水库代码太恶心，没办法的办法
                 if (item.ID != "HT=" && msg.Contains(item.ID)) {
                     try {
-                        item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                        item.Plugin.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                     }
                     catch (Exception) { }
                     IsHandled = true;
@@ -341,7 +342,7 @@ namespace StationConsole.CtrlLayer
                 foreach (var item in pluginTable) {
                     if (item.ID == "HT=" && msg.Contains(item.ID)) {
                         try {
-                            item.Plugin.Invoke("IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+                            item.Plugin.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
                         }
                         catch (Exception) { }
                         break;
@@ -464,7 +465,6 @@ namespace StationConsole.CtrlLayer
 
         public void AtPluginLoad(string filePath)
         {
-            string pluginID = null;
             PluginItem plugin = new PluginItem();
 
             try {
@@ -476,8 +476,7 @@ namespace StationConsole.CtrlLayer
             }
 
             try {
-                pluginID = (string)plugin.Invoke("IDataHandle", "GetPluginID", null);
-                plugin.Invoke("IDataHandle", "StartHandleMsg", null);
+                plugin.Invoke("Mnn.MnnPlugin.IPlugin", "Init", null);
             }
             catch (Exception ex) {
                 plugin.UnLoad();
@@ -487,7 +486,7 @@ namespace StationConsole.CtrlLayer
 
             // 加载模块已经成功
             PluginUnit pluginUnit = new PluginUnit();
-            pluginUnit.ID = pluginID;
+            pluginUnit.ID = (string)plugin.Invoke("Mnn.MnnPlugin.IPlugin", "GetPluginID", null);
             pluginUnit.Name = FileVersionInfo.GetVersionInfo(filePath).ProductName;
             pluginUnit.Schema = UnitSchema.Plugin;
             pluginUnit.FileName = plugin.AssemblyName;
@@ -509,7 +508,7 @@ namespace StationConsole.CtrlLayer
             var subset = from s in pluginTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Plugin.Invoke("IDataHandle", "StopHandleMsg", null);
+                    subset.First().Plugin.Invoke("Mnn.MnnPlugin.IPlugin", "Final", null);
                 }
                 catch (Exception) { }
                 // 卸载模块

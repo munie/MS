@@ -40,10 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataHandle.cs" />
     <Compile Include="Discard\MnnAtCmd\AtCmdSockServer.cs" />
     <Compile Include="Discard\MnnAtCmd\AtCmdUnit.cs" />
     <Compile Include="Discard\MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
+    <Compile Include="IDataHandle.cs" />
     <Compile Include="MnnPlugin\AppDomainProxy.cs" />
+    <Compile Include="MnnPlugin\IPlugin.cs" />
     <Compile Include="MnnPlugin\PluginItem.cs" />
     <Compile Include="MnnPlugin\PluginManager.cs" />
     <Compile Include="Discard\MnnSerialPort\AsyncSerailPort.cs" />
@@ -62,7 +65,15 @@
     <Compile Include="MnnUnit\AtCommand.cs" />
     <Compile Include="MnnUtil\ExprSolve.cs" />
     <Compile Include="MnnUtil\Logger.cs" />
+    <Compile Include="MsgCmd.cs" />
+    <Compile Include="MsgKey.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MnnUtil\ConvertUtil.cs" />
+    <Compile Include="MnnUtil\CrcUtil.cs" />
+    <Compile Include="MnnUtil\DegreeUtil.cs" />
+    <Compile Include="MnnUtil\HumiUtil.cs" />
+    <Compile Include="MnnUtil\MsgAnalizeUitl.cs" />
+    <Compile Include="MnnUtil\RegUtil.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

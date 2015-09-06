@@ -232,7 +232,7 @@ namespace StationConsole
             App.Ctrler = new Controler();
             App.Ctrler.InitailizeConfig();
             App.Ctrler.InitailizeServer();
-            App.Ctrler.InitailizeDefaultPlugin();
+            App.Ctrler.InitailizeModulePlugin();
         }
 
         private void MenuItem_LoadPlugin_Click(object sender, RoutedEventArgs e)
@@ -398,7 +398,7 @@ namespace StationConsole
             input.textBlock2.Text = "时间间隔";
             input.textBlock2.IsEnabled = false;
             input.textBox2.IsEnabled = false;
-            input.textBox1.Text = "!A0#";
+            input.textBox1.Text = "!A1?";
             input.textBox1.Focus();
             input.textBox1.Select(input.textBox1.Text.Length, 0);
 

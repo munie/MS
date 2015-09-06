@@ -120,7 +120,7 @@ namespace Mnn.MnnUtil
 
             if (check_expr(expr) != 0) {
                 //printf("表达式非法！\n");
-                result.Append("表达式非法！");
+                result.Append("表达式非法: " + expr);
                 return -1;
             }
 
@@ -249,17 +249,42 @@ namespace Mnn.MnnUtil
             return retValue;
         }
 
-        static public double CalculateExpr(string expr)
+        //static public double CalculateExpr(string expr)
+        //{
+        //    if (expr.Contains("new Random().NextDouble()"))
+        //        expr = expr.Replace("new Random().NextDouble()", "(" + Math.Round(new Random().NextDouble(),2).ToString() + ")");
+        //    else if (expr.Contains("new Random().Next()"))
+        //        expr = expr.Replace("new Random().Next()", "(" + new Random().Next().ToString() + ")");
+
+        //    StringBuilder postOrderExpr = new StringBuilder();
+
+        //    if (ExprSolve.preorder_to_postorder_expr(out postOrderExpr, expr) != 0)
+        //        throw new ApplicationException(postOrderExpr.ToString());
+
+        //    return Math.Round(ExprSolve.calculate_postorder_expr(postOrderExpr.ToString()), 2);
+        //}
+
+        static public double CalculateExpr(string expr, int precision = 2, string replace = "", double value = 0)
         {
             if (expr.Contains("new Random().NextDouble()"))
-                expr = expr.Replace("new Random().NextDouble()", "(" + Math.Round(new Random().NextDouble(),2).ToString() + ")");
-                
+                expr = expr.Replace("new Random().NextDouble()", "(" + Math.Round(new Random().NextDouble(), 2).ToString() + ")");
+            else if (expr.Contains("new Random().Next()"))
+                expr = expr.Replace("new Random().Next()", "(" + new Random().Next().ToString() + ")");
+
+            if (!string.IsNullOrEmpty(replace))
+                expr = expr.Replace(replace, "(" + value + ")");
+            
             StringBuilder postOrderExpr = new StringBuilder();
 
             if (ExprSolve.preorder_to_postorder_expr(out postOrderExpr, expr) != 0)
                 throw new ApplicationException(postOrderExpr.ToString());
 
-            return ExprSolve.calculate_postorder_expr(postOrderExpr.ToString());
+            return Math.Round(ExprSolve.calculate_postorder_expr(postOrderExpr.ToString()), precision);
+        }
+
+        static public decimal CalculateExprDecimal(string expr, int precision = 2, string replace = "", decimal value = 0)
+        {
+            return (decimal)CalculateExpr(expr, precision, replace, (double)value);
         }
     }
 }
