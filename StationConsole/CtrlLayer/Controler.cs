@@ -17,18 +17,31 @@ using Mnn.MnnUnit;
 
 namespace StationConsole.CtrlLayer
 {
+    class MessageUnit
+    {
+        public IPEndPoint EP;
+        public string Content;
+    }
+
     public class Controler
     {
         // From config.xml
         public Encoding coding = Encoding.Default;
 
+        // tables
         private List<ServerUnit> serverTable = new List<ServerUnit>();
         private List<ClientUnit> clientTable = new List<ClientUnit>();
         private List<ModuleUnit> moduleTable = new List<ModuleUnit>();
-
+        // rwlock for moduleTable
         private ReaderWriterLock rwlock = new ReaderWriterLock();
 
-        public void InitailizeConfig()
+        // Message Handle Thread
+        private const int max_msg_count = 2048;
+        private bool isExitThread = false;
+        private Semaphore sem = new Semaphore(0, max_msg_count);
+        private Queue<MessageUnit> msgQueue = new Queue<MessageUnit>();
+
+        public void InitConfig()
         {
             if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\config.xml") == false) {
                 System.Windows.MessageBox.Show("未找到配置文件： config.xml");
@@ -77,7 +90,7 @@ namespace StationConsole.CtrlLayer
             /// ** Initialize End ====================================================
         }
 
-        public void InitailizeServer()
+        public void InitServer()
         {
             // 启动监听
             foreach (var item in serverTable) {
@@ -121,7 +134,7 @@ namespace StationConsole.CtrlLayer
 
         }
 
-        public void InitailizeDefaultModule()
+        public void InitDefaultModule()
         {
             // 加载 DataHandles 文件夹下的所有模块
             string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
@@ -131,11 +144,68 @@ namespace StationConsole.CtrlLayer
 
                 // Load dll files one by one
                 foreach (var item in files) {
-                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && !item.EndsWith("Mnn.dll")) {
-                        LoadModule(item);
+                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && item.Contains("Module_")) {
+                        AtModuleLoad(item);
                     }
                 }
             }
+        }
+
+        public void InitMsgHandle()
+        {
+            Thread thread = new Thread(() =>
+            {
+                isExitThread = false;
+
+                while (true) {
+                    if (isExitThread == true) {
+                        isExitThread = false;
+                        break;
+                    }
+
+                    MsgHandle();
+                }
+            });
+
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        private void MsgHandle()
+        {
+            MessageUnit msg = null;
+
+            sem.WaitOne();
+            lock (msgQueue) {
+                msg = msgQueue.Dequeue();
+            }
+
+            bool IsHandled = false;
+            rwlock.AcquireReaderLock(100);
+            foreach (var item in moduleTable) {
+                // 水库代码太恶心，没办法的办法
+                if (item.ID != "HT=" && msg.Content.Contains(item.ID)) {
+                    try {
+                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                    }
+                    catch (Exception) { }
+                    IsHandled = true;
+                    break;
+                }
+            }
+            // 水库代码太恶心，没办法的办法
+            if (IsHandled == false) {
+                foreach (var item in moduleTable) {
+                    if (item.ID == "HT=" && msg.Content.Contains(item.ID)) {
+                        try {
+                            item.Module.Invoke("Mnn.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                        }
+                        catch (Exception) { }
+                        break;
+                    }
+                }
+            }
+            rwlock.ReleaseReaderLock();
         }
 
         // Events for AsyncSocketListenItem =================================================
@@ -155,21 +225,7 @@ namespace StationConsole.CtrlLayer
                 return;
             }
 
-            atCmd.Result = AtCmdServer_ExecCommand(atCmd) ? "Success" : "Failure";
-
-            if (atCmd.FromSchema == UnitSchema.Module) {
-                lock (moduleTable) {
-                    foreach (var item in moduleTable) {
-                        if (item.ID.Equals(atCmd.FromID)) {
-                            try {
-                                item.Module.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
-                            }
-                            catch (Exception) { }
-                            break;
-                        }
-                    }
-                }
-            }
+            AtCmdServer_ExecCommand(atCmd);
 
             // 打印至窗口，写命令日志
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
@@ -208,7 +264,7 @@ namespace StationConsole.CtrlLayer
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
 
-        private bool AtCmdServer_ExecCommand(AtCommand atCmd)
+        private void AtCmdServer_ExecCommand(AtCommand atCmd)
         {
             if (atCmd.ToSchema == UnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
                 if (atCmd.DataType == AtCommandDataType.ClientUpdateID) {
@@ -244,36 +300,35 @@ namespace StationConsole.CtrlLayer
                         "Name", atCmd.Data);
                 }
                 else if (atCmd.DataType == AtCommandDataType.ClientClose) {
-                    string ServerID = null;
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmd.ToID)) {
-                                ServerID = item.ServerID;
-                                break;
-                            }
-                        }
-                    }
-                    if (ServerID != null)
-                        ClientClose(ServerID, atCmd.ToID);
+                    AtClientClose(atCmd.ToID);
                 }
-                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
-                    string ServerID = null;
-                    lock (clientTable) {
-                        foreach (var item in clientTable) {
-                            if (item.ID.Equals(atCmd.ToID)) {
-                                ServerID = item.ServerID;
-                                break;
+                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg && atCmd.ToID == "all") {
+
+                }
+                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg && atCmd.ToID != "all") {
+                    // 设置发送结果
+                    var subset = from s in clientTable where s.ID.Equals(atCmd.ToID) select s;
+                    if (subset.Count() != 0)
+                        atCmd.Result = subset.Count() != 0 ? "Success" : "Failure";
+
+                    // 发送数据
+                    AtClientSendMessage(atCmd.ToID, atCmd.Data);
+
+                    // 反馈发送结果
+                    rwlock.AcquireWriterLock(100);
+                    foreach (var item in moduleTable) {
+                        if (item.ID.Equals(atCmd.FromID)) {
+                            try {
+                                item.Module.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
                             }
+                            catch (Exception) { }
+                            break;
                         }
                     }
-                    if (ServerID != null)
-                        ClientSendMessage(ServerID, atCmd.ToID, atCmd.Data);
-                    else
-                        return false;
+                    rwlock.ReleaseWriterLock();
                 }
             }
 
-            return true;
         }
 
         private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
@@ -322,32 +377,40 @@ namespace StationConsole.CtrlLayer
         {
             string msg = coding.GetString(e.Data);
 
-            bool IsHandled = false;
-            rwlock.AcquireReaderLock(100);
-            foreach (var item in moduleTable) {
-                // 水库代码太恶心，没办法的办法
-                if (item.ID != "HT=" && msg.Contains(item.ID)) {
-                    try {
-                        item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
-                    }
-                    catch (Exception) { }
-                    IsHandled = true;
-                    break;
-                }
+            if (msgQueue.Count() >= max_msg_count)
+                return;
+
+            lock (msgQueue) {
+                msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = msg });
             }
-            // 水库代码太恶心，没办法的办法
-            if (IsHandled == false) {
-                foreach (var item in moduleTable) {
-                    if (item.ID == "HT=" && msg.Contains(item.ID)) {
-                        try {
-                            item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
-                        }
-                        catch (Exception) { }
-                        break;
-                    }
-                }
-            }
-            rwlock.ReleaseReaderLock();
+            sem.Release();
+
+            //bool IsHandled = false;
+            //rwlock.AcquireReaderLock(100);
+            //foreach (var item in moduleTable) {
+            //    // 水库代码太恶心，没办法的办法
+            //    if (item.ID != "HT=" && msg.Contains(item.ID)) {
+            //        try {
+            //            item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //        }
+            //        catch (Exception) { }
+            //        IsHandled = true;
+            //        break;
+            //    }
+            //}
+            //// 水库代码太恶心，没办法的办法
+            //if (IsHandled == false) {
+            //    foreach (var item in moduleTable) {
+            //        if (item.ID == "HT=" && msg.Contains(item.ID)) {
+            //            try {
+            //                item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //            }
+            //            catch (Exception) { }
+            //            break;
+            //        }
+            //    }
+            //}
+            //rwlock.ReleaseReaderLock();
 
             // 打印至窗口
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
@@ -363,9 +426,9 @@ namespace StationConsole.CtrlLayer
             Mnn.MnnUtil.Logger.Write(logFormat);
         }
 
-        // public methods ========================================================================
+        // At Command ========================================================================
 
-        public void StartServer(string serverID)
+        public void AtServerStart(string serverID)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -386,7 +449,7 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void StartServer(string serverID, IPEndPoint ep)
+        public void AtServerStart(string serverID, IPEndPoint ep)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -406,7 +469,7 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void StopServer(string serverID)
+        public void AtServerStop(string serverID)
         {
             lock (serverTable) {
                 var subset = from s in serverTable
@@ -421,47 +484,47 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        //public void AtServerTimerStart(string serverID, double interval, string timerCommand)
-        //{
-        //    ServerUnit serverUnit = null;
+        public void AtServerTimerStart(string serverID, double interval, string timerCommand)
+        {
+            ServerUnit serverUnit = null;
 
-        //    lock (serverTable) {
-        //        foreach (var item in serverTable) {
-        //            if (item.ID.Equals(serverID) && item.Server is TcpServer) {
-        //                serverUnit = item;
-        //                break;
-        //            }
-        //        }
-        //    }
+            lock (serverTable) {
+                foreach (var item in serverTable) {
+                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+                        serverUnit = item;
+                        break;
+                    }
+                }
+            }
 
-        //    if (serverUnit == null && !(serverUnit.Server is TcpServer))
-        //        return;
+            if (serverUnit == null && !(serverUnit.Server is TcpServer))
+                return;
 
-        //    serverUnit.Timer = new System.Timers.Timer(interval);
-        //    serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-        //    {
-        //        try {
-        //            (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
-        //        }
-        //        catch (Exception) { }
-        //    });
-        //    serverUnit.Timer.Start();
-        //}
+            serverUnit.Timer = new System.Timers.Timer(interval);
+            serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+            {
+                try {
+                    (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
+                }
+                catch (Exception) { }
+            });
+            serverUnit.Timer.Start();
+        }
 
-        //public void AtServerTimerStop(string serverID)
-        //{
-        //    lock (serverTable) {
-        //        foreach (var item in serverTable) {
-        //            if (item.ID.Equals(serverID) && item.Server is TcpServer) {
-        //                item.Timer.Stop();
-        //                item.Timer.Close();
-        //                break;
-        //            }
-        //        }
-        //    }
-        //}
+        public void AtServerTimerStop(string serverID)
+        {
+            lock (serverTable) {
+                foreach (var item in serverTable) {
+                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+                        item.Timer.Stop();
+                        item.Timer.Close();
+                        break;
+                    }
+                }
+            }
+        }
 
-        public void LoadModule(string filePath)
+        public void AtModuleLoad(string filePath)
         {
             ModuleItem module = new ModuleItem();
 
@@ -500,7 +563,7 @@ namespace StationConsole.CtrlLayer
             App.Mindow.AddModule(moduleUnit);
         }
 
-        public void UnloadModule(string fileName)
+        public void AtModuleUnload(string fileName)
         {
             rwlock.AcquireWriterLock(2000);
 
@@ -520,16 +583,63 @@ namespace StationConsole.CtrlLayer
             rwlock.ReleaseWriterLock();
         }
 
-        public void ClientSendMessage(string serverID, string clientID, string msg)
+        //public void AtClientSendMessage(string serverID, string clientID, string msg)
+        //{
+        //    // Find IPEndPoint of Client
+        //    IPEndPoint ep = null;
+        //    lock (clientTable) {
+        //        var subset = from s in clientTable where s.ID.Equals(clientID) select s;
+        //        if (subset.Count() != 0)
+        //            ep = subset.First().RemoteEP;
+        //    }
+        //    if (ep == null)
+        //        return;
+
+        //    lock (serverTable) {
+        //        try {
+        //            var subset = from s in serverTable where s.ID.Equals(serverID) select s;
+        //            if (subset.Count() != 0)
+        //                subset.First().Server.Send(ep, coding.GetBytes(msg));
+        //        }
+        //        catch (Exception) { }
+        //    }
+        //}
+
+        //public void AtClientClose(string serverID, string clientID)
+        //{
+        //    // Find IPEndPoint of Client
+        //    IPEndPoint ep = null;
+        //    lock (clientTable) {
+        //        var subset = from s in clientTable where s.ID.Equals(clientID) select s;
+        //        if (subset.Count() != 0)
+        //            ep = subset.First().RemoteEP;
+        //    }
+        //    if (ep == null)
+        //        return;
+
+        //    // Close Client
+        //    lock (serverTable) {
+        //        var subset = from s in serverTable where s.ID.Equals(serverID) select s;
+        //        if (subset.Count() != 0 && subset.First().Server is TcpServer) {
+        //            TcpServer tcp = subset.First().Server as TcpServer;
+        //            tcp.CloseClient(ep);
+        //        }
+        //    }
+        //}
+
+        public void AtClientSendMessage(string clientID, string msg)
         {
             // Find IPEndPoint of Client
+            string serverID = null;
             IPEndPoint ep = null;
             lock (clientTable) {
                 var subset = from s in clientTable where s.ID.Equals(clientID) select s;
-                if (subset.Count() != 0)
+                if (subset.Count() != 0) {
+                    serverID = subset.First().ID;
                     ep = subset.First().RemoteEP;
+                }
             }
-            if (ep == null)
+            if (string.IsNullOrEmpty(serverID) || ep == null)
                 return;
 
             lock (serverTable) {
@@ -542,16 +652,19 @@ namespace StationConsole.CtrlLayer
             }
         }
 
-        public void ClientClose(string serverID, string clientID)
+        public void AtClientClose(string clientID)
         {
             // Find IPEndPoint of Client
+            string serverID = null;
             IPEndPoint ep = null;
             lock (clientTable) {
                 var subset = from s in clientTable where s.ID.Equals(clientID) select s;
-                if (subset.Count() != 0)
+                if (subset.Count() != 0) {
+                    serverID = subset.First().ID;
                     ep = subset.First().RemoteEP;
+                }
             }
-            if (ep == null)
+            if (string.IsNullOrEmpty(serverID) || ep == null)
                 return;
 
             // Close Client

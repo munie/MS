@@ -94,12 +94,12 @@ namespace StationConsole
                 state.ListenState = ServerUnitState.ListenStateStarted;
             else
                 state.ListenState = ServerUnitState.ListenStateStoped;
-            //if (state.Protocol == "tcp")
-            //    state.TimerState = ServerUnitState.TimerStateStoped;
-            //else
-            //    state.TimerState = ServerUnitState.TimerStateDisable;
-            //state.TimerInterval = 0;
-            //state.TimerCommand = "";
+            if (state.Protocol == "tcp")
+                state.TimerState = ServerUnitState.TimerStateStoped;
+            else
+                state.TimerState = ServerUnitState.TimerStateDisable;
+            state.TimerInterval = 0;
+            state.TimerCommand = "";
             //state.ModuleSupport = "";
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
@@ -257,9 +257,10 @@ namespace StationConsole
         {
             App.Mindow = this;
             App.Ctrler = new Controler();
-            App.Ctrler.InitailizeConfig();
-            App.Ctrler.InitailizeServer();
-            App.Ctrler.InitailizeDefaultModule();
+            App.Ctrler.InitConfig();
+            App.Ctrler.InitServer();
+            App.Ctrler.InitDefaultModule();
+            App.Ctrler.InitMsgHandle();
         }
 
         private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
@@ -270,7 +271,7 @@ namespace StationConsole
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                App.Ctrler.LoadModule(openFileDialog.FileName);
+                App.Ctrler.AtModuleLoad(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
@@ -288,7 +289,7 @@ namespace StationConsole
 
             // 卸载操作
             foreach (var item in handles) {
-                App.Ctrler.UnloadModule(item.FileName);
+                App.Ctrler.AtModuleUnload(item.FileName);
             }
         }
 
@@ -302,7 +303,7 @@ namespace StationConsole
                 if (server.ListenState == ServerUnitState.ListenStateStarted)
                     continue;
 
-                App.Ctrler.StartServer(server.ID,
+                App.Ctrler.AtServerStart(server.ID,
                     new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
                 server.ListenState = ServerUnitState.ListenStateStarted;
             }
@@ -319,7 +320,7 @@ namespace StationConsole
                     continue;
 
                 if (server.CanStop == true)
-                    App.Ctrler.StopServer(server.ID);
+                    App.Ctrler.AtServerStop(server.ID);
                 server.ListenState = ServerUnitState.ListenStateStoped;
             }
         }
@@ -350,65 +351,65 @@ namespace StationConsole
             }
         }
 
-        //private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
-        //{
-        //    foreach (var item in lstViewServer.SelectedItems) {
-        //        ServerUnitState server = item as ServerUnitState;
-        //        if (server == null)
-        //            continue;
+        private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
+                    continue;
 
-        //        if (server.TimerState == ServerUnitState.TimerStateStarted ||
-        //            server.TimerState == ServerUnitState.TimerStateDisable ||
-        //            server.TimerInterval <= 0 || server.TimerCommand == "")
-        //            continue;
+                if (server.TimerState == ServerUnitState.TimerStateStarted ||
+                    server.TimerState == ServerUnitState.TimerStateDisable ||
+                    server.TimerInterval <= 0 || server.TimerCommand == "")
+                    continue;
 
-        //        App.Ctrler.AtServerTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
-        //        server.TimerState = ServerUnitState.TimerStateStarted;
-        //    }
-        //}
+                App.Ctrler.AtServerTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
+                server.TimerState = ServerUnitState.TimerStateStarted;
+            }
+        }
 
-        //private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
-        //{
-        //    foreach (var item in lstViewServer.SelectedItems) {
-        //        ServerUnitState server = item as ServerUnitState;
-        //        if (server == null)
-        //            continue;
+        private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
+                    continue;
 
-        //        if (server.TimerState == ServerUnitState.TimerStateStoped ||
-        //            server.TimerState == ServerUnitState.TimerStateDisable)
-        //            continue;
+                if (server.TimerState == ServerUnitState.TimerStateStoped ||
+                    server.TimerState == ServerUnitState.TimerStateDisable)
+                    continue;
 
-        //        App.Ctrler.AtServerTimerStop(server.ID);
-        //        server.TimerState = ServerUnitState.TimerStateStoped;
-        //    }
-        //}
+                App.Ctrler.AtServerTimerStop(server.ID);
+                server.TimerState = ServerUnitState.TimerStateStoped;
+            }
+        }
 
-        //private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
-        //{
-        //    InputDialog input = new InputDialog();
-        //    input.Owner = this;
-        //    input.Title = "设置定时器";
-        //    input.textBlock1.Text = "命令";
-        //    input.textBlock2.Text = "时间间隔";
-        //    input.textBox1.Text = "!A0#";
-        //    input.textBox2.Focus();
+        private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
+        {
+            InputDialog input = new InputDialog();
+            input.Owner = this;
+            input.Title = "设置定时器";
+            input.textBlock1.Text = "命令";
+            input.textBlock2.Text = "时间间隔";
+            input.textBox1.Text = "!A0#";
+            input.textBox2.Focus();
 
-        //    if (input.ShowDialog() == false)
-        //        return;
+            if (input.ShowDialog() == false)
+                return;
 
-        //    foreach (var item in lstViewServer.SelectedItems) {
-        //        ServerUnitState server = item as ServerUnitState;
-        //        if (server == null)
-        //            continue;
+            foreach (var item in lstViewServer.SelectedItems) {
+                ServerUnitState server = item as ServerUnitState;
+                if (server == null)
+                    continue;
 
-        //        if (server.TimerState == ServerUnitState.TimerStateStarted)
-        //            continue;
+                if (server.TimerState == ServerUnitState.TimerStateStarted)
+                    continue;
 
-        //        server.TimerCommand = input.textBox1.Text;
-        //        if (input.textBox2.Text != "")
-        //            server.TimerInterval = Convert.ToDouble(input.textBox2.Text);
-        //    }
-        //}
+                server.TimerCommand = input.textBox1.Text;
+                if (input.textBox2.Text != "")
+                    server.TimerInterval = Convert.ToDouble(input.textBox2.Text);
+            }
+        }
 
         private void MenuItem_ClientSendMessage_Click(object sender, RoutedEventArgs e)
         {
@@ -431,7 +432,7 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                App.Ctrler.ClientSendMessage(client.ServerID, client.ID, input.textBox1.Text);
+                App.Ctrler.AtClientSendMessage(client.ID, input.textBox1.Text);
             }
         }
 
@@ -442,7 +443,7 @@ namespace StationConsole
                 if (client == null)
                     continue;
 
-                App.Ctrler.ClientClose(client.ServerID, client.ID);
+                App.Ctrler.AtClientClose(client.ID);
             }
         }
 
