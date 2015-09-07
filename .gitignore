@@ -33,4 +33,5 @@ MnnTester/
 SocketTransfer/
 ZLS_SerialPortService/
 Module_*/
+Timer_*/
 Oracle.DataAccess.dll
