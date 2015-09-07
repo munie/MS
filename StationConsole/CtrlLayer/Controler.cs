@@ -307,10 +307,7 @@ namespace StationConsole.CtrlLayer
                 else if (atCmd.DataType == AtCommandDataType.ClientClose) {
                     AtClientClose(atCmd.ToID);
                 }
-                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg && atCmd.ToID == "all") {
-
-                }
-                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg && atCmd.ToID != "all") {
+                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
                     // 设置发送结果
                     var subset = from s in clientTable where s.ID.Equals(atCmd.ToID) select s;
                     if (subset.Count() != 0)
