@@ -205,6 +205,26 @@ namespace StationConsole
             }));
         }
 
+        public void AddMessage()
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // set value for ObservableCollection object 
+                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) + 1).ToString();
+                historyMsgFetchCount.Text = (Convert.ToInt32(historyMsgFetchCount.Text) + 1).ToString();
+            }));
+        }
+
+        public void RemoveMessage()
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // set value for ObservableCollection object 
+                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) - 1).ToString();
+                historyMsgHandledCount.Text = (Convert.ToInt32(historyMsgHandledCount.Text) + 1).ToString();
+            }));
+        }
+
         public void DisplayMessage(string msg)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>

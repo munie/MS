@@ -36,7 +36,7 @@ namespace StationConsole.CtrlLayer
         private ReaderWriterLock rwlock = new ReaderWriterLock();
 
         // Message Handle Thread
-        private const int max_msg_count = 2048;
+        private const int max_msg_count = 980;
         private bool isExitThread = false;
         private Semaphore sem = new Semaphore(0, max_msg_count);
         private Queue<MessageUnit> msgQueue = new Queue<MessageUnit>();
@@ -179,9 +179,10 @@ namespace StationConsole.CtrlLayer
             lock (msgQueue) {
                 msg = msgQueue.Dequeue();
             }
+            App.Mindow.RemoveMessage();
 
             bool IsHandled = false;
-            rwlock.AcquireReaderLock(100);
+            rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 // 水库代码太恶心，没办法的办法
                 if (item.ID != "HT=" && msg.Content.Contains(item.ID)) {
@@ -309,15 +310,17 @@ namespace StationConsole.CtrlLayer
                 }
                 else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
                     // 设置发送结果
-                    var subset = from s in clientTable where s.ID.Equals(atCmd.ToID) select s;
-                    if (subset.Count() != 0)
-                        atCmd.Result = subset.Count() != 0 ? "Success" : "Failure";
+                    lock (clientTable) {
+                        var subset = from s in clientTable where s.ID.Equals(atCmd.ToID) select s;
+                        if (subset.Count() != 0)
+                            atCmd.Result = subset.Count() != 0 ? "Success" : "Failure";
+                    }
 
-                    // 发送数据
+                    //// 发送数据
                     AtClientSendMessage(atCmd.ToID, atCmd.Data);
 
-                    // 反馈发送结果
-                    rwlock.AcquireWriterLock(100);
+                    //// 反馈发送结果
+                    rwlock.AcquireReaderLock(-1);
                     foreach (var item in moduleTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
@@ -327,7 +330,7 @@ namespace StationConsole.CtrlLayer
                             break;
                         }
                     }
-                    rwlock.ReleaseWriterLock();
+                    rwlock.ReleaseReaderLock();
                 }
             }
 
@@ -340,7 +343,7 @@ namespace StationConsole.CtrlLayer
             client.ID = "";
             client.Name = "";
             client.RemoteEP = e.RemoteEP;
-            lock (serverTable) {
+            //lock (serverTable) {
                 foreach (var item in serverTable) {
                     if (item.Port.Equals(e.LocalEP.Port)) {
                         client.ServerID = item.ID;
@@ -348,7 +351,7 @@ namespace StationConsole.CtrlLayer
                         break;
                     }
                 }
-            }
+            //}
             client.ConnectTime = DateTime.Now;
 
             lock (clientTable) {
@@ -386,9 +389,10 @@ namespace StationConsole.CtrlLayer
                 msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = msg });
             }
             sem.Release();
+            App.Mindow.AddMessage();
 
             //bool IsHandled = false;
-            //rwlock.AcquireReaderLock(100);
+            //rwlock.AcquireReaderLock(-1);
             //foreach (var item in moduleTable) {
             //    // 水库代码太恶心，没办法的办法
             //    if (item.ID != "HT=" && msg.Contains(item.ID)) {
@@ -432,7 +436,7 @@ namespace StationConsole.CtrlLayer
 
         public void AtServerStart(string serverID)
         {
-            lock (serverTable) {
+            //lock (serverTable) {
                 var subset = from s in serverTable
                              where s.ID.Equals(serverID)
                              select s;
@@ -448,12 +452,12 @@ namespace StationConsole.CtrlLayer
                 catch (Exception ex) {
                     MessageBox.Show(ex.Message, "Error");
                 }
-            }
+            //}
         }
 
         public void AtServerStart(string serverID, IPEndPoint ep)
         {
-            lock (serverTable) {
+            //lock (serverTable) {
                 var subset = from s in serverTable
                              where s.ID.Equals(serverID)
                              select s;
@@ -468,12 +472,12 @@ namespace StationConsole.CtrlLayer
                 catch (Exception ex) {
                     MessageBox.Show(ex.Message, "Error");
                 }
-            }
+            //}
         }
 
         public void AtServerStop(string serverID)
         {
-            lock (serverTable) {
+            //lock (serverTable) {
                 var subset = from s in serverTable
                              where s.ID.Equals(serverID)
                              select s;
@@ -483,39 +487,35 @@ namespace StationConsole.CtrlLayer
 
                 // 逻辑上讲，不会出现异常
                 subset.First().Server.Stop();
-            }
+            //}
         }
 
         public void AtServerTimerStart(string serverID, double interval, string timerCommand)
         {
-            ServerUnit serverUnit = null;
+            //lock (serverTable) {
+                var subset = from s in serverTable
+                             where s.ID.Equals(serverID) && s.Server is TcpServer
+                             select s;
 
-            lock (serverTable) {
-                foreach (var item in serverTable) {
-                    if (item.ID.Equals(serverID) && item.Server is TcpServer) {
-                        serverUnit = item;
-                        break;
+                if (subset.Count() == 0)
+                    return;
+
+                subset.First().Timer = new System.Timers.Timer(interval);
+                // limbda 不会锁住serverTable
+                subset.First().Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+                {
+                    try {
+                        (subset.First().Server as TcpServer).Send(coding.GetBytes(timerCommand));
                     }
-                }
-            }
-
-            if (serverUnit == null && !(serverUnit.Server is TcpServer))
-                return;
-
-            serverUnit.Timer = new System.Timers.Timer(interval);
-            serverUnit.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-            {
-                try {
-                    (serverUnit.Server as TcpServer).Send(coding.GetBytes(timerCommand));
-                }
-                catch (Exception) { }
-            });
-            serverUnit.Timer.Start();
+                    catch (Exception) { }
+                });
+                subset.First().Timer.Start();
+            //}
         }
 
         public void AtServerTimerStop(string serverID)
         {
-            lock (serverTable) {
+            //lock (serverTable) {
                 foreach (var item in serverTable) {
                     if (item.ID.Equals(serverID) && item.Server is TcpServer) {
                         item.Timer.Stop();
@@ -523,7 +523,7 @@ namespace StationConsole.CtrlLayer
                         break;
                     }
                 }
-            }
+            //}
         }
 
         public void AtModuleLoad(string filePath)
@@ -558,7 +558,7 @@ namespace StationConsole.CtrlLayer
             moduleUnit.Module = module;
 
             // 加入 table
-            rwlock.AcquireWriterLock(2000);
+            rwlock.AcquireWriterLock(-1);
             moduleTable.Add(moduleUnit);
             rwlock.ReleaseWriterLock();
 
@@ -567,7 +567,7 @@ namespace StationConsole.CtrlLayer
 
         public void AtModuleUnload(string fileName)
         {
-            rwlock.AcquireWriterLock(2000);
+            rwlock.AcquireWriterLock(-1);
 
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
@@ -600,14 +600,14 @@ namespace StationConsole.CtrlLayer
             if (string.IsNullOrEmpty(serverID) || ep == null)
                 return;
 
-            lock (serverTable) {
+            //lock (serverTable) { //会死锁
                 try {
                     var subset = from s in serverTable where s.ID.Equals(serverID) select s;
                     if (subset.Count() != 0)
                         subset.First().Server.Send(ep, coding.GetBytes(msg));
                 }
                 catch (Exception) { }
-            }
+            //}
         }
 
         public void AtClientClose(string clientID)
@@ -626,13 +626,13 @@ namespace StationConsole.CtrlLayer
                 return;
 
             // Close Client
-            lock (serverTable) {
-                var subset = from s in serverTable where s.ID.Equals(serverID) select s;
-                if (subset.Count() != 0 && subset.First().Server is TcpServer) {
-                    TcpServer tcp = subset.First().Server as TcpServer;
+            //lock (serverTable) {
+                var subserver = from s in serverTable where s.ID.Equals(serverID) select s;
+                if (subserver.Count() != 0 && subserver.First().Server is TcpServer) {
+                    TcpServer tcp = subserver.First().Server as TcpServer;
                     tcp.CloseClient(ep);
                 }
-            }
+            //}
         }
 
     }
