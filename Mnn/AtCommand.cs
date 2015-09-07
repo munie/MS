@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Mnn.MnnUnit
+namespace Mnn
 {
+    public enum UnitSchema
+    {
+        Server,
+        Client,
+        Module,
+    }
+
     public enum AtCommandDirect
     {
         Request,

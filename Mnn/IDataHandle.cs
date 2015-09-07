@@ -11,7 +11,7 @@ namespace Mnn
 
         void HandleMsg(System.Net.IPEndPoint ep, string msg);
 
-        void AtCmdResult(MnnUnit.AtCommand atCmd);
+        void AtCmdResult(AtCommand atCmd);
 
     }
 }

@@ -9,7 +9,6 @@ using System.Collections;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using Mnn.MnnUnit;
 
 namespace Mnn
 {
@@ -41,29 +40,29 @@ namespace Mnn
 
         public void Init()
         {
-            //Thread thread = new Thread(() =>
-            //{
-            //    isExitThread = false;
-            //    DataHandleMsg msg = null;
+            Thread thread = new Thread(() =>
+            {
+                isExitThread = false;
+                DataHandleMsg msg = null;
 
-            //    while (true) {
-            //        if (isExitThread == true) {
-            //            isExitThread = false;
-            //            break;
-            //        }
+                while (true) {
+                    if (isExitThread == true) {
+                        isExitThread = false;
+                        break;
+                    }
 
-            //        sem.WaitOne();
-            //        lock (msgQueue) {
-            //            msg = msgQueue.Dequeue();
-            //        }
-            //        try {
-            //            HandleMsg(msg.EP, msg.Content);
-            //        }
-            //        catch (Exception ex) {
-            //            MnnUtil.Logger.WriteException(ex, ErrLogPrefix);
-            //        }
-            //    }
-            //});
+                    sem.WaitOne();
+                    lock (msgQueue) {
+                        msg = msgQueue.Dequeue();
+                    }
+                    try {
+                        HandleMsg(msg.EP, msg.Content);
+                    }
+                    catch (Exception ex) {
+                        MnnUtil.Logger.WriteException(ex, ErrLogPrefix);
+                    }
+                }
+            });
 
             //thread.IsBackground = true;
             //thread.Start();

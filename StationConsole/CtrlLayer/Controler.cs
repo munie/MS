@@ -11,9 +11,9 @@ using System.Diagnostics;
 using System.Windows;
 using System.Xml;
 using System.Threading;
+using Mnn;
 using Mnn.MnnSocket;
 using Mnn.MnnModule;
-using Mnn.MnnUnit;
 
 namespace StationConsole.CtrlLayer
 {
