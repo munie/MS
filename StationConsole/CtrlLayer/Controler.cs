@@ -208,6 +208,11 @@ namespace StationConsole.CtrlLayer
             rwlock.ReleaseReaderLock();
         }
 
+        public void FinalMsgHandle()
+        {
+            isExitThread = true;
+        }
+
         // Events for AsyncSocketListenItem =================================================
 
         private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
@@ -582,50 +587,6 @@ namespace StationConsole.CtrlLayer
 
             rwlock.ReleaseWriterLock();
         }
-
-        //public void AtClientSendMessage(string serverID, string clientID, string msg)
-        //{
-        //    // Find IPEndPoint of Client
-        //    IPEndPoint ep = null;
-        //    lock (clientTable) {
-        //        var subset = from s in clientTable where s.ID.Equals(clientID) select s;
-        //        if (subset.Count() != 0)
-        //            ep = subset.First().RemoteEP;
-        //    }
-        //    if (ep == null)
-        //        return;
-
-        //    lock (serverTable) {
-        //        try {
-        //            var subset = from s in serverTable where s.ID.Equals(serverID) select s;
-        //            if (subset.Count() != 0)
-        //                subset.First().Server.Send(ep, coding.GetBytes(msg));
-        //        }
-        //        catch (Exception) { }
-        //    }
-        //}
-
-        //public void AtClientClose(string serverID, string clientID)
-        //{
-        //    // Find IPEndPoint of Client
-        //    IPEndPoint ep = null;
-        //    lock (clientTable) {
-        //        var subset = from s in clientTable where s.ID.Equals(clientID) select s;
-        //        if (subset.Count() != 0)
-        //            ep = subset.First().RemoteEP;
-        //    }
-        //    if (ep == null)
-        //        return;
-
-        //    // Close Client
-        //    lock (serverTable) {
-        //        var subset = from s in serverTable where s.ID.Equals(serverID) select s;
-        //        if (subset.Count() != 0 && subset.First().Server is TcpServer) {
-        //            TcpServer tcp = subset.First().Server as TcpServer;
-        //            tcp.CloseClient(ep);
-        //        }
-        //    }
-        //}
 
         public void AtClientSendMessage(string clientID, string msg)
         {

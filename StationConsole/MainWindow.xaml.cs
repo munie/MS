@@ -100,7 +100,6 @@ namespace StationConsole
                 state.TimerState = ServerUnitState.TimerStateDisable;
             state.TimerInterval = 0;
             state.TimerCommand = "";
-            //state.ModuleSupport = "";
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -182,38 +181,6 @@ namespace StationConsole
                     propertyInfo.SetValue(subset.First(), value, null);
             }));
         }
-
-        //public void AddModule(ModuleUnit module)
-        //{
-        //    string name = module.Name;
-        //    string fileName = module.FileName;
-
-        //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-        //    {
-        //        var subset = from s in serverStateTable where s.Name.Contains(name) select s;
-
-        //        if (subset.Count() == 0) {
-        //            subset = from s in serverStateTable where s.Name.Contains("通用") select s;
-        //        }
-
-        //        subset.First().ModuleSupport += fileName + "，";
-        //    }));
-        //}
-
-        //public void RemoveModule(ModuleUnit module)
-        //{
-        //    string fileName = module.FileName;
-
-        //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-        //    {
-        //        var subset = from s in serverStateTable where s.ModuleSupport.Contains(fileName) select s;
-
-        //        if (subset.Count() == 0)
-        //            return;
-
-        //        subset.First().ModuleSupport = subset.First().ModuleSupport.Replace(module.FileName + "，", "");
-        //    }));
-        //}
 
         public void AddModule(ModuleUnit module)
         {
