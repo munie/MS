@@ -18,21 +18,21 @@
   </serverconfig>
 
   <timerconfig>
-    <timer type="Timer_SK" interval="86400" command="!Z1"
+    <timer type="Timer_SK" interval="10" command="!Z1"
            ccid="89860113836037156801,89860096111456058587"
            id ="Timer_SK1" name="Timer_SK1"></timer>
     
-    <timer type="Timer_SK" interval="86422" command="!X1"
+    <timer type="Timer_SK" interval="20" command="!X1"
            ccid="89860112453600104241,89860020101480005460"
            id ="Timer_SK2" name="Timer_SK2"></timer>
     
-    <timer type="Timer_SK" interval="3600,65,65" command="!Y1,!A3?,!A1?"
+    <timer type="Timer_SK" interval="30,5,5" command="!Y1,!A3?,!A1?"
            ccid="89860114836037330892,89860113836037156801,89860112453600104241,89860020101480005460"
            id ="Timer_SK3" name="Timer_SK3"></timer>
 
-    <timer type="Timer_SK" interval="86410,65" command="!Q1,!P1"
+    <!--<timer type="Timer_SK" interval="86410,65" command="!Q1,!P1"
            ccid="89860113836037156801,89860112453600104241,89860020101480005460,89860114836037330892,89860096111456058587"
-           id ="Timer_SK4" name="Timer_SK4"></timer>
+           id ="Timer_SK4" name="Timer_SK4"></timer>-->
   </timerconfig>
 
 </configuration>
