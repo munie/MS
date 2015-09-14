@@ -39,7 +39,10 @@ namespace TcpDebugger
                 coding = Encoding.GetEncoding(node.InnerText);
 
                 node = xdoc.SelectSingleNode("/configuration/ipaddress");
-                ipaddress = IPAddress.Parse(node.InnerText);
+                IPAddress[] ips;
+                ips = Dns.GetHostAddresses(node.InnerText);
+                ipaddress = ips[0];
+                //ipaddress = IPAddress.Parse(node.InnerText);
 
                 node = xdoc.SelectSingleNode("/configuration/port");
                 port = int.Parse(node.InnerText);
@@ -55,8 +58,11 @@ namespace TcpDebugger
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            IPAddress ip = IPAddress.Parse(txtIP.Text.Trim());
-            IPEndPoint ep = new IPEndPoint(ip, int.Parse(txtPort.Text.Trim()));
+            IPAddress[] ips;
+            ips = Dns.GetHostAddresses(txtIP.Text.Trim());
+            ipaddress = ips[0];
+            //IPAddress ipaddress = IPAddress.Parse(txtIP.Text.Trim());
+            IPEndPoint ep = new IPEndPoint(ipaddress, int.Parse(txtPort.Text.Trim()));
 
             client.Connect(ep);
             btnConnect.Enabled = false;
@@ -121,7 +127,7 @@ namespace TcpDebugger
         {
             if ((int)e.KeyChar != 8 &&
                 (int)e.KeyChar != 46 &&
-                !char.IsDigit(e.KeyChar))
+                !char.IsLetterOrDigit(e.KeyChar))
                 e.Handled = true;
         }
 

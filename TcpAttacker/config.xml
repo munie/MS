@@ -7,7 +7,7 @@
   -->
   <ipaddress>127.0.0.1</ipaddress>
   
-  <station name="mnn" port="5964" max_interval="5" count="0">
+  <station name="mnn" port="5964" max_interval="5" count="1000">
     <message command="send" content="Ragnarok" />
     <message command="send" content="rAthena" />
     <message command="send" content="HaiMen" />
@@ -23,7 +23,7 @@
     <message command="send" content="煌煌天威" />
     <message command="send" content="以剑引之" />
   </station>
-  <station name="气象" port="3006" max_interval="5" count="1000">
+  <station name="气象" port="3006" max_interval="5" count="0">
     <message command="send" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|GPS_N=0000.000|GPS_E=00000.000" />
     <message command="send" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|GPS_N=0000.000|GPS_E=00000.000" />
     <message command="send" content="|HT=Q8|CCID=89860112653600933735|csq=22|voltage=|W_S=0422|W_D=1152|S_D=0423|PRE=+1022.22|TEMP=2035|RH=000000000000000000000000|RAIN=0D000000000000|GPS_N=0000.000|GPS_E=00000.000" />

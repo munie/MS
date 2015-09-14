@@ -35,7 +35,10 @@ namespace TcpAttacker
                 coding = Encoding.GetEncoding(codingNode.InnerText);
 
                 XmlNode ipNode = xdoc.SelectSingleNode("/configuration/ipaddress");
-                ipAddress = IPAddress.Parse(ipNode.InnerText);
+                IPAddress[] ips;
+                ips = Dns.GetHostAddresses(ipNode.InnerText);
+                ipAddress = ips[0];
+                //ipAddress = IPAddress.Parse(ipNode.InnerText);
 
                 XmlNodeList nodes = xdoc.GetElementsByTagName("station");
                 foreach (XmlNode item in nodes) {
