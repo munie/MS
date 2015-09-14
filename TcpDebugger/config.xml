@@ -2,10 +2,7 @@
 <configuration>
   <encoding>utf-8</encoding>
 
-  <!--
-  <ipaddress>10.12.111.222</ipaddress>
-  -->
-  
   <ipaddress>localhost</ipaddress>
   <port>3006</port>
+  
 </configuration>
