@@ -5,20 +5,19 @@
   <ipaddress>localhost</ipaddress>
   
   <station name="mnn" port="5964" max_interval="5" count="1000">
-    <message command="send" content="Ragnarok" />
-    <message command="send" content="rAthena" />
     <message command="send" content="HaiMen" />
-    <message command="send" content="munie" />
-    <message command="send" content="atomic kitten" />
     <message command="send" content="China" />
+	<message command="send" content="Japan" />
+	<message command="send" content="Korea" />
+	<message command="send" content="India" />
+	<message command="send" content="Russia" />
     <message command="send" content="New Zealand" />
-    <message command="send" content="XuYiKun" />
-    <message command="send" content="SongXie" />
-    <message command="send" content="LiangYan" />
-    <message command="send" content="九天玄刹" />
-    <message command="send" content="化为神雷" />
-    <message command="send" content="煌煌天威" />
-    <message command="send" content="以剑引之" />
+	<message command="send" content="Australia" />
+	<message command="send" content="America" />
+	<message command="send" content="England" />
+	<message command="send" content="France" />
+	<message command="send" content="German" />
+	<message command="send" content="Italy" />
   </station>
   <station name="气象" port="3006" max_interval="5" count="0">
     <message command="send" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|GPS_N=0000.000|GPS_E=00000.000" />
