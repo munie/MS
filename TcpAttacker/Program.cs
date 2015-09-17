@@ -49,6 +49,7 @@ namespace TcpAttacker
                         attacker.Coding = coding;
                         attacker.Rand = new Random(random.Next(0, 10000));
                         attacker.Name = item.Attributes["name"].Value;
+                        attacker.Protocol = item.Attributes["protocol"].Value;
                         attacker.EP = new IPEndPoint(ipAddress, Convert.ToInt32(item.Attributes["port"].Value));
                         attacker.Interval = 1000 * random.Next(1, Convert.ToInt32(item.Attributes["max_interval"].Value));
                         XmlNodeList msg = item.SelectNodes("message");

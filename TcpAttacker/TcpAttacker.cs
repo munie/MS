@@ -16,6 +16,7 @@ namespace TcpAttacker
         public Encoding Coding;
         public Random Rand;
         public string Name;
+        public string Protocol;
         public IPEndPoint EP;
         public double Interval;
         public List<string> MessageTable = new List<string>();
@@ -28,8 +29,13 @@ namespace TcpAttacker
             {
                 try {
                     if (isConnected == false) {
-                        socketSender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        socketSender.Connect(EP);
+                        if (Protocol.ToLower() == "udp") {
+                            socketSender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                        }
+                        else {
+                            socketSender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                            socketSender.Connect(EP);
+                        }
                         isConnected = true;
                     }
                     else if (Rand.Next(0, 3) % 3 == 0) {
@@ -38,7 +44,10 @@ namespace TcpAttacker
                     }
                     else {
                         string data = MessageTable[Rand.Next(0, MessageTable.Count())];
-                        socketSender.Send(Coding.GetBytes(data));
+                        if (Protocol.ToLower() == "udp")
+                            socketSender.SendTo(Coding.GetBytes(data), EP);
+                        else
+                            socketSender.Send(Coding.GetBytes(data));
                     }
                 }
                 catch (Exception) { }
