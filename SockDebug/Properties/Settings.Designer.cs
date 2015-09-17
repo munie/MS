@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TcpDebugger.Properties {
+namespace ScokDebug.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

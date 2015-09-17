@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace TcpDebugger
+namespace ScokDebug
 {
     static class Program
     {

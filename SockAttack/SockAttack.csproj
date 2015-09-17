@@ -8,8 +8,8 @@
     <ProjectGuid>{2C1C92B9-6401-49DB-A162-E185A6F5D16B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TcpAttacker</RootNamespace>
-    <AssemblyName>TcpAttacker</AssemblyName>
+    <RootNamespace>SockAttack</RootNamespace>
+    <AssemblyName>SockAttack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -45,7 +45,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TcpAttacker.cs" />
+    <Compile Include="SockAttack.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.xml">

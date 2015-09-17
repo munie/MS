@@ -1,4 +1,4 @@
-﻿namespace TcpDebugger
+﻿namespace ScokDebug
 {
     partial class MainForm
     {

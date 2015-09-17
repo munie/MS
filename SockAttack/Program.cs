@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Xml;
 using System.IO;
 
-namespace TcpAttacker
+namespace SockAttack
 {
     class Program
     {
@@ -16,7 +16,7 @@ namespace TcpAttacker
             Encoding coding;
             IPAddress ipAddress;
             Random random = new Random();
-            List<TcpAttacker> attackerTable = new List<TcpAttacker>();
+            List<SockAttack> attackerTable = new List<SockAttack>();
 
 
             // 读取配置文件
@@ -45,7 +45,7 @@ namespace TcpAttacker
                     int Count = Convert.ToInt32(item.Attributes["count"].InnerText);
 
                     for (int i = 0; i < Count; i++) {
-                        TcpAttacker attacker = new TcpAttacker();
+                        SockAttack attacker = new SockAttack();
                         attacker.Coding = coding;
                         attacker.Rand = new Random(random.Next(0, 10000));
                         attacker.Name = item.Attributes["name"].Value;

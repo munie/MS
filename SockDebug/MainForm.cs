@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 using System.Xml;
 using Mnn.MnnSocket;
 
-namespace TcpDebugger
+namespace ScokDebug
 {
     public partial class MainForm : Form
     {

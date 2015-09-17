@@ -5,9 +5,9 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 
-namespace TcpAttacker
+namespace SockAttack
 {
-    class TcpAttacker
+    class SockAttack
     {
         private Socket socketSender;
         private System.Timers.Timer timer;
