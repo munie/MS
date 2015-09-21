@@ -37,6 +37,7 @@
             this.txtMessage = new System.Windows.Forms.TextBox();
             this.txtSend = new System.Windows.Forms.TextBox();
             this.btnDisconn = new System.Windows.Forms.Button();
+            this.cbLogFile = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtIP
@@ -44,13 +45,13 @@
             this.txtIP.Location = new System.Drawing.Point(53, 17);
             this.txtIP.Multiline = true;
             this.txtIP.Name = "txtIP";
-            this.txtIP.Size = new System.Drawing.Size(130, 18);
+            this.txtIP.Size = new System.Drawing.Size(119, 18);
             this.txtIP.TabIndex = 1;
             this.txtIP.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtIP_KeyPress);
             // 
             // btnConnect
             // 
-            this.btnConnect.Location = new System.Drawing.Point(298, 15);
+            this.btnConnect.Location = new System.Drawing.Point(367, 15);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(62, 23);
             this.btnConnect.TabIndex = 4;
@@ -61,7 +62,7 @@
             // btnSend
             // 
             this.btnSend.Enabled = false;
-            this.btnSend.Location = new System.Drawing.Point(339, 246);
+            this.btnSend.Location = new System.Drawing.Point(412, 281);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(85, 38);
             this.btnSend.TabIndex = 8;
@@ -71,7 +72,7 @@
             // 
             // txtPort
             // 
-            this.txtPort.Location = new System.Drawing.Point(244, 17);
+            this.txtPort.Location = new System.Drawing.Point(219, 17);
             this.txtPort.Multiline = true;
             this.txtPort.Name = "txtPort";
             this.txtPort.Size = new System.Drawing.Size(48, 18);
@@ -90,7 +91,7 @@
             // labPort
             // 
             this.labPort.AutoSize = true;
-            this.labPort.Location = new System.Drawing.Point(203, 23);
+            this.labPort.Location = new System.Drawing.Point(178, 23);
             this.labPort.Name = "labPort";
             this.labPort.Size = new System.Drawing.Size(35, 12);
             this.labPort.TabIndex = 2;
@@ -102,7 +103,7 @@
             this.txtMessage.Multiline = true;
             this.txtMessage.Name = "txtMessage";
             this.txtMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtMessage.Size = new System.Drawing.Size(398, 182);
+            this.txtMessage.Size = new System.Drawing.Size(471, 182);
             this.txtMessage.TabIndex = 6;
             // 
             // txtSend
@@ -111,13 +112,13 @@
             this.txtSend.Multiline = true;
             this.txtSend.Name = "txtSend";
             this.txtSend.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtSend.Size = new System.Drawing.Size(291, 64);
+            this.txtSend.Size = new System.Drawing.Size(367, 90);
             this.txtSend.TabIndex = 7;
             // 
             // btnDisconn
             // 
             this.btnDisconn.Enabled = false;
-            this.btnDisconn.Location = new System.Drawing.Point(362, 15);
+            this.btnDisconn.Location = new System.Drawing.Point(435, 15);
             this.btnDisconn.Name = "btnDisconn";
             this.btnDisconn.Size = new System.Drawing.Size(62, 23);
             this.btnDisconn.TabIndex = 5;
@@ -125,11 +126,22 @@
             this.btnDisconn.UseVisualStyleBackColor = true;
             this.btnDisconn.Click += new System.EventHandler(this.btnDisconn_Click);
             // 
+            // cbLogFile
+            // 
+            this.cbLogFile.AutoSize = true;
+            this.cbLogFile.Location = new System.Drawing.Point(283, 19);
+            this.cbLogFile.Name = "cbLogFile";
+            this.cbLogFile.Size = new System.Drawing.Size(66, 16);
+            this.cbLogFile.TabIndex = 9;
+            this.cbLogFile.Text = "logfile";
+            this.cbLogFile.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(451, 307);
+            this.ClientSize = new System.Drawing.Size(509, 331);
+            this.Controls.Add(this.cbLogFile);
             this.Controls.Add(this.btnDisconn);
             this.Controls.Add(this.txtSend);
             this.Controls.Add(this.txtMessage);
@@ -160,6 +172,7 @@
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.TextBox txtSend;
         private System.Windows.Forms.Button btnDisconn;
+        private System.Windows.Forms.CheckBox cbLogFile;
     }
 }
 

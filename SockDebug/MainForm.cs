@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Xml;
+using System.IO;
 using Mnn.MnnSocket;
 
 namespace ScokDebug
@@ -20,6 +21,7 @@ namespace ScokDebug
         private IPAddress ipaddress;
         private int port;
         private AsyncSocketSender client;
+        private FileStream sw = new FileStream("debug.log", FileMode.OpenOrCreate);
 
         public MainForm()
         {
@@ -41,7 +43,12 @@ namespace ScokDebug
                 node = xdoc.SelectSingleNode("/configuration/ipaddress");
                 IPAddress[] ips;
                 ips = Dns.GetHostAddresses(node.InnerText);
-                ipaddress = ips[0];
+                foreach (var item in ips) {
+                    if (item.AddressFamily == AddressFamily.InterNetwork) {
+                        ipaddress = item;
+                        break;
+                    }
+                }
                 //ipaddress = IPAddress.Parse(node.InnerText);
 
                 node = xdoc.SelectSingleNode("/configuration/port");
@@ -118,6 +125,12 @@ namespace ScokDebug
                     txtMessage.AppendText("Send Failed.\n");
                     break;
                 case AsyncSocketSender.AsyncState.ReadMessage:
+                    if (cbLogFile.Checked == true) {
+                        if (!File.Exists("debug.log"))
+                            sw = new FileStream("debug.log", FileMode.Create);
+                        sw.Write(data, 0, data.Count());
+                        sw.Flush();
+                    }
                     txtMessage.AppendText("(" + txtIP.Text + " " + DateTime.Now.ToString() + ")\r\n" + coding.GetString(data) + "\n");
                     break;
             }
