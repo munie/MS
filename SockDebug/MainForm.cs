@@ -63,7 +63,6 @@ namespace ScokDebug
 
             if (File.Exists("debug.log"))
                 File.Delete("debug.log");
-            File.Create("debug.log");
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -129,7 +128,7 @@ namespace ScokDebug
                     break;
                 case AsyncSocketSender.AsyncState.ReadMessage:
                     if (cbLogFile.Checked == true) {
-                        using (FileStream sw = new FileStream("debug.log", FileMode.Append, FileAccess.Write)) {
+                        using (FileStream sw = new FileStream("debug.log", FileMode.OpenOrCreate|FileMode.Append, FileAccess.Write)) {
                             sw.Write(data, 0, data.Count());
                             sw.Flush();
                         }
