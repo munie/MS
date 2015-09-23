@@ -21,7 +21,6 @@ namespace ScokDebug
         private IPAddress ipaddress;
         private int port;
         private AsyncSocketSender client;
-        private FileStream sw = new FileStream("debug.log", FileMode.OpenOrCreate);
 
         public MainForm()
         {
@@ -61,6 +60,10 @@ namespace ScokDebug
 
             txtIP.Text = ipaddress.ToString();
             txtPort.Text = port.ToString();
+
+            if (File.Exists("debug.log"))
+                File.Delete("debug.log");
+            File.Create("debug.log");
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -126,10 +129,10 @@ namespace ScokDebug
                     break;
                 case AsyncSocketSender.AsyncState.ReadMessage:
                     if (cbLogFile.Checked == true) {
-                        if (!File.Exists("debug.log"))
-                            sw = new FileStream("debug.log", FileMode.Create);
-                        sw.Write(data, 0, data.Count());
-                        sw.Flush();
+                        using (FileStream sw = new FileStream("debug.log", FileMode.Append, FileAccess.Write)) {
+                            sw.Write(data, 0, data.Count());
+                            sw.Flush();
+                        }
                     }
                     txtMessage.AppendText("(" + txtIP.Text + " " + DateTime.Now.ToString() + ")\r\n" + coding.GetString(data) + "\n");
                     break;
