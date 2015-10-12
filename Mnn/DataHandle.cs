@@ -38,6 +38,8 @@ namespace Mnn
 
         public abstract string GetModuleID();
 
+        public abstract UInt16 GetModuleType();
+
         public void Init()
         {
             Thread thread = new Thread(() =>
@@ -85,6 +87,8 @@ namespace Mnn
         }
 
         public abstract void HandleMsg(IPEndPoint ep, string msg);
+
+        public abstract void HandleMsgByte(IPEndPoint ep, byte[] msg);
 
         public abstract void HandleAlive(IPEndPoint ep, IDictionary<string, string> dc);
 
