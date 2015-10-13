@@ -6,7 +6,7 @@ using System.Net;
 using Mnn.MnnSocket;
 using Mnn.MnnUtil;
 
-namespace ConsoleCenter
+namespace EnvCenter
 {
     class client_sdata
     {

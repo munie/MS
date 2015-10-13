@@ -8,8 +8,8 @@
     <ProjectGuid>{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ConsoleCenter</RootNamespace>
-    <AssemblyName>ConsoleCenter</AssemblyName>
+    <RootNamespace>EnvCenter</RootNamespace>
+    <AssemblyName>EnvCenter</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
