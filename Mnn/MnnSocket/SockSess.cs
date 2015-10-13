@@ -25,14 +25,12 @@ namespace Mnn.MnnSocket
 
         public delegate void RecvDelegate(SockSess sess);
         public delegate void SendDelegate(SockSess sess);
-        public delegate void ParseDelegate(SockSess sess);
         public RecvDelegate recvfunc;
         public SendDelegate sendfunc;
-        public ParseDelegate parsefunc;
 
         // Methods ============================================================================
 
-        public SockSess(int type, Socket sock, RecvDelegate recv, SendDelegate send, ParseDelegate parse)
+        public SockSess(int type, Socket sock, RecvDelegate recv, SendDelegate send)
         {
             this.sock = sock;
             this.type = type;
@@ -43,15 +41,15 @@ namespace Mnn.MnnSocket
             wdata = new byte[wdata_max];
             sdata = null;
 
-            recvfunc += recv;
-            sendfunc += send;
-            parsefunc = parse;
+            recvfunc = recv;
+            sendfunc = send;
         }
 
         public static void Recv(SockSess sess)
         {
             try {
                 sess.rdata_size = (UInt32)sess.sock.Receive(sess.rdata);
+                sess.tick = DateTime.Now;
             }
             catch (Exception) {
                 sess.eof = true;
@@ -67,29 +65,24 @@ namespace Mnn.MnnSocket
             sess.sock.Send(sess.wdata.Take((int)sess.wdata_size).ToArray());
             sess.wdata_size = 0;
         }
-
-        public static void Parse(SockSess sess)
-        {
-            sess.rdata_size = 0;
-        }
     }
 
     public class SockSessManager
     {
-        private SockSess.ParseDelegate parse_func;
         private TimeSpan stall_time;
         private List<SockSess> sess_table;
 
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
+        public delegate void SessParseDelegate(object sender, SockSess sess);
         public event SessCreateDelegate sess_create;
         public event SessDeleteDelegate sess_delete;
+        public event SessParseDelegate sess_parse;
 
         // Methods ============================================================================
 
-        public SockSessManager(SockSess.ParseDelegate func)
+        public SockSessManager()
         {
-            parse_func = func;
             stall_time = new TimeSpan(TimeSpan.TicksPerMinute);
             sess_table = new List<SockSess>();
         }
@@ -105,7 +98,7 @@ namespace Mnn.MnnSocket
                     if (item.sock == i) {
                         if (item.type == 0) {
                             Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send, parse_func));
+                            sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
                         }
@@ -124,13 +117,13 @@ namespace Mnn.MnnSocket
                     item.eof = true;
 
                 if (item.rdata_size != 0)
-                    item.parsefunc(item);
+                    sess_parse(this, item);
 
                 if (item.wdata_size != 0)
                     item.sendfunc(item);
 
                 if (item.eof == true) {
-                    DeleteSession(item);
+                    RemoveSession(item);
                     if (sess_delete != null)
                         sess_delete(this, item);
                 }
@@ -150,10 +143,10 @@ namespace Mnn.MnnSocket
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             sock.Bind(ep);
             sock.Listen(100);
-            sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send, SockSess.Parse));
+            sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send));
         }
 
-        private void DeleteSession(SockSess sess)
+        private void RemoveSession(SockSess sess)
         {
             sess.sock.Shutdown(SocketShutdown.Both);
             sess.sock.Close();

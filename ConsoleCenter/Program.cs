@@ -10,9 +10,10 @@ namespace ConsoleCenter
     {
         static void Main(string[] args)
         {
-            Mnn.MnnSocket.SockSessManager sessmgr = new Mnn.MnnSocket.SockSessManager(Parse);
+            Mnn.MnnSocket.SockSessManager sessmgr = new Mnn.MnnSocket.SockSessManager();
             sessmgr.sess_create += new Mnn.MnnSocket.SockSessManager.SessCreateDelegate(sessmgr_sess_create);
             sessmgr.sess_delete += new Mnn.MnnSocket.SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
+            sessmgr.sess_parse += new Mnn.MnnSocket.SockSessManager.SessParseDelegate(sessmgr_sess_parse);
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
 
             while(true) {
@@ -30,12 +31,10 @@ namespace ConsoleCenter
             Console.WriteLine("sess_delete");
         }
 
-        static void Parse(Mnn.MnnSocket.SockSess sess)
+        static void sessmgr_sess_parse(object sender, Mnn.MnnSocket.SockSess sess)
         {
             Console.WriteLine(Encoding.Default.GetString(sess.rdata.Take((int)sess.rdata_size).ToArray()));
             sess.rdata_size = 0;
         }
-
-
     }
 }
