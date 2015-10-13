@@ -266,12 +266,8 @@ namespace StationConsole
             List<ModuleUnitState> handles = new List<ModuleUnitState>();
 
             // 保存要卸载的模块信息
-            foreach (var item in lstViewModule.SelectedItems) {
-                ModuleUnitState dataHandle = item as ModuleUnitState;
-                if (dataHandle == null)
-                    continue;
-
-                handles.Add(dataHandle);
+            foreach (ModuleUnitState item in lstViewModule.SelectedItems) {
+                handles.Add(item);
             }
 
             // 卸载操作
@@ -282,155 +278,126 @@ namespace StationConsole
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
+            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                if (item.ListenState == ServerUnitState.ListenStateStarted)
                     continue;
 
-                if (server.ListenState == ServerUnitState.ListenStateStarted)
-                    continue;
-
-                App.Ctrler.AtServerStart(server.ID,
-                    new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
-                server.ListenState = ServerUnitState.ListenStateStarted;
+                App.Ctrler.AtServerStart(item.ID,
+                    new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                item.ListenState = ServerUnitState.ListenStateStarted;
             }
         }
 
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
+            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                if (item.ListenState == ServerUnitState.ListenStateStoped || item.CanStop == false)
                     continue;
 
-                if (server.ListenState == ServerUnitState.ListenStateStoped || server.CanStop == false)
-                    continue;
-
-                if (server.CanStop == true)
-                    App.Ctrler.AtServerStop(server.ID);
-                server.ListenState = ServerUnitState.ListenStateStoped;
+                if (item.CanStop == true)
+                    App.Ctrler.AtServerStop(item.ID);
+                item.ListenState = ServerUnitState.ListenStateStoped;
             }
         }
 
         private void MenuItem_SetListener_Click(object sender, RoutedEventArgs e)
         {
-            InputDialog input = new InputDialog();
-            input.Owner = this;
-            input.Title = "设置监听端口";
-            input.textBlock1.Text = "其他";
-            input.textBlock2.Text = "端口";
-            input.textBlock1.IsEnabled = false;
-            input.textBox1.IsEnabled = false;
-            input.textBox2.Focus();
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "设置监听端口";
+                input.textBlock1.Text = "其他";
+                input.textBlock2.Text = "端口";
+                input.textBlock1.IsEnabled = false;
+                input.textBox1.IsEnabled = false;
+                input.textBox2.Focus();
 
-            if (input.ShowDialog() == false)
-                return;
+                if (input.ShowDialog() == false)
+                    return;
 
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
-                    continue;
+                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                    if (item.ListenState == ServerUnitState.ListenStateStarted)
+                        continue;
 
-                if (server.ListenState == ServerUnitState.ListenStateStarted)
-                    continue;
-
-                server.Port = int.Parse(input.textBox2.Text);
+                    item.Port = int.Parse(input.textBox2.Text);
+                }
             }
         }
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
+            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                if (item.TimerState == ServerUnitState.TimerStateStarted ||
+                    item.TimerState == ServerUnitState.TimerStateDisable ||
+                    item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                if (server.TimerState == ServerUnitState.TimerStateStarted ||
-                    server.TimerState == ServerUnitState.TimerStateDisable ||
-                    server.TimerInterval <= 0 || server.TimerCommand == "")
-                    continue;
-
-                App.Ctrler.AtServerTimerStart(server.ID, server.TimerInterval * 1000, server.TimerCommand);
-                server.TimerState = ServerUnitState.TimerStateStarted;
+                App.Ctrler.AtServerTimerStart(item.ID, item.TimerInterval * 1000, item.TimerCommand);
+                item.TimerState = ServerUnitState.TimerStateStarted;
             }
         }
 
         private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
+            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                if (item.TimerState == ServerUnitState.TimerStateStoped ||
+                    item.TimerState == ServerUnitState.TimerStateDisable)
                     continue;
 
-                if (server.TimerState == ServerUnitState.TimerStateStoped ||
-                    server.TimerState == ServerUnitState.TimerStateDisable)
-                    continue;
-
-                App.Ctrler.AtServerTimerStop(server.ID);
-                server.TimerState = ServerUnitState.TimerStateStoped;
+                App.Ctrler.AtServerTimerStop(item.ID);
+                item.TimerState = ServerUnitState.TimerStateStoped;
             }
         }
 
         private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
         {
-            InputDialog input = new InputDialog();
-            input.Owner = this;
-            input.Title = "设置定时器";
-            input.textBlock1.Text = "命令";
-            input.textBlock2.Text = "时间间隔";
-            input.textBox1.Text = "!A0#";
-            input.textBox2.Focus();
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "设置定时器";
+                input.textBlock1.Text = "命令";
+                input.textBlock2.Text = "时间间隔";
+                input.textBox1.Text = "!A0#";
+                input.textBox2.Focus();
 
-            if (input.ShowDialog() == false)
-                return;
+                if (input.ShowDialog() == false)
+                    return;
 
-            foreach (var item in lstViewServer.SelectedItems) {
-                ServerUnitState server = item as ServerUnitState;
-                if (server == null)
-                    continue;
+                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
+                    if (item.TimerState == ServerUnitState.TimerStateStarted)
+                        continue;
 
-                if (server.TimerState == ServerUnitState.TimerStateStarted)
-                    continue;
-
-                server.TimerCommand = input.textBox1.Text;
-                if (input.textBox2.Text != "")
-                    server.TimerInterval = Convert.ToDouble(input.textBox2.Text);
+                    item.TimerCommand = input.textBox1.Text;
+                    if (input.textBox2.Text != "")
+                        item.TimerInterval = Convert.ToDouble(input.textBox2.Text);
+                }
             }
         }
 
         private void MenuItem_ClientSendMessage_Click(object sender, RoutedEventArgs e)
         {
-            InputDialog input = new InputDialog();
-            input.Owner = this;
-            input.Title = "发送命令";
-            input.textBlock1.Text = "命令";
-            input.textBlock2.Text = "时间间隔";
-            input.textBlock2.IsEnabled = false;
-            input.textBox2.IsEnabled = false;
-            input.textBox1.Text = "!A1?";
-            input.textBox1.Focus();
-            input.textBox1.Select(input.textBox1.Text.Length, 0);
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "发送命令";
+                input.textBlock1.Text = "命令";
+                input.textBlock2.Text = "时间间隔";
+                input.textBlock2.IsEnabled = false;
+                input.textBox2.IsEnabled = false;
+                input.textBox1.Text = "!A1?";
+                input.textBox1.Focus();
+                input.textBox1.Select(input.textBox1.Text.Length, 0);
 
-            if (input.ShowDialog() == false)
-                return;
+                if (input.ShowDialog() == false)
+                    return;
 
-            foreach (var item in lstViewClient.SelectedItems) {
-                ClientUnitState client = item as ClientUnitState;
-                if (client == null)
-                    continue;
-
-                App.Ctrler.AtClientSendMessage(client.ID, input.textBox1.Text);
+                foreach (ClientUnitState item in lstViewClient.SelectedItems) {
+                    App.Ctrler.AtClientSendMessage(item.ID, input.textBox1.Text);
+                }
             }
         }
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewClient.SelectedItems) {
-                ClientUnitState client = item as ClientUnitState;
-                if (client == null)
-                    continue;
-
-                App.Ctrler.AtClientClose(client.ID);
+            foreach (ClientUnitState item in lstViewClient.SelectedItems) {
+                App.Ctrler.AtClientClose(item.ID);
             }
         }
 

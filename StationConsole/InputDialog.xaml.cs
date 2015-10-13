@@ -17,13 +17,17 @@ namespace StationConsole
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class InputDialog : Window
+    public partial class InputDialog : Window, IDisposable
     {
         public InputDialog()
         {
             InitializeComponent();
         }
 
+        public void Dispose()
+        {
+            this.Close();
+        }
 
         private void button1_Click(object sender, RoutedEventArgs e)
         {
