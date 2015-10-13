@@ -139,13 +139,15 @@ namespace Mnn.MnnSocket
             }
         }
 
-        public void AddListenSession(IPEndPoint ep)
+        public bool AddListenSession(IPEndPoint ep)
         {
             // Verify IPEndPoints
             IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             foreach (IPEndPoint globalEP in globalEPs) {
-                if (ep.Equals(globalEP))
-                    throw new ApplicationException(ep.ToString() + " is in listening.");
+                if (ep.Equals(globalEP)) {
+                    Console.Write("[error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
+                    return false;
+                }
             }
 
             // Initialize the listenEP field of ListenerState
@@ -154,9 +156,10 @@ namespace Mnn.MnnSocket
             sock.Listen(100);
             sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send));
             Console.Write("[info]: Session #L listened at {0}.\n", ep.ToString());
+            return true;
         }
 
-        public void AddConnectSession(IPEndPoint ep)
+        public bool AddConnectSession(IPEndPoint ep)
         {
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try {
@@ -164,10 +167,12 @@ namespace Mnn.MnnSocket
             }
             catch (Exception) {
                 Console.Write("[error]: Connected to {0} failed.\n", ep.ToString());
-                return;
+                return false;
             }
+
             sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
+            return true;
         }
 
         private void RemoveSession(SockSess sess)
