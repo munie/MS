@@ -57,6 +57,7 @@
                     <MenuItem Header="编辑命令" Click="MenuItem_EditCommand_Click"/>
                     <MenuItem Header="新增命令" Click="MenuItem_AddCommand_Click"/>
                     <MenuItem Header="删除命令" Click="MenuItem_RemoveCommand_Click"/>
+                    <MenuItem Header="保存配置" Click="MenuItem_SaveCommand_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

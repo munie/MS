@@ -76,7 +76,7 @@ namespace SockClient
         {
             if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml") == false) {
                 System.Windows.MessageBox.Show("未找到配置文件： sockclient.xml");
-                Thread.CurrentThread.Abort();
+                return;
             }
 
             /// ** Initialize Start ====================================================
@@ -119,11 +119,49 @@ namespace SockClient
                     txtMsg.Clear();
                 }
 
-                txtMsg.AppendText(sess.rdata.Take(sess.rdata_size).ToArray() + "\r\n\r\n");
+                string hexstr = "";
+                foreach (var item in sess.rdata.Take(sess.rdata_size).ToArray()) {
+                    string s = Convert.ToString(item, 16);
+                    if (s.Length == 1)
+                        s = "0" + s;
+                    if (hexstr.Length != 0)
+                        hexstr += " " + s;
+                    else
+                        hexstr += s;
+                }
+
+                txtMsg.AppendText(hexstr + "\n");
                 txtMsg.ScrollToEnd();
 
                 sess.rdata_size = 0;
             }));
+        }
+
+        private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                if (item.State == CnnUnit.StateConnected)
+                    continue;
+
+                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
+                    item.State = CnnUnit.StateConnected;
+            }
+        }
+
+        private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                if (item.State == CnnUnit.StateDisconned)
+                    continue;
+
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
+                var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
+                foreach (var i in subset) {
+                    i.eof = true;
+                    item.State = CnnUnit.StateDisconned;
+                    break;
+                }
+            }
         }
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
@@ -145,6 +183,7 @@ namespace SockClient
                 select.Owner = this;
                 select.Title = "选择发送连接";
                 select.lstViewConnect.ItemsSource = cnn_table;
+                select.lstViewConnect.SelectedItems.Add(select.lstViewConnect.Items[0]);
                 if (select.ShowDialog() == false)
                     return;
 
@@ -223,31 +262,33 @@ namespace SockClient
                 cmd_table.Remove(item);
         }
 
-        private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SaveCommand_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
-                if (item.State == CnnUnit.StateConnected)
-                    continue;
+            XmlDocument doc = new XmlDocument();
+            XmlNode cmdconfig;
 
-                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
-                    item.State = CnnUnit.StateConnected;
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml")) {
+                doc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+                cmdconfig = doc.SelectSingleNode("/configuration/cmdconfig");
             }
-        }
-
-        private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
-                if (item.State == CnnUnit.StateDisconned)
-                    continue;
-
-                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
-                var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
-                foreach (var i in subset) {
-                    i.eof = true;
-                    item.State = CnnUnit.StateDisconned;
-                    break;
-                }
+            else {
+                doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));  
+                XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
+                doc.AppendChild(root);
+                cmdconfig = doc.CreateElement("cmdconfig"); // 创建根节点album
+                root.AppendChild(cmdconfig);
             }
+
+            cmdconfig.RemoveAll();
+            foreach (var item in cmd_table) {
+                XmlElement cmd = doc.CreateElement("cmd");
+                cmd.SetAttribute("id", item.ID);
+                cmd.SetAttribute("content", item.CMD);
+                cmd.SetAttribute("comment", item.Comment);
+                cmdconfig.AppendChild(cmd);
+            }
+
+            doc.Save(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
         }
     }
 }

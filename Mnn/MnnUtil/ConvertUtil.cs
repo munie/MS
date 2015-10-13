@@ -66,7 +66,8 @@ namespace Mnn.MnnUtil
                 hexstr += "0";
 
             for (int i = 2; i < hexstr.Length; i += 2)
-                list.Add(byte.Parse(hexstr.Substring(i, 2), System.Globalization.NumberStyles.HexNumber));
+                //list.Add(byte.Parse(hexstr.Substring(i, 2), System.Globalization.NumberStyles.HexNumber));
+                list.Add(Convert.ToByte(hexstr.Substring(i, 2), 16));
 
             return list.ToArray();
         }
