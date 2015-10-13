@@ -12,6 +12,7 @@ namespace SockClient
 
         private string id;
         private string cmd;
+        private string comment;
 
         public string ID
         {
@@ -32,6 +33,17 @@ namespace SockClient
                 cmd = value;
                 if (PropertyChanged != null) {
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
+                }
+            }
+        }
+        public string Comment
+        {
+            get { return comment; }
+            set
+            {
+                comment = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Comment"));
                 }
             }
         }

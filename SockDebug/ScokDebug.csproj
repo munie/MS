@@ -84,7 +84,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="SockDebug.xml">
+    <Content Include="sockdebug.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

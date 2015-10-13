@@ -53,6 +53,53 @@ namespace Mnn.MnnUtil
             return obj;
         }
 
+        /// <summary>
+        /// 0x3020050040 => new byte[] { 30, 20, 05, 00, 40 }
+        /// </summary>
+        /// <param name="hexstr"></param>
+        /// <returns></returns>
+        public static byte[] HexstrToBytes(string hexstr)
+        {
+            List<string> list = new List<string>();
+
+            if (hexstr.Length % 2 != 0)
+                hexstr += "0";
+
+            for (int i = 2; i < hexstr.Length; i += 2) {
+                list.Add(hexstr.Substring(i, 2));
+            }
+
+            byte[] retval = list.Select(
+                t => Convert.ToInt32(t) / 10 * 16 + Convert.ToInt32(t) % 10
+                ).Select(t => Convert.ToByte(t)).ToArray();
+
+            return retval;
+        }
+
+        /// <summary>
+        /// 0x3020050040 string 0x16 => new byte[] { 30, 20, 05, 00, 40, 73, 74, 72, 69, 6e, 67, 16 }
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <returns></returns>
+        public static byte[] CmdstrToBytes(string cmd)
+        {
+            string[] str = cmd.Split(' ');
+            byte[] retval = new byte[0];
+
+            foreach (var item in str) {
+                if (item.Contains("0x"))
+                    retval = retval.Concat(HexstrToBytes(item)).ToArray();
+                else
+                    retval = retval.Concat(Encoding.Default.GetBytes(item)).ToArray();
+            }
+
+            //byte[] retval = cmd.Split(' ').Select(
+            //    t => Convert.ToInt32(t) / 10 * 16 + Convert.ToInt32(t) % 10
+            //    ).Select(t => Convert.ToByte(t)).ToArray();
+
+            return retval;
+        }
+
         public static double CDouble(String numStr, int digits)
         {
             try

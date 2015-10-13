@@ -48,7 +48,7 @@
     <Compile Include="SockAttack.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="SockAttack.xml">
+    <Content Include="sockattack.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

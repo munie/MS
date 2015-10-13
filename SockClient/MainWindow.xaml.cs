@@ -14,7 +14,10 @@ using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Threading;
+using System.IO;
+using System.Xml;
 using Mnn.MnnSocket;
+using Mnn.MnnUtil;
 
 namespace SockClient
 {
@@ -27,15 +30,17 @@ namespace SockClient
         {
             InitializeComponent();
 
+            // init cmd_table
             cmd_table = new ObservableCollection<CmdUnit>();
-            cmd_table.Add(new CmdUnit() { ID = "1", CMD = "30 20 05 00 40" });
-            cmd_table.Add(new CmdUnit() { ID = "2", CMD = "20 40 04 00" });
             lstViewCommand.ItemsSource = cmd_table;
 
+            // init cnn_table
+            cnn_table = new ObservableCollection<CnnUnit>();
+            lstViewConnect.ItemsSource = cnn_table;
+
+            // init socksessmgr
             sessmgr = new SockSessManager();
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
-            sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-
             Thread thread = new Thread(() =>
             {
                 while (true) {
@@ -44,10 +49,59 @@ namespace SockClient
             });
             thread.IsBackground = true;
             thread.Start();
+
+            // read config
+            config();
+            foreach (var item in cnn_table) {
+                if (item.Autorun == true) {
+                    if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
+                        item.State = CnnUnit.StateConnected;
+                }
+            }
         }
 
         ObservableCollection<CmdUnit> cmd_table;
+        ObservableCollection<CnnUnit> cnn_table;
         SockSessManager sessmgr;
+
+        private void config()
+        {
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml") == false) {
+                System.Windows.MessageBox.Show("未找到配置文件： sockclient.xml");
+                Thread.CurrentThread.Abort();
+            }
+
+            /// ** Initialize Start ====================================================
+            try {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+
+                // cmd config
+                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cmdconfig/cmd")) {
+                    CmdUnit cmd = new CmdUnit();
+                    cmd.ID = item.Attributes["id"].Value;
+                    cmd.CMD = item.Attributes["content"].Value;
+                    cmd.Comment = item.Attributes["comment"].Value;
+                    cmd_table.Add(cmd);
+                }
+
+                // cnn config
+                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cnnconfig/cnn")) {
+                    CnnUnit cnn = new CnnUnit();
+                    cnn.ID = item.Attributes["id"].Value;
+                    cnn.IP = item.Attributes["ip"].Value;
+                    cnn.Port = item.Attributes["port"].Value;
+                    cnn.State = CnnUnit.StateDisconned;
+                    cnn.Autorun = bool.Parse(item.Attributes["autorun"].Value);
+                    cnn_table.Add(cnn);
+                }
+            }
+            catch (Exception ex) {
+                Mnn.MnnUtil.Logger.WriteException(ex);
+                System.Windows.MessageBox.Show("配置文件读取错误： sockclient.xml");
+            }
+            /// ** Initialize End ====================================================
+        }
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
@@ -64,15 +118,6 @@ namespace SockClient
             }));
         }
 
-        private byte[] CmdParse(string cmd)
-        {
-            byte[] retval = cmd.Split(' ').Select(
-                t => Convert.ToInt32(t) / 10 * 16 + Convert.ToInt32(t) % 10
-                ).Select(t => Convert.ToByte(t)).ToArray();
-
-            return retval;
-        }
-
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in lstViewCommand.SelectedItems) {
@@ -80,7 +125,7 @@ namespace SockClient
                 if (cmd == null)
                     continue;
 
-                sessmgr.sess_table[0].sock.Send(CmdParse(cmd.CMD));
+                sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(cmd.CMD));
             }
         }
 
@@ -143,6 +188,41 @@ namespace SockClient
 
             foreach (var item in tmp)
                 cmd_table.Remove(item);
+        }
+
+        private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in lstViewConnect.SelectedItems) {
+                CnnUnit cnn = item as CnnUnit;
+                if (cnn == null)
+                    continue;
+
+                if (cnn.State == CnnUnit.StateConnected)
+                    continue;
+
+                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(cnn.IP), int.Parse(cnn.Port))))
+                    cnn.State = CnnUnit.StateConnected;
+            }
+        }
+
+        private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in lstViewConnect.SelectedItems) {
+                CnnUnit cnn = item as CnnUnit;
+                if (cnn == null)
+                    continue;
+
+                if (cnn.State == CnnUnit.StateDisconned)
+                    continue;
+
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(cnn.IP), int.Parse(cnn.Port));
+                var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
+                foreach (var i in subset) {
+                    i.eof = true;
+                    cnn.State = CnnUnit.StateDisconned;
+                    break;
+                }
+            }
         }
     }
 }

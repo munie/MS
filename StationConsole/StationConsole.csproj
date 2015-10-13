@@ -123,7 +123,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="config.xml">
+    <Content Include="stationconsole.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
