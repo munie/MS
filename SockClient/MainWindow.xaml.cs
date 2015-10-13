@@ -128,12 +128,38 @@ namespace SockClient
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewCommand.SelectedItems) {
-                CmdUnit cmd = item as CmdUnit;
-                if (cmd == null)
-                    continue;
+            // 没有连接
+            if (sessmgr.sess_table.Count == 0)
+                return;
 
-                sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(cmd.CMD));
+            // 只有一个连接
+            if (sessmgr.sess_table.Count == 1) {
+                foreach (CmdUnit item in lstViewCommand.SelectedItems)
+                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+                return;
+            }
+
+            // 多个连接
+            using (SelectDialog select = new SelectDialog()) {
+                // 新建对话框进行选择
+                select.Owner = this;
+                select.Title = "选择发送连接";
+                select.lstViewConnect.ItemsSource = cnn_table;
+                if (select.ShowDialog() == false)
+                    return;
+
+                // 对话框返回，根据选择的信息找到对应的连接，发送命令
+                foreach (CnnUnit item in select.lstViewConnect.SelectedItems) {
+                    // 根据选择的信息找到对应的连接
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
+                    var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
+                    if (subset.Count() == 0)
+                        continue;
+
+                    // 发送命令
+                    foreach (CmdUnit i in lstViewCommand.SelectedItems)
+                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.CMD));
+                }
             }
         }
 
@@ -142,57 +168,56 @@ namespace SockClient
             if (lstViewCommand.SelectedItems.Count == 0)
                 return;
 
-            InputDialog input = new InputDialog();
-            input.Owner = this;
-            input.Title = "编辑命令";
-            input.textBlock1.Text = "序号：";
-            input.textBlock2.Text = "命令：";
-            input.textBox1.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
-            input.textBox2.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
-            input.textBox1.Focus();
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "编辑命令";
+                input.textBlock1.Text = "序号：";
+                input.textBlock2.Text = "命令：";
+                input.textBlock3.Text = "说明：";
+                input.textBox1.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
+                input.textBox2.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
+                input.textBox3.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
+                input.textBox2.Focus();
+                input.textBox2.SelectionStart = input.textBox2.Text.Length;
 
-            if (input.ShowDialog() == false)
-                return;
+                if (input.ShowDialog() == false)
+                    return;
 
-            foreach (var item in lstViewCommand.SelectedItems) {
-                CmdUnit cmd = item as CmdUnit;
-                if (cmd == null)
-                    continue;
-
-                cmd.ID = input.textBox1.Text;
-                cmd.CMD = input.textBox2.Text;
+                foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+                    item.ID = input.textBox1.Text;
+                    item.CMD = input.textBox2.Text;
+                    item.Comment = input.textBox3.Text;
+                }
             }
         }
 
         private void MenuItem_AddCommand_Click(object sender, RoutedEventArgs e)
         {
-            InputDialog input = new InputDialog();
-            input.Owner = this;
-            input.Title = "新增命令";
-            input.textBlock1.Text = "序号：";
-            input.textBlock2.Text = "命令：";
-            input.textBox1.Focus();
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "新增命令";
+                input.textBlock1.Text = "序号：";
+                input.textBlock2.Text = "命令：";
+                input.textBlock3.Text = "说明：";
+                input.textBox1.Focus();
 
-            if (input.ShowDialog() == false)
-                return;
+                if (input.ShowDialog() == false)
+                    return;
 
-            CmdUnit cmd = new CmdUnit();
-            cmd.ID = input.textBox1.Text;
-            cmd.CMD = input.textBox2.Text;
-            cmd_table.Add(cmd);
+                CmdUnit cmd = new CmdUnit();
+                cmd.ID = input.textBox1.Text;
+                cmd.CMD = input.textBox2.Text;
+                cmd.Comment = input.textBox3.Text;
+                cmd_table.Add(cmd);
+            }
         }
 
         private void MenuItem_RemoveCommand_Click(object sender, RoutedEventArgs e)
         {
             List<CmdUnit> tmp = new List<CmdUnit>();
 
-            foreach (var item in lstViewCommand.SelectedItems) {
-                CmdUnit cmd = item as CmdUnit;
-                if (cmd == null)
-                    continue;
-
-                tmp.Add(cmd);
-            }
+            foreach (CmdUnit item in lstViewCommand.SelectedItems)
+                tmp.Add(item);
 
             foreach (var item in tmp)
                 cmd_table.Remove(item);
@@ -200,34 +225,26 @@ namespace SockClient
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewConnect.SelectedItems) {
-                CnnUnit cnn = item as CnnUnit;
-                if (cnn == null)
+            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                if (item.State == CnnUnit.StateConnected)
                     continue;
 
-                if (cnn.State == CnnUnit.StateConnected)
-                    continue;
-
-                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(cnn.IP), int.Parse(cnn.Port))))
-                    cnn.State = CnnUnit.StateConnected;
+                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
+                    item.State = CnnUnit.StateConnected;
             }
         }
 
         private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in lstViewConnect.SelectedItems) {
-                CnnUnit cnn = item as CnnUnit;
-                if (cnn == null)
+            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                if (item.State == CnnUnit.StateDisconned)
                     continue;
 
-                if (cnn.State == CnnUnit.StateDisconned)
-                    continue;
-
-                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(cnn.IP), int.Parse(cnn.Port));
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
                 var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
                 foreach (var i in subset) {
                     i.eof = true;
-                    cnn.State = CnnUnit.StateDisconned;
+                    item.State = CnnUnit.StateDisconned;
                     break;
                 }
             }

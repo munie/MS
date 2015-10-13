@@ -17,9 +17,9 @@ namespace SockClient
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class InputDialog : Window, IDisposable
+    public partial class SelectDialog : Window, IDisposable
     {
-        public InputDialog()
+        public SelectDialog()
         {
             InitializeComponent();
         }
@@ -45,6 +45,12 @@ namespace SockClient
                 this.DialogResult = false;
 
             if (e.Key == Key.Enter)
+                this.DialogResult = true;
+        }
+
+        private void lstViewConnect_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (lstViewConnect.SelectedItems.Count != 0)
                 this.DialogResult = true;
         }
     }
