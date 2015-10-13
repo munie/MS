@@ -69,7 +69,7 @@ namespace Mnn.MnnSocket
     public class SockSessManager
     {
         private TimeSpan stall_time;
-        private List<SockSess> sess_table;
+        public List<SockSess> sess_table;
 
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
@@ -82,7 +82,7 @@ namespace Mnn.MnnSocket
 
         public SockSessManager()
         {
-            stall_time = new TimeSpan(TimeSpan.TicksPerMinute);
+            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*60);
             sess_table = new List<SockSess>();
             sess_create = null;
             sess_delete = null;
@@ -101,6 +101,7 @@ namespace Mnn.MnnSocket
                         if (item.type == 0) {
                             Socket sock = item.sock.Accept();
                             sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
+                            Console.WriteLine("[Info]: Session #C created to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
                         }
@@ -146,10 +147,12 @@ namespace Mnn.MnnSocket
             sock.Bind(ep);
             sock.Listen(100);
             sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send));
+            Console.WriteLine("[info]: Listen #S added to {0}.\n", ep.ToString());
         }
 
         private void RemoveSession(SockSess sess)
         {
+            Console.WriteLine("[info]: Session #* deleted from {0}.\n", sess.sock.RemoteEndPoint.ToString());
             sess.sock.Shutdown(SocketShutdown.Both);
             sess.sock.Close();
             sess_table.Remove(sess);

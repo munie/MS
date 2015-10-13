@@ -55,6 +55,7 @@
     <Compile Include="MnnSocket\AsyncSocketListenManager.cs" />
     <Compile Include="MnnSocket\AsyncSocketSender.cs" />
     <Compile Include="MnnSocket\ClientEventArgs.cs" />
+    <Compile Include="MnnSocket\SockMsg.cs" />
     <Compile Include="MnnSocket\PipeServer.cs" />
     <Compile Include="MnnSocket\SockServer.cs" />
     <Compile Include="MnnSocket\ListenEventArgs.cs" />
