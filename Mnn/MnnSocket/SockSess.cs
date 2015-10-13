@@ -17,10 +17,9 @@ namespace Mnn.MnnSocket
         public DateTime tick;
 
         public byte[] rdata;
-        public UInt32 rdata_max = 4096, rdata_size, rdata_pos;
+        public UInt32 rdata_max = 8192, rdata_size, rdata_pos;
         public byte[] wdata;
-        public UInt32 wdata_max = 2048, wdata_size;
-
+        public UInt32 wdata_max = 8192, wdata_size;
         public object sdata;
 
         public delegate void RecvDelegate(SockSess sess);
@@ -85,6 +84,9 @@ namespace Mnn.MnnSocket
         {
             stall_time = new TimeSpan(TimeSpan.TicksPerMinute);
             sess_table = new List<SockSess>();
+            sess_create = null;
+            sess_delete = null;
+            sess_parse = null;
         }
 
         public void Perform(int next)
@@ -116,7 +118,7 @@ namespace Mnn.MnnSocket
                 if (item.type != 0 && DateTime.Now.Subtract(item.tick) > stall_time)
                     item.eof = true;
 
-                if (item.rdata_size != 0)
+                if (item.rdata_size != 0 && sess_parse != null)
                     sess_parse(this, item);
 
                 if (item.wdata_size != 0)
