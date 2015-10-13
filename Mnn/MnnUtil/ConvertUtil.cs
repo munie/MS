@@ -60,20 +60,15 @@ namespace Mnn.MnnUtil
         /// <returns></returns>
         public static byte[] HexstrToBytes(string hexstr)
         {
-            List<string> list = new List<string>();
+            List<byte> list = new List<byte>();
 
             if (hexstr.Length % 2 != 0)
                 hexstr += "0";
 
-            for (int i = 2; i < hexstr.Length; i += 2) {
-                list.Add(hexstr.Substring(i, 2));
-            }
+            for (int i = 2; i < hexstr.Length; i += 2)
+                list.Add(byte.Parse(hexstr.Substring(i, 2), System.Globalization.NumberStyles.HexNumber));
 
-            byte[] retval = list.Select(
-                t => Convert.ToInt32(t) / 10 * 16 + Convert.ToInt32(t) % 10
-                ).Select(t => Convert.ToByte(t)).ToArray();
-
-            return retval;
+            return list.ToArray();
         }
 
         /// <summary>

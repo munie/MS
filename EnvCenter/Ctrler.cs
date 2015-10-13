@@ -112,7 +112,7 @@ namespace EnvCenter
 
             switch (hdr.msg_type) {
                 case 0x0C: break;
-                case 0x30:
+                case 0x22:
                     sd.type = sess.rdata[4];
                     break;
             }

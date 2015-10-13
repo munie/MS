@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <cmdconfig>
-    <cmd id="1" content="0x2220050040 string 0x16" comment="22处理类型 from 20模块" />
-    <cmd id="2" content="0x20400400" comment="20心跳 from 40终端" />
+    <cmd id="1" content="0x2220050040" comment="22处理类型 from 20模块" />
+    <cmd id="2" content="0x0C400400" comment="0C心跳 from 40终端" />
   </cmdconfig>
 
   <cnnconfig>
