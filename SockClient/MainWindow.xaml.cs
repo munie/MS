@@ -30,6 +30,27 @@ namespace SockClient
         {
             InitializeComponent();
 
+            // init
+            init();
+
+            // config after init
+            config();
+
+            // autorun connects
+            foreach (var item in cnn_table) {
+                if (item.Autorun == true) {
+                    if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
+                        item.State = CnnUnit.StateConnected;
+                }
+            }
+        }
+
+        ObservableCollection<CmdUnit> cmd_table;
+        ObservableCollection<CnnUnit> cnn_table;
+        SockSessManager sessmgr;
+
+        private void init()
+        {
             // init cmd_table
             cmd_table = new ObservableCollection<CmdUnit>();
             lstViewCommand.ItemsSource = cmd_table;
@@ -49,20 +70,7 @@ namespace SockClient
             });
             thread.IsBackground = true;
             thread.Start();
-
-            // read config
-            config();
-            foreach (var item in cnn_table) {
-                if (item.Autorun == true) {
-                    if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
-                        item.State = CnnUnit.StateConnected;
-                }
-            }
         }
-
-        ObservableCollection<CmdUnit> cmd_table;
-        ObservableCollection<CnnUnit> cnn_table;
-        SockSessManager sessmgr;
 
         private void config()
         {
