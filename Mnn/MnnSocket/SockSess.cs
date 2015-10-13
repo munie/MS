@@ -73,12 +73,12 @@ namespace Mnn.MnnSocket
         private TimeSpan stall_time;
         public List<SockSess> sess_table;
 
-        public delegate void SessParseDelegate(object sender, SockSess sess);
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
-        public event SessParseDelegate sess_parse;
+        public delegate void SessParseDelegate(object sender, SockSess sess);
         public event SessCreateDelegate sess_create;
         public event SessDeleteDelegate sess_delete;
+        public event SessParseDelegate sess_parse;
 
         // Methods ============================================================================
 
