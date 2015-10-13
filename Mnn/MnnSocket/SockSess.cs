@@ -100,8 +100,8 @@ namespace Mnn.MnnSocket
                     if (item.sock == i) {
                         if (item.type == 0) {
                             Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
-                            Console.WriteLine("[Info]: Session #C created to {0}.\n", sock.RemoteEndPoint.ToString());
+                            sess_table.Add(new SockSess(2, sock, SockSess.Recv, SockSess.Send));
+                            Console.WriteLine("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
                         }
@@ -147,7 +147,21 @@ namespace Mnn.MnnSocket
             sock.Bind(ep);
             sock.Listen(100);
             sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send));
-            Console.WriteLine("[info]: Listen #S added to {0}.\n", ep.ToString());
+            Console.WriteLine("[info]: Session #L listened at {0}.\n", ep.ToString());
+        }
+
+        public void AddConnectSession(IPEndPoint ep)
+        {
+            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            try {
+                sock.Connect(ep);
+            }
+            catch (Exception) {
+                Console.WriteLine("[error]: Connected to {0} failed.\n", ep.ToString());
+                return;
+            }
+            sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
+            Console.WriteLine("[info]: Session #C connected to {0}.\n", ep.ToString());
         }
 
         private void RemoveSession(SockSess sess)
