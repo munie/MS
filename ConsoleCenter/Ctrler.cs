@@ -93,11 +93,11 @@ namespace ConsoleCenter
                          select s;
 
             foreach (var item in subset)
-                item.sock.Send(sess.rdata, (int)sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
 
             //foreach (var item in sessmgr.sess_table) {
             //    if (item.sdata != null && (item.sdata as module_sdata).type == sess.rdata[1]) {
-            //        item.sock.Send(sess.rdata, (int)sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+            //        item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
             //        break;
             //    }
             //}
