@@ -38,10 +38,8 @@ namespace SockClient
 
             // autorun connects
             foreach (var item in cnn_table) {
-                if (item.Autorun == true) {
-                    if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
-                        item.State = CnnUnit.StateConnected;
-                }
+                if (item.Autorun == true)
+                    sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
             }
         }
 
@@ -62,6 +60,8 @@ namespace SockClient
             // init socksessmgr
             sessmgr = new SockSessManager();
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
+            sessmgr.sess_create += new SockSessManager.SessCreateDelegate(sessmgr_sess_create);
+            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
             Thread thread = new Thread(() =>
             {
                 while (true) {
@@ -88,6 +88,7 @@ namespace SockClient
                 foreach (XmlNode item in xdoc.SelectNodes("/configuration/cmdconfig/cmd")) {
                     CmdUnit cmd = new CmdUnit();
                     cmd.ID = item.Attributes["id"].Value;
+                    cmd.CNNID = item.Attributes["cnnid"].Value;
                     cmd.CMD = item.Attributes["content"].Value;
                     cmd.Comment = item.Attributes["comment"].Value;
                     cmd_table.Add(cmd);
@@ -137,14 +138,31 @@ namespace SockClient
             }));
         }
 
+        private void sessmgr_sess_create(object sender, SockSess sess)
+        {
+            var subset = from s in cnn_table
+                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         select s;
+            foreach (var item in subset)
+                item.State = CnnUnit.StateConnected;
+        }
+
+        private void sessmgr_sess_delete(object sender, SockSess sess)
+        {
+            var subset = from s in cnn_table
+                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         select s;
+            foreach (var item in subset)
+                item.State = CnnUnit.StateDisconned;
+        }
+
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
             foreach (CnnUnit item in lstViewConnect.SelectedItems) {
                 if (item.State == CnnUnit.StateConnected)
                     continue;
 
-                if (sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port))))
-                    item.State = CnnUnit.StateConnected;
+                sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
             }
         }
 
@@ -156,50 +174,62 @@ namespace SockClient
 
                 IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
                 var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
-                foreach (var i in subset) {
+                foreach (var i in subset)
                     i.eof = true;
-                    item.State = CnnUnit.StateDisconned;
-                    break;
-                }
             }
         }
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            // 没有连接
-            if (sessmgr.sess_table.Count == 0)
-                return;
-
-            // 只有一个连接
-            if (sessmgr.sess_table.Count == 1) {
-                foreach (CmdUnit item in lstViewCommand.SelectedItems)
-                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
-                return;
-            }
-
-            // 多个连接
-            using (SelectDialog select = new SelectDialog()) {
-                // 新建对话框进行选择
-                select.Owner = this;
-                select.Title = "选择发送连接";
-                select.lstViewConnect.ItemsSource = cnn_table;
-                select.lstViewConnect.SelectedItems.Add(select.lstViewConnect.Items[0]);
-                if (select.ShowDialog() == false)
-                    return;
-
-                // 对话框返回，根据选择的信息找到对应的连接，发送命令
-                foreach (CnnUnit item in select.lstViewConnect.SelectedItems) {
-                    // 根据选择的信息找到对应的连接
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
-                    var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
-                    if (subset.Count() == 0)
-                        continue;
-
-                    // 发送命令
-                    foreach (CmdUnit i in lstViewCommand.SelectedItems)
-                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.CMD));
+            foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+                // 从 cnn_table 中找到符合CNNID的连接
+                string[] str = item.CNNID.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                var subset = from s in cnn_table
+                             where s.State == CnnUnit.StateConnected && str.Contains(s.ID)
+                             select s;
+                // 根据连接找到对应的socket，发送命令
+                foreach (CnnUnit i in subset) {
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(i.IP), int.Parse(i.Port));
+                    var set = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
+                    if (set.Count() != 0)
+                        set.First().sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
                 }
             }
+
+            //// 没有连接
+            //if (sessmgr.sess_table.Count == 0)
+            //    return;
+
+            //// 只有一个连接
+            //if (sessmgr.sess_table.Count == 1) {
+            //    foreach (CmdUnit item in lstViewCommand.SelectedItems)
+            //        sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+            //    return;
+            //}
+
+            //// 多个连接
+            //using (SelectDialog select = new SelectDialog()) {
+            //    // 新建对话框进行选择
+            //    select.Owner = this;
+            //    select.Title = "选择发送连接";
+            //    select.lstViewConnect.ItemsSource = cnn_table;
+            //    select.lstViewConnect.SelectedItems.Add(select.lstViewConnect.Items[0]);
+            //    if (select.ShowDialog() == false)
+            //        return;
+
+            //    // 对话框返回，根据选择的信息找到对应的连接，发送命令
+            //    foreach (CnnUnit item in select.lstViewConnect.SelectedItems) {
+            //        // 根据选择的信息找到对应的连接
+            //        IPEndPoint ep = new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port));
+            //        var subset = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
+            //        if (subset.Count() == 0)
+            //            continue;
+
+            //        // 发送命令
+            //        foreach (CmdUnit i in lstViewCommand.SelectedItems)
+            //            subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.CMD));
+            //    }
+            //}
         }
 
         private void MenuItem_EditCommand_Click(object sender, RoutedEventArgs e)
@@ -210,22 +240,25 @@ namespace SockClient
             using (InputDialog input = new InputDialog()) {
                 input.Owner = this;
                 input.Title = "编辑命令";
-                input.textBlock1.Text = "序号：";
-                input.textBlock2.Text = "命令：";
-                input.textBlock3.Text = "说明：";
+                input.textBlock1.Text = "ID：";
+                input.textBlock2.Text = "CNNID：";
+                input.textBlock3.Text = "命令：";
+                input.textBlock4.Text = "说明：";
                 input.textBox1.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
-                input.textBox2.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
-                input.textBox3.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
-                input.textBox2.Focus();
-                input.textBox2.SelectionStart = input.textBox2.Text.Length;
+                input.textBox2.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CNNID;
+                input.textBox3.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
+                input.textBox4.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
+                input.textBox3.Focus();
+                input.textBox3.SelectionStart = input.textBox3.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
 
                 foreach (CmdUnit item in lstViewCommand.SelectedItems) {
                     item.ID = input.textBox1.Text;
-                    item.CMD = input.textBox2.Text;
-                    item.Comment = input.textBox3.Text;
+                    item.CNNID = input.textBox2.Text;
+                    item.CMD = input.textBox3.Text;
+                    item.Comment = input.textBox4.Text;
                 }
             }
         }
@@ -235,9 +268,10 @@ namespace SockClient
             using (InputDialog input = new InputDialog()) {
                 input.Owner = this;
                 input.Title = "新增命令";
-                input.textBlock1.Text = "序号：";
-                input.textBlock2.Text = "命令：";
-                input.textBlock3.Text = "说明：";
+                input.textBlock1.Text = "ID：";
+                input.textBlock2.Text = "CNNID：";
+                input.textBlock3.Text = "命令：";
+                input.textBlock4.Text = "说明：";
                 input.textBox1.Focus();
 
                 if (input.ShowDialog() == false)
@@ -245,8 +279,9 @@ namespace SockClient
 
                 CmdUnit cmd = new CmdUnit();
                 cmd.ID = input.textBox1.Text;
-                cmd.CMD = input.textBox2.Text;
-                cmd.Comment = input.textBox3.Text;
+                cmd.CNNID = input.textBox2.Text;
+                cmd.CMD = input.textBox3.Text;
+                cmd.Comment = input.textBox4.Text;
                 cmd_table.Add(cmd);
             }
         }
@@ -283,6 +318,7 @@ namespace SockClient
             foreach (var item in cmd_table) {
                 XmlElement cmd = doc.CreateElement("cmd");
                 cmd.SetAttribute("id", item.ID);
+                cmd.SetAttribute("cnnid", item.CNNID);
                 cmd.SetAttribute("content", item.CMD);
                 cmd.SetAttribute("comment", item.Comment);
                 cmdconfig.AppendChild(cmd);

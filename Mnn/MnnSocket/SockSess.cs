@@ -12,6 +12,7 @@ namespace Mnn.MnnSocket
     public class SockSess
     {
         public Socket sock;
+        public IPEndPoint ep;
         public int type;
         public bool eof;
         public DateTime tick;
@@ -32,6 +33,7 @@ namespace Mnn.MnnSocket
         public SockSess(int type, Socket sock, RecvDelegate recv, SendDelegate send)
         {
             this.sock = sock;
+            ep = type == 0 ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
             this.type = type;
             eof = false;
             tick = DateTime.Now;
@@ -71,12 +73,12 @@ namespace Mnn.MnnSocket
         private TimeSpan stall_time;
         public List<SockSess> sess_table;
 
+        public delegate void SessParseDelegate(object sender, SockSess sess);
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
-        public delegate void SessParseDelegate(object sender, SockSess sess);
+        public event SessParseDelegate sess_parse;
         public event SessCreateDelegate sess_create;
         public event SessDeleteDelegate sess_delete;
-        public event SessParseDelegate sess_parse;
 
         // Methods ============================================================================
 
@@ -172,12 +174,14 @@ namespace Mnn.MnnSocket
 
             sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
+            if (sess_create != null)
+                sess_create(this, sess_table.Last());
             return true;
         }
 
         private void RemoveSession(SockSess sess)
         {
-            Console.Write("[info]: Session #* deleted from {0}.\n", sess.sock.RemoteEndPoint.ToString());
+            Console.Write("[info]: Session #* deleted from {0}.\n", sess.ep.ToString());
             sess.sock.Shutdown(SocketShutdown.Both);
             sess.sock.Close();
             sess_table.Remove(sess);

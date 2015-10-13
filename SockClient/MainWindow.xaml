@@ -22,7 +22,7 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="序号" Width="60"
+                    <GridViewColumn Header="ID" Width="30"
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="IP" Width="120"
                                     DisplayMemberBinding="{Binding IP}" />
@@ -43,12 +43,14 @@
         <ListView x:Name="lstViewCommand" Margin="5,5,7,5" Grid.Row="2">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="序号" Width="60"
+                    <GridViewColumn Header="ID" Width="30"
                                     DisplayMemberBinding="{Binding ID}" />
+                    <GridViewColumn Header="CNNID" Width="90"
+                                    DisplayMemberBinding="{Binding CNNID}" />
                     <GridViewColumn Header="命令" Width="240"
                                     DisplayMemberBinding="{Binding CMD}" />
                     <GridViewColumn Header="说明" Width="240"
-                                    DisplayMemberBinding="{Binding CMD}" />
+                                    DisplayMemberBinding="{Binding Comment}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>

@@ -1,13 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <cmdconfig>
-    <cmd id="1" content="0x2220050040" comment="22处理类型 from 20模块" />
-    <cmd id="2" content="0x0C400400" comment="0C心跳 from 40终端" />
+    <cmd id="1" cnnid="1" content="0x2220050040" comment="22处理类型 from 20模块" />
+    <cmd id="2" cnnid="1,2" content="0x0C400400" comment="0C心跳 from 40终端" />
   </cmdconfig>
-
   <cnnconfig>
     <cnn id="1" ip="127.0.0.1" port="2000" autorun="true" />
     <cnn id="2" ip="127.0.0.1" port="3002" autorun="true" />
   </cnnconfig>
-
 </configuration>
