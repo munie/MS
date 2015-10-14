@@ -38,12 +38,12 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="连接" Click="MenuItem_Connect_Click"/>
-                    <MenuItem Header="断开" Click="MenuItem_Disconn_Click"/>
-                    <MenuItem Header="编辑" Click="MenuItem_EditConnect_Click"/>
-                    <MenuItem Header="新增" Click="MenuItem_AddConnect_Click"/>
-                    <MenuItem Header="删除" Click="MenuItem_RemoveConnect_Click"/>
-                    <MenuItem Header="保存" Click="MenuItem_SaveConnect_Click"/>
+                    <MenuItem Header="connect" Click="MenuItem_Connect_Click"/>
+                    <MenuItem Header="disconn" Click="MenuItem_Disconn_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_EditCnn_Click"/>
+                    <MenuItem Header="new" Click="MenuItem_NewCnn_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_DelCnn_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SaveCnn_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
@@ -63,12 +63,12 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="发送命令" Click="MenuItem_SendCommand_Click"/>
-                    <MenuItem Header="选择发送" Click="MenuItem_SelectSendCommand_Click"/>
-                    <MenuItem Header="编辑命令" Click="MenuItem_EditCommand_Click"/>
-                    <MenuItem Header="新增命令" Click="MenuItem_AddCommand_Click"/>
-                    <MenuItem Header="删除命令" Click="MenuItem_RemoveCommand_Click"/>
-                    <MenuItem Header="保存配置" Click="MenuItem_SaveCommand_Click"/>
+                    <MenuItem Header="send" Click="MenuItem_SendCmd_Click"/>
+                    <MenuItem Header="select" Click="MenuItem_SelectCmd_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_EditCmd_Click"/>
+                    <MenuItem Header="new" Click="MenuItem_NewCmd_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_DelCmd_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SaveCmd_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

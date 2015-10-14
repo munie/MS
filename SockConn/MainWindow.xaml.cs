@@ -182,7 +182,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_EditConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_EditCnn_Click(object sender, RoutedEventArgs e)
         {
             if (lstViewCnn.SelectedItems.Count == 0)
                 return;
@@ -212,7 +212,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_AddConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_NewCnn_Click(object sender, RoutedEventArgs e)
         {
             using (CnnInputDialog input = new CnnInputDialog()) {
                 input.Owner = this;
@@ -233,7 +233,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_RemoveConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_DelCnn_Click(object sender, RoutedEventArgs e)
         {
             List<CnnUnit> tmp = new List<CnnUnit>();
 
@@ -244,7 +244,7 @@ namespace SockConn
                 cnn_table.Remove(item);
         }
 
-        private void MenuItem_SaveConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SaveCnn_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
@@ -277,7 +277,7 @@ namespace SockConn
 
         // Cmd methods ======================================================================
 
-        private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SendCmd_Click(object sender, RoutedEventArgs e)
         {
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 // 从 cnn_table 中找到符合CNNS的连接
@@ -295,7 +295,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_SelectSendCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SelectCmd_Click(object sender, RoutedEventArgs e)
         {
             // 没有连接
             if (sessmgr.sess_table.Count == 0)
@@ -333,7 +333,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_EditCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_EditCmd_Click(object sender, RoutedEventArgs e)
         {
             if (lstViewCmd.SelectedItems.Count == 0)
                 return;
@@ -363,7 +363,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_AddCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_NewCmd_Click(object sender, RoutedEventArgs e)
         {
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
@@ -383,7 +383,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_RemoveCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_DelCmd_Click(object sender, RoutedEventArgs e)
         {
             List<CmdUnit> tmp = new List<CmdUnit>();
 
@@ -394,7 +394,7 @@ namespace SockConn
                 cmd_table.Remove(item);
         }
 
-        private void MenuItem_SaveCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SaveCmd_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
