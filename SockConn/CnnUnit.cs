@@ -18,7 +18,7 @@ namespace SockConn
         private string ip;
         private string port;
         private string state;
-        public bool autorun;
+        private bool autorun;
 
         public string ID
         {

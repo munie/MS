@@ -39,10 +39,12 @@ namespace SockConn
             // autorun connects
             foreach (var item in cnn_table) {
                 if (item.Autorun == true)
-                    sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
+                    sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)), item.ID);
             }
         }
 
+        public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
+        public static readonly string conf_name = "sockconn.xml";
         ObservableCollection<CmdUnit> cmd_table;
         ObservableCollection<CnnUnit> cnn_table;
         SockSessManager sessmgr;
@@ -74,18 +76,18 @@ namespace SockConn
 
         private void config()
         {
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml") == false) {
-                System.Windows.MessageBox.Show("未找到配置文件： sockclient.xml");
+            if (File.Exists(base_dir + conf_name) == false) {
+                System.Windows.MessageBox.Show("未找到配置文件");
                 return;
             }
 
             /// ** Initialize Start ====================================================
             try {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+                XmlDocument doc = new XmlDocument();
+                doc.Load(base_dir + conf_name);
 
                 // cmd config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cmdconfig/cmd")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/cmdconfig/cmd")) {
                     CmdUnit cmd = new CmdUnit();
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
@@ -96,7 +98,7 @@ namespace SockConn
                 }
 
                 // cnn config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cnnconfig/cnn")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/cnnconfig/cnn")) {
                     CnnUnit cnn = new CnnUnit();
                     cnn.ID = item.Attributes["id"].Value;
                     cnn.Name = item.Attributes["name"].Value;
@@ -109,7 +111,7 @@ namespace SockConn
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
-                System.Windows.MessageBox.Show("配置文件读取错误： sockclient.xml");
+                System.Windows.MessageBox.Show("配置文件读取错误");
             }
             /// ** Initialize End ====================================================
         }
@@ -143,16 +145,18 @@ namespace SockConn
         private void sessmgr_sess_create(object sender, SockSess sess)
         {
             var subset = from s in cnn_table
-                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         where s.ID.Equals(sess.sdata)
                          select s;
-            foreach (var item in subset)
+            foreach (var item in subset) {
                 item.State = CnnUnit.StateConnected;
+                break;
+            }
         }
 
         private void sessmgr_sess_delete(object sender, SockSess sess)
         {
             var subset = from s in cnn_table
-                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         where s.ID.Equals(sess.sdata)
                          select s;
             foreach (var item in subset)
                 item.State = CnnUnit.StateDisconned;
@@ -166,7 +170,7 @@ namespace SockConn
                 if (item.State == CnnUnit.StateConnected)
                     continue;
 
-                sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
+                sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)), item.ID);
             }
         }
 
@@ -250,8 +254,8 @@ namespace SockConn
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml")) {
-                doc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            if (File.Exists(base_dir + conf_name)) {
+                doc.Load(base_dir + conf_name);
                 config = doc.SelectSingleNode("/configuration/cnnconfig");
             }
             else {
@@ -273,7 +277,7 @@ namespace SockConn
                 config.AppendChild(cnn);
             }
 
-            doc.Save(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            doc.Save(base_dir + conf_name);
         }
 
         // CMD methods ======================================================================
@@ -400,8 +404,8 @@ namespace SockConn
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml")) {
-                doc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            if (File.Exists(base_dir + conf_name)) {
+                doc.Load(base_dir + conf_name);
                 config = doc.SelectSingleNode("/configuration/cmdconfig");
             }
             else {
@@ -423,7 +427,7 @@ namespace SockConn
                 config.AppendChild(cmd);
             }
 
-            doc.Save(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            doc.Save(base_dir + conf_name);
         }
     }
 }
