@@ -28,9 +28,9 @@
                                     DisplayMemberBinding="{Binding Name}" />
                     <GridViewColumn Header="IP" Width="120"
                                     DisplayMemberBinding="{Binding IP}" />
-                    <GridViewColumn Header="PORT" Width="60"
+                    <GridViewColumn Header="Port" Width="60"
                                     DisplayMemberBinding="{Binding Port}" />
-                    <GridViewColumn Header="状态" Width="90"
+                    <GridViewColumn Header="State" Width="90"
                                     DisplayMemberBinding="{Binding State}" />
                     <GridViewColumn Header="Autorun" Width="90"
                                     DisplayMemberBinding="{Binding Autorun}" />
@@ -55,10 +55,10 @@
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="Name" Width="60"
                                     DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="CNNS" Width="90"
-                                    DisplayMemberBinding="{Binding CNNS}" />
-                    <GridViewColumn Header="命令" Width="360"
-                                    DisplayMemberBinding="{Binding CMD}" />
+                    <GridViewColumn Header="Connects" Width="90"
+                                    DisplayMemberBinding="{Binding Cnns}" />
+                    <GridViewColumn Header="Command" Width="360"
+                                    DisplayMemberBinding="{Binding Cmd}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>

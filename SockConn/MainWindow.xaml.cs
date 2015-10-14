@@ -87,18 +87,18 @@ namespace SockConn
                 doc.Load(base_dir + conf_name);
 
                 // cmd config
-                foreach (XmlNode item in doc.SelectNodes("/configuration/cmdconfig/cmd")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/command/cmditem")) {
                     CmdUnit cmd = new CmdUnit();
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
-                    cmd.CNNS = item.Attributes["cnns"].Value;
-                    cmd.CMD = item.Attributes["content"].Value;
+                    cmd.Cnns = item.Attributes["cnns"].Value;
+                    cmd.Cmd = item.Attributes["content"].Value;
                     cmd.Comment = item.Attributes["comment"].Value;
                     cmd_table.Add(cmd);
                 }
 
                 // cnn config
-                foreach (XmlNode item in doc.SelectNodes("/configuration/cnnconfig/cnn")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/connect/cnnitem")) {
                     CnnUnit cnn = new CnnUnit();
                     cnn.ID = item.Attributes["id"].Value;
                     cnn.Name = item.Attributes["name"].Value;
@@ -162,7 +162,7 @@ namespace SockConn
                 item.State = CnnUnit.StateDisconned;
         }
 
-        // CNN methods ======================================================================
+        // Cnn methods ======================================================================
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
@@ -256,19 +256,19 @@ namespace SockConn
 
             if (File.Exists(base_dir + conf_name)) {
                 doc.Load(base_dir + conf_name);
-                config = doc.SelectSingleNode("/configuration/cnnconfig");
+                config = doc.SelectSingleNode("/configuration/connect");
             }
             else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("cnnconfig"); // 创建根节点album
+                config = doc.CreateElement("connect"); // 创建根节点album
                 root.AppendChild(config);
             }
 
             config.RemoveAll();
             foreach (var item in cnn_table) {
-                XmlElement cnn = doc.CreateElement("cnn");
+                XmlElement cnn = doc.CreateElement("cnnitem");
                 cnn.SetAttribute("id", item.ID);
                 cnn.SetAttribute("name", item.Name);
                 cnn.SetAttribute("ip", item.IP);
@@ -280,13 +280,13 @@ namespace SockConn
             doc.Save(base_dir + conf_name);
         }
 
-        // CMD methods ======================================================================
+        // Cmd methods ======================================================================
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
             foreach (CmdUnit item in lstViewCommand.SelectedItems) {
                 // 从 cnn_table 中找到符合CNNS的连接
-                string[] str = item.CNNS.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                string[] str = item.Cnns.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 var subset = from s in cnn_table
                              where s.State == CnnUnit.StateConnected && str.Contains(s.Name)
                              select s;
@@ -295,7 +295,7 @@ namespace SockConn
                     IPEndPoint ep = new IPEndPoint(IPAddress.Parse(i.IP), int.Parse(i.Port));
                     var set = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
                     if (set.Count() != 0)
-                        set.First().sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+                        set.First().sock.Send(ConvertUtil.CmdstrToBytes(item.Cmd));
                 }
             }
         }
@@ -309,7 +309,7 @@ namespace SockConn
             // 只有一个连接
             if (sessmgr.sess_table.Count == 1) {
                 foreach (CmdUnit item in lstViewCommand.SelectedItems)
-                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.Cmd));
                 return;
             }
 
@@ -333,7 +333,7 @@ namespace SockConn
 
                     // 发送命令
                     foreach (CmdUnit i in lstViewCommand.SelectedItems)
-                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.CMD));
+                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.Cmd));
                 }
             }
         }
@@ -348,11 +348,11 @@ namespace SockConn
                 input.Title = "编辑命令";
                 input.textBoxID.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
                 input.textBoxName.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Name;
-                input.textBoxCNNS.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CNNS;
-                input.textBoxCMD.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
+                input.textBoxCnns.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Cnns;
+                input.textBoxCmd.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Cmd;
                 input.textBoxComment.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
-                input.textBoxCMD.Focus();
-                input.textBoxCMD.SelectionStart = input.textBoxCMD.Text.Length;
+                input.textBoxCmd.Focus();
+                input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
@@ -360,8 +360,8 @@ namespace SockConn
                 foreach (CmdUnit item in lstViewCommand.SelectedItems) {
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
-                    item.CNNS = input.textBoxCNNS.Text;
-                    item.CMD = input.textBoxCMD.Text;
+                    item.Cnns = input.textBoxCnns.Text;
+                    item.Cmd = input.textBoxCmd.Text;
                     item.Comment = input.textBoxComment.Text;
                     break;
                 }
@@ -381,8 +381,8 @@ namespace SockConn
                 CmdUnit cmd = new CmdUnit();
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
-                cmd.CNNS = input.textBoxCNNS.Text;
-                cmd.CMD = input.textBoxCMD.Text;
+                cmd.Cnns = input.textBoxCnns.Text;
+                cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Comment = input.textBoxComment.Text;
                 cmd_table.Add(cmd);
             }
@@ -406,23 +406,23 @@ namespace SockConn
 
             if (File.Exists(base_dir + conf_name)) {
                 doc.Load(base_dir + conf_name);
-                config = doc.SelectSingleNode("/configuration/cmdconfig");
+                config = doc.SelectSingleNode("/configuration/command");
             }
             else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));  
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("cmdconfig"); // 创建根节点album
+                config = doc.CreateElement("command"); // 创建根节点album
                 root.AppendChild(config);
             }
 
             config.RemoveAll();
             foreach (var item in cmd_table) {
-                XmlElement cmd = doc.CreateElement("cmd");
+                XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
-                cmd.SetAttribute("cnns", item.CNNS);
-                cmd.SetAttribute("content", item.CMD);
+                cmd.SetAttribute("cnns", item.Cnns);
+                cmd.SetAttribute("content", item.Cmd);
                 cmd.SetAttribute("comment", item.Comment);
                 config.AppendChild(cmd);
             }

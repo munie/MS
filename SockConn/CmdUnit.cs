@@ -38,7 +38,7 @@ namespace SockConn
                 }
             }
         }
-        public string CNNS
+        public string Cnns
         {
             get { return cnns; }
             set
@@ -49,7 +49,7 @@ namespace SockConn
                 }
             }
         }
-        public string CMD
+        public string Cmd
         {
             get { return cmd; }
             set
