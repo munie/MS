@@ -19,7 +19,7 @@ using System.Xml;
 using Mnn.MnnSocket;
 using Mnn.MnnUtil;
 
-namespace SockClient
+namespace SockConn
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑

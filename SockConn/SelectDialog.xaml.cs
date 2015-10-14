@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 
-namespace SockClient
+namespace SockConn
 {
     /// <summary>
     /// InputDialog.xaml 的交互逻辑

@@ -8,8 +8,8 @@
     <ProjectGuid>{7DDABA04-F694-42A8-AB04-183D6EE83D1E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SockClient</RootNamespace>
-    <AssemblyName>SockClient</AssemblyName>
+    <RootNamespace>SockConn</RootNamespace>
+    <AssemblyName>SockConn</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
