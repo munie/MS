@@ -18,7 +18,7 @@ namespace SockConn
         private string ip;
         private string port;
         private string state;
-        public bool Autorun { get; set; }
+        public bool autorun;
 
         public string ID
         {
@@ -72,6 +72,17 @@ namespace SockConn
                 state = value;
                 if (PropertyChanged != null) {
                     PropertyChanged(this, new PropertyChangedEventArgs("State"));
+                }
+            }
+        }
+        public bool Autorun
+        {
+            get { return autorun; }
+            set
+            {
+                autorun = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Autorun"));
                 }
             }
         }

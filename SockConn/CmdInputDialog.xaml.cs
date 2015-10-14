@@ -17,9 +17,9 @@ namespace SockConn
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class InputDialog : Window, IDisposable
+    public partial class CmdInputDialog : Window, IDisposable
     {
-        public InputDialog()
+        public CmdInputDialog()
         {
             InitializeComponent();
         }

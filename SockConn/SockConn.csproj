@@ -58,7 +58,10 @@
     <Compile Include="SelectDialog.xaml.cs">
       <DependentUpon>SelectDialog.xaml</DependentUpon>
     </Compile>
-    <Page Include="InputDialog.xaml">
+    <Compile Include="CnnInputDialog.xaml.cs">
+      <DependentUpon>CnnInputDialog.xaml</DependentUpon>
+    </Compile>
+    <Page Include="CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -72,14 +75,18 @@
     </Compile>
     <Compile Include="CmdUnit.cs" />
     <Compile Include="CnnUnit.cs" />
-    <Compile Include="InputDialog.xaml.cs">
-      <DependentUpon>InputDialog.xaml</DependentUpon>
+    <Compile Include="CmdInputDialog.xaml.cs">
+      <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="SelectDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CnnInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

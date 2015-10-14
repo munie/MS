@@ -32,12 +32,18 @@
                                     DisplayMemberBinding="{Binding Port}" />
                     <GridViewColumn Header="状态" Width="90"
                                     DisplayMemberBinding="{Binding State}" />
+                    <GridViewColumn Header="Autorun" Width="90"
+                                    DisplayMemberBinding="{Binding Autorun}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="连接" Click="MenuItem_Connect_Click"/>
                     <MenuItem Header="断开" Click="MenuItem_Disconn_Click"/>
+                    <MenuItem Header="编辑" Click="MenuItem_EditConnect_Click"/>
+                    <MenuItem Header="新增" Click="MenuItem_AddConnect_Click"/>
+                    <MenuItem Header="删除" Click="MenuItem_RemoveConnect_Click"/>
+                    <MenuItem Header="保存" Click="MenuItem_SaveConnect_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
