@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <socket>
+    <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000"></sockitem>
+    <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002"></sockitem>
+    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000"></sockitem>
+    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002"></sockitem>
+  </socket>
+</configuration>
