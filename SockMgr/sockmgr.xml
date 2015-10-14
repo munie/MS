@@ -1,9 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <socket>
-    <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000"></sockitem>
-    <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002"></sockitem>
-    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000"></sockitem>
-    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002"></sockitem>
+    <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000" />
+    <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002" />
+    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000" />
+    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" />
   </socket>
+  <command>
+    <cmditem id="1" name="模块注册" content="0x2220050040" comment="22type 20module" />
+    <cmditem id="2" name="终端心跳" content="0x0C400400" comment="0Calive 40termial" />
+    <cmditem id="3" name="test" content="Hello World!" comment="test cmd" />
+  </command>
 </configuration>

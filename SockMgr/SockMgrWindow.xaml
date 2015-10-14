@@ -16,7 +16,7 @@
 
         <TextBlock Text="SockMgr ~ Mnn" Margin="5,5,5,120" Grid.Row="1" TextAlignment="Center" FontWeight="Bold" FontStyle="Italic" FontFamily="Palatino Linotype" FontSize="18" />
         
-        <TreeView Name="TreeSock" Margin="5,37,7,5" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding SockTable}" PreviewMouseRightButtonDown="TreeView_PreviewMouseRightButtonDown">
+        <TreeView Name="treeSock" Margin="5,37,7,5" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding SockTable}" PreviewMouseRightButtonDown="TreeView_PreviewMouseRightButtonDown">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Childs}">
                     <TextBlock Text="{Binding Comment}"></TextBlock>
@@ -30,8 +30,8 @@
             </TreeView.ItemTemplate>
             <TreeView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="listen" Click="MenuItem_Listen_Click"/>
                     <MenuItem Header="connect" Click="MenuItem_Connect_Click"/>
+                    <MenuItem Header="listen" Click="MenuItem_Listen_Click"/>
                     <MenuItem Header="close" Click="MenuItem_Close_Click"/>
                 </ContextMenu>
             </TreeView.ContextMenu>
@@ -39,7 +39,28 @@
 
         <GridSplitter Width="2" Grid.Row="1" Grid.RowSpan="2" ></GridSplitter>
 
-        <ListView Name="listView1" Margin="5" Grid.Row="1" Grid.Column="1">
+        <ListView Name="lstViewCmd" Margin="5" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding CmdTable}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="30"
+                                    DisplayMemberBinding="{Binding ID}" />
+                    <GridViewColumn Header="Name" Width="60"
+                                    DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="Comment" Width="120"
+                                    DisplayMemberBinding="{Binding Comment}" />
+                    <GridViewColumn Header="Cmd" Width="300"
+                                    DisplayMemberBinding="{Binding Cmd}" />
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu StaysOpen="true">
+                    <MenuItem Header="send" Click="MenuItem_SendCmd_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_EditCmd_Click"/>
+                    <MenuItem Header="new" Click="MenuItem_NewCmd_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_DelCmd_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SaveCmd_Click"/>
+                </ContextMenu>
+            </ListView.ContextMenu>
         </ListView>
 
         <GridSplitter Height="2" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"></GridSplitter>
