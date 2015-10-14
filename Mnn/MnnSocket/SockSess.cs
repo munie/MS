@@ -9,11 +9,18 @@ using System.Collections;
 
 namespace Mnn.MnnSocket
 {
+    public enum SessType
+    {
+        listen = 0,
+        accept = 1, 
+        connect = 2,
+    }
+
     public class SockSess
     {
         public Socket sock;
         public IPEndPoint ep;
-        public int type;
+        public SessType type;
         public bool eof;
         public DateTime tick;
 
@@ -30,10 +37,10 @@ namespace Mnn.MnnSocket
 
         // Methods ============================================================================
 
-        public SockSess(int type, Socket sock, RecvDelegate recv, SendDelegate send)
+        public SockSess(SessType type, Socket sock, RecvDelegate recv, SendDelegate send)
         {
             this.sock = sock;
-            ep = type == 0 ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
+            ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
             this.type = type;
             eof = false;
             tick = DateTime.Now;
@@ -84,7 +91,7 @@ namespace Mnn.MnnSocket
 
         public SockSessManager()
         {
-            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*60);
+            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*12);
             sess_table = new List<SockSess>();
             sess_create = null;
             sess_delete = null;
@@ -106,14 +113,14 @@ namespace Mnn.MnnSocket
             foreach (var i in list) {
                 foreach (var item in sess_table) {
                     if (item.sock == i) {
-                        if (item.type == 0) {
+                        if (item.type == SessType.listen) {
                             Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(2, sock, SockSess.Recv, SockSess.Send));
+                            sess_table.Add(new SockSess(SessType.accept, sock, SockSess.Recv, SockSess.Send));
                             Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
                         }
-                        else if (item.type != 0) {
+                        else {
                             item.recvfunc(item);
                         }
                         break;
@@ -124,7 +131,7 @@ namespace Mnn.MnnSocket
             // ** timeout after read & parse & send & close
             list = new ArrayList(sess_table);
             foreach (SockSess item in list) {
-                if (item.type != 0 && DateTime.Now.Subtract(item.tick) > stall_time)
+                if (item.type == SessType.accept && DateTime.Now.Subtract(item.tick) > stall_time)
                     item.eof = true;
 
                 if (item.rdata_size != 0 && sess_parse != null)
@@ -172,7 +179,7 @@ namespace Mnn.MnnSocket
                 return false;
             }
 
-            sess_table.Add(new SockSess(1, sock, SockSess.Recv, SockSess.Send));
+            sess_table.Add(new SockSess(SessType.connect, sock, SockSess.Recv, SockSess.Send));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
             if (sess_create != null)
                 sess_create(this, sess_table.Last());
