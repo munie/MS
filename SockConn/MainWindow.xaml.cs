@@ -45,31 +45,26 @@ namespace SockConn
 
         public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
         public static readonly string conf_name = "sockconn.xml";
-        ObservableCollection<CmdUnit> cmd_table;
-        ObservableCollection<CnnUnit> cnn_table;
-        SockSessManager sessmgr;
+        private ObservableCollection<CmdUnit> cmd_table;
+        private ObservableCollection<CnnUnit> cnn_table;
+        private SockSessManager sessmgr;
 
         private void init()
         {
             // init cmd_table
             cmd_table = new ObservableCollection<CmdUnit>();
-            lstViewCommand.ItemsSource = cmd_table;
+            lstViewCmd.ItemsSource = cmd_table;
 
             // init cnn_table
             cnn_table = new ObservableCollection<CnnUnit>();
-            lstViewConnect.ItemsSource = cnn_table;
+            lstViewCnn.ItemsSource = cnn_table;
 
             // init socksessmgr
             sessmgr = new SockSessManager();
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
             sessmgr.sess_create += new SockSessManager.SessCreateDelegate(sessmgr_sess_create);
             sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    sessmgr.Perform(1000);
-                }
-            });
+            Thread thread = new Thread(() => { while (true) { sessmgr.Perform(1000); } });
             thread.IsBackground = true;
             thread.Start();
         }
@@ -166,7 +161,7 @@ namespace SockConn
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+            foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                 if (item.State == CnnUnit.StateConnected)
                     continue;
 
@@ -176,7 +171,7 @@ namespace SockConn
 
         private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+            foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                 if (item.State == CnnUnit.StateDisconned)
                     continue;
 
@@ -189,24 +184,24 @@ namespace SockConn
 
         private void MenuItem_EditConnect_Click(object sender, RoutedEventArgs e)
         {
-            if (lstViewConnect.SelectedItems.Count == 0)
+            if (lstViewCnn.SelectedItems.Count == 0)
                 return;
 
             using (CnnInputDialog input = new CnnInputDialog()) {
                 input.Owner = this;
                 input.Title = "编辑命令";
-                input.textBoxID.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).ID;
-                input.textBoxName.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).Name;
-                input.textBoxIP.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).IP;
-                input.textBoxPort.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).Port;
-                input.checkBoxAutorun.IsChecked = (lstViewConnect.SelectedItems[0] as CnnUnit).Autorun;
+                input.textBoxID.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).ID;
+                input.textBoxName.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).Name;
+                input.textBoxIP.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).IP;
+                input.textBoxPort.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).Port;
+                input.checkBoxAutorun.IsChecked = (lstViewCnn.SelectedItems[0] as CnnUnit).Autorun;
                 input.textBoxPort.Focus();
                 input.textBoxPort.SelectionStart = input.textBoxPort.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.IP = input.textBoxIP.Text;
@@ -242,7 +237,7 @@ namespace SockConn
         {
             List<CnnUnit> tmp = new List<CnnUnit>();
 
-            foreach (CnnUnit item in lstViewCommand.SelectedItems)
+            foreach (CnnUnit item in lstViewCmd.SelectedItems)
                 tmp.Add(item);
 
             foreach (var item in tmp)
@@ -284,7 +279,7 @@ namespace SockConn
 
         private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+            foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 // 从 cnn_table 中找到符合CNNS的连接
                 string[] str = item.Cnns.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 var subset = from s in cnn_table
@@ -308,7 +303,7 @@ namespace SockConn
 
             // 只有一个连接
             if (sessmgr.sess_table.Count == 1) {
-                foreach (CmdUnit item in lstViewCommand.SelectedItems)
+                foreach (CmdUnit item in lstViewCmd.SelectedItems)
                     sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.Cmd));
                 return;
             }
@@ -332,7 +327,7 @@ namespace SockConn
                         continue;
 
                     // 发送命令
-                    foreach (CmdUnit i in lstViewCommand.SelectedItems)
+                    foreach (CmdUnit i in lstViewCmd.SelectedItems)
                         subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.Cmd));
                 }
             }
@@ -340,24 +335,24 @@ namespace SockConn
 
         private void MenuItem_EditCommand_Click(object sender, RoutedEventArgs e)
         {
-            if (lstViewCommand.SelectedItems.Count == 0)
+            if (lstViewCmd.SelectedItems.Count == 0)
                 return;
 
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
                 input.Title = "编辑命令";
-                input.textBoxID.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
-                input.textBoxName.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Name;
-                input.textBoxCnns.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Cnns;
-                input.textBoxCmd.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Cmd;
-                input.textBoxComment.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
+                input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
+                input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
+                input.textBoxCnns.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cnns;
+                input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
+                input.textBoxComment.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Comment;
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+                foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.Cnns = input.textBoxCnns.Text;
@@ -392,7 +387,7 @@ namespace SockConn
         {
             List<CmdUnit> tmp = new List<CmdUnit>();
 
-            foreach (CmdUnit item in lstViewCommand.SelectedItems)
+            foreach (CmdUnit item in lstViewCmd.SelectedItems)
                 tmp.Add(item);
 
             foreach (var item in tmp)
