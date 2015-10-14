@@ -11,7 +11,8 @@ namespace SockClient
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;
-        private string cnnid;
+        private string name;
+        private string cnns;
         private string cmd;
         private string comment;
 
@@ -26,12 +27,23 @@ namespace SockClient
                 }
             }
         }
-        public string CNNID
+        public string Name
         {
-            get { return cnnid; }
+            get { return name; }
             set
             {
-                cnnid = value;
+                name = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Name"));
+                }
+            }
+        }
+        public string CNNS
+        {
+            get { return cnns; }
+            set
+            {
+                cnns = value;
                 if (PropertyChanged != null) {
                     PropertyChanged(this, new PropertyChangedEventArgs("CNNID"));
                 }

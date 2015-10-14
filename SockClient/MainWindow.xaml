@@ -22,7 +22,7 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="ID" Width="30"
+                    <GridViewColumn Header="ID" Width="60"
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="IP" Width="120"
                                     DisplayMemberBinding="{Binding IP}" />
@@ -45,17 +45,18 @@
                 <GridView>
                     <GridViewColumn Header="ID" Width="30"
                                     DisplayMemberBinding="{Binding ID}" />
-                    <GridViewColumn Header="CNNID" Width="90"
-                                    DisplayMemberBinding="{Binding CNNID}" />
-                    <GridViewColumn Header="命令" Width="240"
+                    <GridViewColumn Header="Name" Width="60"
+                                    DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="CNNS" Width="90"
+                                    DisplayMemberBinding="{Binding CNNS}" />
+                    <GridViewColumn Header="命令" Width="360"
                                     DisplayMemberBinding="{Binding CMD}" />
-                    <GridViewColumn Header="说明" Width="240"
-                                    DisplayMemberBinding="{Binding Comment}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="发送命令" Click="MenuItem_SendCommand_Click"/>
+                    <MenuItem Header="选择发送" Click="MenuItem_SelectSendCommand_Click"/>
                     <MenuItem Header="编辑命令" Click="MenuItem_EditCommand_Click"/>
                     <MenuItem Header="新增命令" Click="MenuItem_AddCommand_Click"/>
                     <MenuItem Header="删除命令" Click="MenuItem_RemoveCommand_Click"/>
