@@ -37,7 +37,7 @@ namespace Mnn.MnnSocket
 
         // Methods ============================================================================
 
-        public SockSess(SessType type, Socket sock, RecvDelegate recv, SendDelegate send)
+        public SockSess(SessType type, Socket sock, RecvDelegate recv, SendDelegate send, object sdata)
         {
             this.sock = sock;
             ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
@@ -47,7 +47,7 @@ namespace Mnn.MnnSocket
 
             rdata = new byte[rdata_max];
             wdata = new byte[wdata_max];
-            sdata = null;
+            this.sdata = sdata;
 
             recvfunc = recv;
             sendfunc = send;
@@ -115,7 +115,7 @@ namespace Mnn.MnnSocket
                     if (item.sock == i) {
                         if (item.type == SessType.listen) {
                             Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(SessType.accept, sock, SockSess.Recv, SockSess.Send));
+                            sess_table.Add(new SockSess(SessType.accept, sock, SockSess.Recv, SockSess.Send, null));
                             Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
@@ -141,9 +141,18 @@ namespace Mnn.MnnSocket
                     item.sendfunc(item);
 
                 if (item.eof == true) {
-                    RemoveSession(item);
+                    if (item.type == SessType.listen) {
+                        foreach (var i in sess_table.ToArray()) {
+                            if (item.ep.Equals(i.sock.LocalEndPoint)) {
+                                if (sess_delete != null)
+                                    sess_delete(this, i);
+                                DeleteSession(i);
+                            }
+                        }
+                    }
                     if (sess_delete != null)
                         sess_delete(this, item);
+                    DeleteSession(item);
                 }
             }
         }
@@ -163,12 +172,12 @@ namespace Mnn.MnnSocket
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             sock.Bind(ep);
             sock.Listen(100);
-            sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send));
+            sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send, null));
             Console.Write("[info]: Session #L listened at {0}.\n", ep.ToString());
             return true;
         }
 
-        public bool AddConnectSession(IPEndPoint ep)
+        public bool AddConnectSession(IPEndPoint ep, object sdata = null)
         {
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try {
@@ -179,17 +188,30 @@ namespace Mnn.MnnSocket
                 return false;
             }
 
-            sess_table.Add(new SockSess(SessType.connect, sock, SockSess.Recv, SockSess.Send));
+            sess_table.Add(new SockSess(SessType.connect, sock, SockSess.Recv, SockSess.Send, sdata));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
             if (sess_create != null)
                 sess_create(this, sess_table.Last());
             return true;
         }
 
-        private void RemoveSession(SockSess sess)
+        public void RemoveSession(IPEndPoint ep)
+        {
+            var subset = from s in sess_table
+                         where s.ep.Equals(ep)
+                         select s;
+
+            if (subset.Count() == 0)
+                return;
+
+            subset.First().eof = true;
+        }
+
+        private void DeleteSession(SockSess sess)
         {
             Console.Write("[info]: Session #* deleted from {0}.\n", sess.ep.ToString());
-            sess.sock.Shutdown(SocketShutdown.Both);
+            if (sess.type != SessType.listen)
+                sess.sock.Shutdown(SocketShutdown.Both);
             sess.sock.Close();
             sess_table.Remove(sess);
         }
