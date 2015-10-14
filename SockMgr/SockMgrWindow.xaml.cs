@@ -224,14 +224,29 @@ namespace SockMgr
             if (treeSock.SelectedItem == null)
                 return;
 
-            SockUnit sock = treeSock.SelectedItem as SockUnit;
+            SockUnit unit = treeSock.SelectedItem as SockUnit;
 
+            // 发送所有选中的命令
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                foreach (var i in sessmgr.sess_table) {
-                    if (i.ep.Equals(sock.EP)) {
-                        if (i.type != SessType.listen)
-                            i.sock.Send(Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd));
-                        break;
+                // 如果unit不是监听，根据选中的EP从session表中找到对应的sess，发送数据
+                if (unit.Type != SockUnit.TypeListen) {
+                    foreach (var sess in sessmgr.sess_table) {
+                        if (sess.ep.Equals(unit.EP)) {
+                            sess.sock.Send(Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd));
+                            break;
+                        }
+                    }
+                }
+                // 如果unit是监听，迭代该sock的所有child
+                // 根据child的EP从session表中找到对应的sess，发送数据
+                else {
+                    foreach (var child in unit.Childs) {
+                        foreach (var sess in sessmgr.sess_table) {
+                            if (sess.ep.Equals(child.EP)) {
+                                sess.sock.Send(Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd));
+                                break;
+                            }
+                        }
                     }
                 }
             }
