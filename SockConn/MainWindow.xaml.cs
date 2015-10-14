@@ -99,6 +99,7 @@ namespace SockConn
                 foreach (XmlNode item in xdoc.SelectNodes("/configuration/cnnconfig/cnn")) {
                     CnnUnit cnn = new CnnUnit();
                     cnn.ID = item.Attributes["id"].Value;
+                    cnn.Name = item.Attributes["name"].Value;
                     cnn.IP = item.Attributes["ip"].Value;
                     cnn.Port = item.Attributes["port"].Value;
                     cnn.State = CnnUnit.StateDisconned;
@@ -186,7 +187,7 @@ namespace SockConn
                 // 从 cnn_table 中找到符合CNNS的连接
                 string[] str = item.CNNS.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 var subset = from s in cnn_table
-                             where s.State == CnnUnit.StateConnected && str.Contains(s.ID)
+                             where s.State == CnnUnit.StateConnected && str.Contains(s.Name)
                              select s;
                 // 根据连接找到对应的socket，发送命令
                 foreach (CnnUnit i in subset) {

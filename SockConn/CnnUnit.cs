@@ -14,6 +14,7 @@ namespace SockConn
         public static readonly string StateDisconned = "已断开";
 
         private string id;
+        private string name;
         private string ip;
         private string port;
         private string state;
@@ -27,6 +28,17 @@ namespace SockConn
                 id = value;
                 if (PropertyChanged != null) {
                     PropertyChanged(this, new PropertyChangedEventArgs("ID"));
+                }
+            }
+        }
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                name = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Name"));
                 }
             }
         }
