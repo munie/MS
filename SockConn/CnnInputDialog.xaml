@@ -16,6 +16,6 @@
         <CheckBox Name="checkBoxAutorun" Canvas.Left="30" Canvas.Top="183" Content="Autorun" />
         <Button Content="确认" Grid.Row="1" Height="23" Margin="157,27,0,0" Name="button1" Width="75" Canvas.Left="92" Canvas.Top="219" Click="button1_Click" />
         <Button Content="取消" Grid.Row="1" Height="23" HorizontalAlignment="Right" Margin="0,27,25,0" Name="button2" VerticalAlignment="Top" Width="75" Canvas.Left="355" Canvas.Top="219" Click="button2_Click" />
-        <Separator Canvas.Left="12" Canvas.Top="228" Height="1" Name="separator1" Width="432" />
+        <Separator Canvas.Left="12" Canvas.Top="223" Height="1" Name="separator1" Width="432" />
     </Canvas>
 </Window>
