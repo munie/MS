@@ -251,40 +251,18 @@ namespace SockMgr
         {
             if (treeSock.SelectedItem != null)
                 (treeSock.SelectedItem as SockUnit).State = SockUnitState.open;
-
-            //SockUnit sock = treeSock.SelectedItem as SockUnit;
-
-            //if (sock != null && sock.Type == SockUnit.TypeListen &&
-            //    sock.Title.Contains(SockUnit.StateClosed) && sessmgr.AddListenSession(sock.EP))
-            //    sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateListened);
         }
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
             if (treeSock.SelectedItem != null)
                 (treeSock.SelectedItem as SockUnit).State = SockUnitState.open;
-
-            //SockUnit sock = treeSock.SelectedItem as SockUnit;
-
-            //if (sock != null && sock.Type == SockUnit.TypeConnect &&
-            //    sock.Title.Contains(SockUnit.StateClosed) && sessmgr.AddConnectSession(sock.EP))
-            //    sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateConnected);
         }
 
         private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
         {
             if (treeSock.SelectedItem != null)
                 (treeSock.SelectedItem as SockUnit).State = SockUnitState.close;
-            
-            //SockUnit sock = treeSock.SelectedItem as SockUnit;
-
-            //if (sock != null)
-            //    sessmgr.RemoveSession(sock.EP);
-
-            //if (sock.Type == SockUnit.TypeListen)
-            //    sock.Title = sock.Title.Replace(SockUnit.StateListened, SockUnit.StateClosed);
-            //else if (sock.Type == SockUnit.TypeConnect)
-            //    sock.Title = sock.Title.Replace(SockUnit.StateConnected, SockUnit.StateClosed);
         }
 
         private void MenuItem_EditSock_Click(object sender, RoutedEventArgs e)
@@ -422,27 +400,6 @@ namespace SockMgr
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 unit.SendBuff = Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd);
                 unit.SendBuffSize = unit.SendBuff.Length;
-                //// 如果unit不是监听，根据选中的EP从session表中找到对应的sess，发送数据
-                //if (unit.Type == SockUnit.TypeAccept || unit.Type == SockUnit.TypeConnect) {
-                //    foreach (var sess in sessmgr.sess_table) {
-                //        if (sess.ep.Equals(unit.EP)) {
-                //            sess.sock.Send(Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd));
-                //            break;
-                //        }
-                //    }
-                //}
-                //// 如果unit是监听，迭代该sock的所有child
-                //// 根据child的EP从session表中找到对应的sess，发送数据
-                //else {
-                //    foreach (var child in unit.Childs) {
-                //        foreach (var sess in sessmgr.sess_table) {
-                //            if (sess.ep.Equals(child.EP)) {
-                //                sess.sock.Send(Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd));
-                //                break;
-                //            }
-                //        }
-                //    }
-                //}
             }
         }
 
