@@ -77,9 +77,9 @@ namespace Mnn.MnnUtil
         /// </summary>
         /// <param name="cmd"></param>
         /// <returns></returns>
-        public static byte[] CmdstrToBytes(string cmd)
+        public static byte[] CmdstrToBytes(string cmd, char sperator = ' ')
         {
-            string[] str = cmd.Split(' ');
+            string[] str = cmd.Split(sperator);
             byte[] retval = new byte[0];
 
             foreach (var item in str) {
