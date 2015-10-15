@@ -10,17 +10,16 @@ namespace SockMgr
 {
     public enum SockUnitState
 	{
-	    none = 0,
-        open = 1,
-        close = 2,
+        //None = 0,
+        Opening = 1,
+        Closing = 2,
+        Opened = 3,
+        Closed = 4,
 	}
 
     public class SockUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public static readonly string StateClosed = "closed";
-        public static readonly string StateListened = "listened";
-        public static readonly string StateConnected = "connected";
         public static readonly string TypeListen = "listen";
         public static readonly string TypeAccept = "accept";
         public static readonly string TypeConnect = "connect";
@@ -34,14 +33,23 @@ namespace SockMgr
         public ObservableCollection<SockUnit> Childs { get; set; }
         public byte[] SendBuff { get; set; }
         public int SendBuffSize { get; set; }
-        public SockUnitState State { get; set; }
+        private SockUnitState state;
+        public SockUnitState State
+        {
+            get { return state; }
+            set
+            {
+                state = value;
+                UpdateTitle();
+            }
+        }
 
         public SockUnit()
         {
             Childs = new ObservableCollection<SockUnit>();
             SendBuff = null;
             SendBuffSize = 0;
-            State = SockUnitState.none;
+            State = SockUnitState.Closed;
         }
 
         public string ID
@@ -109,6 +117,34 @@ namespace SockMgr
                     PropertyChanged(this, new PropertyChangedEventArgs("Autorun"));
                 }
             }
+        }
+
+        public void UpdateTitle()
+        {
+            if (Type == null || ID == null || EP == null)
+                return;
+
+            if (Type == SockUnit.TypeAccept)
+                Title = "\tA " + EP.ToString() + " " + State;
+            else if (Type == SockUnit.TypeListen && State == SockUnitState.Opening)
+                Title = ID + "\tL " + EP.ToString() + "    " + "Listening";
+            else if (Type == SockUnit.TypeListen && State == SockUnitState.Opened)
+                Title = ID + "\tL " + EP.ToString() + "    " + "Listened";
+            else if (Type == SockUnit.TypeConnect && State == SockUnitState.Opening)
+                Title = ID + "\tC " + EP.ToString() + "    " + "Connecting";
+            else if (Type == SockUnit.TypeConnect && State == SockUnitState.Opened)
+                Title = ID + "\tC " + EP.ToString() + "    " + "Connected";
+            else if (Type == SockUnit.TypeListen)
+                Title = ID + "\tL " + EP.ToString() + "    " + State;
+            else if (Type == SockUnit.TypeConnect)
+                Title = ID + "\tC " + EP.ToString() + "    " + State;
+
+            //if (Type == SockUnit.TypeListen)
+            //    Title = ID + "\tL " + EP.ToString() + "    " + State;
+            //else if (Type == SockUnit.TypeConnect)
+            //    Title = ID + "\tC " + EP.ToString() + "    " + State;
+            //else
+            //    Title = "\tA " + EP.ToString();
         }
     }
 }
