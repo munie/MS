@@ -28,21 +28,12 @@ namespace SockMgr
         private string name;
         private string type;
         private IPEndPoint ep;
+        private SockUnitState state;
         private string title;
         private bool autorun;
         public ObservableCollection<SockUnit> Childs { get; set; }
         public byte[] SendBuff { get; set; }
         public int SendBuffSize { get; set; }
-        private SockUnitState state;
-        public SockUnitState State
-        {
-            get { return state; }
-            set
-            {
-                state = value;
-                UpdateTitle();
-            }
-        }
 
         public SockUnit()
         {
@@ -58,9 +49,8 @@ namespace SockMgr
             set
             {
                 id = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("ID"));
-                }
             }
         }
         public string Name
@@ -69,9 +59,8 @@ namespace SockMgr
             set
             {
                 name = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Name"));
-                }
             }
         }
         public string Type
@@ -80,9 +69,8 @@ namespace SockMgr
             set
             {
                 type = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Type"));
-                }
             }
         }
         public IPEndPoint EP
@@ -91,9 +79,19 @@ namespace SockMgr
             set
             {
                 ep = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("EP"));
-                }
+            }
+        }
+        public SockUnitState State
+        {
+            get { return state; }
+            set
+            {
+                state = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("State"));
+                UpdateTitle();
             }
         }
         public string Title
@@ -102,9 +100,8 @@ namespace SockMgr
             set
             {
                 title = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Title"));
-                }
             }
         }
         public bool Autorun
@@ -113,9 +110,8 @@ namespace SockMgr
             set
             {
                 autorun = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Autorun"));
-                }
             }
         }
 
@@ -138,13 +134,6 @@ namespace SockMgr
                 Title = ID + "\tL " + EP.ToString() + "    " + State;
             else if (Type == SockUnit.TypeConnect)
                 Title = ID + "\tC " + EP.ToString() + "    " + State;
-
-            //if (Type == SockUnit.TypeListen)
-            //    Title = ID + "\tL " + EP.ToString() + "    " + State;
-            //else if (Type == SockUnit.TypeConnect)
-            //    Title = ID + "\tC " + EP.ToString() + "    " + State;
-            //else
-            //    Title = "\tA " + EP.ToString();
         }
     }
 }

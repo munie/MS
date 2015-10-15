@@ -209,7 +209,6 @@ namespace SockMgr
                             Type = SockUnit.TypeAccept,
                             State = SockUnitState.Opened,
                         });
-
                         break;
                     }
                 }

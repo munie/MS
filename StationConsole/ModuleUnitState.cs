@@ -29,9 +29,8 @@ namespace StationConsole
             set
             {
                 fileName = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("FileName"));
-                }
             }
         }
         private string fileComment;
@@ -41,9 +40,8 @@ namespace StationConsole
             set
             {
                 fileComment = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("FileComment"));
-                }
             }
         }
 

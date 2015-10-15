@@ -64,9 +64,8 @@ namespace StationConsole
             set
             {
                 timerInterval = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerInterval"));
-                }
             }
         }
         public string TimerCommand
@@ -92,9 +91,8 @@ namespace StationConsole
             set
             {
                 port = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Port"));
-                }
             }
         }
         //public override string PipeName { get; set; }

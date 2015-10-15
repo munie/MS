@@ -21,9 +21,8 @@ namespace SockMgr
             set
             {
                 id = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("ID"));
-                }
             }
         }
         public string Name
@@ -32,9 +31,8 @@ namespace SockMgr
             set
             {
                 name = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Name"));
-                }
             }
         }
         public string Cmd
@@ -43,9 +41,8 @@ namespace SockMgr
             set
             {
                 cmd = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
-                }
             }
         }
         public string Comment
@@ -54,9 +51,8 @@ namespace SockMgr
             set
             {
                 comment = value;
-                if (PropertyChanged != null) {
+                if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Comment"));
-                }
             }
         }
     }
