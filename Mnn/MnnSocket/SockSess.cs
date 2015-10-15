@@ -6,9 +6,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Collections;
+using System.Threading;
 
 namespace Mnn.MnnSocket
 {
+    /// this file is converted from c proj, so still use c-style to name fileds
+
     public enum SessType
     {
         listen = 0,
@@ -77,8 +80,9 @@ namespace Mnn.MnnSocket
 
     public class SockSessManager
     {
+        public List<SockSess> sess_table;
         private TimeSpan stall_time;
-        private List<SockSess> sess_table;
+        private Thread thread;
 
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
@@ -91,8 +95,9 @@ namespace Mnn.MnnSocket
 
         public SockSessManager()
         {
-            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*12);
             sess_table = new List<SockSess>();
+            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*12);
+            thread = null;
             sess_create = null;
             sess_delete = null;
             sess_parse = null;
@@ -100,6 +105,8 @@ namespace Mnn.MnnSocket
 
         public void Perform(int next)
         {
+            ThreadCheck(true);
+
             // ** none
             if (sess_table.Count == 0) {
                 System.Threading.Thread.Sleep(next);
@@ -157,6 +164,8 @@ namespace Mnn.MnnSocket
 
         public bool AddListenSession(IPEndPoint ep)
         {
+            ThreadCheck(false);
+
             // Verify IPEndPoints
             IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             foreach (IPEndPoint globalEP in globalEPs) {
@@ -177,6 +186,8 @@ namespace Mnn.MnnSocket
 
         public bool AddConnectSession(IPEndPoint ep, object sdata = null)
         {
+            ThreadCheck(false);
+
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try {
                 sock.Connect(ep);
@@ -195,6 +206,8 @@ namespace Mnn.MnnSocket
 
         public void RemoveSession(IPEndPoint ep)
         {
+            ThreadCheck(false);
+
             var subset = from s in sess_table
                          where s.ep.Equals(ep)
                          select s;
@@ -207,6 +220,8 @@ namespace Mnn.MnnSocket
 
         public void SendSession(IPEndPoint ep, byte[] data)
         {
+            ThreadCheck(false);
+
             var subset = from s in sess_table
                          where s.ep.Equals(ep)
                          select s;
@@ -221,6 +236,15 @@ namespace Mnn.MnnSocket
             else {
                 subset.First().sock.Send(data);
             }
+        }
+
+        private void ThreadCheck(bool isSockThread)
+        {
+            if (isSockThread && thread == null)
+                thread = Thread.CurrentThread;
+
+            if (thread != null && thread != Thread.CurrentThread)
+                throw new ApplicationException("Only socket thread can call this function!");
         }
 
         private void DeleteSession(SockSess sess)
