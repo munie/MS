@@ -177,7 +177,12 @@ namespace Mnn.MnnSocket
 
             // Initialize the listenEP field of ListenerState
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            sock.Bind(ep);
+            try {
+                sock.Bind(ep);
+            }
+            catch (Exception) {
+                return false;
+            }
             sock.Listen(100);
             sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send, null));
             Console.Write("[info]: Session #L listened at {0}.\n", ep.ToString());
