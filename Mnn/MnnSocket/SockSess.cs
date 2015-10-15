@@ -143,7 +143,7 @@ namespace Mnn.MnnSocket
                 if (item.eof == true) {
                     if (item.type == SessType.listen) {
                         foreach (var i in sess_table.ToArray()) {
-                            if (item.type != SessType.listen && item.ep.Equals(i.sock.LocalEndPoint)) {
+                            if (i.type == SessType.accept && item.ep.Port == (i.sock.LocalEndPoint as IPEndPoint).Port) {
                                 if (sess_delete != null)
                                     sess_delete(this, i);
                                 DeleteSession(i);
