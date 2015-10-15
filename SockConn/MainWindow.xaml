@@ -14,7 +14,7 @@
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <ListView x:Name="lstViewConnect" Margin="5,5,7,5" Grid.Row="1">
+        <ListView x:Name="lstViewCnn" Margin="5,5,7,5" Grid.Row="1">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -28,9 +28,9 @@
                                     DisplayMemberBinding="{Binding Name}" />
                     <GridViewColumn Header="IP" Width="120"
                                     DisplayMemberBinding="{Binding IP}" />
-                    <GridViewColumn Header="PORT" Width="60"
+                    <GridViewColumn Header="Port" Width="60"
                                     DisplayMemberBinding="{Binding Port}" />
-                    <GridViewColumn Header="状态" Width="90"
+                    <GridViewColumn Header="State" Width="90"
                                     DisplayMemberBinding="{Binding State}" />
                     <GridViewColumn Header="Autorun" Width="90"
                                     DisplayMemberBinding="{Binding Autorun}" />
@@ -38,37 +38,37 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="连接" Click="MenuItem_Connect_Click"/>
-                    <MenuItem Header="断开" Click="MenuItem_Disconn_Click"/>
-                    <MenuItem Header="编辑" Click="MenuItem_EditConnect_Click"/>
-                    <MenuItem Header="新增" Click="MenuItem_AddConnect_Click"/>
-                    <MenuItem Header="删除" Click="MenuItem_RemoveConnect_Click"/>
-                    <MenuItem Header="保存" Click="MenuItem_SaveConnect_Click"/>
+                    <MenuItem Header="connect" Click="MenuItem_Connect_Click"/>
+                    <MenuItem Header="disconn" Click="MenuItem_Disconn_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_EditCnn_Click"/>
+                    <MenuItem Header="new" Click="MenuItem_NewCnn_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_DelCnn_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SaveCnn_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
 
-        <ListView x:Name="lstViewCommand" Margin="5,5,7,5" Grid.Row="2">
+        <ListView x:Name="lstViewCmd" Margin="5,5,7,5" Grid.Row="2">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="ID" Width="30"
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="Name" Width="60"
                                     DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="CNNS" Width="90"
-                                    DisplayMemberBinding="{Binding CNNS}" />
-                    <GridViewColumn Header="命令" Width="360"
-                                    DisplayMemberBinding="{Binding CMD}" />
+                    <GridViewColumn Header="Connects" Width="90"
+                                    DisplayMemberBinding="{Binding Cnns}" />
+                    <GridViewColumn Header="Command" Width="360"
+                                    DisplayMemberBinding="{Binding Cmd}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="发送命令" Click="MenuItem_SendCommand_Click"/>
-                    <MenuItem Header="选择发送" Click="MenuItem_SelectSendCommand_Click"/>
-                    <MenuItem Header="编辑命令" Click="MenuItem_EditCommand_Click"/>
-                    <MenuItem Header="新增命令" Click="MenuItem_AddCommand_Click"/>
-                    <MenuItem Header="删除命令" Click="MenuItem_RemoveCommand_Click"/>
-                    <MenuItem Header="保存配置" Click="MenuItem_SaveCommand_Click"/>
+                    <MenuItem Header="send" Click="MenuItem_SendCmd_Click"/>
+                    <MenuItem Header="select" Click="MenuItem_SelectCmd_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_EditCmd_Click"/>
+                    <MenuItem Header="new" Click="MenuItem_NewCmd_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_DelCmd_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SaveCmd_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

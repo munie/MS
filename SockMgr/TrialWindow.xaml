@@ -1,0 +1,85 @@
+﻿<Window x:Class="SockMgr.TrialWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="TrialWindow" Height="392" Width="678">
+    <Grid Background="LightBlue">
+        
+        <TreeView Margin="443,10,12,12" ItemsSource="{Binding League}">
+            <!-- Conference teamplate -->
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Teams}">
+                    <TextBlock Foreground="Red" Text="{Binding Name}" />
+
+                    <!-- Team template -->
+                    <HierarchicalDataTemplate.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </HierarchicalDataTemplate.ItemTemplate>
+
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <TreeView Height="329" HorizontalAlignment="Left" Margin="12,12,0,0" Name="treeViewSock" VerticalAlignment="Top" Width="133">
+            <!--<TreeView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Foreground="Blue" Text="{Binding}" />
+                </DataTemplate>
+            </TreeView.ItemTemplate>-->
+            <sys:String>Western Conference</sys:String>
+            <sys:String>Eastern Conference</sys:String>
+            <!--<TreeViewItem Header="Western Conference">
+                <TreeViewItem.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock Foreground="Blue" Text="{Binding}" />
+                    </DataTemplate>
+                </TreeViewItem.HeaderTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Eastern Conference" HeaderTemplate="{Binding ElementName=_template1}">
+
+            </TreeViewItem>-->
+            <TreeView.ContextMenu>
+                <ContextMenu StaysOpen="true">
+                    <MenuItem Header="listen"/>
+                </ContextMenu>
+            </TreeView.ContextMenu>
+        </TreeView>
+
+        <ListBox Height="329" HorizontalAlignment="Left" Margin="151,12,0,0" Name="listBox1" VerticalAlignment="Top" Width="127">
+            <!--<ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Foreground="Red" Text="{Binding}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+
+            <sys:String>Western Conference</sys:String>
+            <sys:String>Eastern Conference</sys:String>-->
+            <ListBoxItem Content="Eastern Conference">
+                <ListBoxItem.ContentTemplate>
+                    <DataTemplate x:Name="_template1">
+                        <TextBlock Foreground="Red" Text="{Binding}" />
+                    </DataTemplate>
+                </ListBoxItem.ContentTemplate>
+            </ListBoxItem>
+            <ListBoxItem Content="Western Conference"
+                 ContentTemplate="{Binding ElementName=_template1}" />
+            <ListBox.ContextMenu>
+                <ContextMenu StaysOpen="true">
+                    <MenuItem Header="listen"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+        
+        <ListView Height="329" HorizontalAlignment="Left" Margin="284,12,0,0" Name="listView1" VerticalAlignment="Top" Width="139">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Foreground="Blue" Text="{Binding}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <sys:String>Western Conference</sys:String>
+            <sys:String>Eastern Conference</sys:String>
+        </ListView>
+    </Grid>
+</Window>

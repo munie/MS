@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace SockConn
+namespace SockMgr
 {
-    class CmdUnit : INotifyPropertyChanged
+    public class CmdUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;
         private string name;
-        private string cnns;
         private string cmd;
         private string comment;
 
@@ -35,17 +34,6 @@ namespace SockConn
                 name = value;
                 if (PropertyChanged != null) {
                     PropertyChanged(this, new PropertyChangedEventArgs("Name"));
-                }
-            }
-        }
-        public string Cnns
-        {
-            get { return cnns; }
-            set
-            {
-                cnns = value;
-                if (PropertyChanged != null) {
-                    PropertyChanged(this, new PropertyChangedEventArgs("CNNID"));
                 }
             }
         }

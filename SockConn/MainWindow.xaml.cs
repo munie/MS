@@ -39,64 +39,61 @@ namespace SockConn
             // autorun connects
             foreach (var item in cnn_table) {
                 if (item.Autorun == true)
-                    sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
+                    sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)), item.ID);
             }
         }
 
-        ObservableCollection<CmdUnit> cmd_table;
-        ObservableCollection<CnnUnit> cnn_table;
-        SockSessManager sessmgr;
+        public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
+        public static readonly string conf_name = "sockconn.xml";
+        private ObservableCollection<CmdUnit> cmd_table;
+        private ObservableCollection<CnnUnit> cnn_table;
+        private SockSessManager sessmgr;
 
         private void init()
         {
             // init cmd_table
             cmd_table = new ObservableCollection<CmdUnit>();
-            lstViewCommand.ItemsSource = cmd_table;
+            lstViewCmd.ItemsSource = cmd_table;
 
             // init cnn_table
             cnn_table = new ObservableCollection<CnnUnit>();
-            lstViewConnect.ItemsSource = cnn_table;
+            lstViewCnn.ItemsSource = cnn_table;
 
             // init socksessmgr
             sessmgr = new SockSessManager();
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
             sessmgr.sess_create += new SockSessManager.SessCreateDelegate(sessmgr_sess_create);
             sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    sessmgr.Perform(1000);
-                }
-            });
+            Thread thread = new Thread(() => { while (true) { sessmgr.Perform(1000); } });
             thread.IsBackground = true;
             thread.Start();
         }
 
         private void config()
         {
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml") == false) {
-                System.Windows.MessageBox.Show("未找到配置文件： sockclient.xml");
+            if (File.Exists(base_dir + conf_name) == false) {
+                System.Windows.MessageBox.Show("未找到配置文件");
                 return;
             }
 
             /// ** Initialize Start ====================================================
             try {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+                XmlDocument doc = new XmlDocument();
+                doc.Load(base_dir + conf_name);
 
                 // cmd config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cmdconfig/cmd")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/command/cmditem")) {
                     CmdUnit cmd = new CmdUnit();
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
-                    cmd.CNNS = item.Attributes["cnns"].Value;
-                    cmd.CMD = item.Attributes["content"].Value;
+                    cmd.Cnns = item.Attributes["cnns"].Value;
+                    cmd.Cmd = item.Attributes["content"].Value;
                     cmd.Comment = item.Attributes["comment"].Value;
                     cmd_table.Add(cmd);
                 }
 
                 // cnn config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/cnnconfig/cnn")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/connect/cnnitem")) {
                     CnnUnit cnn = new CnnUnit();
                     cnn.ID = item.Attributes["id"].Value;
                     cnn.Name = item.Attributes["name"].Value;
@@ -109,7 +106,7 @@ namespace SockConn
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
-                System.Windows.MessageBox.Show("配置文件读取错误： sockclient.xml");
+                System.Windows.MessageBox.Show("配置文件读取错误");
             }
             /// ** Initialize End ====================================================
         }
@@ -143,36 +140,38 @@ namespace SockConn
         private void sessmgr_sess_create(object sender, SockSess sess)
         {
             var subset = from s in cnn_table
-                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         where s.ID.Equals(sess.sdata)
                          select s;
-            foreach (var item in subset)
+            foreach (var item in subset) {
                 item.State = CnnUnit.StateConnected;
+                break;
+            }
         }
 
         private void sessmgr_sess_delete(object sender, SockSess sess)
         {
             var subset = from s in cnn_table
-                         where s.IP.Equals(sess.ep.Address.ToString()) && int.Parse(s.Port) == sess.ep.Port
+                         where s.ID.Equals(sess.sdata)
                          select s;
             foreach (var item in subset)
                 item.State = CnnUnit.StateDisconned;
         }
 
-        // CNN methods ======================================================================
+        // Cnn methods ======================================================================
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+            foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                 if (item.State == CnnUnit.StateConnected)
                     continue;
 
-                sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)));
+                sessmgr.AddConnectSession(new IPEndPoint(IPAddress.Parse(item.IP), int.Parse(item.Port)), item.ID);
             }
         }
 
         private void MenuItem_Disconn_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+            foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                 if (item.State == CnnUnit.StateDisconned)
                     continue;
 
@@ -183,26 +182,26 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_EditConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_EditCnn_Click(object sender, RoutedEventArgs e)
         {
-            if (lstViewConnect.SelectedItems.Count == 0)
+            if (lstViewCnn.SelectedItems.Count == 0)
                 return;
 
             using (CnnInputDialog input = new CnnInputDialog()) {
                 input.Owner = this;
                 input.Title = "编辑命令";
-                input.textBoxID.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).ID;
-                input.textBoxName.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).Name;
-                input.textBoxIP.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).IP;
-                input.textBoxPort.Text = (lstViewConnect.SelectedItems[0] as CnnUnit).Port;
-                input.checkBoxAutorun.IsChecked = (lstViewConnect.SelectedItems[0] as CnnUnit).Autorun;
+                input.textBoxID.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).ID;
+                input.textBoxName.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).Name;
+                input.textBoxIP.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).IP;
+                input.textBoxPort.Text = (lstViewCnn.SelectedItems[0] as CnnUnit).Port;
+                input.checkBoxAutorun.IsChecked = (lstViewCnn.SelectedItems[0] as CnnUnit).Autorun;
                 input.textBoxPort.Focus();
                 input.textBoxPort.SelectionStart = input.textBoxPort.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (CnnUnit item in lstViewConnect.SelectedItems) {
+                foreach (CnnUnit item in lstViewCnn.SelectedItems) {
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.IP = input.textBoxIP.Text;
@@ -213,7 +212,7 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_AddConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_NewCnn_Click(object sender, RoutedEventArgs e)
         {
             using (CnnInputDialog input = new CnnInputDialog()) {
                 input.Owner = this;
@@ -234,37 +233,37 @@ namespace SockConn
             }
         }
 
-        private void MenuItem_RemoveConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_DelCnn_Click(object sender, RoutedEventArgs e)
         {
             List<CnnUnit> tmp = new List<CnnUnit>();
 
-            foreach (CnnUnit item in lstViewCommand.SelectedItems)
+            foreach (CnnUnit item in lstViewCmd.SelectedItems)
                 tmp.Add(item);
 
             foreach (var item in tmp)
                 cnn_table.Remove(item);
         }
 
-        private void MenuItem_SaveConnect_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SaveCnn_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml")) {
-                doc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
-                config = doc.SelectSingleNode("/configuration/cnnconfig");
+            if (File.Exists(base_dir + conf_name)) {
+                doc.Load(base_dir + conf_name);
+                config = doc.SelectSingleNode("/configuration/connect");
             }
             else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("cnnconfig"); // 创建根节点album
+                config = doc.CreateElement("connect"); // 创建根节点album
                 root.AppendChild(config);
             }
 
             config.RemoveAll();
             foreach (var item in cnn_table) {
-                XmlElement cnn = doc.CreateElement("cnn");
+                XmlElement cnn = doc.CreateElement("cnnitem");
                 cnn.SetAttribute("id", item.ID);
                 cnn.SetAttribute("name", item.Name);
                 cnn.SetAttribute("ip", item.IP);
@@ -273,16 +272,16 @@ namespace SockConn
                 config.AppendChild(cnn);
             }
 
-            doc.Save(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            doc.Save(base_dir + conf_name);
         }
 
-        // CMD methods ======================================================================
+        // Cmd methods ======================================================================
 
-        private void MenuItem_SendCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SendCmd_Click(object sender, RoutedEventArgs e)
         {
-            foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+            foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 // 从 cnn_table 中找到符合CNNS的连接
-                string[] str = item.CNNS.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                string[] str = item.Cnns.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 var subset = from s in cnn_table
                              where s.State == CnnUnit.StateConnected && str.Contains(s.Name)
                              select s;
@@ -291,12 +290,12 @@ namespace SockConn
                     IPEndPoint ep = new IPEndPoint(IPAddress.Parse(i.IP), int.Parse(i.Port));
                     var set = from s in sessmgr.sess_table where s.sock.RemoteEndPoint.Equals(ep) select s;
                     if (set.Count() != 0)
-                        set.First().sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+                        set.First().sock.Send(ConvertUtil.CmdstrToBytes(item.Cmd));
                 }
             }
         }
 
-        private void MenuItem_SelectSendCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SelectCmd_Click(object sender, RoutedEventArgs e)
         {
             // 没有连接
             if (sessmgr.sess_table.Count == 0)
@@ -304,8 +303,8 @@ namespace SockConn
 
             // 只有一个连接
             if (sessmgr.sess_table.Count == 1) {
-                foreach (CmdUnit item in lstViewCommand.SelectedItems)
-                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.CMD));
+                foreach (CmdUnit item in lstViewCmd.SelectedItems)
+                    sessmgr.sess_table[0].sock.Send(ConvertUtil.CmdstrToBytes(item.Cmd));
                 return;
             }
 
@@ -328,43 +327,43 @@ namespace SockConn
                         continue;
 
                     // 发送命令
-                    foreach (CmdUnit i in lstViewCommand.SelectedItems)
-                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.CMD));
+                    foreach (CmdUnit i in lstViewCmd.SelectedItems)
+                        subset.First().sock.Send(ConvertUtil.CmdstrToBytes(i.Cmd));
                 }
             }
         }
 
-        private void MenuItem_EditCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_EditCmd_Click(object sender, RoutedEventArgs e)
         {
-            if (lstViewCommand.SelectedItems.Count == 0)
+            if (lstViewCmd.SelectedItems.Count == 0)
                 return;
 
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
                 input.Title = "编辑命令";
-                input.textBoxID.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).ID;
-                input.textBoxName.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Name;
-                input.textBoxCNNS.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CNNS;
-                input.textBoxCMD.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).CMD;
-                input.textBoxComment.Text = (lstViewCommand.SelectedItems[0] as CmdUnit).Comment;
-                input.textBoxCMD.Focus();
-                input.textBoxCMD.SelectionStart = input.textBoxCMD.Text.Length;
+                input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
+                input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
+                input.textBoxCnns.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cnns;
+                input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
+                input.textBoxComment.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Comment;
+                input.textBoxCmd.Focus();
+                input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (CmdUnit item in lstViewCommand.SelectedItems) {
+                foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
-                    item.CNNS = input.textBoxCNNS.Text;
-                    item.CMD = input.textBoxCMD.Text;
+                    item.Cnns = input.textBoxCnns.Text;
+                    item.Cmd = input.textBoxCmd.Text;
                     item.Comment = input.textBoxComment.Text;
                     break;
                 }
             }
         }
 
-        private void MenuItem_AddCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_NewCmd_Click(object sender, RoutedEventArgs e)
         {
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
@@ -377,53 +376,53 @@ namespace SockConn
                 CmdUnit cmd = new CmdUnit();
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
-                cmd.CNNS = input.textBoxCNNS.Text;
-                cmd.CMD = input.textBoxCMD.Text;
+                cmd.Cnns = input.textBoxCnns.Text;
+                cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Comment = input.textBoxComment.Text;
                 cmd_table.Add(cmd);
             }
         }
 
-        private void MenuItem_RemoveCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_DelCmd_Click(object sender, RoutedEventArgs e)
         {
             List<CmdUnit> tmp = new List<CmdUnit>();
 
-            foreach (CmdUnit item in lstViewCommand.SelectedItems)
+            foreach (CmdUnit item in lstViewCmd.SelectedItems)
                 tmp.Add(item);
 
             foreach (var item in tmp)
                 cmd_table.Remove(item);
         }
 
-        private void MenuItem_SaveCommand_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SaveCmd_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml")) {
-                doc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
-                config = doc.SelectSingleNode("/configuration/cmdconfig");
+            if (File.Exists(base_dir + conf_name)) {
+                doc.Load(base_dir + conf_name);
+                config = doc.SelectSingleNode("/configuration/command");
             }
             else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));  
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("cmdconfig"); // 创建根节点album
+                config = doc.CreateElement("command"); // 创建根节点album
                 root.AppendChild(config);
             }
 
             config.RemoveAll();
             foreach (var item in cmd_table) {
-                XmlElement cmd = doc.CreateElement("cmd");
+                XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
-                cmd.SetAttribute("cnns", item.CNNS);
-                cmd.SetAttribute("content", item.CMD);
+                cmd.SetAttribute("cnns", item.Cnns);
+                cmd.SetAttribute("content", item.Cmd);
                 cmd.SetAttribute("comment", item.Comment);
                 config.AppendChild(cmd);
             }
 
-            doc.Save(System.AppDomain.CurrentDomain.BaseDirectory + @"\sockclient.xml");
+            doc.Save(base_dir + conf_name);
         }
     }
 }

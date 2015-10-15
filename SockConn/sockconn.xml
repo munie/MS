@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <connect>
+    <cnnitem id="1" name="cmd" ip="127.0.0.1" port="2000" autorun="True" />
+    <cnnitem id="2" name="zls" ip="127.0.0.1" port="3002" autorun="True" />
+    <cnnitem id="3" name="sk" ip="127.0.0.1" port="3000" autorun="False" />
+  </connect>
+  <command>
+    <cmditem id="1" name="模块注册" cnns="cmd" content="0x2220050040" comment="22处理类型 from 20模块" />
+    <cmditem id="2" name="终端心跳" cnns="cmd zls sk" content="0x0C400400" comment="0C心跳 from 40终端" />
+  </command>
+</configuration>

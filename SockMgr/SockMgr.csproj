@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7DDABA04-F694-42A8-AB04-183D6EE83D1E}</ProjectGuid>
+    <ProjectGuid>{89415F7F-08C2-40B0-A2CD-4BCC966D42C7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SockConn</RootNamespace>
-    <AssemblyName>SockConn</AssemblyName>
+    <RootNamespace>SockMgr</RootNamespace>
+    <AssemblyName>SockMgr</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -55,17 +55,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="SelectDialog.xaml.cs">
-      <DependentUpon>SelectDialog.xaml</DependentUpon>
+    <Compile Include="CmdInputDialog.xaml.cs">
+      <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CnnInputDialog.xaml.cs">
-      <DependentUpon>CnnInputDialog.xaml</DependentUpon>
+    <Compile Include="CmdUnit.cs" />
+    <Compile Include="SockUnit.cs" />
+    <Compile Include="SockMgrWindow.xaml.cs">
+      <DependentUpon>SockMgrWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="TrialWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -73,22 +75,13 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CmdUnit.cs" />
-    <Compile Include="CnnUnit.cs" />
-    <Compile Include="CmdInputDialog.xaml.cs">
-      <DependentUpon>CmdInputDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
+    <Compile Include="TrialWindow.xaml.cs">
+      <DependentUpon>TrialWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="SelectDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <Page Include="SockMgrWindow.xaml">
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="CnnInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -122,9 +115,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="sockconn.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="sockmgr.xml">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
