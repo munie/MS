@@ -164,27 +164,34 @@ namespace SockMgr
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
+            byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
+            sess.rdata_size = 0;
+
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (txtMsg.Text.Length >= 20 * 1024) {
+                if (txtMsg.Text.Length >= 20 * 1024)
                     txtMsg.Clear();
-                }
 
                 string hexstr = "";
-                foreach (var item in sess.rdata.Take(sess.rdata_size).ToArray()) {
+                foreach (var item in data) {
+                    if (item >= 0x20 && item < 0x7f) {
+                        hexstr += Convert.ToChar(item);
+                        continue;
+                    }
                     string s = Convert.ToString(item, 16);
                     if (s.Length == 1)
                         s = "0" + s;
-                    if (hexstr.Length != 0)
-                        hexstr += " " + s;
-                    else
-                        hexstr += s;
+                    //if (hexstr.Length != 0)
+                    //    hexstr += " " + s;
+                    //else
+                        hexstr += "(" + s + ")";
                 }
+                hexstr = hexstr.Replace(")(", "");
 
+                txtMsg.AppendText(DateTime.Now + " (" +
+                    sess.sock.RemoteEndPoint.ToString() + " => " + sess.sock.LocalEndPoint.ToString() + ")\n");
                 txtMsg.AppendText(hexstr + "\n");
                 txtMsg.ScrollToEnd();
-
-                sess.rdata_size = 0;
             }));
         }
 
@@ -398,7 +405,7 @@ namespace SockMgr
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                unit.SendBuff = Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd);
+                unit.SendBuff = Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd, '|');
                 unit.SendBuffSize = unit.SendBuff.Length;
                 break;
             }
