@@ -77,9 +77,9 @@ namespace SockMgr
                     if (str.Count() == 2)
                         sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
                     if (sock.Type == SockUnit.TypeListen)
-                        sock.Comment = sock.EP.ToString() + " L " + SockUnit.StateClosed;
+                        sock.Title = sock.ID + "\tL " + sock.EP.ToString() + "\t    " + SockUnit.StateClosed;
                     else if (sock.Type == SockUnit.TypeConnect)
-                        sock.Comment = sock.EP.ToString() + " C " + SockUnit.StateClosed;
+                        sock.Title = sock.ID + "\tC " + sock.EP.ToString() + "\t    " + SockUnit.StateClosed;
                     SockTable.Add(sock);
                 }
 
@@ -140,7 +140,7 @@ namespace SockMgr
                             Name = "accept",
                             EP = sess.ep,
                             Type = SockUnit.TypeAccept,
-                            Comment = sess.ep.ToString() + " A",
+                            Title = sess.ep.ToString() + " A",
                         });
                     }
                 }
@@ -164,6 +164,22 @@ namespace SockMgr
                         }
                     }
                 }
+                else if (sess.type == SessType.connect) {
+                    foreach (var item in SockTable) {
+                        if (item.EP.Equals(sess.ep)) {
+                            item.Title = item.Title.Replace(SockUnit.StateConnected, SockUnit.StateClosed);
+                            return;
+                        }
+                    }
+                }
+                else if (sess.type == SessType.listen) {
+                    foreach (var item in SockTable) {
+                        if (item.EP.Equals(sess.ep)) {
+                            item.Title = item.Title.Replace(SockUnit.StateListened, SockUnit.StateClosed);
+                            return;
+                        }
+                    }
+                }
             }));
         }
 
@@ -174,8 +190,8 @@ namespace SockMgr
             SockUnit sock = treeSock.SelectedItem as SockUnit;
 
             if (sock != null && sock.Type == SockUnit.TypeListen &&
-                sock.Comment.Contains(SockUnit.StateClosed) && sessmgr.AddListenSession(sock.EP))
-                sock.Comment = sock.Comment.Replace(SockUnit.StateClosed, SockUnit.StateListened);
+                sock.Title.Contains(SockUnit.StateClosed) && sessmgr.AddListenSession(sock.EP))
+                sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateListened);
         }
 
         private void MenuItem_Connect_Click(object sender, RoutedEventArgs e)
@@ -183,8 +199,8 @@ namespace SockMgr
             SockUnit sock = treeSock.SelectedItem as SockUnit;
 
             if (sock != null && sock.Type == SockUnit.TypeConnect &&
-                sock.Comment.Contains(SockUnit.StateClosed) && sessmgr.AddConnectSession(sock.EP))
-                sock.Comment = sock.Comment.Replace(SockUnit.StateClosed, SockUnit.StateConnected);
+                sock.Title.Contains(SockUnit.StateClosed) && sessmgr.AddConnectSession(sock.EP))
+                sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateConnected);
         }
 
         private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
@@ -195,9 +211,113 @@ namespace SockMgr
                 sessmgr.RemoveSession(sock.EP);
 
             if (sock.Type == SockUnit.TypeListen)
-                sock.Comment = sock.Comment.Replace(SockUnit.StateListened, SockUnit.StateClosed);
+                sock.Title = sock.Title.Replace(SockUnit.StateListened, SockUnit.StateClosed);
             else if (sock.Type == SockUnit.TypeConnect)
-                sock.Comment = sock.Comment.Replace(SockUnit.StateConnected, SockUnit.StateClosed);
+                sock.Title = sock.Title.Replace(SockUnit.StateConnected, SockUnit.StateClosed);
+        }
+
+        private void MenuItem_EditSock_Click(object sender, RoutedEventArgs e)
+        {
+            if (treeSock.SelectedItem == null)
+                return;
+
+            SockUnit sock = treeSock.SelectedItem as SockUnit;
+
+            // only closed listen & connect can be modified
+            if (sock.Title.Contains(SockUnit.StateClosed) == false)
+                return;
+
+            using (SockInputDialog input = new SockInputDialog()) {
+                input.Owner = this;
+                input.Title = "Edit";
+                input.textBoxID.Text = sock.ID;
+                input.textBoxName.Text = sock.Name;
+                input.textBoxEP.Text = sock.EP.ToString();
+                if (sock.Type == SockUnit.TypeListen)
+                    input.radioButtonListen.IsChecked = true;
+                else
+                    input.radioButtonConnect.IsChecked = true;
+                input.checkBoxAutorun.IsChecked = sock.Autorun;
+                input.textBoxEP.Focus();
+                input.textBoxEP.SelectionStart = input.textBoxEP.Text.Length;
+
+                if (input.ShowDialog() == false)
+                    return;
+
+                sock.ID = input.textBoxID.Text;
+                sock.Name = input.textBoxName.Text;
+                string[] str = input.textBoxEP.Text.Split(':');
+                if (str.Count() == 2)
+                    sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
+            }
+        }
+
+        private void MenuItem_NewSock_Click(object sender, RoutedEventArgs e)
+        {
+            using (SockInputDialog input = new SockInputDialog()) {
+                input.Owner = this;
+                input.Title = "New";
+                input.textBoxID.Focus();
+
+                if (input.ShowDialog() == false)
+                    return;
+
+                SockUnit sock = new SockUnit();
+                sock.ID = input.textBoxID.Text;
+                sock.Name = input.textBoxName.Text;
+                string[] str = input.textBoxEP.Text.Split(':');
+                if (str.Count() == 2)
+                    sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
+                SockTable.Add(sock);
+            }
+        }
+
+        private void MenuItem_DelSock_Click(object sender, RoutedEventArgs e)
+        {
+            if (treeSock.SelectedItem == null)
+                return;
+
+            SockUnit sock = treeSock.SelectedItem as SockUnit;
+
+            // only closed listen & connect can be modified
+            if (sock.Title.Contains(SockUnit.StateClosed) == false)
+                return;
+
+            SockTable.Remove(sock);
+        }
+
+        private void MenuItem_SaveSock_Click(object sender, RoutedEventArgs e)
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlNode config;
+
+            if (File.Exists(base_dir + conf_name)) {
+                doc.Load(base_dir + conf_name);
+                config = doc.SelectSingleNode("/configuration/socket");
+            }
+            else {
+                doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
+                XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
+                doc.AppendChild(root);
+                config = doc.CreateElement("socket"); // 创建根节点album
+                root.AppendChild(config);
+            }
+
+            config.RemoveAll();
+            foreach (var item in SockTable) {
+                if (item.Type == SockUnit.TypeAccept)
+                    continue;
+                XmlElement sockitem = doc.CreateElement("sockitem");
+                sockitem.SetAttribute("id", item.ID);
+                sockitem.SetAttribute("name", item.Name);
+                sockitem.SetAttribute("ep", item.EP.ToString());
+                sockitem.SetAttribute("autorun", item.Autorun.ToString());
+                config.AppendChild(sockitem);
+            }
+
+            doc.Save(base_dir + conf_name);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -259,7 +379,7 @@ namespace SockMgr
 
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
-                input.Title = "编辑命令";
+                input.Title = "Eidt";
                 input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
@@ -284,7 +404,7 @@ namespace SockMgr
         {
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
-                input.Title = "新增命令";
+                input.Title = "New";
                 input.textBoxID.Focus();
 
                 if (input.ShowDialog() == false)

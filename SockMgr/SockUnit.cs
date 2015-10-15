@@ -18,11 +18,12 @@ namespace SockMgr
         public static readonly string TypeAccept = "accept";
         public static readonly string TypeConnect = "connect";
 
-        public string ID { get; set; }
-        public string Name { get; set; }
-        public string Type { get; set; }
+        private string id;
+        private string name;
+        private string type;
         private IPEndPoint ep;
-        private string comment;
+        private string title;
+        private bool autorun;
         public ObservableCollection<SockUnit> Childs { get; set; }
 
         public SockUnit()
@@ -30,6 +31,39 @@ namespace SockMgr
             Childs = new ObservableCollection<SockUnit>();
         }
 
+        public string ID
+        {
+            get { return id; }
+            set
+            {
+                id = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("ID"));
+                }
+            }
+        }
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                name = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Name"));
+                }
+            }
+        }
+        public string Type
+        {
+            get { return type; }
+            set
+            {
+                type = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Type"));
+                }
+            }
+        }
         public IPEndPoint EP
         {
             get { return ep; }
@@ -41,15 +75,25 @@ namespace SockMgr
                 }
             }
         }
-
-        public string Comment
+        public string Title
         {
-            get { return comment; }
+            get { return title; }
             set
             {
-                comment = value;
+                title = value;
                 if (PropertyChanged != null) {
-                    PropertyChanged(this, new PropertyChangedEventArgs("Comment"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("Title"));
+                }
+            }
+        }
+        public bool Autorun
+        {
+            get { return autorun; }
+            set
+            {
+                autorun = value;
+                if (PropertyChanged != null) {
+                    PropertyChanged(this, new PropertyChangedEventArgs("Autorun"));
                 }
             }
         }

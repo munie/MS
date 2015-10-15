@@ -59,11 +59,18 @@
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="CmdUnit.cs" />
+    <Compile Include="SockInputDialog.xaml.cs">
+      <DependentUpon>SockInputDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SockUnit.cs" />
     <Compile Include="SockMgrWindow.xaml.cs">
       <DependentUpon>SockMgrWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CmdInputDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SockInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
