@@ -8,6 +8,13 @@ using System.Net;
 
 namespace SockMgr
 {
+    public enum SockUnitState
+	{
+	    none = 0,
+        open = 1,
+        close = 2,
+	}
+
     public class SockUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -25,10 +32,16 @@ namespace SockMgr
         private string title;
         private bool autorun;
         public ObservableCollection<SockUnit> Childs { get; set; }
+        public byte[] SendBuff { get; set; }
+        public int SendBuffSize { get; set; }
+        public SockUnitState State { get; set; }
 
         public SockUnit()
         {
             Childs = new ObservableCollection<SockUnit>();
+            SendBuff = null;
+            SendBuffSize = 0;
+            State = SockUnitState.none;
         }
 
         public string ID
