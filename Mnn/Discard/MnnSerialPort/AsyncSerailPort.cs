@@ -16,8 +16,8 @@ namespace Mnn.MnnSerialPort
 
         //List<SerialPort> spTable = new List<SerialPort>();
         SerialPort serialPort = new SerialPort();
-        byte[] buffer = new byte[8192];
-        StringBuilder sb = new StringBuilder();
+        //byte[] buffer = new byte[8192];
+        //StringBuilder sb = new StringBuilder();
 
         public void Start(string protName, int baudRate, int dataBits, int stopBits, int parity)
         {
@@ -31,10 +31,10 @@ namespace Mnn.MnnSerialPort
 
             serialPort.DataReceived += new SerialDataReceivedEventHandler((s, ea) =>
             {
-                //string str = serialPort.ReadLine();
-                Thread.Sleep(500);
-                int bytesRead = serialPort.Read(buffer, 0, buffer.Count());
-                sb.Append(Encoding.GetEncoding(936).GetString(buffer, 0, bytesRead));
+                string str = serialPort.ReadLine();
+                //Thread.Sleep(500);
+                //int bytesRead = serialPort.Read(buffer, 0, buffer.Count());
+                //sb.Append(Encoding.GetEncoding(936).GetString(buffer, 0, bytesRead));
 
                 if (PortReadMsg != null) {
                     PortReadMsg.Invoke(this, new AsyncSerailPortEventArgs()
@@ -44,11 +44,11 @@ namespace Mnn.MnnSerialPort
                         DataBits = serialPort.DataBits,
                         StopBits = (int)serialPort.StopBits,
                         Parity = (int)serialPort.Parity,
-                        Data = sb.ToString(),
+                        Data = str.ToString(),
                     });
                 }
 
-                sb.Clear();
+                //sb.Clear();
             });
 
             serialPort.Open();
