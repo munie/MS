@@ -312,6 +312,7 @@ namespace SockMgr
                 XmlElement sockitem = doc.CreateElement("sockitem");
                 sockitem.SetAttribute("id", item.ID);
                 sockitem.SetAttribute("name", item.Name);
+                sockitem.SetAttribute("type", item.Type);
                 sockitem.SetAttribute("ep", item.EP.ToString());
                 sockitem.SetAttribute("autorun", item.Autorun.ToString());
                 config.AppendChild(sockitem);
