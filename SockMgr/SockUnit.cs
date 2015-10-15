@@ -121,7 +121,7 @@ namespace SockMgr
                 return;
 
             if (Type == SockUnit.TypeAccept)
-                Title = "\tA " + EP.ToString() + " " + State;
+                Title = "\t" + ID + " A " + EP.ToString() + " " + State;
             else if (Type == SockUnit.TypeListen && State == SockUnitState.Opening)
                 Title = ID + "\tL " + EP.ToString() + "    " + "Listening";
             else if (Type == SockUnit.TypeListen && State == SockUnitState.Opened)

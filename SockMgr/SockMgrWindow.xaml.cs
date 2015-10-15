@@ -203,7 +203,7 @@ namespace SockMgr
                     foreach (var item in subset) {
                         item.Childs.Add(new SockUnit()
                         {
-                            ID = "*",
+                            ID = "-",
                             Name = "accept",
                             EP = sess.ep,
                             Type = SockUnit.TypeAccept,
