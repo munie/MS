@@ -396,10 +396,11 @@ namespace SockMgr
 
             SockUnit unit = treeSock.SelectedItem as SockUnit;
 
-            // 发送所有选中的命令
+            // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 unit.SendBuff = Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd);
                 unit.SendBuffSize = unit.SendBuff.Length;
+                break;
             }
         }
 
