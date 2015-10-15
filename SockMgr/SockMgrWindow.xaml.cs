@@ -80,6 +80,7 @@ namespace SockMgr
                         sock.Title = sock.ID + "\tL " + sock.EP.ToString() + "\t    " + SockUnit.StateClosed;
                     else if (sock.Type == SockUnit.TypeConnect)
                         sock.Title = sock.ID + "\tC " + sock.EP.ToString() + "\t    " + SockUnit.StateClosed;
+                    sock.Autorun = bool.Parse(item.Attributes["autorun"].Value);
                     SockTable.Add(sock);
                 }
 
@@ -98,6 +99,13 @@ namespace SockMgr
                 System.Windows.MessageBox.Show("配置文件读取错误" );
             }
             /// ** Initialize End ====================================================
+
+            foreach (var sock in SockTable) {
+                if (sock.Autorun == true && sock.Type == SockUnit.TypeListen && sessmgr.AddListenSession(sock.EP))
+                    sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateListened);
+                else if (sock.Autorun == true && sock.Type == SockUnit.TypeConnect && sessmgr.AddConnectSession(sock.EP))
+                    sock.Title = sock.Title.Replace(SockUnit.StateClosed, SockUnit.StateConnected);
+            }
         }
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
