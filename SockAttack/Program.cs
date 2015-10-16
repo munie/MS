@@ -13,8 +13,8 @@ namespace SockAttack
     {
         static void Main(string[] args)
         {
-            Encoding coding;
-            IPAddress ipAddress;
+            Encoding coding = Encoding.Default;
+            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
             Random random = new Random();
             List<SockAttack> attackerTable = new List<SockAttack>();
 
@@ -37,7 +37,12 @@ namespace SockAttack
                 XmlNode ipNode = xdoc.SelectSingleNode("/configuration/ipaddress");
                 IPAddress[] ips;
                 ips = Dns.GetHostAddresses(ipNode.InnerText);
-                ipAddress = ips[0];
+                foreach (var item in ips) {
+                    if (item.AddressFamily == AddressFamily.InterNetwork) {
+                        ipAddress = item;
+                        break;
+                    }
+                }
                 //ipAddress = IPAddress.Parse(ipNode.InnerText);
 
                 XmlNodeList nodes = xdoc.GetElementsByTagName("station");
