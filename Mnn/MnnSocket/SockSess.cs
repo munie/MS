@@ -22,7 +22,8 @@ namespace Mnn.MnnSocket
     public class SockSess
     {
         public Socket sock;
-        public IPEndPoint ep;
+        public IPEndPoint lep;
+        public IPEndPoint rep;
         public SessType type;
         public bool eof;
         public DateTime tick;
@@ -43,7 +44,9 @@ namespace Mnn.MnnSocket
         public SockSess(SessType type, Socket sock, RecvDelegate recv, SendDelegate send, object sdata)
         {
             this.sock = sock;
-            ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
+            //ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
+            lep = sock.LocalEndPoint as IPEndPoint;
+            rep = type == SessType.listen ? null : sock.RemoteEndPoint as IPEndPoint; ;
             this.type = type;
             eof = false;
             tick = DateTime.Now;
@@ -209,33 +212,32 @@ namespace Mnn.MnnSocket
         {
             ThreadCheck(false);
 
-            var subset = from s in sess_table
-                         where s.ep.Equals(ep)
-                         select s;
-
-            if (subset.Count() == 0)
-                return;
-
-            subset.First().eof = true;
+            foreach (var item in sess_table) {
+                if (item.type == SessType.listen && item.lep.Equals(ep)) {
+                    item.eof = true;
+                    break;
+                }
+                else if (item.type != SessType.listen && item.rep.Equals(ep)) {
+                    item.eof = true;
+                    break;
+                }
+            }
         }
 
         public void SendSession(IPEndPoint ep, byte[] data)
         {
             ThreadCheck(false);
 
-            var subset = from s in sess_table
-                         where s.ep.Equals(ep)
-                         select s;
-
-            if (subset.Count() == 0)
-                return;
-
-            if (subset.First().type == SessType.listen) {
-                foreach (var item in FindAcceptSession(subset.First()))
+            foreach (var item in sess_table) {
+                if (item.type == SessType.listen && item.lep.Equals(ep)) {
+                    foreach (var child in FindAcceptSession(item))
+                        child.sock.Send(data);
+                    break;
+                }
+                else if (item.type != SessType.listen && item.rep.Equals(ep)) {
                     item.sock.Send(data);
-            }
-            else {
-                subset.First().sock.Send(data);
+                    break;
+                }
             }
         }
 
@@ -250,9 +252,12 @@ namespace Mnn.MnnSocket
 
         private void DeleteSession(SockSess sess)
         {
-            Console.Write("[info]: Session #* deleted from {0}.\n", sess.ep.ToString());
-            if (sess.type != SessType.listen)
+            if (sess.type == SessType.listen)
+                Console.Write("[info]: Session #* deleted from {0}.\n", sess.lep.ToString());
+            else if (sess.type != SessType.listen) {
+                Console.Write("[info]: Session #* deleted from {0}.\n", sess.rep.ToString());
                 sess.sock.Shutdown(SocketShutdown.Both);
+            }
             sess.sock.Close();
             sess_table.Remove(sess);
         }
@@ -263,7 +268,7 @@ namespace Mnn.MnnSocket
 
             if (sess.type == SessType.listen) {
                 var subset = from s in sess_table
-                             where s.type == SessType.accept && sess.ep.Port == (s.sock.LocalEndPoint as IPEndPoint).Port
+                             where s.type == SessType.accept && sess.lep.Port == s.lep.Port
                              select s;
                 foreach (var item in subset)
                     retval.Add(item);

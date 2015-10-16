@@ -121,7 +121,11 @@ namespace SockMgr
         {
             foreach (var item in SockTable) {
                 /// ** first handle child(accept) socket
-                foreach (var child in item.Childs) {
+                SockUnit[] childArray;
+                lock (SockTable) {
+                    childArray = item.Childs.ToArray();
+                }
+                foreach (var child in childArray) {
                     if (child.SendBuffSize != 0 && child.State == SockUnitState.Opened) {
                         sessmgr.SendSession(child.EP, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
@@ -186,7 +190,7 @@ namespace SockMgr
                 sb.Replace(")(", "");
 
                 txtMsg.AppendText(DateTime.Now + " (" +
-                    sess.sock.RemoteEndPoint.ToString() + " => " + sess.sock.LocalEndPoint.ToString() + ")\n");
+                    sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
                 txtMsg.AppendText(sb.ToString() + "\n");
                 txtMsg.ScrollToEnd();
             }));
@@ -198,18 +202,20 @@ namespace SockMgr
             {
                 if (sess.type == SessType.accept) {
                     var subset = from s in SockTable
-                                 where s.Type == SockUnit.TypeListen && s.EP.Port == (sess.sock.LocalEndPoint as IPEndPoint).Port
+                                 where s.Type == SockUnit.TypeListen && s.EP.Port == sess.lep.Port
                                  select s;
                     foreach (var item in subset) {
-                        item.Childs.Add(new SockUnit()
-                        {
-                            ID = "-",
-                            Name = "accept",
-                            EP = sess.ep,
-                            Type = SockUnit.TypeAccept,
-                            State = SockUnitState.Opened,
-                        });
-                        break;
+                        lock (SockTable) {
+                            item.Childs.Add(new SockUnit()
+                            {
+                                ID = "-",
+                                Name = "accept",
+                                EP = sess.rep,
+                                Type = SockUnit.TypeAccept,
+                                State = SockUnitState.Opened,
+                            });
+                            break;
+                        }
                     }
                 }
             }));
@@ -225,8 +231,10 @@ namespace SockMgr
                             continue;
 
                         foreach (var i in item.Childs) {
-                            if (i.EP.Equals(sess.ep)) {
-                                item.Childs.Remove(i);
+                            if (i.EP.Equals(sess.rep)) {
+                                lock (SockTable) {
+                                    item.Childs.Remove(i);
+                                }
                                 return;
                             }
                         }
@@ -234,7 +242,7 @@ namespace SockMgr
                 }
                 else if (sess.type == SessType.connect) {
                     foreach (var item in SockTable) {
-                        if (item.EP.Equals(sess.ep)) {
+                        if (item.EP.Equals(sess.rep)) {
                             item.State = SockUnitState.Closed;
                             return;
                         }
@@ -242,7 +250,7 @@ namespace SockMgr
                 }
                 else if (sess.type == SessType.listen) {
                     foreach (var item in SockTable) {
-                        if (item.EP.Equals(sess.ep)) {
+                        if (item.EP.Equals(sess.lep)) {
                             item.State = SockUnitState.Closed;
                             return;
                         }
