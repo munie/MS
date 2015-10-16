@@ -9,8 +9,8 @@
     <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
   </socket>
   <command>
-    <cmditem id="0" name="模块注册" content="0x20|0x0D|0x0500|0x42" comment="20/Mod 0D/Reg" />
-    <cmditem id="1" name="流量心跳" content="0x42|0x0C|0x1800|89860113836037156496" comment="42/ZLS 0C/Alive" />
-    <cmditem id="2" name="test" content="Hello World!|0x0102030405" comment="test cmd" />
+    <cmditem id="200D" name="模块注册" content="0x20|0x0D|0x0500|0x42" comment="20/Mod 0D/Reg" />
+    <cmditem id="201C" name="模块转发" content="0x20|0x1C|0x1B00|89860113836037156496|*OK" comment="20/Mod 1C/Tran" />
+    <cmditem id="420C" name="流量心跳" content="0x42|0x0C|0x1800|89860113836037156496" comment="42/ZLS 0C/Alive" />
   </command>
 </configuration>

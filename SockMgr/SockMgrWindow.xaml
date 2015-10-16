@@ -45,7 +45,7 @@
         <ListView Name="lstViewCmd" Margin="5" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding CmdTable}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="ID" Width="30"
+                    <GridViewColumn Header="ID" Width="45"
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="Name" Width="60"
                                     DisplayMemberBinding="{Binding Name}" />

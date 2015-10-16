@@ -67,9 +67,22 @@ namespace EnvCenter
             SessData sd = sess.sdata as SessData;
 
             switch (hdr.msg_type) {
+                // 心跳
                 case 0x0C: break;
-                case 0x0D: // 注册目标term类型
-                    sd.type = sess.rdata[4];
+                // 注册目标term类型
+                case 0x0D: sd.type = sess.rdata[4]; break;
+                // 转发
+                case 0x1C:
+                    SockMsg.termhdr thdr = (SockMsg.termhdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.termhdr));
+                    string s = new string(thdr.ccid);
+                    Console.Write(s);
+                    foreach (var item in sessmgr.sess_table) {
+                        if (item.sdata != null && (item.sdata as SessData).ccid != null &&
+                            (item.sdata as SessData).ccid.Equals(new string(thdr.ccid))) {
+                            item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                            break;
+                        }
+                    }
                     break;
             }
         }
