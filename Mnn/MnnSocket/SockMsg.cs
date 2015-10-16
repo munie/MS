@@ -16,5 +16,14 @@ namespace Mnn.MnnSocket
             public byte id_type;
             public UInt16 len;
         }
+
+        [Serializable] // 指示可序列化
+        [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
+        public struct termhdr
+        {
+            msghdr hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+            public char[] ccid;
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace EnvCenter
 {
     class SessData
     {
+        public string ccid;
         public int type;
     }
 
@@ -42,21 +43,13 @@ namespace EnvCenter
              * 0x80 ~ 0xff : reserved
              */
             switch (hdr.id_type) {
-                case 0x00:
-                case 0x01:
-                    break;
-
                 case 0x20:
-                case 0x21:
-                    module_parse(sess, hdr);
-                    break;
+                case 0x21: module_parse(sess, hdr); break;
 
                 case 0x40:
                 case 0x41: 
                 case 0x42:
-                case 0x43:
-                    client_parse(sess);
-                    break;
+                case 0x43: term_parse(sess); break;
 
                 default: break;
             }
@@ -64,8 +57,17 @@ namespace EnvCenter
             sess.rdata_size = 0;
         }
 
-        private void client_parse(SockSess sess)
+        private void term_parse(SockSess sess)
         {
+            SockMsg.termhdr thdr = (SockMsg.termhdr)ConvertUtil.BytesToStruct(sess.rdata, typeof(SockMsg.termhdr));
+
+            // 保存ccid
+            if (sess.sdata == null)
+                sess.sdata = new SessData();
+            SessData sd = sess.sdata as SessData;
+            sd.ccid = new string(thdr.ccid);
+
+            // 迭代sess_table，找到对应的处理模块，发送数据
             foreach (var item in sessmgr.sess_table) {
                 if (item.sdata != null && (item.sdata as SessData).type == sess.rdata[1]) {
                     item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
@@ -78,12 +80,11 @@ namespace EnvCenter
         {
             if (sess.sdata == null)
                 sess.sdata = new SessData();
-
             SessData sd = sess.sdata as SessData;
 
             switch (hdr.msg_type) {
                 case 0x0C: break;
-                case 0x22:
+                case 0x22: // 注册目标term类型
                     sd.type = sess.rdata[4];
                     break;
             }
