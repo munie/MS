@@ -151,11 +151,8 @@ namespace Mnn.MnnSock
 
                 if (item.eof == true) {
                     if (item.type == SockType.listen) {
-                        foreach (var i in FindAcceptSession(item)) {
-                            if (sess_delete != null)
-                                sess_delete(this, i);
-                            DeleteSession(i);
-                        }
+                        foreach (var i in FindAcceptSession(item))
+                            i.eof = true;
                     }
                     if (sess_delete != null)
                         sess_delete(this, item);
