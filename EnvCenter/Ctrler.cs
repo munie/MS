@@ -52,7 +52,7 @@ namespace EnvCenter
 
             //if ((UInt16)sess.rdata[2]+((UInt16)sess.rdata[3]<<8) != sess.rdata_size) {
             if (hdr.len != sess.rdata_size) {
-                Console.Write("[Error]: Unknow packet from {0}.\n", sess.ep.ToString());
+                Console.Write("[Error]: Unknow packet from {0}.\n", sess.rep.ToString());
                 sess.rdata_size = 0;
                 return;
             }
