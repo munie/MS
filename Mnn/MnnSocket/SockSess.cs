@@ -15,8 +15,8 @@ namespace Mnn.MnnSocket
     public enum SockType
     {
         listen = 0,
-        accept = 1, 
-        connect = 2,
+        accept = 2,
+        connect = 1,
     }
 
     public class SockSess

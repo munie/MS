@@ -110,7 +110,7 @@ namespace SockMgr
                     SockUnit sock = new SockUnit();
                     sock.ID = item.Attributes["id"].Value;
                     sock.Name = item.Attributes["name"].Value;
-                    sock.Type = item.Attributes["type"].Value;
+                    sock.Type = item.Attributes["type"].Value == "listen" ? SockType.listen : SockType.connect;
                     string[] str = item.Attributes["ep"].Value.Split(':');
                     if (str.Count() == 2)
                         sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
@@ -186,13 +186,13 @@ namespace SockMgr
                 }
                 /// ** third handle open or close
                 if (item.State == SockUnitState.Opening && item.State != SockUnitState.Opened) {
-                    if (item.Type == SockUnit.TypeListen) {
+                    if (item.Type == SockType.listen) {
                         if (sessmgr.AddListenSession(item.EP))
                             item.State = SockUnitState.Opened;
                         else
                             item.State = SockUnitState.Closed;
                     }
-                    else if (item.Type == SockUnit.TypeConnect) {
+                    else if (item.Type == SockType.connect) {
                         if (sessmgr.AddConnectSession(item.EP))
                             item.State = SockUnitState.Opened;
                         else
@@ -245,7 +245,7 @@ namespace SockMgr
                     historyAcceptOpenCount.Text = (Convert.ToInt32(historyAcceptOpenCount.Text) + 1).ToString();
 
                     var subset = from s in SockTable
-                                 where s.Type == SockUnit.TypeListen && s.EP.Port == sess.lep.Port
+                                 where s.Type == SockType.listen && s.EP.Port == sess.lep.Port
                                  select s;
                     foreach (var item in subset) {
                         lock (SockTable) {
@@ -254,7 +254,7 @@ namespace SockMgr
                                 ID = "-",
                                 Name = "accept",
                                 EP = sess.rep,
-                                Type = SockUnit.TypeAccept,
+                                Type = SockType.accept,
                                 State = SockUnitState.Opened,
                             });
                             break;
@@ -335,7 +335,7 @@ namespace SockMgr
                 input.textBoxID.Text = sock.ID;
                 input.textBoxName.Text = sock.Name;
                 input.textBoxEP.Text = sock.EP.ToString();
-                if (sock.Type == SockUnit.TypeListen)
+                if (sock.Type == SockType.listen)
                     input.radioButtonListen.IsChecked = true;
                 else
                     input.radioButtonConnect.IsChecked = true;
@@ -352,9 +352,9 @@ namespace SockMgr
                 if (str.Count() == 2)
                     sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
                 if (input.radioButtonListen.IsChecked == true)
-                    sock.Type = SockUnit.TypeListen;
+                    sock.Type = SockType.listen;
                 else
-                    sock.Type = SockUnit.TypeConnect;
+                    sock.Type = SockType.connect;
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
             }
@@ -377,9 +377,9 @@ namespace SockMgr
                 if (str.Count() == 2)
                     sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
                 if (input.radioButtonListen.IsChecked == true)
-                    sock.Type = SockUnit.TypeListen;
+                    sock.Type = SockType.listen;
                 else
-                    sock.Type = SockUnit.TypeConnect;
+                    sock.Type = SockType.connect;
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
                 SockTable.Add(sock);
@@ -419,12 +419,12 @@ namespace SockMgr
 
             config.RemoveAll();
             foreach (var item in SockTable) {
-                if (item.Type == SockUnit.TypeAccept)
+                if (item.Type == SockType.accept)
                     continue;
                 XmlElement sockitem = doc.CreateElement("sockitem");
                 sockitem.SetAttribute("id", item.ID);
                 sockitem.SetAttribute("name", item.Name);
-                sockitem.SetAttribute("type", item.Type);
+                sockitem.SetAttribute("type", item.Type.ToString());
                 sockitem.SetAttribute("ep", item.EP.ToString());
                 sockitem.SetAttribute("autorun", item.Autorun.ToString());
                 config.AppendChild(sockitem);
