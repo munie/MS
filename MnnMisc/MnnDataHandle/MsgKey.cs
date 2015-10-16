@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Mnn.MnnDataHandle
+namespace Mnn.MnnMisc.MnnDataHandle
 {
     /// <summary>
     /// Socket数据的key值

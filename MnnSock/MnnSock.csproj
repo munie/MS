@@ -8,7 +8,7 @@
     <ProjectGuid>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MnnSock</RootNamespace>
+    <RootNamespace>Mnn.MnnSock</RootNamespace>
     <AssemblyName>MnnSock</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -54,9 +54,6 @@
     <Compile Include="SockConvert.cs" />
     <Compile Include="SockMsg.cs" />
     <Compile Include="SockSess.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

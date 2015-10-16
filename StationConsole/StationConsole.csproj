@@ -121,7 +121,7 @@
       <Project>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</Project>
       <Name>MnnMisc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MnnSocket\MnnSock.csproj">
+    <ProjectReference Include="..\MnnSock\MnnSock.csproj">
       <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
       <Name>MnnSock</Name>
     </ProjectReference>

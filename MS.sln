@@ -27,11 +27,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockMgr", "SockMgr\SockMgr.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvModule", "EnvModule\EnvModule.csproj", "{8B27CA98-1781-4630-B3E0-7D99BF6BF400}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnSock", "MnnSocket\MnnSock.csproj", "{4298E664-3238-45B4-8CDD-BA6764A3F2FF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnUtil", "MnnUtil\MnnUtil.csproj", "{E58D40E9-DAFE-4564-9BAE-867025DB9051}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnMisc", "MnnMisc\MnnMisc.csproj", "{8C1BDA51-F559-4472-A895-6BF82C0A06DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnnSock", "MnnSock\MnnSock.csproj", "{4298E664-3238-45B4-8CDD-BA6764A3F2FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -173,16 +173,6 @@ Global
 		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|Mixed Platforms.Build.0 = Release|x86
 		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|x86.ActiveCfg = Release|x86
 		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|x86.Build.0 = Release|x86
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|x86.ActiveCfg = Release|Any CPU
 		{E58D40E9-DAFE-4564-9BAE-867025DB9051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E58D40E9-DAFE-4564-9BAE-867025DB9051}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E58D40E9-DAFE-4564-9BAE-867025DB9051}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -203,6 +193,16 @@ Global
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{8C1BDA51-F559-4472-A895-6BF82C0A06DE}.Release|x86.ActiveCfg = Release|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4298E664-3238-45B4-8CDD-BA6764A3F2FF}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,8 +12,8 @@ using System.Windows;
 using System.Xml;
 using System.Threading;
 using Mnn.MnnSock.Deprecated;
-using Mnn.MnnModule;
-using Mnn.MnnDataHandle;
+using Mnn.MnnMisc.MnnModule;
+using Mnn.MnnMisc.MnnDataHandle;
 
 namespace StationConsole.CtrlLayer
 {

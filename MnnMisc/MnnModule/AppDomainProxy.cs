@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 
-namespace Mnn.MnnModule
+namespace Mnn.MnnMisc.MnnModule
 {
     class InterfaceUnit
     {

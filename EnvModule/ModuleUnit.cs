@@ -60,6 +60,6 @@ namespace EnvModule
             }
         }
 
-        public Mnn.MnnModule.ModuleItem Module { get; set; }
+        public Mnn.MnnMisc.MnnModule.ModuleItem Module { get; set; }
     }
 }

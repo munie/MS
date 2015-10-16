@@ -5,7 +5,7 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 
-namespace Mnn.MnnSerialPort
+namespace Mnn.MnnMisc.MnnSerial
 {
     public class AsyncSerailPort
     {

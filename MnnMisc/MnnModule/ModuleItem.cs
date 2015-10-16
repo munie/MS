@@ -5,7 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace Mnn.MnnModule
+namespace Mnn.MnnMisc.MnnModule
 {
     public class ModuleItem
     {

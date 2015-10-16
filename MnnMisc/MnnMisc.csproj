@@ -8,7 +8,7 @@
     <ProjectGuid>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MnnMisc</RootNamespace>
+    <RootNamespace>Mnn.MnnMisc</RootNamespace>
     <AssemblyName>MnnMisc</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -46,8 +46,8 @@
     <Compile Include="MnnModule\IModule.cs" />
     <Compile Include="MnnModule\ModuleItem.cs" />
     <Compile Include="MnnModule\ModuleManager.cs" />
-    <Compile Include="MnnSerialPort\AsyncSerailPort.cs" />
-    <Compile Include="MnnSerialPort\AsyncSerailPortEventArgs.cs" />
+    <Compile Include="MnnSerial\AsyncSerailPort.cs" />
+    <Compile Include="MnnSerial\AsyncSerailPortEventArgs.cs" />
     <Compile Include="MnnDataHandle\AtCommand.cs" />
     <Compile Include="MnnDataHandle\MsgCmd.cs" />
     <Compile Include="MnnDataHandle\MsgKey.cs" />

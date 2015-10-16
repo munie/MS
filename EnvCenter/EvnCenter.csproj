@@ -48,7 +48,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnSocket\MnnSock.csproj">
+    <ProjectReference Include="..\MnnSock\MnnSock.csproj">
       <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
       <Name>MnnSock</Name>
     </ProjectReference>
