@@ -12,7 +12,7 @@ namespace Mnn.MnnSocket
 {
     /// this file is converted from c proj, so still use c-style to name fileds
 
-    public enum SessType
+    public enum SockType
     {
         listen = 0,
         accept = 1, 
@@ -22,9 +22,9 @@ namespace Mnn.MnnSocket
     public class SockSess
     {
         public Socket sock;
+        public SockType type;
         public IPEndPoint lep;
         public IPEndPoint rep;
-        public SessType type;
         public bool eof;
         public DateTime tick;
 
@@ -41,13 +41,13 @@ namespace Mnn.MnnSocket
 
         // Methods ============================================================================
 
-        public SockSess(SessType type, Socket sock, RecvDelegate recv, SendDelegate send, object sdata)
+        public SockSess(SockType type, Socket sock, RecvDelegate recv, SendDelegate send, object sdata)
         {
             this.sock = sock;
+            this.type = type;
             //ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
             lep = sock.LocalEndPoint as IPEndPoint;
-            rep = type == SessType.listen ? null : sock.RemoteEndPoint as IPEndPoint; ;
-            this.type = type;
+            rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint; ;
             eof = false;
             tick = DateTime.Now;
 
@@ -123,9 +123,9 @@ namespace Mnn.MnnSocket
             foreach (var i in list) {
                 foreach (var item in sess_table) {
                     if (item.sock == i) {
-                        if (item.type == SessType.listen) {
+                        if (item.type == SockType.listen) {
                             Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(SessType.accept, sock, SockSess.Recv, SockSess.Send, null));
+                            sess_table.Add(new SockSess(SockType.accept, sock, SockSess.Recv, SockSess.Send, null));
                             Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
@@ -141,7 +141,7 @@ namespace Mnn.MnnSocket
             // ** timeout after read & parse & send & close
             list = new ArrayList(sess_table);
             foreach (SockSess item in list) {
-                if (item.type == SessType.accept && DateTime.Now.Subtract(item.tick) > stall_time)
+                if (item.type == SockType.accept && DateTime.Now.Subtract(item.tick) > stall_time)
                     item.eof = true;
 
                 if (item.rdata_size != 0 && sess_parse != null)
@@ -151,7 +151,7 @@ namespace Mnn.MnnSocket
                     item.sendfunc(item);
 
                 if (item.eof == true) {
-                    if (item.type == SessType.listen) {
+                    if (item.type == SockType.listen) {
                         foreach (var i in FindAcceptSession(item)) {
                             if (sess_delete != null)
                                 sess_delete(this, i);
@@ -201,7 +201,7 @@ namespace Mnn.MnnSocket
                 return false;
             }
 
-            sess_table.Add(new SockSess(SessType.connect, sock, SockSess.Recv, SockSess.Send, sdata));
+            sess_table.Add(new SockSess(SockType.connect, sock, SockSess.Recv, SockSess.Send, sdata));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
             if (sess_create != null)
                 sess_create(this, sess_table.Last());
@@ -213,11 +213,11 @@ namespace Mnn.MnnSocket
             ThreadCheck(false);
 
             foreach (var item in sess_table) {
-                if (item.type == SessType.listen && item.lep.Equals(ep)) {
+                if (item.type == SockType.listen && item.lep.Equals(ep)) {
                     item.eof = true;
                     break;
                 }
-                else if (item.type != SessType.listen && item.rep.Equals(ep)) {
+                else if (item.type != SockType.listen && item.rep.Equals(ep)) {
                     item.eof = true;
                     break;
                 }
@@ -229,12 +229,12 @@ namespace Mnn.MnnSocket
             ThreadCheck(false);
 
             foreach (var item in sess_table) {
-                if (item.type == SessType.listen && item.lep.Equals(ep)) {
+                if (item.type == SockType.listen && item.lep.Equals(ep)) {
                     foreach (var child in FindAcceptSession(item))
                         child.sock.Send(data);
                     break;
                 }
-                else if (item.type != SessType.listen && item.rep.Equals(ep)) {
+                else if (item.type != SockType.listen && item.rep.Equals(ep)) {
                     item.sock.Send(data);
                     break;
                 }
@@ -252,9 +252,9 @@ namespace Mnn.MnnSocket
 
         private void DeleteSession(SockSess sess)
         {
-            if (sess.type == SessType.listen)
+            if (sess.type == SockType.listen)
                 Console.Write("[info]: Session #* deleted from {0}.\n", sess.lep.ToString());
-            else if (sess.type != SessType.listen) {
+            else if (sess.type != SockType.listen) {
                 Console.Write("[info]: Session #* deleted from {0}.\n", sess.rep.ToString());
                 sess.sock.Shutdown(SocketShutdown.Both);
             }
@@ -266,9 +266,9 @@ namespace Mnn.MnnSocket
         {
             List<SockSess> retval = new List<SockSess>();
 
-            if (sess.type == SessType.listen) {
+            if (sess.type == SockType.listen) {
                 var subset = from s in sess_table
-                             where s.type == SessType.accept && sess.lep.Port == s.lep.Port
+                             where s.type == SockType.accept && sess.lep.Port == s.lep.Port
                              select s;
                 foreach (var item in subset)
                     retval.Add(item);

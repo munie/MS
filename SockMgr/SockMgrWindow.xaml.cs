@@ -240,7 +240,7 @@ namespace SockMgr
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (sess.type == SessType.accept) {
+                if (sess.type == SockType.accept) {
                     currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) + 1).ToString();
                     historyAcceptOpenCount.Text = (Convert.ToInt32(historyAcceptOpenCount.Text) + 1).ToString();
 
@@ -268,7 +268,7 @@ namespace SockMgr
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (sess.type == SessType.accept) {
+                if (sess.type == SockType.accept) {
                     currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) - 1).ToString();
                     historyAcceptCloseCount.Text = (Convert.ToInt32(historyAcceptCloseCount.Text) + 1).ToString();
                     foreach (var item in SockTable) {
@@ -285,7 +285,7 @@ namespace SockMgr
                         }
                     }
                 }
-                else if (sess.type == SessType.connect) {
+                else if (sess.type == SockType.connect) {
                     foreach (var item in SockTable) {
                         if (item.EP.Equals(sess.rep)) {
                             item.State = SockUnitState.Closed;
@@ -293,7 +293,7 @@ namespace SockMgr
                         }
                     }
                 }
-                else if (sess.type == SessType.listen) {
+                else if (sess.type == SockType.listen) {
                     foreach (var item in SockTable) {
                         if (item.EP.Equals(sess.lep)) {
                             item.State = SockUnitState.Closed;
