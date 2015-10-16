@@ -8,49 +8,27 @@ using Mnn.MnnUtil;
 
 namespace EnvCenter
 {
-    class client_sdata
-    {
-    }
-
-    class module_sdata
+    class SessData
     {
         public int type;
     }
 
-    class admin_sdata
-    {
-    }
-
     class Ctrler
     {
-        public SockSessManager sessmgr;
-
-        public Ctrler()
+        public Ctrler(SockSessManager sessmgr)
         {
-            sessmgr = new SockSessManager();
-            sessmgr.sess_create += new SockSessManager.SessCreateDelegate(sessmgr_sess_create);
-            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
+            this.sessmgr = sessmgr;
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
         }
 
-        private void sessmgr_sess_create(object sender, SockSess sess)
-        {
-        }
-
-        private void sessmgr_sess_delete(object sender, SockSess sess)
-        {
-        }
+        SockSessManager sessmgr;
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
             SockMsg.msghdr hdr = (SockMsg.msghdr)ConvertUtil.BytesToStruct(sess.rdata, typeof(SockMsg.msghdr));
 
-            //if ((UInt16)sess.rdata[2]+((UInt16)sess.rdata[3]<<8) != sess.rdata_size) {
             if (hdr.len != sess.rdata_size) {
                 Console.Write("[Error]: Unknow packet from {0}.\n", sess.rep.ToString());
                 sess.rdata_size = 0;
@@ -88,27 +66,20 @@ namespace EnvCenter
 
         private void client_parse(SockSess sess)
         {
-            var subset = from s in sessmgr.sess_table
-                         where s.sdata != null && (s.sdata as module_sdata).type == sess.rdata[1]
-                         select s;
-
-            foreach (var item in subset)
-                item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
-
-            //foreach (var item in sessmgr.sess_table) {
-            //    if (item.sdata != null && (item.sdata as module_sdata).type == sess.rdata[1]) {
-            //        item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
-            //        break;
-            //    }
-            //}
+            foreach (var item in sessmgr.sess_table) {
+                if (item.sdata != null && (item.sdata as SessData).type == sess.rdata[1]) {
+                    item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                    break;
+                }
+            }
         }
 
         private void module_parse(SockSess sess, SockMsg.msghdr hdr)
         {
             if (sess.sdata == null)
-                sess.sdata = new module_sdata();
+                sess.sdata = new SessData();
 
-            module_sdata sd = sess.sdata as module_sdata;
+            SessData sd = sess.sdata as SessData;
 
             switch (hdr.msg_type) {
                 case 0x0C: break;

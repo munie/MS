@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using Mnn.MnnSocket;
 
 namespace EnvCenter
 {
@@ -10,10 +11,11 @@ namespace EnvCenter
     {
         static void Main(string[] args)
         {
-            Ctrler clter = new Ctrler();
+            SockSessManager sessmgr = new SockSessManager();
+            Ctrler clter = new Ctrler(sessmgr);
 
             while(true) {
-                clter.sessmgr.Perform(1000);
+                sessmgr.Perform(1000);
             }
         }
     }
