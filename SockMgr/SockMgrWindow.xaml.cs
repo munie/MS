@@ -14,6 +14,8 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Net;
 using System.IO;
+using System.Reflection;
+using System.Diagnostics;
 using System.Xml;
 using Mnn.MnnSocket;
 
@@ -28,9 +30,47 @@ namespace SockMgr
         {
             InitializeComponent();
 
+            InitailizeWindowName();
+            InitailizeStatusBar();
+
             init();
             config();
             perform_once();
+        }
+
+        private void InitailizeWindowName()
+        {
+            // Format Main Form's Name
+            Assembly asm = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
+            this.Title = string.Format("{0} {1}.{2}.{3}-{4} - Powered By {5}",
+                fvi.ProductName,
+                fvi.ProductMajorPart,
+                fvi.ProductMinorPart,
+                fvi.ProductBuildPart,
+                fvi.ProductPrivatePart,
+                fvi.CompanyName);
+        }
+
+        private void InitailizeStatusBar()
+        {
+            // Display TimeRun
+            DateTime startTime = DateTime.Now;
+            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Interval = new TimeSpan(0, 0, 1);
+            timer.Tick += new EventHandler((s, ea) =>
+            {
+                txtTimeRun.Text = "运行时间 " + DateTime.Now.Subtract(startTime).ToString(@"dd\-hh\:mm\:ss");
+
+                long memory = GC.GetTotalMemory(false) / 1000;
+                long diff = memory - Convert.ToInt32(txtMemory.Text);
+                txtMemory.Text = memory.ToString();
+                if (diff >= 0)
+                    txtMemoryDiff.Text = "+" + diff;
+                else
+                    txtMemoryDiff.Text = "-" + diff;
+            });
+            timer.Start();
         }
 
         public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
@@ -173,8 +213,8 @@ namespace SockMgr
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (txtMsg.Text.Length >= 20 * 1024)
-                    txtMsg.Clear();
+                if (txtBoxMsg.Text.Length >= 20 * 1024)
+                    txtBoxMsg.Clear();
 
                 StringBuilder sb = new StringBuilder();
                 foreach (var item in data) {
@@ -189,10 +229,10 @@ namespace SockMgr
                 }
                 sb.Replace(")(", "");
 
-                txtMsg.AppendText(DateTime.Now + " (" +
+                txtBoxMsg.AppendText(DateTime.Now + " (" +
                     sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
-                txtMsg.AppendText(sb.ToString() + "\n");
-                txtMsg.ScrollToEnd();
+                txtBoxMsg.AppendText(sb.ToString() + "\n");
+                txtBoxMsg.ScrollToEnd();
             }));
         }
 
@@ -201,6 +241,9 @@ namespace SockMgr
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (sess.type == SessType.accept) {
+                    currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) + 1).ToString();
+                    historyAcceptOpenCount.Text = (Convert.ToInt32(historyAcceptOpenCount.Text) + 1).ToString();
+
                     var subset = from s in SockTable
                                  where s.Type == SockUnit.TypeListen && s.EP.Port == sess.lep.Port
                                  select s;
@@ -226,6 +269,8 @@ namespace SockMgr
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (sess.type == SessType.accept) {
+                    currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) - 1).ToString();
+                    historyAcceptCloseCount.Text = (Convert.ToInt32(historyAcceptCloseCount.Text) + 1).ToString();
                     foreach (var item in SockTable) {
                         if (item.Childs.Count == 0)
                             continue;
