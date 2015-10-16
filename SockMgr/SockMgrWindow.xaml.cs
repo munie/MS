@@ -167,19 +167,19 @@ namespace SockMgr
                 }
                 foreach (var child in childArray) {
                     if (child.SendBuffSize != 0 && child.State == SockUnitState.Opened) {
-                        sessmgr.SendSession(child.EP, child.SendBuff);
+                        sessmgr.SendSession(child.Sock, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                             child.SendBuffSize = 0;
                         //}));
                     }
                     if (child.State == SockUnitState.Closing && child.State != SockUnitState.Closed) {
-                        sessmgr.RemoveSession(child.EP);
+                        sessmgr.RemoveSession(child.Sock);
                         child.State = SockUnitState.Closed;
                     }
                 }
                 /// ** second handle sending data
                 if (item.SendBuffSize != 0 && item.State == SockUnitState.Opened) {
-                    sessmgr.SendSession(item.EP, item.SendBuff);
+                    sessmgr.SendSession(item.Sock, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         item.SendBuffSize = 0;
                     //}));
@@ -187,20 +187,20 @@ namespace SockMgr
                 /// ** third handle open or close
                 if (item.State == SockUnitState.Opening && item.State != SockUnitState.Opened) {
                     if (item.Type == SockType.listen) {
-                        if (sessmgr.AddListenSession(item.EP))
+                        if ((item.Sock = sessmgr.AddListenSession(item.EP)) != null)
                             item.State = SockUnitState.Opened;
                         else
                             item.State = SockUnitState.Closed;
                     }
                     else if (item.Type == SockType.connect) {
-                        if (sessmgr.AddConnectSession(item.EP))
+                        if ((item.Sock = sessmgr.AddConnectSession(item.EP)) != null)
                             item.State = SockUnitState.Opened;
                         else
                             item.State = SockUnitState.Closed;
                     }
                 }
                 else if (item.State == SockUnitState.Closing && item.State != SockUnitState.Closed) {
-                    sessmgr.RemoveSession(item.EP);
+                    sessmgr.RemoveSession(item.Sock);
                     item.State = SockUnitState.Closed;
                 }
             }
@@ -253,8 +253,9 @@ namespace SockMgr
                             {
                                 ID = "-",
                                 Name = "accept",
+                                Type = sess.type,
+                                Sock = sess.sock,
                                 EP = sess.rep,
-                                Type = SockType.accept,
                                 State = SockUnitState.Opened,
                             });
                             break;

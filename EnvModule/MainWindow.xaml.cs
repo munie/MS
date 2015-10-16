@@ -70,10 +70,10 @@ namespace EnvModule
 
         private void perform_once()
         {
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
-            byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
-            sessmgr.AddConnectSession(ep);
-            sessmgr.SendSession(ep, data);
+            //IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
+            //byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
+            //sessmgr.AddConnectSession(ep);
+            //sessmgr.SendSession(ep, data);
 
             //// autorun socket
             //foreach (var sock in SockTable) {
@@ -231,15 +231,15 @@ namespace EnvModule
 
         private void MenuItem_OpenModule_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
-                IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
-                byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
-                if (sessmgr.AddConnectSession(ep)) {
-                    sessmgr.SendSession(ep, data);
-                    item.EP = sessmgr.sess_table.Last().sock.LocalEndPoint as IPEndPoint;
-                    item.State = SockState.Opened;
-                }
-            }
+            //foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+            //    IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
+            //    byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
+            //    if (sessmgr.AddConnectSession(ep)) {
+            //        sessmgr.SendSession(ep, data);
+            //        item.EP = sessmgr.sess_table.Last().sock.LocalEndPoint as IPEndPoint;
+            //        item.State = SockState.Opened;
+            //    }
+            //}
         }
 
         private void MenuItem_CloseModule_Click(object sender, RoutedEventArgs e)

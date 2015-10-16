@@ -26,6 +26,7 @@ namespace SockMgr
         private string id;
         private string name;
         private SockType type;
+        private Socket sock;
         private IPEndPoint ep;
         private SockUnitState state;
         private string title;
@@ -70,6 +71,16 @@ namespace SockMgr
                 type = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Type"));
+            }
+        }
+        public Socket Sock
+        {
+            get { return sock; }
+            set
+            {
+                sock = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("Sock"));
             }
         }
         public IPEndPoint EP

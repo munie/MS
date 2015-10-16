@@ -21,8 +21,8 @@ namespace Mnn.MnnSocket
 
     public class SockSess
     {
-        public Socket sock;
         public SockType type;
+        public Socket sock;
         public IPEndPoint lep;
         public IPEndPoint rep;
         public bool eof;
@@ -43,9 +43,8 @@ namespace Mnn.MnnSocket
 
         public SockSess(SockType type, Socket sock, RecvDelegate recv, SendDelegate send, object sdata)
         {
-            this.sock = sock;
             this.type = type;
-            //ep = type == SessType.listen ? sock.LocalEndPoint as IPEndPoint : sock.RemoteEndPoint as IPEndPoint;
+            this.sock = sock;
             lep = sock.LocalEndPoint as IPEndPoint;
             rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint; ;
             eof = false;
@@ -165,7 +164,7 @@ namespace Mnn.MnnSocket
             }
         }
 
-        public bool AddListenSession(IPEndPoint ep)
+        public Socket AddListenSession(IPEndPoint ep)
         {
             ThreadCheck(false);
 
@@ -175,7 +174,7 @@ namespace Mnn.MnnSocket
                 //if (ep.Equals(globalEP)) {
                 if (ep.Port == globalEP.Port) {
                     Console.Write("[error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
-                    return false;
+                    return null;
                 }
             }
 
@@ -185,10 +184,10 @@ namespace Mnn.MnnSocket
             sock.Listen(100);
             sess_table.Add(new SockSess(0, sock, SockSess.Recv, SockSess.Send, null));
             Console.Write("[info]: Session #L listened at {0}.\n", ep.ToString());
-            return true;
+            return sock;
         }
 
-        public bool AddConnectSession(IPEndPoint ep, object sdata = null)
+        public Socket AddConnectSession(IPEndPoint ep, object sdata = null)
         {
             ThreadCheck(false);
 
@@ -198,43 +197,39 @@ namespace Mnn.MnnSocket
             }
             catch (Exception) {
                 Console.Write("[error]: Connected to {0} failed.\n", ep.ToString());
-                return false;
+                return null;
             }
 
             sess_table.Add(new SockSess(SockType.connect, sock, SockSess.Recv, SockSess.Send, sdata));
             Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
             if (sess_create != null)
                 sess_create(this, sess_table.Last());
-            return true;
+            return sock;
         }
 
-        public void RemoveSession(IPEndPoint ep)
+        public void RemoveSession(Socket sock)
         {
             ThreadCheck(false);
 
             foreach (var item in sess_table) {
-                if (item.type == SockType.listen && item.lep.Equals(ep)) {
-                    item.eof = true;
-                    break;
-                }
-                else if (item.type != SockType.listen && item.rep.Equals(ep)) {
+                if (item.sock == sock) {
                     item.eof = true;
                     break;
                 }
             }
         }
 
-        public void SendSession(IPEndPoint ep, byte[] data)
+        public void SendSession(Socket sock, byte[] data)
         {
             ThreadCheck(false);
 
             foreach (var item in sess_table) {
-                if (item.type == SockType.listen && item.lep.Equals(ep)) {
+                if (item.type == SockType.listen && item.sock == sock) {
                     foreach (var child in FindAcceptSession(item))
                         child.sock.Send(data);
                     break;
                 }
-                else if (item.type != SockType.listen && item.rep.Equals(ep)) {
+                else if (item.sock == sock) {
                     item.sock.Send(data);
                     break;
                 }
