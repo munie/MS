@@ -46,7 +46,7 @@ namespace Mnn.MnnSocket
             this.type = type;
             this.sock = sock;
             lep = sock.LocalEndPoint as IPEndPoint;
-            rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint; ;
+            rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint;
             eof = false;
             tick = DateTime.Now;
 

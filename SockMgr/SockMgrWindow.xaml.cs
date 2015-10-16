@@ -141,7 +141,7 @@ namespace SockMgr
             // autorun socket
             foreach (var sock in SockTable) {
                 if (sock.Autorun == true)
-                    sock.State = SockUnitState.Opening;
+                    sock.State = SockState.Opening;
             }
 
             // new thread for running socket
@@ -166,42 +166,42 @@ namespace SockMgr
                     childArray = item.Childs.ToArray();
                 }
                 foreach (var child in childArray) {
-                    if (child.SendBuffSize != 0 && child.State == SockUnitState.Opened) {
+                    if (child.SendBuffSize != 0 && child.State == SockState.Opened) {
                         sessmgr.SendSession(child.Sock, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                             child.SendBuffSize = 0;
                         //}));
                     }
-                    if (child.State == SockUnitState.Closing && child.State != SockUnitState.Closed) {
+                    if (child.State == SockState.Closing && child.State != SockState.Closed) {
                         sessmgr.RemoveSession(child.Sock);
-                        child.State = SockUnitState.Closed;
+                        child.State = SockState.Closed;
                     }
                 }
                 /// ** second handle sending data
-                if (item.SendBuffSize != 0 && item.State == SockUnitState.Opened) {
+                if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
                     sessmgr.SendSession(item.Sock, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         item.SendBuffSize = 0;
                     //}));
                 }
                 /// ** third handle open or close
-                if (item.State == SockUnitState.Opening && item.State != SockUnitState.Opened) {
+                if (item.State == SockState.Opening && item.State != SockState.Opened) {
                     if (item.Type == SockType.listen) {
                         if ((item.Sock = sessmgr.AddListenSession(item.EP)) != null)
-                            item.State = SockUnitState.Opened;
+                            item.State = SockState.Opened;
                         else
-                            item.State = SockUnitState.Closed;
+                            item.State = SockState.Closed;
                     }
                     else if (item.Type == SockType.connect) {
                         if ((item.Sock = sessmgr.AddConnectSession(item.EP)) != null)
-                            item.State = SockUnitState.Opened;
+                            item.State = SockState.Opened;
                         else
-                            item.State = SockUnitState.Closed;
+                            item.State = SockState.Closed;
                     }
                 }
-                else if (item.State == SockUnitState.Closing && item.State != SockUnitState.Closed) {
+                else if (item.State == SockState.Closing && item.State != SockState.Closed) {
                     sessmgr.RemoveSession(item.Sock);
-                    item.State = SockUnitState.Closed;
+                    item.State = SockState.Closed;
                 }
             }
         }
@@ -256,7 +256,7 @@ namespace SockMgr
                                 Type = sess.type,
                                 Sock = sess.sock,
                                 EP = sess.rep,
-                                State = SockUnitState.Opened,
+                                State = SockState.Opened,
                             });
                             break;
                         }
@@ -289,7 +289,7 @@ namespace SockMgr
                 else if (sess.type == SockType.connect) {
                     foreach (var item in SockTable) {
                         if (item.EP.Equals(sess.rep)) {
-                            item.State = SockUnitState.Closed;
+                            item.State = SockState.Closed;
                             return;
                         }
                     }
@@ -297,7 +297,7 @@ namespace SockMgr
                 else if (sess.type == SockType.listen) {
                     foreach (var item in SockTable) {
                         if (item.EP.Equals(sess.lep)) {
-                            item.State = SockUnitState.Closed;
+                            item.State = SockState.Closed;
                             return;
                         }
                     }
@@ -309,14 +309,14 @@ namespace SockMgr
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
-            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockUnitState.Opened)
-                (treeSock.SelectedItem as SockUnit).State = SockUnitState.Opening;
+            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockState.Opened)
+                (treeSock.SelectedItem as SockUnit).State = SockState.Opening;
         }
 
         private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
         {
-            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockUnitState.Closed)
-                (treeSock.SelectedItem as SockUnit).State = SockUnitState.Closing;
+            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockState.Closed)
+                (treeSock.SelectedItem as SockUnit).State = SockState.Closing;
         }
 
         private void MenuItem_EditSock_Click(object sender, RoutedEventArgs e)
@@ -327,7 +327,7 @@ namespace SockMgr
             SockUnit sock = treeSock.SelectedItem as SockUnit;
 
             // only closed listen & connect can be modified
-            if (sock.State != SockUnitState.Closed)
+            if (sock.State != SockState.Closed)
                 return;
 
             using (SockInputDialog input = new SockInputDialog()) {
@@ -395,7 +395,7 @@ namespace SockMgr
             SockUnit sock = treeSock.SelectedItem as SockUnit;
 
             // only closed listen & connect can be modified
-            if (sock.State != SockUnitState.Closed)
+            if (sock.State != SockState.Closed)
                 return;
 
             SockTable.Remove(sock);

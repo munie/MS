@@ -10,7 +10,7 @@ using Mnn.MnnSocket;
 
 namespace SockMgr
 {
-    public enum SockUnitState
+    public enum SockState
 	{
         //None = 0,
         Opening = 1,
@@ -28,7 +28,7 @@ namespace SockMgr
         private SockType type;
         private Socket sock;
         private IPEndPoint ep;
-        private SockUnitState state;
+        private SockState state;
         private string title;
         private bool autorun;
         public ObservableCollection<SockUnit> Childs { get; set; }
@@ -40,7 +40,7 @@ namespace SockMgr
             Childs = new ObservableCollection<SockUnit>();
             SendBuff = null;
             SendBuffSize = 0;
-            State = SockUnitState.Closed;
+            State = SockState.Closed;
         }
 
         public string ID
@@ -93,7 +93,7 @@ namespace SockMgr
                     PropertyChanged(this, new PropertyChangedEventArgs("EP"));
             }
         }
-        public SockUnitState State
+        public SockState State
         {
             get { return state; }
             set
@@ -136,13 +136,13 @@ namespace SockMgr
 
             if (Type == SockType.accept)
                 Title = ID.ToString() + " A " + EP.ToString() + " " + State;
-            else if (Type == SockType.listen && State == SockUnitState.Opening)
+            else if (Type == SockType.listen && State == SockState.Opening)
                 Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listening";
-            else if (Type == SockType.listen && State == SockUnitState.Opened)
+            else if (Type == SockType.listen && State == SockState.Opened)
                 Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listened";
-            else if (Type == SockType.connect && State == SockUnitState.Opening)
+            else if (Type == SockType.connect && State == SockState.Opening)
                 Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connecting";
-            else if (Type == SockType.connect && State == SockUnitState.Opened)
+            else if (Type == SockType.connect && State == SockState.Opened)
                 Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connected";
             else if (Type == SockType.listen)
                 Title = sb.ToString() + "L " + EP.ToString() + "    " + State;
