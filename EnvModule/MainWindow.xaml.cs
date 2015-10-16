@@ -98,7 +98,7 @@ namespace EnvModule
         {
         }
 
-        void sessmgr_sess_parse(object sender, SockSess sess)
+        private void sessmgr_sess_parse(object sender, SockSess sess)
         {
             byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
             sess.rdata_size = 0;
@@ -143,6 +143,8 @@ namespace EnvModule
             rwlock.ReleaseReaderLock();
         }
 
+        // Normal methods ===============================================================
+
         public void AtModuleLoad(string filePath)
         {
             ModuleItem module = new ModuleItem();
@@ -170,6 +172,7 @@ namespace EnvModule
             moduleUnit.ID = (string)module.Invoke("Mnn.MnnModule.IModule", "GetModuleID", null);
             moduleUnit.Name = fvi.ProductName;
             moduleUnit.Type = (UInt16)module.Invoke("Mnn.MnnModule.IModule", "GetModuleType", null);
+            moduleUnit.State = SockState.Closed;
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
             moduleUnit.FileComment = fvi.Comments;
@@ -200,5 +203,50 @@ namespace EnvModule
             rwlock.ReleaseWriterLock();
         }
 
+        // Module Menu ==================================================================
+
+        private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+
+            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            openFileDialog.FileName = "";
+
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                AtModuleLoad(openFileDialog.FileName);
+        }
+
+        private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
+        {
+            List<ModuleUnit> handles = new List<ModuleUnit>();
+
+            // 保存要卸载的模块信息
+            foreach (ModuleUnit item in lstViewModule.SelectedItems)
+                handles.Add(item);
+
+            // 卸载操作
+            foreach (var item in handles)
+                AtModuleUnload(item.FileName);
+        }
+
+        private void MenuItem_OpenModule_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
+                byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
+                if (sessmgr.AddConnectSession(ep)) {
+                    sessmgr.SendSession(ep, data);
+                    item.EP = sessmgr.sess_table.Last().sock.LocalEndPoint as IPEndPoint;
+                    item.State = SockState.Opened;
+                }
+            }
+        }
+
+        private void MenuItem_CloseModule_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                item.State = SockState.Closed;
+            }
+        }
     }
 }

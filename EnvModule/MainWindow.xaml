@@ -19,16 +19,20 @@
                 <GridView>
                     <GridViewColumn Header="模块名" Width="100"
                                     DisplayMemberBinding="{Binding FileName}" />
+                    <GridViewColumn Header="状态" Width="100"
+                                    DisplayMemberBinding="{Binding State}" />
                     <GridViewColumn Header="说明" Width="135"
                                     DisplayMemberBinding="{Binding FileComment}" />
                 </GridView>
             </ListView.View>
-            <!--<ListView.ContextMenu>
+            <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
+                    <MenuItem Header="激活模块" Click="MenuItem_OpenModule_Click"/>
+                    <MenuItem Header="关闭模块" Click="MenuItem_CloseModule_Click"/>
                     <MenuItem Header="加载模块" Click="MenuItem_LoadModule_Click"/>
                     <MenuItem Header="卸载模块" Click="MenuItem_UnloadModule_Click"/>
                 </ContextMenu>
-            </ListView.ContextMenu>-->
+            </ListView.ContextMenu>
         </ListView>
 
         <GridSplitter Height="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"></GridSplitter>

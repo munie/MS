@@ -3,20 +3,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
+using System.Net;
 
 namespace EnvModule
 {
+    public enum SockState
+	{
+        //None = 0,
+        Opening = 1,
+        Closing = 2,
+        Opened = 3,
+        Closed = 4,
+	}
+
     public class ModuleUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public virtual string ID { get; set; }
-        public virtual string Name { get; set; }
-        public virtual UInt16 Type { get; set; }
-        public virtual string FilePath { get; set; }
+        public string ID { get; set; }
+        public string Name { get; set; }
+        public UInt16 Type { get; set; }
+        public IPEndPoint EP { get; set; }
+        private SockState state;
+        public string FilePath { get; set; }
         private string fileName;
         private string fileComment;
 
+        public SockState State
+        {
+            get { return state; }
+            set
+            {
+                state = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("State"));
+            }
+        }
         public string FileName
         {
             get { return fileName; }
