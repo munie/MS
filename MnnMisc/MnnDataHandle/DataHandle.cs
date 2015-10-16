@@ -10,7 +10,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace Mnn
+namespace Mnn.MnnDataHandle
 {
     public abstract class DataHandle : Mnn.MnnModule.IModule, IDataHandle
     {

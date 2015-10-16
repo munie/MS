@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("SockMgr")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Mnn")]
+[assembly: AssemblyCompany("munie")]
 [assembly: AssemblyProduct("SockMgr")]
-[assembly: AssemblyCopyright("Copyright © Mnn 2015")]
+[assembly: AssemblyCopyright("Copyright © munie 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

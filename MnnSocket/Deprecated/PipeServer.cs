@@ -7,34 +7,50 @@ using System.IO;
 using System.IO.Pipes;
 using System.Xml.Serialization;
 
-namespace Mnn.MnnAtCmd
+namespace Mnn.MnnSock.Deprecated
 {
-    public class AtCmdPipeServer
+    public class PipeServer
     {
-        public event ExecuteAtCmdDeleagte ExecCommand;
+        public event EventHandler<ClientEventArgs> ClientReadMsg;
 
         private string pipeName;
         private int readbufferSize = 4096;
+        private bool isExitThread = false;
 
         // Method ====================================================================================
 
-        public void Run(string name)
+        public void Start(string name)
         {
             pipeName = name;
 
+            isExitThread = false;
             Thread thread = new Thread(() =>
             {
-                try {
-                    NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-                    pipeServer.BeginWaitForConnection(ReadCallback, pipeServer);
-                }
-                catch (Exception ex) {
-                    Mnn.MnnUtil.Logger.WriteException(ex);
+                while (true) {
+                    if (isExitThread == true) {
+                        isExitThread = false;
+                        break;
+                    }
+
+                    try {
+                        // xp 无法使用pipe，所以加点延迟预防一下...
+                        Thread.Sleep(500);
+                        NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                        pipeServer.BeginWaitForConnection(ReadCallback, pipeServer);
+                    }
+                    catch (Exception ex) {
+                        Mnn.MnnUtil.Logger.WriteException(ex);
+                    }
                 }
             });
 
             thread.IsBackground = true;
             thread.Start();
+        }
+
+        public void Stop()
+        {
+            isExitThread = true;
         }
 
         private void ReadCallback(IAsyncResult ar)
@@ -44,22 +60,13 @@ namespace Mnn.MnnAtCmd
             try {
                 pipeServerStream.EndWaitForConnection(ar);
 
-                // 监听下一个PipeClient
-                NamedPipeServerStream pipeServerStreamNext = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-                pipeServerStreamNext.BeginWaitForConnection(ReadCallback, pipeServerStreamNext);
-
                 byte[] readbuffer = new byte[readbufferSize];
-                MemoryStream memory = new MemoryStream(readbuffer);
-                XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCmdUnit));
                 while (true) {
                     try {
-                        pipeServerStream.Read(readbuffer, 0, readbuffer.Length);
-                        AtCmdUnit atCmdUnit = xmlFormat.Deserialize(memory) as AtCmdUnit;
-                        Array.Clear(readbuffer, 0, readbuffer.Length);
-                        memory.Position = 0;
+                        int bytesRead = pipeServerStream.Read(readbuffer, 0, readbuffer.Length);
 
-                        if (ExecCommand != null)
-                            ExecCommand(atCmdUnit);
+                        if (ClientReadMsg != null)
+                            ClientReadMsg(this, new ClientEventArgs(null, null, readbuffer.Take(bytesRead).ToArray()));
                     }
                     catch (InvalidOperationException ex) {
                         // From XmlSerializer when xml syntax is wrong
@@ -74,7 +81,6 @@ namespace Mnn.MnnAtCmd
                         break;
                     }
                 }
-                memory.Close();
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);

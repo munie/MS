@@ -17,7 +17,7 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 using System.Xml;
-using Mnn.MnnSocket;
+using Mnn.MnnSock;
 
 namespace SockMgr
 {
@@ -129,8 +129,7 @@ namespace SockMgr
                     CmdTable.Add(cmd);
                 }
             }
-            catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+            catch (Exception) {
                 System.Windows.MessageBox.Show("配置文件读取错误" );
             }
             /// ** Initialize End ====================================================
@@ -462,7 +461,7 @@ namespace SockMgr
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                unit.SendBuff = Mnn.MnnUtil.ConvertUtil.CmdstrToBytes(item.Cmd, '|');
+                unit.SendBuff = SockConvert.CmdstrToBytes(item.Cmd, '|');
                 unit.SendBuffSize = unit.SendBuff.Length;
                 break;
             }

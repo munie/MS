@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using Mnn.MnnSocket;
-using Mnn.MnnUtil;
+using Mnn.MnnSock;
 
 namespace EnvCenter
 {
@@ -28,7 +27,7 @@ namespace EnvCenter
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
-            SockMsg.msghdr hdr = (SockMsg.msghdr)ConvertUtil.BytesToStruct(sess.rdata, typeof(SockMsg.msghdr));
+            SockMsg.msghdr hdr = (SockMsg.msghdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.msghdr));
 
             if (hdr.len != sess.rdata_size) {
                 Console.Write("[Error]: Unknow packet from {0}.\n", sess.rep.ToString());
@@ -59,7 +58,7 @@ namespace EnvCenter
 
         private void term_parse(SockSess sess)
         {
-            SockMsg.termhdr thdr = (SockMsg.termhdr)ConvertUtil.BytesToStruct(sess.rdata, typeof(SockMsg.termhdr));
+            SockMsg.termhdr thdr = (SockMsg.termhdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.termhdr));
 
             // 保存ccid
             if (sess.sdata == null)

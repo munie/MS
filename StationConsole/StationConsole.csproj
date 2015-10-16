@@ -117,9 +117,17 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Mnn\Mnn.csproj">
+    <ProjectReference Include="..\MnnMisc\MnnMisc.csproj">
       <Project>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</Project>
-      <Name>Mnn</Name>
+      <Name>MnnMisc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MnnSocket\MnnSock.csproj">
+      <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
+      <Name>MnnSock</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MnnUtil\MnnUtil.csproj">
+      <Project>{E58D40E9-DAFE-4564-9BAE-867025DB9051}</Project>
+      <Name>MnnUtil</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

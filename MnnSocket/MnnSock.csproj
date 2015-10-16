@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</ProjectGuid>
+    <ProjectGuid>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mnn</RootNamespace>
-    <AssemblyName>Mnn</AssemblyName>
+    <RootNamespace>MnnSock</RootNamespace>
+    <AssemblyName>MnnSock</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\mnn\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -40,43 +40,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataHandle.cs" />
-    <Compile Include="Discard\MnnAtCmd\AtCmdSockServer.cs" />
-    <Compile Include="Discard\MnnAtCmd\AtCmdUnit.cs" />
-    <Compile Include="Discard\MnnAtCmd\ExecuteAtCmdDeleagte.cs" />
-    <Compile Include="IDataHandle.cs" />
-    <Compile Include="MnnModule\AppDomainProxy.cs" />
-    <Compile Include="MnnModule\IModule.cs" />
-    <Compile Include="MnnModule\ModuleItem.cs" />
-    <Compile Include="MnnModule\ModuleManager.cs" />
-    <Compile Include="Discard\MnnSerialPort\AsyncSerailPort.cs" />
-    <Compile Include="Discard\MnnSerialPort\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="MnnSocket\AsyncSocketListenItem.cs" />
-    <Compile Include="MnnSocket\AsyncSocketListenManager.cs" />
-    <Compile Include="MnnSocket\AsyncSocketSender.cs" />
-    <Compile Include="MnnSocket\ClientEventArgs.cs" />
-    <Compile Include="MnnSocket\SockMsg.cs" />
-    <Compile Include="MnnSocket\PipeServer.cs" />
-    <Compile Include="MnnSocket\SockServer.cs" />
-    <Compile Include="MnnSocket\ListenEventArgs.cs" />
-    <Compile Include="MnnSocket\TcpServer.cs" />
-    <Compile Include="MnnSocket\SockSess.cs" />
-    <Compile Include="MnnSocket\UdpServer.cs" />
-    <Compile Include="Discard\MnnAtCmd\AtCmdPipeServer.cs" />
-    <Compile Include="AtCommand.cs" />
-    <Compile Include="MnnUtil\ExprSolve.cs" />
-    <Compile Include="MnnUtil\Logger.cs" />
-    <Compile Include="MsgCmd.cs" />
-    <Compile Include="MsgKey.cs" />
+    <Compile Include="Deprecated\AsyncSocketListenItem.cs" />
+    <Compile Include="Deprecated\AsyncSocketListenManager.cs" />
+    <Compile Include="Deprecated\AsyncSocketSender.cs" />
+    <Compile Include="Deprecated\ClientEventArgs.cs" />
+    <Compile Include="Deprecated\ListenEventArgs.cs" />
+    <Compile Include="Deprecated\PipeServer.cs" />
+    <Compile Include="Deprecated\SockServer.cs" />
+    <Compile Include="Deprecated\TcpServer.cs" />
+    <Compile Include="Deprecated\UdpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MnnUtil\ConvertUtil.cs" />
-    <Compile Include="MnnUtil\CrcUtil.cs" />
-    <Compile Include="MnnUtil\DegreeUtil.cs" />
-    <Compile Include="MnnUtil\HumiUtil.cs" />
-    <Compile Include="MnnUtil\MsgAnalizeUitl.cs" />
-    <Compile Include="MnnUtil\RegUtil.cs" />
+    <Compile Include="SockConvert.cs" />
+    <Compile Include="SockMsg.cs" />
+    <Compile Include="SockSess.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MnnUtil\MnnUtil.csproj">
+      <Project>{E58D40E9-DAFE-4564-9BAE-867025DB9051}</Project>
+      <Name>MnnUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

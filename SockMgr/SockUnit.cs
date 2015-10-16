@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
-using Mnn.MnnSocket;
+using Mnn.MnnSock;
 
 namespace SockMgr
 {

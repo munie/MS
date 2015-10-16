@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock.Deprecated
 {
     public class AsyncSocketListenManager
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock
 {
     public class SockMsg
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock.Deprecated
 {
     public abstract class SockServer
     {

@@ -78,15 +78,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Mnn\Mnn.csproj">
-      <Project>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</Project>
-      <Name>Mnn</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="sockdebug.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MnnSocket\MnnSock.csproj">
+      <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
+      <Name>MnnSock</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

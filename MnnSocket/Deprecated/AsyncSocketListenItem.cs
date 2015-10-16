@@ -8,7 +8,7 @@ using System.Net.NetworkInformation;
 using System.Threading;
 using Mnn.MnnUtil;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock.Deprecated
 {
     public partial class AsyncSocketListenItem : IDisposable
     {

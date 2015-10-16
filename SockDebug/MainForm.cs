@@ -11,7 +11,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Xml;
 using System.IO;
-using Mnn.MnnSocket;
+using Mnn.MnnSock.Deprecated;
 
 namespace ScokDebug
 {

@@ -17,7 +17,7 @@ using System.IO;
 using System.Net;
 using System.Diagnostics;
 using System.Reflection;
-using Mnn.MnnSocket;
+using Mnn.MnnSock;
 using Mnn.MnnModule;
 
 namespace EnvModule

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的常规信息通过以下
 // 特性集控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("SockAttack")]
+[assembly: AssemblyTitle("MnnSock")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("munie")]
-[assembly: AssemblyProduct("SockAttack")]
+[assembly: AssemblyProduct("MnnSock")]
 [assembly: AssemblyCopyright("Copyright © munie 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("0b7e4fc9-e2dc-417c-8731-388b4b1503ee")]
+[assembly: Guid("649f3ec4-b695-4174-9749-4b56a8a8a45f")]
 
 // 程序集的版本信息由下面四个值组成:
 //

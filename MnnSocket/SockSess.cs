@@ -8,7 +8,7 @@ using System.Net.NetworkInformation;
 using System.Collections;
 using System.Threading;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock
 {
     /// this file is converted from c proj, so still use c-style to name fileds
 

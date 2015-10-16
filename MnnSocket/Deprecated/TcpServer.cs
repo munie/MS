@@ -10,7 +10,7 @@ using System.Collections;
 using Mnn.MnnUtil;
 using System.Runtime.InteropServices;
 
-namespace Mnn.MnnSocket
+namespace Mnn.MnnSock.Deprecated
 {
     public class TcpServer : SockServer
     {

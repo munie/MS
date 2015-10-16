@@ -2,30 +2,27 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EnvCenter</RootNamespace>
-    <AssemblyName>EnvCenter</AssemblyName>
+    <RootNamespace>Mnn</RootNamespace>
+    <AssemblyName>Mnn</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\env\</OutputPath>
+    <OutputPath>..\bin\mnn\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -43,15 +40,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ctrler.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="MnnDataHandle\DataHandle.cs" />
+    <Compile Include="MnnDataHandle\IDataHandle.cs" />
+    <Compile Include="MnnModule\AppDomainProxy.cs" />
+    <Compile Include="MnnModule\IModule.cs" />
+    <Compile Include="MnnModule\ModuleItem.cs" />
+    <Compile Include="MnnModule\ModuleManager.cs" />
+    <Compile Include="MnnSerialPort\AsyncSerailPort.cs" />
+    <Compile Include="MnnSerialPort\AsyncSerailPortEventArgs.cs" />
+    <Compile Include="MnnDataHandle\AtCommand.cs" />
+    <Compile Include="MnnDataHandle\MsgCmd.cs" />
+    <Compile Include="MnnDataHandle\MsgKey.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnSocket\MnnSock.csproj">
-      <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
-      <Name>MnnSock</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MnnUtil\MnnUtil.csproj">
       <Project>{E58D40E9-DAFE-4564-9BAE-867025DB9051}</Project>
       <Name>MnnUtil</Name>
