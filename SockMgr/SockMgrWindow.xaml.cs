@@ -172,22 +172,22 @@ namespace SockMgr
                 if (txtMsg.Text.Length >= 20 * 1024)
                     txtMsg.Clear();
 
-                string hexstr = "";
+                StringBuilder str = new StringBuilder();
                 foreach (var item in data) {
                     if (item >= 0x20 && item < 0x7f) {
-                        hexstr += Convert.ToChar(item);
+                        str.Append(Convert.ToChar(item));
                         continue;
                     }
                     string s = Convert.ToString(item, 16);
                     if (s.Length == 1)
                         s = "0" + s;
-                    hexstr += "(" + s + ")";
+                    str.Append("(" + s + ")");
                 }
-                hexstr = hexstr.Replace(")(", "");
+                str.Replace(")(", "");
 
                 txtMsg.AppendText(DateTime.Now + " (" +
                     sess.sock.RemoteEndPoint.ToString() + " => " + sess.sock.LocalEndPoint.ToString() + ")\n");
-                txtMsg.AppendText(hexstr + "\n");
+                txtMsg.AppendText(str.ToString() + "\n");
                 txtMsg.ScrollToEnd();
             }));
         }
