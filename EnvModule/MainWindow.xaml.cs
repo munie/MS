@@ -17,6 +17,7 @@ using System.IO;
 using System.Net;
 using System.Diagnostics;
 using System.Reflection;
+using System.Configuration;
 using Mnn.MnnSock;
 using Mnn.MnnMisc.MnnModule;
 
@@ -30,10 +31,7 @@ namespace EnvModule
         public MainWindow()
         {
             InitializeComponent();
-
             init();
-            config();
-            perform_once();
         }
 
         private SockSessManager sessmgr;
@@ -41,14 +39,19 @@ namespace EnvModule
         private ReaderWriterLock rwlock = new ReaderWriterLock();
         private ObservableCollection<ModuleUnit> moduleTable;
         private ObservableCollection<ClientUnit> clientTable;
+        private IPEndPoint ep;
 
         private void init()
         {
+            // 初始化变量
             sessmgr = new SockSessManager();
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
+            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
             moduleTable = new ObservableCollection<ModuleUnit>();
             clientTable = new ObservableCollection<ClientUnit>();
             DataContext = new { ModuleTable = moduleTable, ClientTable = clientTable };
+            ep = new IPEndPoint(IPAddress.Parse(ConfigurationManager.AppSettings["ip"]),
+                int.Parse(ConfigurationManager.AppSettings["port"]));
 
             // 加载 DataHandles 文件夹下的所有模块
             string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
@@ -62,27 +65,12 @@ namespace EnvModule
                     }
                 }
             }
-        }
 
-        private void config()
-        {
-        }
+            // 尝试连接中心站
+            foreach (var item in moduleTable)
+                item.State = SockState.Opening;
 
-        private void perform_once()
-        {
-            //IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
-            //byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
-            //sessmgr.AddConnectSession(ep);
-            //sessmgr.SendSession(ep, data);
-
-            //// autorun socket
-            //foreach (var sock in SockTable) {
-            //    if (sock.Autorun == true)
-            //        sock.State = SockUnitState.Opening;
-            //}
-
-            // new thread for running socket
-            // from now on, we can't call motheds of sessmgr directly in this thread
+            // 启动socket线程
             Thread thread = new Thread(() =>
             {
                 while (true) {
@@ -96,6 +84,31 @@ namespace EnvModule
 
         private void perform()
         {
+            foreach (var item in moduleTable) {
+                /// ** second handle sending data
+                if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
+                    sessmgr.SendSession(item.Sock, item.SendBuff);
+                    //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                    item.SendBuffSize = 0;
+                    //}));
+                }
+
+                /// ** third handle open or close
+                if (item.State == SockState.Opening) {
+                    if ((item.Sock = sessmgr.AddConnectSession(ep)) != null) {
+                        item.State = SockState.Opened;
+                        // 向中心站注册
+                        byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, Convert.ToByte(item.Type) };
+                        sessmgr.SendSession(item.Sock, data);
+                    }
+                    else
+                        item.State = SockState.Closed;
+                }
+                else if (item.State == SockState.Closing) {
+                    sessmgr.RemoveSession(item.Sock);
+                    item.State = SockState.Closed;
+                }
+            }
         }
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
@@ -127,12 +140,12 @@ namespace EnvModule
                 txtBoxMsg.ScrollToEnd();
             }));
 
-
+            // 根据data[1]找到对应模块，处理数据
             rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
                     try {
-                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsgByte", new object[] { null, data });
+                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsgByte", new object[] { data });
                     }
                     catch (Exception ex) {
                         Console.Write(ex.ToString());
@@ -141,6 +154,19 @@ namespace EnvModule
                 }
             }
             rwlock.ReleaseReaderLock();
+        }
+
+        private void sessmgr_sess_delete(object sender, SockSess sess)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var item in moduleTable) {
+                    if (item.Sock == sess.sock) {
+                        item.State = SockState.Closed;
+                        break;
+                    }
+                }
+            }));
         }
 
         // Normal methods ===============================================================
@@ -231,22 +257,19 @@ namespace EnvModule
 
         private void MenuItem_OpenModule_Click(object sender, RoutedEventArgs e)
         {
-            //foreach (ModuleUnit item in lstViewModule.SelectedItems) {
-            //    IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
-            //    byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, 0x40 };
-            //    if (sessmgr.AddConnectSession(ep)) {
-            //        sessmgr.SendSession(ep, data);
-            //        item.EP = sessmgr.sess_table.Last().sock.LocalEndPoint as IPEndPoint;
-            //        item.State = SockState.Opened;
-            //    }
-            //}
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                if (item.State == SockState.Closed)
+                    item.State = SockState.Opening;
+            }
         }
 
         private void MenuItem_CloseModule_Click(object sender, RoutedEventArgs e)
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
-                item.State = SockState.Closed;
+                if (item.State == SockState.Opened)
+                    item.State = SockState.Closing;
             }
         }
+
     }
 }

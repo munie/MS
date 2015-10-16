@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
-using System.Net;
+using System.Net.Sockets;
 
 namespace EnvModule
 {
@@ -23,8 +23,12 @@ namespace EnvModule
         public string ID { get; set; }
         public string Name { get; set; }
         public UInt16 Type { get; set; }
-        public IPEndPoint EP { get; set; }
+
+        public Socket Sock { get; set; }
         private SockState state;
+        public byte[] SendBuff { get; set; }
+        public int SendBuffSize { get; set; }
+
         public string FilePath { get; set; }
         private string fileName;
         private string fileComment;

@@ -17,11 +17,11 @@
         <ListView x:Name="lstViewModule" Margin="5" Grid.Row="1" ItemsSource="{Binding ModuleTable}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="模块名" Width="100"
+                    <GridViewColumn Header="模块名" Width="120"
                                     DisplayMemberBinding="{Binding FileName}" />
-                    <GridViewColumn Header="状态" Width="100"
+                    <GridViewColumn Header="状态" Width="60"
                                     DisplayMemberBinding="{Binding State}" />
-                    <GridViewColumn Header="说明" Width="135"
+                    <GridViewColumn Header="说明" Width="180"
                                     DisplayMemberBinding="{Binding FileComment}" />
                 </GridView>
             </ListView.View>
