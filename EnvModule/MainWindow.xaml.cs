@@ -158,7 +158,7 @@ namespace EnvModule
             }
 
             try {
-                module.Invoke("Mnn.MnnModule.IModule", "Init", null);
+                module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Init", null);
             }
             catch (Exception ex) {
                 module.UnLoad();
@@ -169,9 +169,9 @@ namespace EnvModule
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit moduleUnit = new ModuleUnit();
-            moduleUnit.ID = (string)module.Invoke("Mnn.MnnModule.IModule", "GetModuleID", null);
+            moduleUnit.ID = (string)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleID", null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.Type = (UInt16)module.Invoke("Mnn.MnnModule.IModule", "GetModuleType", null);
+            moduleUnit.Type = (UInt16)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleType", null);
             moduleUnit.State = SockState.Closed;
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
@@ -191,7 +191,7 @@ namespace EnvModule
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Module.Invoke("Mnn.MnnModule.IModule", "Final", null);
+                    subset.First().Module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Final", null);
                 }
                 catch (Exception) { }
                 // 卸载模块
