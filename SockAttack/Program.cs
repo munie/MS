@@ -20,8 +20,8 @@ namespace SockAttack
 
 
             // 读取配置文件
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml") == false) {
-                Console.WriteLine("Can't find message.xml at directory config...");
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "\\sockattack.xml") == false) {
+                Console.WriteLine("Can't find sockattack.xml at directory config...");
                 Console.WriteLine("Application will be closed in 5 seconds.");
                 System.Threading.Thread.Sleep(5000);
                 return;
@@ -29,7 +29,7 @@ namespace SockAttack
 
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\sockattack.xml");
 
                 XmlNode codingNode = xdoc.SelectSingleNode("/configuration/encoding");
                 coding = Encoding.GetEncoding(codingNode.InnerText);
@@ -63,7 +63,7 @@ namespace SockAttack
             catch (Exception ex) {
                 Console.Write(ex.ToString());
                 Console.WriteLine("");
-                Console.WriteLine("Error: Reading message.xml Fail.");
+                Console.WriteLine("Error: Reading sockattack.xml Fail.");
                 Console.WriteLine("Application will be closed in 5 seconds.");
                 System.Threading.Thread.Sleep(5000);
                 return;
