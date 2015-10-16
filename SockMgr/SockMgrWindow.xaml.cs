@@ -35,7 +35,24 @@ namespace SockMgr
 
             init();
             config();
-            perform_once();
+
+            // autorun socket
+            foreach (var sock in SockTable) {
+                if (sock.Autorun == true)
+                    sock.State = SockState.Opening;
+            }
+
+            // new thread for running socket
+            // from now on, we can't call motheds of sessmgr directly in this thread
+            Thread thread = new Thread(() =>
+            {
+                while (true) {
+                    perform_sock_table();
+                    sessmgr.Perform(1000);
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         private void InitailizeWindowName()
@@ -135,27 +152,6 @@ namespace SockMgr
             /// ** Initialize End ====================================================
         }
 
-        private void perform_once()
-        {
-            // autorun socket
-            foreach (var sock in SockTable) {
-                if (sock.Autorun == true)
-                    sock.State = SockState.Opening;
-            }
-
-            // new thread for running socket
-            // from now on, we can't call motheds of sessmgr directly in this thread
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    perform_sock_table();
-                    sessmgr.Perform(1000);
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
-        }
-
         private void perform_sock_table()
         {
             foreach (var item in SockTable) {
@@ -176,6 +172,7 @@ namespace SockMgr
                         child.State = SockState.Closed;
                     }
                 }
+
                 /// ** second handle sending data
                 if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
                     sessmgr.SendSession(item.Sock, item.SendBuff);
@@ -183,8 +180,9 @@ namespace SockMgr
                         item.SendBuffSize = 0;
                     //}));
                 }
+
                 /// ** third handle open or close
-                if (item.State == SockState.Opening && item.State != SockState.Opened) {
+                if (item.State == SockState.Opening) {
                     if (item.Type == SockType.listen) {
                         if ((item.Sock = sessmgr.AddListenSession(item.EP)) != null)
                             item.State = SockState.Opened;
@@ -198,7 +196,7 @@ namespace SockMgr
                             item.State = SockState.Closed;
                     }
                 }
-                else if (item.State == SockState.Closing && item.State != SockState.Closed) {
+                else if (item.State == SockState.Closing) {
                     sessmgr.RemoveSession(item.Sock);
                     item.State = SockState.Closed;
                 }
@@ -308,13 +306,13 @@ namespace SockMgr
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
-            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockState.Opened)
+            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State == SockState.Closed)
                 (treeSock.SelectedItem as SockUnit).State = SockState.Opening;
         }
 
         private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
         {
-            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State != SockState.Closed)
+            if (treeSock.SelectedItem != null && (treeSock.SelectedItem as SockUnit).State == SockState.Opened)
                 (treeSock.SelectedItem as SockUnit).State = SockState.Closing;
         }
 
