@@ -10,7 +10,7 @@
   </socket>
   <command>
     <cmditem id="0" name="模块注册" content="0x2220050040" comment="22type 20module" />
-    <cmditem id="1" name="终端心跳" content="0x0C400400" comment="0Calive 40termial" />
+    <cmditem id="1" name="终端心跳" content="0x0C40|0x1800|89860113836037156496" comment="0Calive 40termial" />
     <cmditem id="2" name="test" content="Hello World!|0x0102030405" comment="test cmd" />
   </command>
 </configuration>
