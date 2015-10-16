@@ -98,7 +98,7 @@ namespace EnvModule
                     if ((item.Sock = sessmgr.AddConnectSession(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
-                        byte[] data = new byte[] { 0x22, 0x20, 0x05, 0x00, Convert.ToByte(item.Type) };
+                        byte[] data = new byte[] { 0x20, 0x0D, 0x05, 0x00, Convert.ToByte(item.Type) };
                         sessmgr.SendSession(item.Sock, data);
                     }
                     else

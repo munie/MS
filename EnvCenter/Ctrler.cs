@@ -15,6 +15,8 @@ namespace EnvCenter
 
     class Ctrler
     {
+        SockSessManager sessmgr;
+
         public Ctrler(SockSessManager sessmgr)
         {
             this.sessmgr = sessmgr;
@@ -23,7 +25,7 @@ namespace EnvCenter
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
         }
 
-        SockSessManager sessmgr;
+        // Methods ======================================================================
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
@@ -42,18 +44,34 @@ namespace EnvCenter
              * 0x80 ~ 0xff : reserved
              */
             switch (hdr.id_type) {
-                case 0x20:
-                case 0x21: module_parse(sess, hdr); break;
-
+                case 0x00: admin_parse(sess); break;
+                case 0x20: module_parse(sess, hdr); break;
                 case 0x40:
-                case 0x41: 
-                case 0x42:
-                case 0x43: term_parse(sess); break;
-
+                case 0x42: 
+                case 0x46:
+                case 0x48: term_parse(sess); break;
                 default: break;
             }
 
             sess.rdata_size = 0;
+        }
+
+        private void admin_parse(SockSess sess)
+        {
+        }
+
+        private void module_parse(SockSess sess, SockMsg.msghdr hdr)
+        {
+            if (sess.sdata == null)
+                sess.sdata = new SessData();
+            SessData sd = sess.sdata as SessData;
+
+            switch (hdr.msg_type) {
+                case 0x0C: break;
+                case 0x0D: // 注册目标term类型
+                    sd.type = sess.rdata[4];
+                    break;
+            }
         }
 
         private void term_parse(SockSess sess)
@@ -68,24 +86,10 @@ namespace EnvCenter
 
             // 迭代sess_table，找到对应的处理模块，发送数据
             foreach (var item in sessmgr.sess_table) {
-                if (item.sdata != null && (item.sdata as SessData).type == sess.rdata[1]) {
+                if (item.sdata != null && (item.sdata as SessData).type == thdr.hdr.id_type) {
                     item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
                     break;
                 }
-            }
-        }
-
-        private void module_parse(SockSess sess, SockMsg.msghdr hdr)
-        {
-            if (sess.sdata == null)
-                sess.sdata = new SessData();
-            SessData sd = sess.sdata as SessData;
-
-            switch (hdr.msg_type) {
-                case 0x0C: break;
-                case 0x22: // 注册目标term类型
-                    sd.type = sess.rdata[4];
-                    break;
             }
         }
     }

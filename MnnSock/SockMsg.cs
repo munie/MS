@@ -12,8 +12,8 @@ namespace Mnn.MnnSock
         [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
         public struct msghdr
         {
-            public byte msg_type;
             public byte id_type;
+            public byte msg_type;
             public UInt16 len;
         }
 
@@ -21,7 +21,7 @@ namespace Mnn.MnnSock
         [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
         public struct termhdr
         {
-            msghdr hdr;
+            public msghdr hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
         }
