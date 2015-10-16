@@ -120,20 +120,24 @@ namespace SockMgr
             if (Type == null || ID == null || EP == null)
                 return;
 
+            StringBuilder sb = new StringBuilder(ID);
+            for (int i = 0; i < 4 - ID.Length; ++i)
+                sb.Append(" ");
+
             if (Type == SockUnit.TypeAccept)
-                Title = "\t" + ID + " A " + EP.ToString() + " " + State;
+                Title = ID.ToString() + " A " + EP.ToString() + " " + State;
             else if (Type == SockUnit.TypeListen && State == SockUnitState.Opening)
-                Title = ID + "\tL " + EP.ToString() + "    " + "Listening";
+                Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listening";
             else if (Type == SockUnit.TypeListen && State == SockUnitState.Opened)
-                Title = ID + "\tL " + EP.ToString() + "    " + "Listened";
+                Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listened";
             else if (Type == SockUnit.TypeConnect && State == SockUnitState.Opening)
-                Title = ID + "\tC " + EP.ToString() + "    " + "Connecting";
+                Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connecting";
             else if (Type == SockUnit.TypeConnect && State == SockUnitState.Opened)
-                Title = ID + "\tC " + EP.ToString() + "    " + "Connected";
+                Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connected";
             else if (Type == SockUnit.TypeListen)
-                Title = ID + "\tL " + EP.ToString() + "    " + State;
+                Title = sb.ToString() + "L " + EP.ToString() + "    " + State;
             else if (Type == SockUnit.TypeConnect)
-                Title = ID + "\tC " + EP.ToString() + "    " + State;
+                Title = sb.ToString() + "C " + EP.ToString() + "    " + State;
         }
     }
 }

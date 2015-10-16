@@ -16,7 +16,7 @@
 
         <TextBlock Text="SockMgr ~ Mnn" Margin="5,5,5,120" Grid.Row="1" TextAlignment="Center" FontWeight="Bold" FontStyle="Italic" FontFamily="Palatino Linotype" FontSize="18" />
         
-        <TreeView Name="treeSock" Margin="5,37,7,5" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding SockTable}" PreviewMouseRightButtonDown="TreeView_PreviewMouseRightButtonDown">
+        <TreeView Name="treeSock" Margin="5,37,7,5" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding SockTable}" PreviewMouseRightButtonDown="TreeView_PreviewMouseRightButtonDown" FontFamily="Consolas">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Childs}">
                     <TextBlock Text="{Binding Title}"></TextBlock>
