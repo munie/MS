@@ -80,10 +80,10 @@ namespace Mnn.MnnSock.Deprecated
             }
             catch (SocketException ex) {
                 Close();
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                Logger.WriteException(ex);
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                Logger.WriteException(ex);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Mnn.MnnSock.Deprecated
                 }
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                Logger.WriteException(ex);
             }
         }
     }

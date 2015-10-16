@@ -45,6 +45,7 @@
     <Compile Include="Deprecated\AsyncSocketSender.cs" />
     <Compile Include="Deprecated\ClientEventArgs.cs" />
     <Compile Include="Deprecated\ListenEventArgs.cs" />
+    <Compile Include="Deprecated\Logger.cs" />
     <Compile Include="Deprecated\PipeServer.cs" />
     <Compile Include="Deprecated\SockServer.cs" />
     <Compile Include="Deprecated\TcpServer.cs" />
@@ -55,10 +56,7 @@
     <Compile Include="SockSess.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnUtil\MnnUtil.csproj">
-      <Project>{E58D40E9-DAFE-4564-9BAE-867025DB9051}</Project>
-      <Name>MnnUtil</Name>
-    </ProjectReference>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

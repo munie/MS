@@ -8,8 +8,8 @@
     <ProjectGuid>{8C1BDA51-F559-4472-A895-6BF82C0A06DE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mnn</RootNamespace>
-    <AssemblyName>Mnn</AssemblyName>
+    <RootNamespace>MnnMisc</RootNamespace>
+    <AssemblyName>MnnMisc</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

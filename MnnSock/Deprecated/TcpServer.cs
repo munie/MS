@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Collections;
-using Mnn.MnnUtil;
 using System.Runtime.InteropServices;
 
 namespace Mnn.MnnSock.Deprecated

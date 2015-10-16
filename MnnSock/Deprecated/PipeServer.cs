@@ -39,7 +39,7 @@ namespace Mnn.MnnSock.Deprecated
                         pipeServer.BeginWaitForConnection(ReadCallback, pipeServer);
                     }
                     catch (Exception ex) {
-                        Mnn.MnnUtil.Logger.WriteException(ex);
+                        Logger.WriteException(ex);
                     }
                 }
             });
@@ -70,20 +70,20 @@ namespace Mnn.MnnSock.Deprecated
                     }
                     catch (InvalidOperationException ex) {
                         // From XmlSerializer when xml syntax is wrong
-                        Mnn.MnnUtil.Logger.WriteException(ex);
+                        Logger.WriteException(ex);
                         break;
                     }
                     catch (IOException) {
                         break;
                     }
                     catch (Exception ex) {
-                        Mnn.MnnUtil.Logger.WriteException(ex);
+                        Logger.WriteException(ex);
                         break;
                     }
                 }
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                Logger.WriteException(ex);
             }
         }
     }

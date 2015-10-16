@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
-using Mnn.MnnUtil;
 
 namespace Mnn.MnnSock.Deprecated
 {
