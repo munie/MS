@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <socket>
-    <sockitem id="0" name="cmd" type="listen" ep="0.0.0.0:2000" autorun="True" />
-    <sockitem id="1" name="zls" type="listen" ep="0.0.0.0:3002" autorun="True" />
-    <sockitem id="10" name="cmd" type="connect" ep="127.0.0.1:2000" autorun="False" />
-    <sockitem id="11" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
-    <sockitem id="12" name="munie" type="connect" ep="127.0.0.1:5964" autorun="False" />
+    <sockitem id="0" name="munie" type="listen" ep="0.0.0.0:5964" autorun="True" />
+    <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000" autorun="True" />
+    <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002" autorun="False" />
+    <sockitem id="10" name="munie" type="connect" ep="127.0.0.1:5964" autorun="False" />
+    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000" autorun="False" />
+    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
   </socket>
   <command>
     <cmditem id="0" name="模块注册" content="0x2220050040" comment="22type 20module" />

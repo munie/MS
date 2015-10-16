@@ -4,7 +4,7 @@
   
   <ipaddress>localhost</ipaddress>
   
-  <station name="mnn" protocol="udp" port="5964" max_interval="5" count="1000">
+  <station name="mnn" protocol="tcp" port="5964" max_interval="5" count="1000">
     <message command="send" content="HaiMen" />
     <message command="send" content="China" />
 	<message command="send" content="Japan" />
