@@ -13,7 +13,6 @@ namespace StationConsole
         {
             ID = module.ID;
             Name = module.Name;
-            Type = module.Type;
 
             FilePath = module.FilePath;
             FileName = module.FileName;

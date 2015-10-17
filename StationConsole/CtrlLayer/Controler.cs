@@ -20,7 +20,7 @@ namespace StationConsole.CtrlLayer
     class MessageUnit
     {
         public IPEndPoint EP;
-        public byte[] Content;
+        public string Content;
     }
 
     public class Controler
@@ -183,11 +183,10 @@ namespace StationConsole.CtrlLayer
             App.Mindow.RemoveMessage();
 
             bool IsHandled = false;
-            string msgstr = coding.GetString(msg.Content);
             rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 // 水库代码太恶心，没办法的办法
-                if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
+                if (item.ID != "HT=" && msg.Content.Contains(item.ID)) {
                     try {
                         item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                     }
@@ -199,7 +198,7 @@ namespace StationConsole.CtrlLayer
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in moduleTable) {
-                    if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
+                    if (item.ID == "HT=" && msg.Content.Contains(item.ID)) {
                         try {
                             item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                         }
@@ -382,14 +381,47 @@ namespace StationConsole.CtrlLayer
 
         private void WorkServer_ClientReadMsg(object sender, ClientEventArgs e)
         {
+            string msg = coding.GetString(e.Data);
+
             if (msgQueue.Count() >= max_msg_count)
                 return;
 
             lock (msgQueue) {
-                msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = e.Data });
+                msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = msg });
             }
             sem.Release();
             App.Mindow.AddMessage();
+
+            //bool IsHandled = false;
+            //rwlock.AcquireReaderLock(-1);
+            //foreach (var item in moduleTable) {
+            //    // 水库代码太恶心，没办法的办法
+            //    if (item.ID != "HT=" && msg.Contains(item.ID)) {
+            //        try {
+            //            item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //        }
+            //        catch (Exception) { }
+            //        IsHandled = true;
+            //        break;
+            //    }
+            //}
+            //// 水库代码太恶心，没办法的办法
+            //if (IsHandled == false) {
+            //    foreach (var item in moduleTable) {
+            //        if (item.ID == "HT=" && msg.Contains(item.ID)) {
+            //            try {
+            //                item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //            }
+            //            catch (Exception) { }
+            //            break;
+            //        }
+            //    }
+            //}
+            //rwlock.ReleaseReaderLock();
+
+            // 打印至窗口
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
+            App.Mindow.DisplayMessage(logFormat);
         }
 
         private void WorkServer_ClientSendMsg(object sender, ClientEventArgs e)
@@ -521,7 +553,6 @@ namespace StationConsole.CtrlLayer
             ModuleUnit moduleUnit = new ModuleUnit();
             moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.Type = (UInt16)module.Invoke(SModule.FullName, SModule.GetModuleType, null);
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
             moduleUnit.FileComment = fvi.Comments;
