@@ -12,14 +12,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 
-namespace SockMgr
+namespace SockMaster
 {
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class SockInputDialog : Window, IDisposable
+    public partial class CmdInputDialog : Window, IDisposable
     {
-        public SockInputDialog()
+        public CmdInputDialog()
         {
             InitializeComponent();
         }

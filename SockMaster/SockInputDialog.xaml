@@ -1,4 +1,4 @@
-﻿<Window x:Class="SockMgr.SockInputDialog"
+﻿<Window x:Class="SockMaster.SockInputDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="InputDialog" Height="320" Width="478" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" KeyDown="Window_KeyDown">

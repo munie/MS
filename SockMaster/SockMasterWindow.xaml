@@ -1,7 +1,7 @@
-﻿<Window x:Class="SockMgr.SockMgrWindow"
+﻿<Window x:Class="SockMaster.SockMasterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SockMgr" Height="540" Width="960" WindowStartupLocation="CenterScreen">
+        Title="SockMaster" Height="540" Width="960" WindowStartupLocation="CenterScreen">
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="270" />
@@ -9,12 +9,12 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
-            <RowDefinition Height="151" />
-            <RowDefinition Height="327*" />
+            <RowDefinition Height="327" />
+            <RowDefinition Height="151*" />
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="SockMgr ~ Mnn" Margin="5,5,5,120" Grid.Row="1" TextAlignment="Center" FontWeight="Bold" FontStyle="Italic" FontFamily="Palatino Linotype" FontSize="18" />
+        <TextBlock Text="SockMaster ~ Mnn" Margin="5,5,5,120" Grid.Row="1" TextAlignment="Center" FontWeight="Bold" FontStyle="Italic" FontFamily="Palatino Linotype" FontSize="18" />
         
         <TreeView Name="treeSock" Margin="5,37,7,5" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding SockTable}" PreviewMouseRightButtonDown="TreeView_PreviewMouseRightButtonDown" FontFamily="Consolas">
             <TreeView.ItemTemplate>

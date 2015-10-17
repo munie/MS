@@ -19,14 +19,14 @@ using System.Diagnostics;
 using System.Xml;
 using Mnn.MnnSock;
 
-namespace SockMgr
+namespace SockMaster
 {
     /// <summary>
-    /// SockMgrWindow.xaml 的交互逻辑
+    /// SockMasterWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class SockMgrWindow : Window
+    public partial class SockMasterWindow : Window
     {
-        public SockMgrWindow()
+        public SockMasterWindow()
         {
             InitializeComponent();
 

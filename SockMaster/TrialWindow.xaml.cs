@@ -13,7 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 
-namespace SockMgr
+namespace SockMaster
 {
     class Conference
     {
@@ -46,7 +46,7 @@ namespace SockMgr
             InitializeComponent();
 
             //init();
-            SockMgrWindow mgrwindow = new SockMgrWindow();
+            SockMasterWindow mgrwindow = new SockMasterWindow();
             //mgrwindow.Owner = this;
             mgrwindow.Show();
             this.Hide();

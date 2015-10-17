@@ -8,8 +8,8 @@
     <ProjectGuid>{89415F7F-08C2-40B0-A2CD-4BCC966D42C7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SockMgr</RootNamespace>
-    <AssemblyName>SockMgr</AssemblyName>
+    <RootNamespace>SockMaster</RootNamespace>
+    <AssemblyName>SockMaster</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -63,8 +63,8 @@
       <DependentUpon>SockInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="SockUnit.cs" />
-    <Compile Include="SockMgrWindow.xaml.cs">
-      <DependentUpon>SockMgrWindow.xaml</DependentUpon>
+    <Compile Include="SockMasterWindow.xaml.cs">
+      <DependentUpon>SockMasterWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -86,7 +86,7 @@
       <DependentUpon>TrialWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="SockMgrWindow.xaml">
+    <Page Include="SockMasterWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -116,7 +116,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="sockmgr.xml">
+    <Content Include="sockmaster.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

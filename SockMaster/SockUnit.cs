@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using Mnn.MnnSock;
 
-namespace SockMgr
+namespace SockMaster
 {
     public enum SockState
 	{
