@@ -291,8 +291,10 @@ namespace EnvModule
             List<ModuleUnit> handles = new List<ModuleUnit>();
 
             // 保存要卸载的模块信息
-            foreach (ModuleUnit item in lstViewModule.SelectedItems)
-                handles.Add(item);
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                if (item.State == SockState.Closed)
+                    handles.Add(item);
+            }
 
             // 卸载操作
             foreach (var item in handles)

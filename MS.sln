@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZLS_SerialPortService", "ZLS_SerialPortService\ZLS_SerialPortService.csproj", "{7C76E963-9BBF-4936-B286-27377C805A81}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceSerialZLS", "ZLS_SerialPortService\ServiceSerialZLS.csproj", "{7C76E963-9BBF-4936-B286-27377C805A81}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationConsole", "StationConsole\StationConsole.csproj", "{C39F4B50-C1D3-4A3D-AD6E-29A18FA64FE7}"
 EndProject
@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTrial", "Deprecated\ModT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleTimerSK", "ModuleTimerSK\ModuleTimerSK.csproj", "{78B3C424-DC20-4F7A-A951-8EC2F296F346}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScokDebug", "Deprecated\SockDebug\ScokDebug.csproj", "{B8109D67-7220-4FBA-84D6-1166B114CF47}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockDebug", "Deprecated\SockDebug\SockDebug.csproj", "{B8109D67-7220-4FBA-84D6-1166B114CF47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockMaster", "SockMaster\SockMaster.csproj", "{89415F7F-08C2-40B0-A2CD-4BCC966D42C7}"
 EndProject

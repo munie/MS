@@ -13,7 +13,7 @@ using System.Xml;
 using System.IO;
 using Mnn.MnnSock.Deprecated;
 
-namespace ScokDebug
+namespace SockDebug
 {
     public partial class MainForm : Form
     {

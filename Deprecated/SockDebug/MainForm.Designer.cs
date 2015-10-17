@@ -1,4 +1,4 @@
-﻿namespace ScokDebug
+﻿namespace SockDebug
 {
     partial class MainForm
     {
