@@ -61,7 +61,7 @@ namespace EnvModule
                 // Load dll files one by one
                 foreach (var item in files) {
                     string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if ((str.EndsWith(".dll") || str.EndsWith(".dll")) && str.Contains("Module_"))
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
                         AtModuleLoad(item);
                 }
             }

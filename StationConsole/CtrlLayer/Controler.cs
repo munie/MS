@@ -145,9 +145,8 @@ namespace StationConsole.CtrlLayer
                 // Load dll files one by one
                 foreach (var item in files) {
                     string str = item.Substring(item.LastIndexOf("\\")+1);
-                    if ((str.EndsWith(".dll") || str.EndsWith(".DLL")) && str.Contains("Module")) {
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
                         AtModuleLoad(item);
-                    }
                 }
             }
         }
