@@ -52,10 +52,6 @@
       <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
       <Name>MnnSock</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MnnUtil\MnnUtil.csproj">
-      <Project>{E58D40E9-DAFE-4564-9BAE-867025DB9051}</Project>
-      <Name>MnnUtil</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

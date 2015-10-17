@@ -127,7 +127,8 @@ namespace SockMgr
                     SockUnit sock = new SockUnit();
                     sock.ID = item.Attributes["id"].Value;
                     sock.Name = item.Attributes["name"].Value;
-                    sock.Type = item.Attributes["type"].Value == "listen" ? SockType.listen : SockType.connect;
+                    sock.Type = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
+                    //sock.Type = item.Attributes["type"].Value == "listen" ? SockType.listen : SockType.connect;
                     string[] str = item.Attributes["ep"].Value.Split(':');
                     if (str.Count() == 2)
                         sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
@@ -459,7 +460,7 @@ namespace SockMgr
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                unit.SendBuff = SockConvert.CmdstrToBytes(item.Cmd, '|');
+                unit.SendBuff = SockConvert.CmdstrToBytes(item.Cmd, '#');
                 unit.SendBuffSize = unit.SendBuff.Length;
                 break;
             }

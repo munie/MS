@@ -98,7 +98,7 @@ namespace EnvModule
                     if ((item.Sock = sessmgr.AddConnectSession(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
-                        byte[] data = new byte[] { 0x20, 0x0D, 0x05, 0x00, Convert.ToByte(item.Type) };
+                        byte[] data = new byte[] { 0x20, 0x20, 0x05, 0x00, Convert.ToByte(item.Type) };
                         sessmgr.SendSession(item.Sock, data);
                     }
                     else
@@ -141,16 +141,42 @@ namespace EnvModule
             }));
 
             // 根据data[1]找到对应模块，处理数据
+            bool IsHandled = false;
             rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
                     try {
-                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsgByte", new object[] { data });
+                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsgByte", new object[] { data });
                     }
                     catch (Exception ex) {
                         Console.Write(ex.ToString());
                     }
+                    IsHandled = true;
                     break;
+                }
+
+                // 水库代码太恶心，没办法的办法
+                string msgstr = Encoding.Default.GetString(data);
+                if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
+                    try {
+                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
+                    }
+                    catch (Exception) { }
+                    IsHandled = true;
+                    break;
+                }
+            }
+            // 水库代码太恶心，没办法的办法
+            if (IsHandled == false) {
+                foreach (var item in moduleTable) {
+                    string msgstr = Encoding.Default.GetString(data);
+                    if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
+                        try {
+                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, data });
+                        }
+                        catch (Exception) { }
+                        break;
+                    }
                 }
             }
             rwlock.ReleaseReaderLock();

@@ -8,6 +8,17 @@ namespace Mnn.MnnSock
 {
     public class SockMsg
     {
+        public enum MsgType
+        {
+            alive = 0x0C,
+            trans = 0x0D,
+            
+            // module
+            register = 0x20,
+            register_respond = 0x21,
+
+        }
+
         [Serializable] // 指示可序列化
         [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
         public struct msghdr
