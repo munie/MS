@@ -34,11 +34,7 @@ namespace Mnn.MnnMisc.MnnEnv
         public abstract string LogPrefix { get; }
         public abstract string ErrLogPrefix { get; }
 
-        // IDataHandle Interface ===================================================================
-
-        public abstract string GetModuleID();
-
-        public abstract UInt16 GetModuleType();
+        // IModule ========================================================================
 
         public void Init()
         {
@@ -75,6 +71,14 @@ namespace Mnn.MnnMisc.MnnEnv
             isExitThread = true;
         }
 
+        public abstract string GetModuleID();
+
+        public abstract UInt16 GetModuleType();
+
+        // IMsgProc ========================================================================
+
+        public abstract void HandleMsgByte(IPEndPoint ep, byte[] msg);
+
         public void AppendMsg(System.Net.IPEndPoint ep, string msg)
         {
             if (msgQueue.Count() >= max_msg_count)
@@ -87,8 +91,6 @@ namespace Mnn.MnnMisc.MnnEnv
         }
 
         public abstract void HandleMsg(IPEndPoint ep, string msg);
-
-        public abstract void HandleMsgByte(IPEndPoint ep, byte[] msg);
 
         public abstract void HandleAlive(IPEndPoint ep, IDictionary<string, string> dc);
 

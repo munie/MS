@@ -29,9 +29,9 @@ _ReSharper*/
 $tf*/
 
 .svn/
-MnnTester/
-SocketTransfer/
+Deprecated/SocketTransfer/
+Deprecated/ModTrial/
+Module*/
+Timer*/
 ZLS_SerialPortService/
-Module_*/
-Timer_*/
 Oracle.DataAccess.dll
