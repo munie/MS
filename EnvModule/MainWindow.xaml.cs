@@ -58,12 +58,11 @@ namespace EnvModule
             string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
             if (Directory.Exists(modulePath)) {
                 string[] files = Directory.GetFiles(modulePath);
-
                 // Load dll files one by one
                 foreach (var item in files) {
-                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && item.Contains("Module_")) {
+                    string str = item.Substring(item.LastIndexOf("\\") + 1);
+                    if ((str.EndsWith(".dll") || str.EndsWith(".dll")) && str.Contains("Module_"))
                         AtModuleLoad(item);
-                    }
                 }
             }
 
