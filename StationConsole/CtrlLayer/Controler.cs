@@ -144,7 +144,7 @@ namespace StationConsole.CtrlLayer
 
                 // Load dll files one by one
                 foreach (var item in files) {
-                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && item.Contains("Module_")) {
+                    if ((item.EndsWith(".dll") || item.EndsWith(".dll")) && item.Contains("Module")) {
                         AtModuleLoad(item);
                     }
                 }
@@ -188,7 +188,7 @@ namespace StationConsole.CtrlLayer
                 // 水库代码太恶心，没办法的办法
                 if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
                     try {
-                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                     }
                     catch (Exception) { }
                     IsHandled = true;
@@ -200,7 +200,7 @@ namespace StationConsole.CtrlLayer
                 foreach (var item in moduleTable) {
                     if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
                         try {
-                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                         }
                         catch (Exception) { }
                         break;
@@ -325,7 +325,7 @@ namespace StationConsole.CtrlLayer
                     foreach (var item in moduleTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
-                                item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "AtCmdResult", new object[] { atCmd });
+                                item.Module.Invoke(SMsgProc.FullName, SMsgProc.AtCmdResult, new object[] { atCmd });
                             }
                             catch (Exception) { }
                             break;
@@ -507,7 +507,7 @@ namespace StationConsole.CtrlLayer
             }
 
             try {
-                module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Init", null);
+                module.Invoke(SModule.FullName, SModule.Init, null);
             }
             catch (Exception ex) {
                 module.UnLoad();
@@ -518,9 +518,9 @@ namespace StationConsole.CtrlLayer
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit moduleUnit = new ModuleUnit();
-            moduleUnit.ID = (string)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleID", null);
+            moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.Type = (UInt16)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleType", null);
+            moduleUnit.Type = (UInt16)module.Invoke(SModule.FullName, SModule.GetModuleType, null);
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
             moduleUnit.FileComment = fvi.Comments;
@@ -541,7 +541,7 @@ namespace StationConsole.CtrlLayer
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Final", null);
+                    subset.First().Module.Invoke(SModule.FullName, SModule.Final, null);
                 }
                 catch (Exception) { }
                 // 卸载模块
