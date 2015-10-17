@@ -32,6 +32,5 @@ $tf*/
 Deprecated/SocketTransfer/
 Deprecated/ModTrial/
 Module*/
-Timer*/
-ZLS_SerialPortService/
+ServiceSerialZLS/
 Oracle.DataAccess.dll
