@@ -41,6 +41,7 @@ namespace EnvModule
         private ObservableCollection<ModuleUnit> moduleTable;
         private ObservableCollection<ClientUnit> clientTable;
         private IPEndPoint ep;
+        private DateTime tick;
 
         private void init()
         {
@@ -53,6 +54,7 @@ namespace EnvModule
             DataContext = new { ModuleTable = moduleTable, ClientTable = clientTable };
             ep = new IPEndPoint(IPAddress.Parse(ConfigurationManager.AppSettings["ip"]),
                 int.Parse(ConfigurationManager.AppSettings["port"]));
+            tick = DateTime.Now;
 
             // 加载 DataHandles 文件夹下的所有模块
             string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
@@ -84,6 +86,15 @@ namespace EnvModule
 
         private void perform()
         {
+            /// ** firet send alive to center
+            if (DateTime.Now.Subtract(tick).TotalSeconds >= 60 * 10) {
+                tick = DateTime.Now;
+                foreach (var item in moduleTable) {
+                    if (item.State == SockState.Opened)
+                        sessmgr.SendSession(item.Sock, new byte[] { 0x20, 0x0C, 0x04, 0x00 });
+                }
+            }
+
             foreach (var item in moduleTable) {
                 /// ** second handle sending data
                 if (item.SendBuffSize != 0 && item.State == SockState.Opened) {

@@ -83,7 +83,7 @@ namespace Mnn.MnnSock
     public class SockSessManager
     {
         public List<SockSess> sess_table;
-        private TimeSpan stall_time;
+        private int stall_time;
         private Thread thread;
 
         public delegate void SessCreateDelegate(object sender, SockSess sess);
@@ -98,7 +98,7 @@ namespace Mnn.MnnSock
         public SockSessManager()
         {
             sess_table = new List<SockSess>();
-            stall_time = new TimeSpan(TimeSpan.TicksPerMinute*12);
+            stall_time = 60 * 12;
             thread = null;
             sess_create = null;
             sess_delete = null;
@@ -140,7 +140,7 @@ namespace Mnn.MnnSock
             // ** timeout after read & parse & send & close
             list = new ArrayList(sess_table);
             foreach (SockSess item in list) {
-                if (item.type == SockType.accept && DateTime.Now.Subtract(item.tick) > stall_time)
+                if (item.type == SockType.accept && DateTime.Now.Subtract(item.tick).TotalSeconds > stall_time)
                     item.eof = true;
 
                 if (item.rdata_size != 0 && sess_parse != null)
