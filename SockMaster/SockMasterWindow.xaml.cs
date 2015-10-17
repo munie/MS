@@ -91,7 +91,7 @@ namespace SockMaster
         }
 
         public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
-        public static readonly string conf_name = "sockmgr.xml";
+        public static readonly string conf_name = "SockMaster.xml";
         private SockSessManager sessmgr;
         public ObservableCollection<SockUnit> SockTable { get; set; }
         public ObservableCollection<CmdUnit> CmdTable { get; set; }

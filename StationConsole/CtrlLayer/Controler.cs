@@ -43,15 +43,15 @@ namespace StationConsole.CtrlLayer
 
         public void InitConfig()
         {
-            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\stationconsole.xml") == false) {
-                System.Windows.MessageBox.Show("未找到配置文件： stationconsole.xml");
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\StationConsole.xml") == false) {
+                System.Windows.MessageBox.Show("未找到配置文件： StationConsole.xml");
                 Thread.CurrentThread.Abort();
             }
 
             /// ** Initialize Start ====================================================
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\stationconsole.xml");
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\StationConsole.xml");
 
                 // coding Config
                 XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
@@ -81,7 +81,7 @@ namespace StationConsole.CtrlLayer
             }
             catch (Exception ex) {
                 Mnn.MnnUtil.Logger.WriteException(ex);
-                System.Windows.MessageBox.Show("配置文件读取错误： stationconsole.xml");
+                System.Windows.MessageBox.Show("配置文件读取错误： StationConsole.xml");
             }
 
             foreach (var item in serverTable) {

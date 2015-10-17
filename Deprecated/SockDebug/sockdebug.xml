@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <encoding>utf-8</encoding>
-
-  <ipaddress>localhost</ipaddress>
-  <port>3006</port>
-  
-</configuration>

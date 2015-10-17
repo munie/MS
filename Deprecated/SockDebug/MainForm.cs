@@ -30,30 +30,6 @@ namespace ScokDebug
             coding = Encoding.GetEncoding(936);
             ipaddress = IPAddress.Parse("127.0.0.1");
             port = 5964;
-
-            // Config value
-            try {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
-
-                XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
-                coding = Encoding.GetEncoding(node.InnerText);
-
-                node = xdoc.SelectSingleNode("/configuration/ipaddress");
-                IPAddress[] ips;
-                ips = Dns.GetHostAddresses(node.InnerText);
-                foreach (var item in ips) {
-                    if (item.AddressFamily == AddressFamily.InterNetwork) {
-                        ipaddress = item;
-                        break;
-                    }
-                }
-                //ipaddress = IPAddress.Parse(node.InnerText);
-
-                node = xdoc.SelectSingleNode("/configuration/port");
-                port = int.Parse(node.InnerText);
-            }
-            catch (Exception) { }
    
             client = new AsyncSocketSender();
             client.messageReceiver += new AsyncSocketSender.MessageReceiverDelegate(socketHandle);

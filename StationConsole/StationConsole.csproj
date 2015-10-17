@@ -131,7 +131,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="stationconsole.xml">
+    <Content Include="StationConsole.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
