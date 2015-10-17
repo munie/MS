@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using System.Runtime.InteropServices;
 using Mnn.MnnSock;
 
 namespace EnvCenter
@@ -118,7 +119,9 @@ namespace EnvCenter
                 case (byte)SockMsg.MsgType.trans:
                     SockMsg.termhdr thdr = (SockMsg.termhdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.termhdr));
                     foreach (var item in FindTermSession(new string(thdr.ccid)))
-                        item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                        item.sock.Send(sess.rdata, Marshal.SizeOf(thdr),
+                            sess.rdata_size - Marshal.SizeOf(thdr),
+                            System.Net.Sockets.SocketFlags.None);
                     break;
             }
         }
