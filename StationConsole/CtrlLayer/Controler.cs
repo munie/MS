@@ -182,22 +182,13 @@ namespace StationConsole.CtrlLayer
             App.Mindow.RemoveMessage();
 
             bool IsHandled = false;
+            string msgstr = coding.GetString(msg.Content);
             rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
-                if (item.Type == Convert.ToInt16(msg.Content[1]) && (UInt16)msg.Content[2] == msg.Content.Length) {
-                    try {
-                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsgByte", new object[] { msg.EP, msg.Content });
-                    }
-                    catch (Exception) { }
-                    IsHandled = true;
-                    break;
-                }
-
                 // 水库代码太恶心，没办法的办法
-                string msgstr = coding.GetString(msg.Content);
                 if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
                     try {
-                        item.Module.Invoke("Mnn.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
                     }
                     catch (Exception) { }
                     IsHandled = true;
@@ -207,10 +198,9 @@ namespace StationConsole.CtrlLayer
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in moduleTable) {
-                    string msgstr = coding.GetString(msg.Content);
                     if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
                         try {
-                            item.Module.Invoke("Mnn.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
+                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { msg.EP, msg.Content });
                         }
                         catch (Exception) { }
                         break;
@@ -335,7 +325,7 @@ namespace StationConsole.CtrlLayer
                     foreach (var item in moduleTable) {
                         if (item.ID.Equals(atCmd.FromID)) {
                             try {
-                                item.Module.Invoke("Mnn.IDataHandle", "AtCmdResult", new object[] { atCmd });
+                                item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "AtCmdResult", new object[] { atCmd });
                             }
                             catch (Exception) { }
                             break;
