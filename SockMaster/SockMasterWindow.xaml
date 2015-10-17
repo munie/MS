@@ -9,8 +9,8 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
-            <RowDefinition Height="327" />
-            <RowDefinition Height="151*" />
+            <RowDefinition Height="161*" />
+            <RowDefinition Height="306" />
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
