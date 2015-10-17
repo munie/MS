@@ -1,7 +1,7 @@
-﻿<Window x:Class="EnvModule.MainWindow"
+﻿<Window x:Class="EnvModule.EnvModuleWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="576" Width="1024" WindowStartupLocation="CenterScreen">
+        Title="EnvModuleWindow" Height="576" Width="1024" WindowStartupLocation="CenterScreen">
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="640*" />

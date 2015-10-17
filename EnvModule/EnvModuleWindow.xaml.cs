@@ -25,11 +25,11 @@ using Mnn.MnnMisc.MnnEnv;
 namespace EnvModule
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// EnvModuleWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class EnvModuleWindow : Window
     {
-        public MainWindow()
+        public EnvModuleWindow()
         {
             InitializeComponent();
             init();
@@ -110,6 +110,8 @@ namespace EnvModule
                 }
             }
         }
+
+        // Parse Methods ======================================================================
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
@@ -200,9 +202,9 @@ namespace EnvModule
             }));
         }
 
-        // Normal methods ===============================================================
+        // Self Methods ===============================================================
 
-        public void AtModuleLoad(string filePath)
+        private void AtModuleLoad(string filePath)
         {
             ModuleItem module = new ModuleItem();
 
@@ -241,7 +243,7 @@ namespace EnvModule
             rwlock.ReleaseWriterLock();
         }
 
-        public void AtModuleUnload(string fileName)
+        private void AtModuleUnload(string fileName)
         {
             rwlock.AcquireWriterLock(-1);
 
@@ -260,7 +262,7 @@ namespace EnvModule
             rwlock.ReleaseWriterLock();
         }
 
-        // Module Menu ==================================================================
+        // Menu Methods ==================================================================
 
         private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
         {

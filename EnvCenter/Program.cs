@@ -12,7 +12,7 @@ namespace EnvCenter
         static void Main(string[] args)
         {
             SockSessManager sessmgr = new SockSessManager();
-            Ctrler clter = new Ctrler(sessmgr);
+            EvnCenter cter = new EvnCenter(sessmgr);
 
             while(true) {
                 sessmgr.Perform(1000);

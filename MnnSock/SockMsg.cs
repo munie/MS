@@ -8,7 +8,7 @@ namespace Mnn.MnnSock
 {
     public class SockMsg
     {
-        public enum MsgType
+        public enum MsgType : byte
         {
             alive = 0x0C,
             trans = 0x0D,
@@ -21,18 +21,18 @@ namespace Mnn.MnnSock
 
         [Serializable] // 指示可序列化
         [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
-        public struct msghdr
+        public struct MsgHdr
         {
             public byte id_type;
-            public byte msg_type;
+            public MsgType msg_type;
             public UInt16 len;
         }
 
         [Serializable] // 指示可序列化
         [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
-        public struct termhdr
+        public struct TermHdr
         {
-            public msghdr hdr;
+            public MsgHdr hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
         }
