@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Mnn.MnnMisc.MnnDataHandle
+namespace Mnn.MnnMisc.MnnEnv
 {
     public class MsgCmd
     {

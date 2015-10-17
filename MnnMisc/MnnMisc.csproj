@@ -40,17 +40,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MnnDataHandle\DataHandle.cs" />
-    <Compile Include="MnnDataHandle\IDataHandle.cs" />
+    <Compile Include="MnnEnv\MsgProc.cs" />
+    <Compile Include="MnnEnv\IMsgProc.cs" />
     <Compile Include="MnnModule\AppDomainProxy.cs" />
     <Compile Include="MnnModule\IModule.cs" />
     <Compile Include="MnnModule\ModuleItem.cs" />
     <Compile Include="MnnModule\ModuleManager.cs" />
     <Compile Include="MnnSerial\AsyncSerailPort.cs" />
     <Compile Include="MnnSerial\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="MnnDataHandle\AtCommand.cs" />
-    <Compile Include="MnnDataHandle\MsgCmd.cs" />
-    <Compile Include="MnnDataHandle\MsgKey.cs" />
+    <Compile Include="MnnEnv\AtCommand.cs" />
+    <Compile Include="MnnEnv\MsgCmd.cs" />
+    <Compile Include="MnnEnv\MsgKey.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

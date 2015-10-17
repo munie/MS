@@ -13,7 +13,7 @@ using System.Xml;
 using System.Threading;
 using Mnn.MnnSock.Deprecated;
 using Mnn.MnnMisc.MnnModule;
-using Mnn.MnnMisc.MnnDataHandle;
+using Mnn.MnnMisc.MnnEnv;
 
 namespace StationConsole.CtrlLayer
 {

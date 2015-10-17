@@ -20,7 +20,7 @@ using System.Reflection;
 using System.Configuration;
 using Mnn.MnnSock;
 using Mnn.MnnMisc.MnnModule;
-using Mnn.MnnMisc.MnnDataHandle;
+using Mnn.MnnMisc.MnnEnv;
 
 namespace EnvModule
 {
@@ -151,7 +151,7 @@ namespace EnvModule
                 foreach (var item in moduleTable) {
                     if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
                         try {
-                            item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsg, new object[] { ep, msgstr });
+                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { ep, msgstr });
                         }
                         catch (Exception) { }
                         IsHandled = true;
@@ -163,7 +163,7 @@ namespace EnvModule
                     foreach (var item in moduleTable) {
                         if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
                             try {
-                                item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsg, new object[] { ep, msgstr });
+                                item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { ep, msgstr });
                             }
                             catch (Exception) { }
                             break;
@@ -179,7 +179,7 @@ namespace EnvModule
             foreach (var item in moduleTable) {
                 if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
                     try {
-                        item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsgByte, new object[] { data });
+                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsgByte, new object[] { data });
                     }
                     catch (Exception) { }
                     break;

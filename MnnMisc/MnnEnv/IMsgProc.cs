@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Mnn.MnnMisc.MnnDataHandle
+namespace Mnn.MnnMisc.MnnEnv
 {
-    public class SDataHandle
+    public class SMsgProc
     {
         public static readonly string FullName = "Mnn.MnnMisc.MnnDataHandle.IDataHandle";
         public static readonly string AppendMsg = "AppendMsg";
@@ -14,7 +14,7 @@ namespace Mnn.MnnMisc.MnnDataHandle
         public static readonly string AtCmdResult = "AtCmdResult";
     }
 
-    public interface IDataHandle
+    public interface IMsgProc
     {
         void AppendMsg(System.Net.IPEndPoint ep, string msg);
 
