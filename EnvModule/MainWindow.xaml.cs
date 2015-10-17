@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Configuration;
 using Mnn.MnnSock;
 using Mnn.MnnMisc.MnnModule;
+using Mnn.MnnMisc.MnnDataHandle;
 
 namespace EnvModule
 {
@@ -150,7 +151,7 @@ namespace EnvModule
                 foreach (var item in moduleTable) {
                     if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
                         try {
-                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
+                            item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsg, new object[] { ep, msgstr });
                         }
                         catch (Exception) { }
                         IsHandled = true;
@@ -162,7 +163,7 @@ namespace EnvModule
                     foreach (var item in moduleTable) {
                         if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
                             try {
-                                item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
+                                item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsg, new object[] { ep, msgstr });
                             }
                             catch (Exception) { }
                             break;
@@ -178,11 +179,9 @@ namespace EnvModule
             foreach (var item in moduleTable) {
                 if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
                     try {
-                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsgByte", new object[] { data });
+                        item.Module.Invoke(SDataHandle.FullName, SDataHandle.HandleMsgByte, new object[] { data });
                     }
-                    catch (Exception ex) {
-                        Console.Write(ex.ToString());
-                    }
+                    catch (Exception) { }
                     break;
                 }
             }
@@ -217,7 +216,7 @@ namespace EnvModule
             }
 
             try {
-                module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Init", null);
+                module.Invoke(SModule.FullName, SModule.Init, null);
             }
             catch (Exception ex) {
                 module.UnLoad();
@@ -228,9 +227,9 @@ namespace EnvModule
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit moduleUnit = new ModuleUnit();
-            moduleUnit.ID = (string)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleID", null);
+            moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.Type = (UInt16)module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "GetModuleType", null);
+            moduleUnit.Type = (UInt16)module.Invoke(SModule.FullName, SModule.GetModuleType, null);
             moduleUnit.State = SockState.Closed;
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
@@ -250,7 +249,7 @@ namespace EnvModule
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Module.Invoke("Mnn.MnnMisc.MnnModule.IModule", "Final", null);
+                    subset.First().Module.Invoke(SModule.FullName, SModule.Final, null);
                 }
                 catch (Exception) { }
                 // 卸载模块
