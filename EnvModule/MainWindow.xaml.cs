@@ -136,12 +136,44 @@ namespace EnvModule
 
                 txtBoxMsg.AppendText(DateTime.Now + " (" +
                     sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
-                txtBoxMsg.AppendText(sb.ToString() + "\n");
+                txtBoxMsg.AppendText(sb.ToString() + "\n\n");
                 txtBoxMsg.ScrollToEnd();
             }));
 
+            // 兼容老版本字符流
+            if (sess.rdata[0] == '|' && sess.rdata[1] == 'H' && sess.rdata[2] == 'T') {
+                rwlock.AcquireReaderLock(-1);
+                bool IsHandled = false;
+                string msgstr = Encoding.Default.GetString(data);
+                // 水库代码太恶心，没办法的办法
+                // 除水库以外，相对正常数据处理
+                foreach (var item in moduleTable) {
+                    if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
+                        try {
+                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
+                        }
+                        catch (Exception) { }
+                        IsHandled = true;
+                        break;
+                    }
+                }
+                // 正常代码没有处理，则必是水库数据
+                if (IsHandled == false) {
+                    foreach (var item in moduleTable) {
+                        if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
+                            try {
+                                item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
+                            }
+                            catch (Exception) { }
+                            break;
+                        }
+                    }
+                }
+                rwlock.ReleaseReaderLock();
+                return;
+            }
+
             // 根据data[1]找到对应模块，处理数据
-            bool IsHandled = false;
             rwlock.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
@@ -151,32 +183,7 @@ namespace EnvModule
                     catch (Exception ex) {
                         Console.Write(ex.ToString());
                     }
-                    IsHandled = true;
                     break;
-                }
-
-                // 水库代码太恶心，没办法的办法
-                string msgstr = Encoding.Default.GetString(data);
-                if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
-                    try {
-                        item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, msgstr });
-                    }
-                    catch (Exception) { }
-                    IsHandled = true;
-                    break;
-                }
-            }
-            // 水库代码太恶心，没办法的办法
-            if (IsHandled == false) {
-                foreach (var item in moduleTable) {
-                    string msgstr = Encoding.Default.GetString(data);
-                    if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
-                        try {
-                            item.Module.Invoke("Mnn.MnnMisc.MnnDataHandle.IDataHandle", "HandleMsg", new object[] { ep, data });
-                        }
-                        catch (Exception) { }
-                        break;
-                    }
                 }
             }
             rwlock.ReleaseReaderLock();
