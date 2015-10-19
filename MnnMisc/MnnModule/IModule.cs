@@ -11,7 +11,7 @@ namespace Mnn.MnnMisc.MnnModule
         public static readonly string Init = "Init";
         public static readonly string Final = "Final";
         public static readonly string GetModuleID = "GetModuleID";
-        public static readonly string GetModuleType = "GetModuleType";
+        public static readonly string GetModuleInfo = "GetModuleInfo";
     }
 
     public interface IModule
@@ -22,6 +22,6 @@ namespace Mnn.MnnMisc.MnnModule
 
         string GetModuleID();
 
-        UInt16 GetModuleType();
+        string GetModuleInfo();
     }
 }

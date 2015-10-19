@@ -22,7 +22,7 @@ namespace EnvModule
 
         public string ID { get; set; }
         public string Name { get; set; }
-        public UInt16 Type { get; set; }
+        public string TermInfo { get; set; }
 
         public Socket Sock { get; set; }
         private SockState state;

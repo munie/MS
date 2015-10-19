@@ -8,31 +8,6 @@ using Mnn.MnnSock;
 
 namespace EnvCenter
 {
-    enum EnvSessType : byte
-    {
-        admin = 0x00,
-        module = 0x20,
-        term = 0x40,
-        term_sk = 0x40,
-        term_zls = 0x42,
-        term_qx = 0x46,
-        term_dxs = 0x48,
-    }
-
-    class EnvSessData
-    {
-        public EnvSessType Type { get; set; }
-        public EnvSessType ServeType { get; set; }
-        public string CCID { get; set; }
-
-        public EnvSessData(EnvSessType type)
-        {
-            this.Type = type;
-            ServeType = 0;
-            CCID = null;
-        }
-    }
-
     class EvnCenter
     {
         private SockSessManager sessmgr;
@@ -80,23 +55,23 @@ namespace EnvCenter
             if (sess.rdata[0] == '|' && sess.rdata[1] == 'H' && sess.rdata[2] == 'T') {
                 IDictionary<string, string> dc = AnalyzeString(Encoding.Default.GetString(sess.rdata));
 
-                EnvSessType type;
+                string term_info;
                 if (dc["HT"][0] == 'Z')
-                    type = EnvSessType.term_zls;
+                    term_info = "MMMMNNNNNNNNCZLS";
                 else if (dc["HT"][0] == 'Q')
-                    type = EnvSessType.term_qx;
+                    term_info = "MMMMNNNNNNNNCCQX";
                 else if (dc["HT"][0] == 'D')
-                    type = EnvSessType.term_dxs;
+                    term_info = "MMMMNNNNNNNNCDXS";
                 else
-                    type = EnvSessType.term_sk;
+                    term_info = "MMMMNNNNNNNNCCSK";
 
-                if (sess.sdata == null)
-                    sess.sdata = new EnvSessData(type);
-                if ((sess.sdata as EnvSessData).CCID == null)
-                    (sess.sdata as EnvSessData).CCID = dc["CCID"];
+                foreach (var item in svc_table) {
+                    if ((item.sdata as SvcUnit).TermInfo.Equals(term_info)) {
+                        item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                        break;
+                    }
+                }
 
-                foreach (var item in FindModuleSession(type))
-                    item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
                 sess.rdata_size = 0;
                 return;
             }
@@ -109,139 +84,70 @@ namespace EnvCenter
                 return;
             }
 
+            // 根据SockPack.PackName，调用合适的处理方法
             switch (hdr.name) {
                 case SockPack.PackName.alive:
                     break;
                 case SockPack.PackName.term_register:
-                    SockPack.TermRegister tr = (SockPack.TermRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRegister));
-                    TermUnit term = new TermUnit(tr.ccid, tr.info, null);
-                    foreach (var item in svc_table) {
-                        if ((item.sdata as SvcUnit).TermInfo.Equals(new string(tr.info))) {
-                            term.Svc = item;
-                            break;
-                        }
-                    }
-                    sess.sdata = term;
+                    term_register(sess);
                     break;
                 case SockPack.PackName.term_request:
-                    if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
-                        break;
-                    (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                    term_request(sess);
+                    break;
+                case SockPack.PackName.term_respond:
+                    term_respond(sess);
                     break;
                 case SockPack.PackName.svc_register:
-                    SockPack.SvcRegister sr = (SockPack.SvcRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.SvcRegister));
-                    sess.sdata = new SvcUnit(sr.term_info, sess);
-                    break;
-                case SockPack.PackName.svc_trans:
+                    svc_register(sess);
                     break;
                 default:
                     break;
             }
 
-            //// 初始化SessData
-            //if (sess.sdata == null)
-            //    sess.sdata = new EnvSessData((EnvSessType)hdr.id_type);
-            //EnvSessData sd = sess.sdata as EnvSessData;
-
-            //// 根据SessType，调用合适的处理方法
-            //switch (sd.Type) {
-            //    case EnvSessType.admin: AdminParse(sess); break;
-            //    case EnvSessType.module: ModuleParse(sess, hdr); break;
-            //    case EnvSessType.term_sk:
-            //    case EnvSessType.term_zls: 
-            //    case EnvSessType.term_qx:
-            //    case EnvSessType.term_dxs: TermParse(sess); break;
-            //    default: break;
-            //}
-
             // 数据流处理完成
             sess.rdata_size = 0;
         }
 
-        /// <summary>
-        /// 1.登录EnvCenter
-        /// 2.获取终端列表，能自动更新
-        /// 3.获取终端发送的数据
-        /// 4.向终端发送命令
-        /// 5.关闭终端
-        /// </summary>
-        /// <param name="sess"></param>
-        private void AdminParse(SockSess sess)
+        private void term_register(SockSess sess)
         {
+            SockPack.TermRegister treg = (SockPack.TermRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRegister));
+            TermUnit term = new TermUnit(treg.ccid, treg.info);
+            foreach (var item in svc_table) {
+                if ((item.sdata as SvcUnit).TermInfo.Equals(new string(treg.info))) {
+                    term.Svc = item;
+                    break;
+                }
+            }
+            sess.sdata = term;
         }
 
-        /// <summary>
-        /// 1.向EnvCenter进行模块注册
-        /// 2.通过EnvCenter转发回复、命令到终端
-        /// </summary>
-        /// <param name="sess"></param>
-        /// <param name="hdr"></param>
-        private void ModuleParse(SockSess sess, SockPack.PackHeader hdr)
+        private void term_request(SockSess sess)
         {
-            EnvSessData sd = sess.sdata as EnvSessData;
+            if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
+                return;
+            (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+        }
 
-            switch (hdr.name) {
-                // 心跳
-                case SockPack.PackName.alive: break;
-                // 注册目标term类型
-                case SockPack.PackName.svc_register: sd.ServeType = (EnvSessType)sess.rdata[4]; break;
-                // 转发
-                case SockPack.PackName.svc_trans:
-                    SockPack.TermRequest thdr = (SockPack.TermRequest)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRequest));
-                    foreach (var item in FindTermSession(new string(thdr.ccid)))
-                        item.sock.Send(sess.rdata, Marshal.SizeOf(thdr),
-                            sess.rdata_size - Marshal.SizeOf(thdr),
-                            System.Net.Sockets.SocketFlags.None);
+        private void term_respond(SockSess sess)
+        {
+            SockPack.TermRespond tres = (SockPack.TermRespond)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRespond));
+            foreach (var item in term_table) {
+                if ((item.sdata as TermUnit).CCID.Equals(new string(tres.ccid))) {
+                    item.sock.Send(sess.rdata, Marshal.SizeOf(tres),
+                    sess.rdata_size - Marshal.SizeOf(tres),
+                    System.Net.Sockets.SocketFlags.None);
                     break;
+                }
             }
         }
 
-        /// <summary>
-        /// 将终端数据请求到对应的模块服务程序，通过EnvSessData中的ServeType决定
-        /// </summary>
-        /// <param name="sess"></param>
-        private void TermParse(SockSess sess)
+        private void svc_register(SockSess sess)
         {
-            // 数据流转换
-            SockPack.TermRequest thdr = (SockPack.TermRequest)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRequest));
-
-            // 保存ccid
-            if ((sess.sdata as EnvSessData).CCID == null)
-                (sess.sdata as EnvSessData).CCID = new string(thdr.ccid);
-
-            // 迭代sess_table，找到对应的处理模块，发送数据
-            foreach (var item in FindModuleSession((EnvSessType)thdr.hdr.id_type))
-                item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+            SockPack.SvcRegister sreg = (SockPack.SvcRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.SvcRegister));
+            sess.sdata = new SvcUnit(sreg.term_info, sess);
         }
 
-        // Self Methods =================================================================
-
-        private SockSess[] FindModuleSession(EnvSessType type)
-        {
-            List<SockSess> retval = new List<SockSess>();
-
-            var subset = from s in sessmgr.sess_table
-                         where s.sdata != null && (s.sdata as EnvSessData).ServeType == type
-                         select s;
-            foreach (var item in subset)
-                retval.Add(item);
-
-            return retval.ToArray();
-        }
-
-        private SockSess[] FindTermSession(string ccid)
-        {
-            List<SockSess> retval = new List<SockSess>();
-
-            var subset = from s in sessmgr.sess_table
-                         where s.sdata != null && (s.sdata as EnvSessData).CCID != null
-                         && (s.sdata as EnvSessData).CCID.Equals(ccid)
-                         select s;
-            foreach (var item in subset)
-                retval.Add(item);
-
-            return retval.ToArray();
-        }
+        // Self Methods =======================================================================
 
         private IDictionary<string, string> AnalyzeString(string mes)
         {

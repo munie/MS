@@ -109,7 +109,8 @@ namespace EnvModule
                     if ((item.Sock = sessmgr.AddConnectSession(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
-                        byte[] data = new byte[] { 0x20, 0x20, 0x05, 0x00, Convert.ToByte(item.Type) };
+                        byte[] data = new byte[] { 0x20, 0x00, 0x14, 0x00 };
+                        data = data.Concat(Encoding.ASCII.GetBytes(item.TermInfo)).ToArray();
                         sessmgr.SendSession(item.Sock, data);
                     }
                     else
@@ -186,18 +187,18 @@ namespace EnvModule
                 return;
             }
 
-            // 根据data[1]找到对应模块，处理数据
-            rwlock.AcquireReaderLock(-1);
-            foreach (var item in moduleTable) {
-                if (item.Type == Convert.ToInt16(data[1]) && (UInt16)data[2] == data.Length) {
-                    try {
-                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsgByte, new object[] { data });
-                    }
-                    catch (Exception) { }
-                    break;
-                }
-            }
-            rwlock.ReleaseReaderLock();
+            //// 根据data[1]找到对应模块，处理数据
+            //rwlock.AcquireReaderLock(-1);
+            //foreach (var item in moduleTable) {
+            //    if (item.Sock == sess.sock) {
+            //        try {
+            //            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsgByte, new object[] { data });
+            //        }
+            //        catch (Exception) { }
+            //        break;
+            //    }
+            //}
+            //rwlock.ReleaseReaderLock();
         }
 
         private void sessmgr_sess_delete(object sender, SockSess sess)
@@ -241,7 +242,7 @@ namespace EnvModule
             ModuleUnit moduleUnit = new ModuleUnit();
             moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.Type = (UInt16)module.Invoke(SModule.FullName, SModule.GetModuleType, null);
+            moduleUnit.TermInfo = (string)module.Invoke(SModule.FullName, SModule.GetModuleInfo, null);
             moduleUnit.State = SockState.Closed;
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;

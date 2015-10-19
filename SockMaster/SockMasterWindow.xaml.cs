@@ -90,7 +90,7 @@ namespace SockMaster
             timer.Start();
         }
 
-        public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory + @"\";
+        public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string conf_name = "SockMaster.xml";
         private SockSessManager sessmgr;
         public ObservableCollection<SockUnit> SockTable { get; set; }
@@ -522,6 +522,11 @@ namespace SockMaster
 
             foreach (var item in tmp)
                 CmdTable.Remove(item);
+        }
+
+        private void MenuItem_OpenCmd_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("Explorer.exe", base_dir);
         }
 
         private void MenuItem_SaveCmd_Click(object sender, RoutedEventArgs e)

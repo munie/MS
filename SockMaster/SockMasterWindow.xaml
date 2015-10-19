@@ -67,6 +67,7 @@
                     <MenuItem Header="edit" Click="MenuItem_EditCmd_Click"/>
                     <MenuItem Header="new" Click="MenuItem_NewCmd_Click"/>
                     <MenuItem Header="del" Click="MenuItem_DelCmd_Click"/>
+                    <MenuItem Header="open" Click="MenuItem_OpenCmd_Click"/>
                     <MenuItem Header="save" Click="MenuItem_SaveCmd_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>

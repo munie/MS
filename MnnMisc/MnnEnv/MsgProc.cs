@@ -73,11 +73,9 @@ namespace Mnn.MnnMisc.MnnEnv
 
         public abstract string GetModuleID();
 
-        public abstract UInt16 GetModuleType();
+        public abstract string GetModuleInfo();
 
         // IMsgProc ========================================================================
-
-        public abstract void HandleMsgByte(IPEndPoint ep, byte[] msg);
 
         public void AppendMsg(System.Net.IPEndPoint ep, string msg)
         {

@@ -8,25 +8,30 @@ namespace Mnn.MnnSock
 {
     public class SockPack
     {
-        public enum PackName : byte
+        public enum PackName : ushort
         {
-            alive = 0x0C,
+            alive = 0x000C,
 
-            term_register = 0x10,
-            term_request = 0x11,
+            term_register = 0x0010,
+            term_request = 0x0011,
+            term_respond = 0x0012,
 
-            svc_register = 0x20,
-            svc_trans = 0x0D,
+            svc_register = 0x0020,
         }
 
+        /// <summary>
+        /// Common Header
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct PackHeader
         {
-            public byte id_type;
             public PackName name;
             public UInt16 len;
         }
 
+        /// <summary>
+        /// Terminal Register
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct TermRegister
         {
@@ -37,6 +42,9 @@ namespace Mnn.MnnSock
             public char[] info;
         }
 
+        /// <summary>
+        /// Terminal Request
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct TermRequest
         {
@@ -45,6 +53,20 @@ namespace Mnn.MnnSock
             public char[] ccid;
         }
 
+        /// <summary>
+        /// Terminal Respond
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct TermRespond
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+            public char[] ccid;
+        }
+
+        /// <summary>
+        /// Service Register
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct SvcRegister
         {
