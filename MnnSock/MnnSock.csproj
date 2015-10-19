@@ -52,7 +52,7 @@
     <Compile Include="Deprecated\UdpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SockConvert.cs" />
-    <Compile Include="SockMsg.cs" />
+    <Compile Include="SockPack.cs" />
     <Compile Include="SockSess.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

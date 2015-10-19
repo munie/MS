@@ -35,7 +35,31 @@ namespace EnvCenter
 
     class EvnCenter
     {
-        SockSessManager sessmgr;
+        private SockSessManager sessmgr;
+        private SockSess[] term_table
+        {
+            get
+            {
+                List<SockSess> list = new List<SockSess>();
+                foreach (var item in sessmgr.sess_table) {
+                    if ((item.sdata as TermUnit) != null)
+                        list.Add(item);
+                }
+                return list.ToArray();
+            }
+        }
+        private SockSess[] svc_table
+        {
+            get
+            {
+                List<SockSess> list = new List<SockSess>();
+                foreach (var item in sessmgr.sess_table) {
+                    if ((item.sdata as SvcUnit) != null)
+                        list.Add(item);
+                }
+                return list.ToArray();
+            }
+        }
 
         public EvnCenter(SockSessManager sessmgr)
         {
@@ -78,28 +102,57 @@ namespace EnvCenter
             }
 
             // 验证数据流有效性
-            SockMsg.MsgHdr hdr = (SockMsg.MsgHdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.MsgHdr));
+            SockPack.PackHeader hdr = (SockPack.PackHeader)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.PackHeader));
             if (hdr.len != sess.rdata_size) {
                 Console.Write("[Error]: Unknow packet from {0}.\n", sess.rep.ToString());
                 sess.rdata_size = 0;
                 return;
             }
 
-            // 初始化SessData
-            if (sess.sdata == null)
-                sess.sdata = new EnvSessData((EnvSessType)hdr.id_type);
-            EnvSessData sd = sess.sdata as EnvSessData;
-
-            // 根据SessType，调用合适的处理方法
-            switch (sd.Type) {
-                case EnvSessType.admin: AdminParse(sess); break;
-                case EnvSessType.module: ModuleParse(sess, hdr); break;
-                case EnvSessType.term_sk:
-                case EnvSessType.term_zls: 
-                case EnvSessType.term_qx:
-                case EnvSessType.term_dxs: TermParse(sess); break;
-                default: break;
+            switch (hdr.name) {
+                case SockPack.PackName.alive:
+                    break;
+                case SockPack.PackName.term_register:
+                    SockPack.TermRegister tr = (SockPack.TermRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRegister));
+                    TermUnit term = new TermUnit(tr.ccid, tr.info, null);
+                    foreach (var item in svc_table) {
+                        if ((item.sdata as SvcUnit).TermInfo.Equals(new string(tr.info))) {
+                            term.Svc = item;
+                            break;
+                        }
+                    }
+                    sess.sdata = term;
+                    break;
+                case SockPack.PackName.term_request:
+                    if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
+                        break;
+                    (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+                    break;
+                case SockPack.PackName.svc_register:
+                    SockPack.SvcRegister sr = (SockPack.SvcRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.SvcRegister));
+                    sess.sdata = new SvcUnit(sr.term_info, sess);
+                    break;
+                case SockPack.PackName.svc_trans:
+                    break;
+                default:
+                    break;
             }
+
+            //// 初始化SessData
+            //if (sess.sdata == null)
+            //    sess.sdata = new EnvSessData((EnvSessType)hdr.id_type);
+            //EnvSessData sd = sess.sdata as EnvSessData;
+
+            //// 根据SessType，调用合适的处理方法
+            //switch (sd.Type) {
+            //    case EnvSessType.admin: AdminParse(sess); break;
+            //    case EnvSessType.module: ModuleParse(sess, hdr); break;
+            //    case EnvSessType.term_sk:
+            //    case EnvSessType.term_zls: 
+            //    case EnvSessType.term_qx:
+            //    case EnvSessType.term_dxs: TermParse(sess); break;
+            //    default: break;
+            //}
 
             // 数据流处理完成
             sess.rdata_size = 0;
@@ -123,18 +176,18 @@ namespace EnvCenter
         /// </summary>
         /// <param name="sess"></param>
         /// <param name="hdr"></param>
-        private void ModuleParse(SockSess sess, SockMsg.MsgHdr hdr)
+        private void ModuleParse(SockSess sess, SockPack.PackHeader hdr)
         {
             EnvSessData sd = sess.sdata as EnvSessData;
 
-            switch (hdr.msg_type) {
+            switch (hdr.name) {
                 // 心跳
-                case SockMsg.MsgType.alive: break;
+                case SockPack.PackName.alive: break;
                 // 注册目标term类型
-                case SockMsg.MsgType.register: sd.ServeType = (EnvSessType)sess.rdata[4]; break;
+                case SockPack.PackName.svc_register: sd.ServeType = (EnvSessType)sess.rdata[4]; break;
                 // 转发
-                case SockMsg.MsgType.trans:
-                    SockMsg.TermHdr thdr = (SockMsg.TermHdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.TermHdr));
+                case SockPack.PackName.svc_trans:
+                    SockPack.TermRequest thdr = (SockPack.TermRequest)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRequest));
                     foreach (var item in FindTermSession(new string(thdr.ccid)))
                         item.sock.Send(sess.rdata, Marshal.SizeOf(thdr),
                             sess.rdata_size - Marshal.SizeOf(thdr),
@@ -150,7 +203,7 @@ namespace EnvCenter
         private void TermParse(SockSess sess)
         {
             // 数据流转换
-            SockMsg.TermHdr thdr = (SockMsg.TermHdr)SockConvert.BytesToStruct(sess.rdata, typeof(SockMsg.TermHdr));
+            SockPack.TermRequest thdr = (SockPack.TermRequest)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRequest));
 
             // 保存ccid
             if ((sess.sdata as EnvSessData).CCID == null)
