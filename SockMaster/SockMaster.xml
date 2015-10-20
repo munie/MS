@@ -19,5 +19,7 @@
     <cmditem id="09" name="注册终端" content="0x9000#0x2800#89860113836037156496#MMMMNNNNNNNNCZLS" comment="" />
     <cmditem id="8F" name="IRQ" content="0x8F00#0x2400#89860113836037156496#Hello World!" comment="" />
     <cmditem id="92" name="发送终端" content="0x9200#0x1B00#89860113836037156496#*OK" comment="" />
+    <cmditem id="94" name="信息终端" content="0x9400#0x1800#00000000000000000000" comment="" />
+    <cmditem id="94-1" name="信息终端" content="0x9400#0x1800#89860113836037156496" comment="" />
   </command>
 </configuration>
