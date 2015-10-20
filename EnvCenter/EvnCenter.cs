@@ -40,11 +40,23 @@ namespace EnvCenter
         {
             this.sessmgr = sessmgr;
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
+            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
+        }
+
+        void sessmgr_sess_delete(object sender, SockSess sess)
+        {
+            // 更新终端表模块信息
+            if ((sess.sdata as SvcUnit) != null) {
+                foreach (var item in term_table) {
+                    if ((item.sdata as TermUnit).Info.Equals((sess.sdata as SvcUnit).TermInfo))
+                        (item.sdata as TermUnit).Svc = null;
+                }
+            }
         }
 
         // Parse Methods ======================================================================
@@ -125,12 +137,14 @@ namespace EnvCenter
         {
             if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
                 return;
+            
             (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
         }
 
         private void term_respond(SockSess sess)
         {
             SockPack.TermRespond tres = (SockPack.TermRespond)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRespond));
+            
             foreach (var item in term_table) {
                 if ((item.sdata as TermUnit).CCID.Equals(new string(tres.ccid))) {
                     item.sock.Send(sess.rdata, Marshal.SizeOf(tres),
@@ -144,7 +158,25 @@ namespace EnvCenter
         private void svc_register(SockSess sess)
         {
             SockPack.SvcRegister sreg = (SockPack.SvcRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.SvcRegister));
-            sess.sdata = new SvcUnit(sreg.term_info, sess);
+            SvcUnit svc = new SvcUnit(sreg.term_info, sess);
+
+            // 如果已有相同类型模块注册，则注册失败，关闭连接
+            foreach (var item in svc_table) {
+                if ((item.sdata as SvcUnit).TermInfo.Equals(svc.TermInfo)) {
+                    sess.sock.Send(Encoding.ASCII.GetBytes("svc_register failed: similar svc already registered!"));
+                    sess.eof = true;
+                    break;
+                }
+            }
+
+            // 更新模块表，必须放在模块监测之后
+            sess.sdata = svc;
+
+            // 更新终端表模块信息
+            foreach (var item in term_table) {
+                if ((item.sdata as TermUnit).Info.Equals(svc.TermInfo))
+                    (item.sdata as TermUnit).Svc = sess;
+            }
         }
 
         // Self Methods =======================================================================
