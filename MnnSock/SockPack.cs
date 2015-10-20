@@ -15,9 +15,9 @@ namespace Mnn.MnnSock
             cnt_read,
             cnt_write,
             cnt_irq = 0x008F,
-            cnt_reg_term = 0x0090,
-            cnt_info_term = 0x0091,
+            cnt_reg_term = 0x0090, // +1 for respond
             cnt_send_term = 0x0092,
+            cnt_info_term = 0x0094,
             cnt_reg_svc = 0x00A0,
             cnt_login_user = 0x00B0,
 
@@ -35,6 +35,9 @@ namespace Mnn.MnnSock
             public UInt16 len;
         }
 
+        /// <summary>
+        /// IRQ
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CntIRQ
         {
@@ -43,6 +46,9 @@ namespace Mnn.MnnSock
             public char[] ccid;
         }
 
+        /// <summary>
+        /// Register Terminal
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CntRegTerm
         {
@@ -53,14 +59,9 @@ namespace Mnn.MnnSock
             public char[] info;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntInfoTerm
-        {
-            public PackHeader hdr;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
-            public char[] ccid; // ccid == "0...0" mains all
-        }
-
+        /// <summary>
+        /// Send Terminal
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CntSendTerm
         {
@@ -69,6 +70,20 @@ namespace Mnn.MnnSock
             public char[] ccid; // ccid == "0...0" mains all
         }
 
+        /// <summary>
+        /// Info Terminal
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct CntInfoTerm
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+            public char[] ccid; // ccid == "0...0" mains all
+        }
+
+        /// <summary>
+        /// Register Service
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CntRegSvc
         {
@@ -77,6 +92,9 @@ namespace Mnn.MnnSock
             public char[] term_info;
         }
 
+        /// <summary>
+        /// Login User
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CntLoginUser
         {
@@ -87,6 +105,9 @@ namespace Mnn.MnnSock
             public char[] passwd;
         }
 
+        /// <summary>
+        /// Service Handle
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct SvcHandle
         {
@@ -95,6 +116,9 @@ namespace Mnn.MnnSock
             public char[] ccid;
         }
 
+        /// <summary>
+        /// Terminal Handle
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct TermHandle
         {

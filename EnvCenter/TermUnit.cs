@@ -5,11 +5,18 @@ using System.Text;
 
 namespace EnvCenter
 {
-    class TermUnit
+    [Serializable]
+    public class TerminalBase
     {
-        public string CCID { get; set; }
-        public string Info { get; set; }
-        public Mnn.MnnSock.SockSess Svc { get; set; }
+        public virtual string CCID { get; set; }
+        public virtual string Info { get; set; }
+    }
+
+    public class TermUnit : TerminalBase
+    {
+        public override string CCID { get; set; }
+        public override string Info { get; set; }
+        public Mnn.MnnSock.SockSess Svc;
 
         public TermUnit(char[] ccid, char[] info, Mnn.MnnSock.SockSess svc = null)
         {
@@ -17,5 +24,16 @@ namespace EnvCenter
             Info = new string(info);
             Svc = svc;
         }
+
+        public TerminalBase ToBase()
+        {
+            return new TerminalBase() { CCID = CCID, Info = Info };
+        }
+    }
+
+    [Serializable]
+    public class SerializableTermList
+    {
+        public List<TerminalBase> terminals = new List<TerminalBase>();
     }
 }
