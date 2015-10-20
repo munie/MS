@@ -30,10 +30,4 @@ namespace EnvCenter
             return new TerminalBase() { CCID = CCID, Info = Info };
         }
     }
-
-    [Serializable]
-    public class SerializableTermList
-    {
-        public List<TerminalBase> terminals = new List<TerminalBase>();
-    }
 }

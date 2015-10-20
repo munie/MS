@@ -5,12 +5,14 @@ using System.Text;
 
 namespace EnvCenter
 {
-    class UserUnit
+    [Serializable]
+    public class UserUnit
     {
         public string Userid { get; set; }
         public string Passwd { get; set; }
         public DateTime LoginTime { get; set; }
 
+        public UserUnit() { }
         public UserUnit(char[] userid, char[] passwd)
         {
             Userid = new string(userid);

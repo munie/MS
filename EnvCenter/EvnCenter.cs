@@ -38,6 +38,18 @@ namespace EnvCenter
                 return list.ToArray();
             }
         }
+        private SockSess[] user_table
+        {
+            get
+            {
+                List<SockSess> list = new List<SockSess>();
+                foreach (var item in sessmgr.sess_table) {
+                    if ((item.sdata as UserUnit) != null)
+                        list.Add(item);
+                }
+                return list.ToArray();
+            }
+        }
 
         public EvnCenter(SockSessManager sessmgr)
         {
@@ -121,6 +133,9 @@ namespace EnvCenter
                 case SockPack.PackName.cnt_login_user:
                     cnt_login_user(sess);
                     break;
+                case SockPack.PackName.cnt_info_user:
+                    cnt_info_user(sess);
+                    break;
                 default:
                     break;
             }
@@ -141,28 +156,28 @@ namespace EnvCenter
 
         private void cnt_reg_term(SockSess sess)
         {
-            SockPack.CntRegTerm regterm = (SockPack.CntRegTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegTerm));
-            TermUnit term = new TermUnit(regterm.ccid, regterm.info);
+            SockPack.CntRegTerm reg_term = (SockPack.CntRegTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegTerm));
+            reg_term.hdr.name++;
+            TermUnit term = new TermUnit(reg_term.ccid, reg_term.info);
 
             // 如果已有相同类型终端注册，则注册失败，关闭连接
-            regterm.hdr.name++;
             foreach (var item in term_table) {
                 if ((item.sdata as TermUnit).CCID.Equals(term.CCID)) {
-                    sess.sock.Send(StructPack(regterm,
+                    sess.sock.Send(StructPack(reg_term,
                         Encoding.ASCII.GetBytes("Register term failed: Similar term already registered!")));
                     sess.eof = true;
                     return;
                 }
             }
             // 发送注册成功信息
-            sess.sock.Send(StructPack(regterm, Encoding.ASCII.GetBytes("Register term success!")));
+            sess.sock.Send(StructPack(reg_term, Encoding.ASCII.GetBytes("Register term success!")));
 
             // 更新终端表，必须放在验证之后
             sess.sdata = term;
 
             // 获取对应的svc
             foreach (var item in svc_table) {
-                if ((item.sdata as SvcUnit).TermInfo.Equals(new string(regterm.info))) {
+                if ((item.sdata as SvcUnit).TermInfo.Equals(new string(reg_term.info))) {
                     term.Svc = item;
                     break;
                 }
@@ -171,13 +186,13 @@ namespace EnvCenter
 
         private void cnt_send_term(SockSess sess)
         {
-            SockPack.CntSendTerm sendterm = (SockPack.CntSendTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntSendTerm));
+            SockPack.CntSendTerm send_term = (SockPack.CntSendTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntSendTerm));
 
             sess.rdata[0] = (byte)SockPack.PackName.term_handle;
             sess.rdata[1] = (byte)SockPack.PackName.term_handle >> 8;
 
             foreach (var item in term_table) {
-                if ((item.sdata as TermUnit).CCID.Equals(new string(sendterm.ccid))) {
+                if ((item.sdata as TermUnit).CCID.Equals(new string(send_term.ccid))) {
                     item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
                     break;
                 }
@@ -186,30 +201,30 @@ namespace EnvCenter
 
         private void cnt_info_term(SockSess sess)
         {
-            SockPack.CntInfoTerm infoterm = (SockPack.CntInfoTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntInfoTerm));
-            infoterm.hdr.name++;
+            SockPack.CntInfoTerm info_term = (SockPack.CntInfoTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntInfoTerm));
+            info_term.hdr.name++;
 
             try {
-                byte[] buffer = new byte[2048];
+                byte[] buffer = new byte[4096];
                 MemoryStream memoryStream = new MemoryStream(buffer);
-                XmlSerializer xmlFormat = new XmlSerializer(typeof(SerializableTermList));
+                XmlSerializer xmlFormat = new XmlSerializer(typeof(List<TerminalBase>));
 
-                SerializableTermList list = new SerializableTermList();
-                if ("00000000000000000000".Equals(new string(infoterm.ccid))) {
+                List<TerminalBase> list = new List<TerminalBase>();
+                if (new string('0', info_term.ccid.Length).Equals(new string(info_term.ccid))) {
                     foreach (var item in term_table)
-                        list.terminals.Add((item.sdata as TermUnit).ToBase());
+                        list.Add((item.sdata as TermUnit).ToBase());
                 }
                 else {
                     foreach (var item in term_table) {
-                        if ((item.sdata as TermUnit).CCID.Equals(new string(infoterm.ccid))) {
-                            list.terminals.Add((item.sdata as TermUnit).ToBase());
+                        if ((item.sdata as TermUnit).CCID.Equals(new string(info_term.ccid))) {
+                            list.Add((item.sdata as TermUnit).ToBase());
                             break;
                         }
                     }
                 }
                 xmlFormat.Serialize(memoryStream, list);
 
-                sess.sock.Send(StructPack(infoterm, buffer.Take((int)memoryStream.Position).ToArray()));
+                sess.sock.Send(StructPack(info_term, buffer.Take((int)memoryStream.Position).ToArray()));
                 memoryStream.Close();
             }
             catch (Exception ex) {
@@ -219,20 +234,20 @@ namespace EnvCenter
 
         private void cnt_reg_svc(SockSess sess)
         {
-            SockPack.CntRegSvc regsvc = (SockPack.CntRegSvc)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegSvc));
-            SvcUnit svc = new SvcUnit(regsvc.term_info);
+            SockPack.CntRegSvc reg_svc = (SockPack.CntRegSvc)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegSvc));
+            reg_svc.hdr.name++;
+            SvcUnit svc = new SvcUnit(reg_svc.term_info);
 
             // 如果已有相同类型模块注册，则注册失败，关闭连接
-            regsvc.hdr.name++;
             foreach (var item in svc_table) {
                 if ((item.sdata as SvcUnit).TermInfo.Equals(svc.TermInfo)) {
-                    sess.sock.Send(StructPack(regsvc,
+                    sess.sock.Send(StructPack(reg_svc,
                         Encoding.ASCII.GetBytes("Register svc failed: Similar svc already registered!")));
                     sess.eof = true;
                     return;
                 }
             }
-            sess.sock.Send(StructPack(regsvc, Encoding.ASCII.GetBytes("Register svc success!")));
+            sess.sock.Send(StructPack(reg_svc, Encoding.ASCII.GetBytes("Register svc success!")));
 
             // 更新模块表，必须放在验证之后
             sess.sdata = svc;
@@ -246,13 +261,47 @@ namespace EnvCenter
 
         private void cnt_login_user(SockSess sess)
         {
-            SockPack.CntLoginUser loginuser = (SockPack.CntLoginUser)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntLoginUser));
-            UserUnit user = new UserUnit(loginuser.userid, loginuser.passwd);
+            SockPack.CntLoginUser login_user = (SockPack.CntLoginUser)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntLoginUser));
+            login_user.hdr.name++;
+            UserUnit user = new UserUnit(login_user.userid, login_user.passwd);
 
             // verify login
 
 
             sess.sdata = user;
+        }
+
+        private void cnt_info_user(SockSess sess)
+        {
+            SockPack.CntInfoUser info_user = (SockPack.CntInfoUser)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntInfoUser));
+            info_user.hdr.name++;
+
+            try {
+                byte[] buffer = new byte[4096];
+                MemoryStream memoryStream = new MemoryStream(buffer);
+                XmlSerializer xmlFormat = new XmlSerializer(typeof(List<UserUnit>));
+
+                List<UserUnit> list = new List<UserUnit>();
+                if (new string('0', info_user.userid.Length).Equals(new string(info_user.userid))) {
+                    foreach (var item in term_table)
+                        list.Add(item.sdata as UserUnit);
+                }
+                else {
+                    foreach (var item in term_table) {
+                        if ((item.sdata as TermUnit).CCID.Equals(new string(info_user.userid))) {
+                            list.Add(item.sdata as UserUnit);
+                            break;
+                        }
+                    }
+                }
+                xmlFormat.Serialize(memoryStream, list);
+
+                sess.sock.Send(StructPack(info_user, buffer.Take((int)memoryStream.Position).ToArray()));
+                memoryStream.Close();
+            }
+            catch (Exception ex) {
+                Console.Write(ex.ToString());
+            }
         }
 
         // Self Methods =======================================================================
