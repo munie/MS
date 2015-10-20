@@ -48,6 +48,8 @@ namespace EnvCenter
             sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
         }
 
+        // Parse Methods ======================================================================
+
         void sessmgr_sess_delete(object sender, SockSess sess)
         {
             // 更新终端表模块信息
@@ -58,8 +60,6 @@ namespace EnvCenter
                 }
             }
         }
-
-        // Parse Methods ======================================================================
 
         private void sessmgr_sess_parse(object sender, SockSess sess)
         {
@@ -100,17 +100,17 @@ namespace EnvCenter
             switch (hdr.name) {
                 case SockPack.PackName.alive:
                     break;
-                case SockPack.PackName.term_register:
-                    term_register(sess);
+                case SockPack.PackName.cnt_irq:
+                    cnt_irq(sess);
                     break;
-                case SockPack.PackName.term_request:
-                    term_request(sess);
+                case SockPack.PackName.cnt_reg_term:
+                    cnt_reg_term(sess);
                     break;
-                case SockPack.PackName.term_respond:
-                    term_respond(sess);
+                case SockPack.PackName.cnt_send_term:
+                    cnt_send_term(sess);
                     break;
-                case SockPack.PackName.svc_register:
-                    svc_register(sess);
+                case SockPack.PackName.cnt_reg_svc:
+                    cnt_reg_svc(sess);
                     break;
                 default:
                     break;
@@ -120,9 +120,19 @@ namespace EnvCenter
             sess.rdata_size = 0;
         }
 
-        private void term_register(SockSess sess)
+        private void cnt_irq(SockSess sess)
         {
-            SockPack.TermRegister treg = (SockPack.TermRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRegister));
+            if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
+                return;
+
+            sess.rdata[0] = (byte)SockPack.PackName.svc_handle;
+            sess.rdata[1] = (byte)SockPack.PackName.svc_handle >> 8;
+            (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
+        }
+
+        private void cnt_reg_term(SockSess sess)
+        {
+            SockPack.CntRegTerm treg = (SockPack.CntRegTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegTerm));
             TermUnit term = new TermUnit(treg.ccid, treg.info);
             foreach (var item in svc_table) {
                 if ((item.sdata as SvcUnit).TermInfo.Equals(new string(treg.info))) {
@@ -131,43 +141,38 @@ namespace EnvCenter
                 }
             }
             sess.sdata = term;
+            sess.sock.Send(Encoding.ASCII.GetBytes("Register term success!"));
         }
 
-        private void term_request(SockSess sess)
+        private void cnt_send_term(SockSess sess)
         {
-            if (sess.sdata == null || sess.sdata as TermUnit == null || (sess.sdata as TermUnit).Svc == null)
-                return;
-            
-            (sess.sdata as TermUnit).Svc.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
-        }
+            SockPack.CntSendTerm tres = (SockPack.CntSendTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntSendTerm));
 
-        private void term_respond(SockSess sess)
-        {
-            SockPack.TermRespond tres = (SockPack.TermRespond)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.TermRespond));
-            
+            sess.rdata[0] = (byte)SockPack.PackName.term_respond;
+            sess.rdata[1] = (byte)SockPack.PackName.term_respond >> 8;
+
             foreach (var item in term_table) {
                 if ((item.sdata as TermUnit).CCID.Equals(new string(tres.ccid))) {
-                    item.sock.Send(sess.rdata, Marshal.SizeOf(tres),
-                    sess.rdata_size - Marshal.SizeOf(tres),
-                    System.Net.Sockets.SocketFlags.None);
+                    item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
                     break;
                 }
             }
         }
 
-        private void svc_register(SockSess sess)
+        private void cnt_reg_svc(SockSess sess)
         {
-            SockPack.SvcRegister sreg = (SockPack.SvcRegister)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.SvcRegister));
-            SvcUnit svc = new SvcUnit(sreg.term_info, sess);
+            SockPack.CntRegSvc sreg = (SockPack.CntRegSvc)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegSvc));
+            SvcUnit svc = new SvcUnit(sreg.term_info);
 
             // 如果已有相同类型模块注册，则注册失败，关闭连接
             foreach (var item in svc_table) {
                 if ((item.sdata as SvcUnit).TermInfo.Equals(svc.TermInfo)) {
-                    sess.sock.Send(Encoding.ASCII.GetBytes("svc_register failed: similar svc already registered!"));
+                    sess.sock.Send(Encoding.ASCII.GetBytes("Register svc failed: Similar svc already registered!"));
                     sess.eof = true;
-                    break;
+                    return;
                 }
             }
+            sess.sock.Send(Encoding.ASCII.GetBytes("Register svc success!"));
 
             // 更新模块表，必须放在模块监测之后
             sess.sdata = svc;

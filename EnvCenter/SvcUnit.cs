@@ -8,12 +8,10 @@ namespace EnvCenter
     class SvcUnit
     {
         public string TermInfo { get; set; }
-        public Mnn.MnnSock.SockSess Sess { get; set; }
 
-        public SvcUnit(char[] info, Mnn.MnnSock.SockSess sess)
+        public SvcUnit(char[] info)
         {
             TermInfo = new string(info);
-            Sess = sess;
         }
     }
 }

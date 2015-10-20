@@ -12,11 +12,17 @@ namespace Mnn.MnnSock
         {
             alive = 0x000C,
 
-            term_register = 0x0010,
-            term_request = 0x0011,
-            term_respond = 0x0012,
+            cnt_read,
+            cnt_write,
+            cnt_irq = 0x008F,
+            cnt_reg_term = 0x0090,
+            cnt_info_term = 0x0091,
+            cnt_send_term = 0x0092,
+            cnt_reg_svc = 0x00A0,
+            cnt_login_user = 0x00B0,
 
-            svc_register = 0x0020,
+            svc_handle = 0x0021,
+            term_respond = 0x0022,
         }
 
         /// <summary>
@@ -29,11 +35,18 @@ namespace Mnn.MnnSock
             public UInt16 len;
         }
 
-        /// <summary>
-        /// Terminal Register
-        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct TermRegister
+        public struct CntIRQ
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+            public char[] ccid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
+            public char[] data;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct CntRegTerm
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
@@ -42,37 +55,48 @@ namespace Mnn.MnnSock
             public char[] info;
         }
 
-        /// <summary>
-        /// Terminal Request
-        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct TermRequest
+        public struct CntInfoTerm
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
-            public char[] ccid;
+            public char[] ccid; // ccid == "0...0" mains all
         }
 
-        /// <summary>
-        /// Terminal Respond
-        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct TermRespond
+        public struct CntSendTerm
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
-            public char[] ccid;
+            public char[] ccid; // ccid == "0...0" mains all
         }
 
-        /// <summary>
-        /// Service Register
-        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct SvcRegister
+        public struct CntRegSvc
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] term_info;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SvcHandle
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public char[] ccid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
+            public char[] data;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct TermRespond
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public char[] ccid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
+            public char[] data;
         }
     }
 }

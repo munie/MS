@@ -91,7 +91,7 @@ namespace EnvModule
                 tick = DateTime.Now;
                 foreach (var item in moduleTable) {
                     if (item.State == SockState.Opened)
-                        sessmgr.SendSession(item.Sock, new byte[] { 0x20, 0x0C, 0x04, 0x00 });
+                        sessmgr.SendSession(item.Sock, new byte[] { 0x0C, 0x00, 0x04, 0x00 });
                 }
             }
 
@@ -109,7 +109,7 @@ namespace EnvModule
                     if ((item.Sock = sessmgr.AddConnectSession(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
-                        byte[] data = new byte[] { 0x20, 0x00, 0x14, 0x00 };
+                        byte[] data = new byte[] { 0xA0, 0x00, 0x14, 0x00 };
                         data = data.Concat(Encoding.ASCII.GetBytes(item.TermInfo)).ToArray();
                         sessmgr.SendSession(item.Sock, data);
                     }
