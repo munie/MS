@@ -223,9 +223,9 @@ namespace SockMaster
                     string s = Convert.ToString(item, 16);
                     if (s.Length == 1)
                         s = "0" + s;
-                    sb.Append("(" + s + ")");
+                    sb.Append("[" + s + "]");
                 }
-                sb.Replace(")(", "");
+                sb.Replace("][", "");
 
                 txtBoxMsg.AppendText(DateTime.Now + " (" +
                     sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");

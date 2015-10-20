@@ -112,6 +112,9 @@ namespace EnvCenter
                 case SockPack.PackName.cnt_reg_svc:
                     cnt_reg_svc(sess);
                     break;
+                case SockPack.PackName.cnt_login_user:
+                    cnt_login_user(sess);
+                    break;
                 default:
                     break;
             }
@@ -132,27 +135,34 @@ namespace EnvCenter
 
         private void cnt_reg_term(SockSess sess)
         {
-            SockPack.CntRegTerm treg = (SockPack.CntRegTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegTerm));
-            TermUnit term = new TermUnit(treg.ccid, treg.info);
+            SockPack.CntRegTerm rterm = (SockPack.CntRegTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegTerm));
+            TermUnit term = new TermUnit(rterm.ccid, rterm.info);
+            sess.sdata = term;
+
+            // 获取对应的svc
             foreach (var item in svc_table) {
-                if ((item.sdata as SvcUnit).TermInfo.Equals(new string(treg.info))) {
+                if ((item.sdata as SvcUnit).TermInfo.Equals(new string(rterm.info))) {
                     term.Svc = item;
                     break;
                 }
             }
-            sess.sdata = term;
-            sess.sock.Send(Encoding.ASCII.GetBytes("Register term success!"));
+
+            // 发送注册成功信息
+            SockPack.TermHandle thandle = new SockPack.TermHandle();
+            thandle.hdr.name = SockPack.PackName.term_handle;
+            thandle.ccid = rterm.ccid;
+            sess.sock.Send(StructPack(thandle, Encoding.ASCII.GetBytes("Register term success!")));
         }
 
         private void cnt_send_term(SockSess sess)
         {
-            SockPack.CntSendTerm tres = (SockPack.CntSendTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntSendTerm));
+            SockPack.CntSendTerm sterm = (SockPack.CntSendTerm)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntSendTerm));
 
-            sess.rdata[0] = (byte)SockPack.PackName.term_respond;
-            sess.rdata[1] = (byte)SockPack.PackName.term_respond >> 8;
+            sess.rdata[0] = (byte)SockPack.PackName.term_handle;
+            sess.rdata[1] = (byte)SockPack.PackName.term_handle >> 8;
 
             foreach (var item in term_table) {
-                if ((item.sdata as TermUnit).CCID.Equals(new string(tres.ccid))) {
+                if ((item.sdata as TermUnit).CCID.Equals(new string(sterm.ccid))) {
                     item.sock.Send(sess.rdata, sess.rdata_size, System.Net.Sockets.SocketFlags.None);
                     break;
                 }
@@ -161,18 +171,22 @@ namespace EnvCenter
 
         private void cnt_reg_svc(SockSess sess)
         {
-            SockPack.CntRegSvc sreg = (SockPack.CntRegSvc)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegSvc));
-            SvcUnit svc = new SvcUnit(sreg.term_info);
+            SockPack.CntRegSvc rsvc = (SockPack.CntRegSvc)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntRegSvc));
+            SvcUnit svc = new SvcUnit(rsvc.term_info);
 
             // 如果已有相同类型模块注册，则注册失败，关闭连接
+            SockPack.SvcHandle shandle = new SockPack.SvcHandle();
             foreach (var item in svc_table) {
                 if ((item.sdata as SvcUnit).TermInfo.Equals(svc.TermInfo)) {
-                    sess.sock.Send(Encoding.ASCII.GetBytes("Register svc failed: Similar svc already registered!"));
+                    shandle.hdr.name = SockPack.PackName.svc_handle;
+                    sess.sock.Send(StructPack(shandle,
+                        Encoding.ASCII.GetBytes("Register svc failed: Similar svc already registered!")));
                     sess.eof = true;
                     return;
                 }
             }
-            sess.sock.Send(Encoding.ASCII.GetBytes("Register svc success!"));
+            shandle.hdr.name = SockPack.PackName.svc_handle;
+            sess.sock.Send(StructPack(shandle, Encoding.ASCII.GetBytes("Register svc success!")));
 
             // 更新模块表，必须放在模块监测之后
             sess.sdata = svc;
@@ -184,7 +198,30 @@ namespace EnvCenter
             }
         }
 
+        private void cnt_login_user(SockSess sess)
+        {
+            SockPack.CntLoginUser luser = (SockPack.CntLoginUser)SockConvert.BytesToStruct(sess.rdata, typeof(SockPack.CntLoginUser));
+            UserUnit user = new UserUnit(luser.userid, luser.passwd);
+
+            // verify login
+
+
+            sess.sdata = user;
+        }
+
         // Self Methods =======================================================================
+
+        private byte[] StructPack(object obj, byte[] data, bool update_len = true)
+        {
+            byte[] retval = SockConvert.StructToBytes(obj).Concat(data).ToArray();
+
+            if (update_len) {
+                retval[2] = (byte)(Marshal.SizeOf(obj) + data.Length);
+                retval[3] = (byte)((Marshal.SizeOf(obj) + data.Length) >> 8);
+            }
+
+            return retval;
+        }
 
         private IDictionary<string, string> AnalyzeString(string mes)
         {

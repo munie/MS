@@ -22,7 +22,7 @@ namespace Mnn.MnnSock
             cnt_login_user = 0x00B0,
 
             svc_handle = 0x0021,
-            term_respond = 0x0022,
+            term_handle = 0x0022,
         }
 
         /// <summary>
@@ -41,8 +41,6 @@ namespace Mnn.MnnSock
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
-            public char[] data;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -80,23 +78,29 @@ namespace Mnn.MnnSock
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct CntLoginUser
+        {
+            public PackHeader hdr;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 23 + 1)]
+            public char[] userid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32 + 1)]
+            public char[] passwd;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct SvcHandle
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] ccid;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
-            public char[] data;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct TermRespond
+        public struct TermHandle
         {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] ccid;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0)]
-            public char[] data;
         }
     }
 }
