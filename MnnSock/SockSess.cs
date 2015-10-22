@@ -168,7 +168,7 @@ namespace Mnn.MnnSock
             foreach (IPEndPoint globalEP in globalEPs) {
                 //if (ep.Equals(globalEP)) {
                 if (ep.Port == globalEP.Port) {
-                    Console.Write("[error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
+                    Console.Write("[Error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
                     return null;
                 }
             }
@@ -180,7 +180,7 @@ namespace Mnn.MnnSock
 
             SockSess sess = new SockSess(SockType.listen, sock);
             sess_table.Add(sess);
-            Console.Write("[info]: Session #L listened at {0}.\n", ep.ToString());
+            Console.Write("[Info]: Session #L listened at {0}.\n", ep.ToString());
             return sess;
         }
 
@@ -193,7 +193,7 @@ namespace Mnn.MnnSock
                 sock.Connect(ep);
             }
             catch (Exception) {
-                Console.Write("[error]: Connected to {0} failed.\n", ep.ToString());
+                Console.Write("[Error]: Connected to {0} failed.\n", ep.ToString());
                 return null;
             }
 
@@ -201,7 +201,7 @@ namespace Mnn.MnnSock
             sess_table.Add(sess);
             if (sess_create != null)
                 sess_create(this, sess);
-            Console.Write("[info]: Session #C connected to {0}.\n", ep.ToString());
+            Console.Write("[Info]: Session #C connected to {0}.\n", ep.ToString());
             return sess;
         }
 
@@ -246,9 +246,9 @@ namespace Mnn.MnnSock
         private void DeleteSession(SockSess sess)
         {
             if (sess.type == SockType.listen)
-                Console.Write("[info]: Session #* deleted from {0}.\n", sess.lep.ToString());
+                Console.Write("[Info]: Session #* deleted from {0}.\n", sess.lep.ToString());
             else {
-                Console.Write("[info]: Session #* deleted from {0}.\n", sess.rep.ToString());
+                Console.Write("[Info]: Session #* deleted from {0}.\n", sess.rep.ToString());
                 sess.sock.Shutdown(SocketShutdown.Both);
             }
             sess.sock.Close();
