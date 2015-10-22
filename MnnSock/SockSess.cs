@@ -124,9 +124,9 @@ namespace Mnn.MnnSock
                         if (item.type == SockType.listen) {
                             Socket sock = item.sock.Accept();
                             sess_table.Add(new SockSess(SockType.accept, sock));
-                            Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
+                            Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
                         }
                         else {
                             item.func_recv(item);
