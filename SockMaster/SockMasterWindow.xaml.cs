@@ -185,13 +185,13 @@ namespace SockMaster
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
                     if (item.Type == SockType.listen) {
-                        if ((item.Sock = sessmgr.AddListenSession(item.EP)) != null)
+                        if ((item.Sock = sessmgr.MakeListen(item.EP).sock) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;
                     }
                     else if (item.Type == SockType.connect) {
-                        if ((item.Sock = sessmgr.AddConnectSession(item.EP)) != null)
+                        if ((item.Sock = sessmgr.AddConnect(item.EP).sock) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;

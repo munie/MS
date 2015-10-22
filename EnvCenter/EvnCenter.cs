@@ -56,11 +56,11 @@ namespace EnvCenter
             this.sessmgr = sessmgr;
             sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
             sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
-            sessmgr.AddListenSession(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
+            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
+            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
+            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
+            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
+            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
         }
 
         // Parse Methods ======================================================================
