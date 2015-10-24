@@ -106,7 +106,7 @@ namespace EnvModule
 
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
-                    if ((item.Sock = sessmgr.AddConnect(ep).sock) != null) {
+                    if ((item.Sock = sessmgr.AddConnect(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
                         byte[] data = new byte[] { 0xA0, 0x00, 0x14, 0x00 };

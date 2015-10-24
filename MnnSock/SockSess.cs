@@ -159,7 +159,7 @@ namespace Mnn.MnnSock
             }
         }
 
-        public SockSess MakeListen(IPEndPoint ep)
+        public Socket MakeListen(IPEndPoint ep)
         {
             ThreadCheck(false);
 
@@ -178,13 +178,12 @@ namespace Mnn.MnnSock
             sock.Bind(ep);
             sock.Listen(100);
 
-            SockSess sess = new SockSess(SockType.listen, sock);
-            sess_table.Add(sess);
+            sess_table.Add(new SockSess(SockType.listen, sock));
             Console.Write("[Info]: Session #L listened at {0}.\n", ep.ToString());
-            return sess;
+            return sock;
         }
 
-        public SockSess AddConnect(IPEndPoint ep)
+        public Socket AddConnect(IPEndPoint ep)
         {
             ThreadCheck(false);
 
@@ -197,12 +196,11 @@ namespace Mnn.MnnSock
                 return null;
             }
 
-            SockSess sess = new SockSess(SockType.connect, sock);
-            sess_table.Add(sess);
+            sess_table.Add(new SockSess(SockType.connect, sock));
             if (sess_create != null)
-                sess_create(this, sess);
+                sess_create(this, sess_table.Last());
             Console.Write("[Info]: Session #C connected to {0}.\n", ep.ToString());
-            return sess;
+            return sock;
         }
 
         public void RemoveSession(Socket sock)
