@@ -33,13 +33,11 @@ namespace SockMaster
         private bool autorun;
         public ObservableCollection<SockUnit> Childs { get; set; }
         public byte[] SendBuff { get; set; }
-        public int SendBuffSize { get; set; }
 
         public SockUnit()
         {
             Childs = new ObservableCollection<SockUnit>();
             SendBuff = null;
-            SendBuffSize = 0;
             State = SockState.Closed;
         }
 

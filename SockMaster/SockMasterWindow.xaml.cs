@@ -162,10 +162,10 @@ namespace SockMaster
                     childArray = item.Childs.ToArray();
                 }
                 foreach (var child in childArray) {
-                    if (child.SendBuffSize != 0 && child.State == SockState.Opened) {
+                    if (child.SendBuff != null && child.State == SockState.Opened) {
                         sessmgr.SendSession(child.Sock, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                            child.SendBuffSize = 0;
+                            child.SendBuff = null;
                         //}));
                     }
                     if (child.State == SockState.Closing && child.State != SockState.Closed) {
@@ -175,10 +175,10 @@ namespace SockMaster
                 }
 
                 /// ** second handle sending data
-                if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
+                if (item.SendBuff != null && item.State == SockState.Opened) {
                     sessmgr.SendSession(item.Sock, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                        item.SendBuffSize = 0;
+                        item.SendBuff = null;
                     //}));
                 }
 
@@ -461,7 +461,6 @@ namespace SockMaster
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 unit.SendBuff = SockConvert.CmdstrToBytes(item.Cmd, '#');
-                unit.SendBuffSize = unit.SendBuff.Length;
                 break;
             }
         }
