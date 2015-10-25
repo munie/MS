@@ -58,7 +58,7 @@ namespace Mnn.MnnSock
         /// </summary>
         /// <param name="hexstr"></param>
         /// <returns></returns>
-        public static byte[] HexstrToBytes(string hexstr)
+        public static byte[] ParseHexstrToBytes(string hexstr)
         {
             List<byte> list = new List<byte>();
 
@@ -77,7 +77,7 @@ namespace Mnn.MnnSock
         /// </summary>
         /// <param name="cmd"></param>
         /// <returns></returns>
-        public static byte[] CmdstrToBytes(string cmd, char separator = ' ')
+        public static byte[] ParseCmdstrToBytes(string cmd, char separator = ' ')
         {
             cmd = cmd.Replace(@"\" + separator, separator + "0x" + Convert.ToString(separator, 16) + separator);
 
@@ -87,7 +87,7 @@ namespace Mnn.MnnSock
 
             foreach (var item in str) {
                 if (item.Contains("0x"))
-                    retval = retval.Concat(HexstrToBytes(item)).ToArray();
+                    retval = retval.Concat(ParseHexstrToBytes(item)).ToArray();
                 else
                     retval = retval.Concat(Encoding.Default.GetBytes(item)).ToArray();
             }
@@ -97,6 +97,29 @@ namespace Mnn.MnnSock
             //    ).Select(t => Convert.ToByte(t)).ToArray();
 
             return retval;
+        }
+
+        /// <summary>
+        /// Bytes to String
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static String ParseBytesToString(byte[] data)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in data) {
+                if (item >= 0x20 && item < 0x7f) {
+                    sb.Append(Convert.ToChar(item));
+                    continue;
+                }
+                string s = Convert.ToString(item, 16);
+                if (s.Length == 1)
+                    s = "0" + s;
+                sb.Append("[" + s + "]");
+            }
+            sb.Replace("][", "");
+
+            return sb.ToString();
         }
     }
 }

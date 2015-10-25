@@ -214,22 +214,8 @@ namespace SockMaster
                 if (txtBoxMsg.Text.Length >= 20 * 1024)
                     txtBoxMsg.Clear();
 
-                StringBuilder sb = new StringBuilder();
-                foreach (var item in data) {
-                    if (item >= 0x20 && item < 0x7f) {
-                        sb.Append(Convert.ToChar(item));
-                        continue;
-                    }
-                    string s = Convert.ToString(item, 16);
-                    if (s.Length == 1)
-                        s = "0" + s;
-                    sb.Append("[" + s + "]");
-                }
-                sb.Replace("][", "");
-
-                txtBoxMsg.AppendText(DateTime.Now + " (" +
-                    sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
-                txtBoxMsg.AppendText(sb.ToString() + "\n");
+                txtBoxMsg.AppendText(DateTime.Now + " (" + sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
+                txtBoxMsg.AppendText(SockConvert.ParseBytesToString(data) + "\n\n");
                 txtBoxMsg.ScrollToEnd();
             }));
         }
@@ -460,7 +446,7 @@ namespace SockMaster
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                unit.SendBuff = SockConvert.CmdstrToBytes(item.Cmd, '#');
+                unit.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 break;
             }
         }
