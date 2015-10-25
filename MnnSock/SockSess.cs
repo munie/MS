@@ -61,7 +61,7 @@ namespace Mnn.MnnSock
         public static void Recv(SockSess sess)
         {
             try {
-                if (sess.sock.Receive(sess.rdata) == 0)
+                if ((sess.rdata_size = sess.sock.Receive(sess.rdata)) == 0)
                     sess.eof = true;
 
                 sess.tick = DateTime.Now;
