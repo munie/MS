@@ -79,7 +79,7 @@ namespace Mnn.MnnSock
         }
     }
 
-    public class SockSessManager
+    public class SessCenter
     {
         public List<SockSess> sess_table;
         private int stall_time;
@@ -94,7 +94,7 @@ namespace Mnn.MnnSock
 
         // Methods ============================================================================
 
-        public SockSessManager()
+        public SessCenter()
         {
             sess_table = new List<SockSess>();
             stall_time = 60 * 12;

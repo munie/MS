@@ -13,13 +13,13 @@ namespace EnvCenter
 {
     class EvnCenter
     {
-        private SockSessManager sessmgr;
+        private SessCenter sesscer;
         private SockSess[] term_table
         {
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sessmgr.sess_table) {
+                foreach (var item in sesscer.sess_table) {
                     if ((item.sdata as TermUnit) != null)
                         list.Add(item);
                 }
@@ -31,7 +31,7 @@ namespace EnvCenter
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sessmgr.sess_table) {
+                foreach (var item in sesscer.sess_table) {
                     if ((item.sdata as SvcUnit) != null)
                         list.Add(item);
                 }
@@ -43,7 +43,7 @@ namespace EnvCenter
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sessmgr.sess_table) {
+                foreach (var item in sesscer.sess_table) {
                     if ((item.sdata as UserUnit) != null)
                         list.Add(item);
                 }
@@ -51,11 +51,11 @@ namespace EnvCenter
             }
         }
 
-        public EvnCenter(SockSessManager sessmgr)
+        public EvnCenter(SessCenter sessmgr)
         {
-            this.sessmgr = sessmgr;
-            sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
-            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
+            this.sesscer = sessmgr;
+            sessmgr.sess_parse += new SessCenter.SessParseDelegate(sessmgr_sess_parse);
+            sessmgr.sess_delete += new SessCenter.SessDeleteDelegate(sessmgr_sess_delete);
             sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
             sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
             sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));

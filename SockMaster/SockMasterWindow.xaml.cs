@@ -48,7 +48,7 @@ namespace SockMaster
             {
                 while (true) {
                     perform_sock_table();
-                    sessmgr.Perform(1000);
+                    sesscer.Perform(1000);
                 }
             });
             thread.IsBackground = true;
@@ -90,19 +90,19 @@ namespace SockMaster
             timer.Start();
         }
 
-        public static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory;
-        public static readonly string conf_name = "SockMaster.xml";
-        private SockSessManager sessmgr;
+        private static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string conf_name = "SockMaster.xml";
+        private SessCenter sesscer;
         public ObservableCollection<SockUnit> SockTable { get; set; }
         public ObservableCollection<CmdUnit> CmdTable { get; set; }
 
         private void init()
         {
             // init sessmgr
-            sessmgr = new SockSessManager();
-            sessmgr.sess_parse += new SockSessManager.SessParseDelegate(sessmgr_sess_parse);
-            sessmgr.sess_create += new SockSessManager.SessCreateDelegate(sessmgr_sess_create);
-            sessmgr.sess_delete += new SockSessManager.SessDeleteDelegate(sessmgr_sess_delete);
+            sesscer = new SessCenter();
+            sesscer.sess_parse += new SessCenter.SessParseDelegate(sessmgr_sess_parse);
+            sesscer.sess_create += new SessCenter.SessCreateDelegate(sessmgr_sess_create);
+            sesscer.sess_delete += new SessCenter.SessDeleteDelegate(sessmgr_sess_delete);
 
             // init SockTable
             SockTable = new ObservableCollection<SockUnit>();
@@ -163,20 +163,20 @@ namespace SockMaster
                 }
                 foreach (var child in childArray) {
                     if (child.SendBuff != null && child.State == SockState.Opened) {
-                        sessmgr.SendSession(child.Sess, child.SendBuff);
+                        sesscer.SendSession(child.Sess, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                             child.SendBuff = null;
                         //}));
                     }
                     if (child.State == SockState.Closing && child.State != SockState.Closed) {
-                        sessmgr.DelSession(child.Sess);
+                        sesscer.DelSession(child.Sess);
                         child.State = SockState.Closed;
                     }
                 }
 
                 /// ** second handle sending data
                 if (item.SendBuff != null && item.State == SockState.Opened) {
-                    sessmgr.SendSession(item.Sess, item.SendBuff);
+                    sesscer.SendSession(item.Sess, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         item.SendBuff = null;
                     //}));
@@ -185,20 +185,20 @@ namespace SockMaster
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
                     if (item.Type == SockType.listen) {
-                        if ((item.Sess = sessmgr.MakeListen(item.EP)) != null)
+                        if ((item.Sess = sesscer.MakeListen(item.EP)) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;
                     }
                     else if (item.Type == SockType.connect) {
-                        if ((item.Sess = sessmgr.AddConnect(item.EP)) != null)
+                        if ((item.Sess = sesscer.AddConnect(item.EP)) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;
                     }
                 }
                 else if (item.State == SockState.Closing) {
-                    sessmgr.DelSession(item.Sess);
+                    sesscer.DelSession(item.Sess);
                     item.State = SockState.Closed;
                 }
             }
