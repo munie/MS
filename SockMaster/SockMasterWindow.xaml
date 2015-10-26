@@ -4,8 +4,8 @@
         Title="SockMaster" Height="540" Width="960" WindowStartupLocation="CenterScreen">
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="252*" />
-            <ColumnDefinition Width="686*" />
+            <ColumnDefinition Width="258*" />
+            <ColumnDefinition Width="680*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
