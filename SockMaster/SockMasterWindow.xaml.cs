@@ -163,20 +163,20 @@ namespace SockMaster
                 }
                 foreach (var child in childArray) {
                     if (child.SendBuff != null && child.State == SockState.Opened) {
-                        sessmgr.SendSession(child.Sock, child.SendBuff);
+                        sessmgr.SendSession(child.Sess, child.SendBuff);
                         //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                             child.SendBuff = null;
                         //}));
                     }
                     if (child.State == SockState.Closing && child.State != SockState.Closed) {
-                        sessmgr.RemoveSession(child.Sock);
+                        sessmgr.DelSession(child.Sess);
                         child.State = SockState.Closed;
                     }
                 }
 
                 /// ** second handle sending data
                 if (item.SendBuff != null && item.State == SockState.Opened) {
-                    sessmgr.SendSession(item.Sock, item.SendBuff);
+                    sessmgr.SendSession(item.Sess, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         item.SendBuff = null;
                     //}));
@@ -185,20 +185,20 @@ namespace SockMaster
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
                     if (item.Type == SockType.listen) {
-                        if ((item.Sock = sessmgr.MakeListen(item.EP)) != null)
+                        if ((item.Sess = sessmgr.MakeListen(item.EP)) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;
                     }
                     else if (item.Type == SockType.connect) {
-                        if ((item.Sock = sessmgr.AddConnect(item.EP)) != null)
+                        if ((item.Sess = sessmgr.AddConnect(item.EP)) != null)
                             item.State = SockState.Opened;
                         else
                             item.State = SockState.Closed;
                     }
                 }
                 else if (item.State == SockState.Closing) {
-                    sessmgr.RemoveSession(item.Sock);
+                    sessmgr.DelSession(item.Sess);
                     item.State = SockState.Closed;
                 }
             }
@@ -238,7 +238,7 @@ namespace SockMaster
                                 ID = "-",
                                 Name = "accept",
                                 Type = sess.type,
-                                Sock = sess.sock,
+                                Sess = sess,
                                 EP = sess.rep,
                                 State = SockState.Opened,
                             });
@@ -261,7 +261,7 @@ namespace SockMaster
                         if (item.Childs.Count == 0)
                             continue;
                         foreach (var i in item.Childs) {
-                            if (i.Sock == sess.sock) {
+                            if (i.Sess == sess) {
                                 lock (SockTable) {
                                     item.Childs.Remove(i);
                                 }
@@ -272,7 +272,7 @@ namespace SockMaster
                 }
                 else if (sess.type == SockType.connect) {
                     foreach (var item in SockTable) {
-                        if (item.Sock == sess.sock) {
+                        if (item.Sess == sess) {
                             item.State = SockState.Closed;
                             return;
                         }
@@ -280,7 +280,7 @@ namespace SockMaster
                 }
                 else if (sess.type == SockType.listen) {
                     foreach (var item in SockTable) {
-                        if (item.Sock == sess.sock) {
+                        if (item.Sess == sess) {
                             item.State = SockState.Closed;
                             return;
                         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Net.Sockets;
+using Mnn.MnnSock;
 
 namespace EnvModule
 {
@@ -24,7 +25,7 @@ namespace EnvModule
         public string Name { get; set; }
         public string TermInfo { get; set; }
 
-        public Socket Sock { get; set; }
+        public SockSess Sess { get; set; }
         private SockState state;
         public byte[] SendBuff { get; set; }
         public int SendBuffSize { get; set; }

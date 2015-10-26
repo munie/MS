@@ -159,7 +159,7 @@ namespace Mnn.MnnSock
             }
         }
 
-        public Socket MakeListen(IPEndPoint ep)
+        public SockSess MakeListen(IPEndPoint ep)
         {
             ThreadCheck(false);
 
@@ -180,10 +180,10 @@ namespace Mnn.MnnSock
 
             sess_table.Add(new SockSess(SockType.listen, sock));
             Console.Write("[Info]: Session #L listened at {0}.\n", ep.ToString());
-            return sock;
+            return sess_table.Last();
         }
 
-        public Socket AddConnect(IPEndPoint ep)
+        public SockSess AddConnect(IPEndPoint ep)
         {
             ThreadCheck(false);
 
@@ -200,35 +200,26 @@ namespace Mnn.MnnSock
             if (sess_create != null)
                 sess_create(this, sess_table.Last());
             Console.Write("[Info]: Session #C connected to {0}.\n", ep.ToString());
-            return sock;
+            return sess_table.Last();
         }
 
-        public void RemoveSession(Socket sock)
+        public void DelSession(SockSess sess)
         {
             ThreadCheck(false);
 
-            foreach (var item in sess_table) {
-                if (item.sock == sock) {
-                    item.eof = true;
-                    break;
-                }
+            sess.eof = true;
+        }
+
+        public void SendSession(SockSess sess, byte[] data)
+        {
+            ThreadCheck(false);
+
+            if (sess.type == SockType.listen) {
+                foreach (var child in FindAcceptSession(sess))
+                    child.sock.Send(data);
             }
-        }
-
-        public void SendSession(Socket sock, byte[] data)
-        {
-            ThreadCheck(false);
-
-            foreach (var item in sess_table) {
-                if (item.type == SockType.listen && item.sock == sock) {
-                    foreach (var child in FindAcceptSession(item))
-                        child.sock.Send(data);
-                    break;
-                }
-                else if (item.sock == sock) {
-                    item.sock.Send(data);
-                    break;
-                }
+            else {
+                sess.sock.Send(data);
             }
         }
 

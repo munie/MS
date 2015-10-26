@@ -91,14 +91,14 @@ namespace EnvModule
                 tick = DateTime.Now;
                 foreach (var item in moduleTable) {
                     if (item.State == SockState.Opened)
-                        sessmgr.SendSession(item.Sock, new byte[] { 0x0C, 0x00, 0x04, 0x00 });
+                        sessmgr.SendSession(item.Sess, new byte[] { 0x0C, 0x00, 0x04, 0x00 });
                 }
             }
 
             foreach (var item in moduleTable) {
                 /// ** second handle sending data
                 if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
-                    sessmgr.SendSession(item.Sock, item.SendBuff);
+                    sessmgr.SendSession(item.Sess, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                     item.SendBuffSize = 0;
                     //}));
@@ -106,18 +106,18 @@ namespace EnvModule
 
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
-                    if ((item.Sock = sessmgr.AddConnect(ep)) != null) {
+                    if ((item.Sess = sessmgr.AddConnect(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
                         byte[] data = new byte[] { 0xA0, 0x00, 0x14, 0x00 };
                         data = data.Concat(Encoding.ASCII.GetBytes(item.TermInfo)).ToArray();
-                        sessmgr.SendSession(item.Sock, data);
+                        sessmgr.SendSession(item.Sess, data);
                     }
                     else
                         item.State = SockState.Closed;
                 }
                 else if (item.State == SockState.Closing) {
-                    sessmgr.RemoveSession(item.Sock);
+                    sessmgr.DelSession(item.Sess);
                     item.State = SockState.Closed;
                 }
             }
@@ -206,7 +206,7 @@ namespace EnvModule
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 foreach (var item in moduleTable) {
-                    if (item.Sock == sess.sock) {
+                    if (item.Sess == sess) {
                         item.State = SockState.Closed;
                         break;
                     }
