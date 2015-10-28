@@ -36,8 +36,8 @@
             </TreeView.ItemTemplate>
             <TreeView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="open" Click="MenuItem_Open_Click"/>
-                    <MenuItem Header="close" Click="MenuItem_Close_Click"/>
+                    <MenuItem Header="open" Click="MenuItem_OpenSock_Click"/>
+                    <MenuItem Header="close" Click="MenuItem_CloseSock_Click"/>
                     <Separator></Separator>
                     <MenuItem Header="edit" Click="MenuItem_EditSock_Click"/>
                     <MenuItem Header="new" Click="MenuItem_NewSock_Click"/>

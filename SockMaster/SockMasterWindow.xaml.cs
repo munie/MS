@@ -84,9 +84,9 @@ namespace SockMaster
             timer.Start();
         }
 
-        private static readonly string OPEN = "open";
-        private static readonly string CLOSE = "close";
-        private static readonly string SEND = "send";
+        private static readonly string OPEN_SOCK = "open_sock";
+        private static readonly string CLOSE_SOCK = "close_sock";
+        private static readonly string SEND_SOCK = "send_sock";
         private static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string conf_name = "SockMaster.xml";
         private SessCenter sesscer;
@@ -104,9 +104,9 @@ namespace SockMaster
 
             // init cmdcer
             cmdcer = new AtCmdCenter();
-            cmdcer.Add(OPEN, cmdcer_open);
-            cmdcer.Add(CLOSE, cmdcer_close);
-            cmdcer.Add(SEND, cmdcer_send);
+            cmdcer.Add(OPEN_SOCK, cmdcer_open_sock);
+            cmdcer.Add(CLOSE_SOCK, cmdcer_close_sock);
+            cmdcer.Add(SEND_SOCK, cmdcer_send_sock);
 
             // init SockTable
             SockTable = new ObservableCollection<SockUnit>();
@@ -142,7 +142,7 @@ namespace SockMaster
 
                     if (sock.Autorun) {
                         sock.State = SockState.Opening;
-                        cmdcer.AppendCommand(OPEN, sock);
+                        cmdcer.AppendCommand(OPEN_SOCK, sock);
                     }
                 }
 
@@ -241,7 +241,7 @@ namespace SockMaster
             }));
         }
 
-        private void cmdcer_open(object arg)
+        private void cmdcer_open_sock(object arg)
         {
             SockUnit sock = arg as SockUnit;
             if (sock == null || sock.State == SockState.Opened) return;
@@ -260,7 +260,7 @@ namespace SockMaster
             }
         }
 
-        private void cmdcer_close(object arg)
+        private void cmdcer_close_sock(object arg)
         {
             SockUnit sock = arg as SockUnit;
             if (sock == null || sock.State == SockState.Closed) return;
@@ -269,7 +269,7 @@ namespace SockMaster
             sock.State = SockState.Closed;
         }
 
-        private void cmdcer_send(object arg)
+        private void cmdcer_send_sock(object arg)
         {
             SockUnit sock = arg as SockUnit;
             if (sock == null || sock.State != SockState.Opened) return;
@@ -282,23 +282,23 @@ namespace SockMaster
 
         // Menu methods for TreeView =============================================================
 
-        private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_OpenSock_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Closed) return;
 
             sock.State = SockState.Opening;
-            cmdcer.AppendCommand(OPEN, treeSock.SelectedItem);
+            cmdcer.AppendCommand(OPEN_SOCK, treeSock.SelectedItem);
 
         }
 
-        private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CloseSock_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Opened) return;
 
             sock.State = SockState.Closing;
-            cmdcer.AppendCommand(CLOSE, treeSock.SelectedItem);
+            cmdcer.AppendCommand(CLOSE_SOCK, treeSock.SelectedItem);
         }
 
         private void MenuItem_EditSock_Click(object sender, RoutedEventArgs e)
@@ -433,7 +433,7 @@ namespace SockMaster
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 unit.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                cmdcer.AppendCommand(SEND, unit);
+                cmdcer.AppendCommand(SEND_SOCK, unit);
                 break;
             }
         }
