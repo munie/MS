@@ -1,7 +1,7 @@
 ﻿<Window x:Class="SockMaster.SockMasterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SockMaster" Height="540" Width="960" WindowStartupLocation="CenterScreen">
+        Title="SockMaster" Height="540" Width="960" WindowStartupLocation="CenterScreen" Closed="Window_Closed">
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="258*" />
@@ -36,14 +36,14 @@
             </TreeView.ItemTemplate>
             <TreeView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="open" Click="MenuItem_OpenSock_Click"/>
-                    <MenuItem Header="close" Click="MenuItem_CloseSock_Click"/>
+                    <MenuItem Header="open" Click="MenuItem_SockOpen_Click"/>
+                    <MenuItem Header="close" Click="MenuItem_SockClose_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="edit" Click="MenuItem_EditSock_Click"/>
-                    <MenuItem Header="new" Click="MenuItem_NewSock_Click"/>
-                    <MenuItem Header="del" Click="MenuItem_DelSock_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_SockEdit_Click"/>
+                    <MenuItem Header="add" Click="MenuItem_SockAdd_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_SockDel_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="save" Click="MenuItem_SaveSock_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_SockSave_Click"/>
                 </ContextMenu>
             </TreeView.ContextMenu>
         </TreeView>
@@ -65,15 +65,13 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="send" Click="MenuItem_SendCmd_Click"/>
+                    <MenuItem Header="send" Click="MenuItem_CmdSend_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="edit" Click="MenuItem_EditCmd_Click"/>
-                    <MenuItem Header="new" Click="MenuItem_NewCmd_Click"/>
-                    <MenuItem Header="del" Click="MenuItem_DelCmd_Click"/>
+                    <MenuItem Header="edit" Click="MenuItem_CmdEdit_Click"/>
+                    <MenuItem Header="add" Click="MenuItem_CmdAdd_Click"/>
+                    <MenuItem Header="del" Click="MenuItem_CmdDel_Click"/>
                     <Separator></Separator>
-                    <MenuItem Header="open" Click="MenuItem_OpenCmd_Click"/>
-                    <Separator></Separator>
-                    <MenuItem Header="save" Click="MenuItem_SaveCmd_Click"/>
+                    <MenuItem Header="save" Click="MenuItem_CmdSave_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

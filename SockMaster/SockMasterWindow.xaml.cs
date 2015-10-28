@@ -33,21 +33,6 @@ namespace SockMaster
 
             InitailizeWindowName();
             InitailizeStatusBar();
-
-            init();
-            config();
-
-            // new thread for running socket
-            // from now on, we can't call motheds of sessmgr directly in this thread
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    cmdcer.Perform();
-                    sesscer.Perform(1000);
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
         }
 
         private void InitailizeWindowName()
@@ -85,224 +70,32 @@ namespace SockMaster
             timer.Start();
         }
 
-        private static readonly string OPEN_SOCK = "open_sock";
-        private static readonly string CLOSE_SOCK = "close_sock";
-        private static readonly string SEND_SOCK = "send_sock";
-        private static readonly string base_dir = System.AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string conf_name = "SockMaster.xml";
-        private SessCenter sesscer;
-        private AtCmdCenter cmdcer;
-        public ObservableCollection<SockUnit> SockTable { get; set; }
-        public ObservableCollection<CmdUnit> CmdTable { get; set; }
-
-        private void init()
+        private void Window_Closed(object sender, EventArgs e)
         {
-            // init sesscer
-            sesscer = new SessCenter();
-            sesscer.sess_parse += new SessCenter.SessParseDelegate(sesscer_sess_parse);
-            sesscer.sess_create += new SessCenter.SessCreateDelegate(sesscer_sess_create);
-            sesscer.sess_delete += new SessCenter.SessDeleteDelegate(sesscer_sess_delete);
-
-            // init cmdcer
-            cmdcer = new AtCmdCenter();
-            cmdcer.Add(OPEN_SOCK, cmdcer_open_sock);
-            cmdcer.Add(CLOSE_SOCK, cmdcer_close_sock);
-            cmdcer.Add(SEND_SOCK, cmdcer_send_sock);
-
-            // init SockTable
-            SockTable = new ObservableCollection<SockUnit>();
-            CmdTable = new ObservableCollection<CmdUnit>();
-            DataContext = new { SockTable = SockTable, CmdTable = CmdTable };
-        }
-
-        private void config()
-        {
-            if (File.Exists(base_dir + conf_name) == false) {
-                System.Windows.MessageBox.Show("未找到配置文件" );
-                return;
-            }
-
-            /// ** Initialize Start ====================================================
-            try {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(base_dir + conf_name);
-
-                // socket
-                foreach (XmlNode item in doc.SelectNodes("/configuration/socket/sockitem")) {
-                    SockUnit sock = new SockUnit();
-                    sock.ID = item.Attributes["id"].Value;
-                    sock.Name = item.Attributes["name"].Value;
-                    sock.Type = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
-                    //sock.Type = item.Attributes["type"].Value == "listen" ? SockType.listen : SockType.connect;
-                    string[] str = item.Attributes["ep"].Value.Split(':');
-                    if (str.Count() == 2)
-                        sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
-                    sock.Autorun = bool.Parse(item.Attributes["autorun"].Value);
-                    sock.UpdateTitle();
-                    SockTable.Add(sock);
-
-                    if (sock.Autorun) {
-                        sock.State = SockState.Opening;
-                        cmdcer.AppendCommand(OPEN_SOCK, sock);
-                    }
-                }
-
-                // command
-                foreach (XmlNode item in doc.SelectNodes("/configuration/command/cmditem")) {
-                    CmdUnit cmd = new CmdUnit();
-                    cmd.ID = item.Attributes["id"].Value;
-                    cmd.Name = item.Attributes["name"].Value;
-                    cmd.Cmd = item.Attributes["content"].Value;
-                    cmd.Comment = item.Attributes["comment"].Value;
-                    CmdTable.Add(cmd);
-                }
-            }
-            catch (Exception) {
-                System.Windows.MessageBox.Show("配置文件读取错误" );
-            }
-            /// ** Initialize End ====================================================
-        }
-
-        // Perform ==================================================================================
-
-        private void sesscer_sess_parse(object sender, SockSess sess)
-        {
-            byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
-            sess.rdata_size = 0;
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (txtBoxMsg.Text.Length >= 20 * 1024)
-                    txtBoxMsg.Clear();
-
-                txtBoxMsg.AppendText(DateTime.Now + " (" + sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n");
-                txtBoxMsg.AppendText(SockConvert.ParseBytesToString(data) + "\n\n");
-                txtBoxMsg.ScrollToEnd();
-            }));
-        }
-
-        private void sesscer_sess_create(object sender, SockSess sess)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (sess.type == SockType.accept) {
-                    currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) + 1).ToString();
-                    historyAcceptOpenCount.Text = (Convert.ToInt32(historyAcceptOpenCount.Text) + 1).ToString();
-
-                    var subset = from s in SockTable
-                                 where s.Type == SockType.listen && s.EP.Port == sess.lep.Port
-                                 select s;
-                    foreach (var item in subset) {
-                        lock (SockTable) {
-                            item.Childs.Add(new SockUnit()
-                            {
-                                ID = "-",
-                                Name = "accept",
-                                Type = sess.type,
-                                Sess = sess,
-                                EP = sess.rep,
-                                State = SockState.Opened,
-                            });
-                            break;
-                        }
-                    }
-                }
-            }));
-        }
-
-        private void sesscer_sess_delete(object sender, SockSess sess)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (sess.type == SockType.accept) {
-                    currentAcceptCount.Text = (Convert.ToInt32(currentAcceptCount.Text) - 1).ToString();
-                    historyAcceptCloseCount.Text = (Convert.ToInt32(historyAcceptCloseCount.Text) + 1).ToString();
-
-                    foreach (var item in SockTable) {
-                        if (item.Childs.Count == 0)
-                            continue;
-                        foreach (var i in item.Childs) {
-                            if (i.Sess == sess) {
-                                lock (SockTable) {
-                                    item.Childs.Remove(i);
-                                }
-                                return;
-                            }
-                        }
-                    }
-                }
-                else if (sess.type == SockType.connect) {
-                    foreach (var item in SockTable) {
-                        if (item.Sess == sess) {
-                            item.State = SockState.Closed;
-                            return;
-                        }
-                    }
-                }
-            }));
-        }
-
-        private void cmdcer_open_sock(object arg)
-        {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State == SockState.Opened) return;
-
-            if (sock.Type == SockType.listen) {
-                if ((sock.Sess = sesscer.MakeListen(sock.EP)) != null)
-                    sock.State = SockState.Opened;
-                else
-                    sock.State = SockState.Closed;
-            }
-            else if (sock.Type == SockType.connect) {
-                if ((sock.Sess = sesscer.AddConnect(sock.EP)) != null)
-                    sock.State = SockState.Opened;
-                else
-                    sock.State = SockState.Closed;
-            }
-        }
-
-        private void cmdcer_close_sock(object arg)
-        {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State == SockState.Closed) return;
-
-            sesscer.DelSession(sock.Sess);
-            sock.State = SockState.Closed;
-        }
-
-        private void cmdcer_send_sock(object arg)
-        {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State != SockState.Opened) return;
-
-            if (sock.SendBuff != null) {
-                sesscer.SendSession(sock.Sess, sock.SendBuff);
-                sock.SendBuff = null;
-            }
+            (this.Owner as MainWindow).Close();
         }
 
         // Menu methods for TreeView =============================================================
 
-        private void MenuItem_OpenSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockOpen_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Closed) return;
 
             sock.State = SockState.Opening;
-            cmdcer.AppendCommand(OPEN_SOCK, treeSock.SelectedItem);
-
+            (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_OPEN, treeSock.SelectedItem);
         }
 
-        private void MenuItem_CloseSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Opened) return;
 
             sock.State = SockState.Closing;
-            cmdcer.AppendCommand(CLOSE_SOCK, treeSock.SelectedItem);
+            (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_CLOSE, treeSock.SelectedItem);
         }
 
-        private void MenuItem_EditSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Closed) return;
@@ -338,11 +131,11 @@ namespace SockMaster
             }
         }
 
-        private void MenuItem_NewSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockAdd_Click(object sender, RoutedEventArgs e)
         {
             using (SockInputDialog input = new SockInputDialog()) {
                 input.Owner = this;
-                input.Title = "New";
+                input.Title = "Add";
                 input.textBoxID.Focus();
 
                 if (input.ShowDialog() == false)
@@ -360,28 +153,27 @@ namespace SockMaster
                     sock.Type = SockType.connect;
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
-                SockTable.Add(sock);
+                (this.Owner as MainWindow).SockTable.Add(sock);
             }
         }
 
-        private void MenuItem_DelSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockDel_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Closed) return;
 
-            SockTable.Remove(sock);
+            (this.Owner as MainWindow).SockTable.Remove(sock);
         }
 
-        private void MenuItem_SaveSock_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_SockSave_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(base_dir + conf_name)) {
-                doc.Load(base_dir + conf_name);
+            if (File.Exists(MainWindow.CONF_PATH)) {
+                doc.Load(MainWindow.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/socket");
-            }
-            else {
+            } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
@@ -390,9 +182,9 @@ namespace SockMaster
             }
 
             config.RemoveAll();
-            foreach (var item in SockTable) {
-                if (item.Type == SockType.accept)
-                    continue;
+            foreach (var item in (this.Owner as MainWindow).SockTable) {
+                if (item.Type == SockType.accept) continue;
+
                 XmlElement sockitem = doc.CreateElement("sockitem");
                 sockitem.SetAttribute("id", item.ID);
                 sockitem.SetAttribute("name", item.Name);
@@ -402,7 +194,7 @@ namespace SockMaster
                 config.AppendChild(sockitem);
             }
 
-            doc.Save(base_dir + conf_name);
+            doc.Save(MainWindow.CONF_PATH);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -424,25 +216,22 @@ namespace SockMaster
 
         // Menu methods for ListView ================================================================
 
-        private void MenuItem_SendCmd_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CmdSend_Click(object sender, RoutedEventArgs e)
         {
-            if (treeSock.SelectedItem == null)
-                return;
-
-            SockUnit unit = treeSock.SelectedItem as SockUnit;
+            SockUnit sock = treeSock.SelectedItem as SockUnit;
+            if (sock == null || sock.State != SockState.Opened) return;
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                unit.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                cmdcer.AppendCommand(SEND_SOCK, unit);
+                sock.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+                (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_SEND, sock);
                 break;
             }
         }
 
-        private void MenuItem_EditCmd_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CmdEdit_Click(object sender, RoutedEventArgs e)
         {
-            if (lstViewCmd.SelectedItems.Count == 0)
-                return;
+            if (lstViewCmd.SelectedItems.Count == 0) return;
 
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
@@ -454,8 +243,7 @@ namespace SockMaster
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
-                if (input.ShowDialog() == false)
-                    return;
+                if (input.ShowDialog() == false) return;
 
                 foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                     item.ID = input.textBoxID.Text;
@@ -467,26 +255,25 @@ namespace SockMaster
             }
         }
 
-        private void MenuItem_NewCmd_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CmdAdd_Click(object sender, RoutedEventArgs e)
         {
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
-                input.Title = "New";
+                input.Title = "Add";
                 input.textBoxID.Focus();
 
-                if (input.ShowDialog() == false)
-                    return;
+                if (input.ShowDialog() == false) return;
 
                 CmdUnit cmd = new CmdUnit();
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Comment = input.textBoxComment.Text;
-                CmdTable.Add(cmd);
+                (this.Owner as MainWindow).CmdTable.Add(cmd);
             }
         }
 
-        private void MenuItem_DelCmd_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CmdDel_Click(object sender, RoutedEventArgs e)
         {
             List<CmdUnit> tmp = new List<CmdUnit>();
 
@@ -494,24 +281,18 @@ namespace SockMaster
                 tmp.Add(item);
 
             foreach (var item in tmp)
-                CmdTable.Remove(item);
+                (this.Owner as MainWindow).CmdTable.Remove(item);
         }
 
-        private void MenuItem_OpenCmd_Click(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("Explorer.exe", base_dir);
-        }
-
-        private void MenuItem_SaveCmd_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_CmdSave_Click(object sender, RoutedEventArgs e)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(base_dir + conf_name)) {
-                doc.Load(base_dir + conf_name);
+            if (File.Exists(MainWindow.CONF_PATH)) {
+                doc.Load(MainWindow.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/command");
-            }
-            else {
+            } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
@@ -520,7 +301,7 @@ namespace SockMaster
             }
 
             config.RemoveAll();
-            foreach (var item in CmdTable) {
+            foreach (var item in (this.Owner as MainWindow).CmdTable) {
                 XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
@@ -529,7 +310,12 @@ namespace SockMaster
                 config.AppendChild(cmd);
             }
 
-            doc.Save(base_dir + conf_name);
+            doc.Save(MainWindow.CONF_PATH);
         }
+
+        //private void MenuItem_CmdOpen_Click(object sender, RoutedEventArgs e)
+        //{
+        //    System.Diagnostics.Process.Start("Explorer.exe", MainWindow.BASE_DIR);
+        //}
     }
 }

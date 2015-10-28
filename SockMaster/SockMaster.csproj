@@ -59,6 +59,9 @@
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="CmdUnit.cs" />
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SockInputDialog.xaml.cs">
       <DependentUpon>SockInputDialog.xaml</DependentUpon>
     </Compile>
@@ -69,6 +72,10 @@
     <Page Include="CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SockInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
