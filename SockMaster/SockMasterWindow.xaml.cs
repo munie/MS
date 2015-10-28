@@ -153,6 +153,8 @@ namespace SockMaster
             /// ** Initialize End ====================================================
         }
 
+        // Perform ==================================================================================
+
         private void perform_sock_table()
         {
             foreach (var item in SockTable) {
@@ -281,7 +283,7 @@ namespace SockMaster
             }));
         }
 
-        // treeview menu methods =====================================================================
+        // Menu methods for TreeView =============================================================
 
         private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
         {
@@ -427,7 +429,7 @@ namespace SockMaster
             return source;
         }
 
-        // Cmd methods ======================================================================
+        // Menu methods for ListView ================================================================
 
         private void MenuItem_SendCmd_Click(object sender, RoutedEventArgs e)
         {
