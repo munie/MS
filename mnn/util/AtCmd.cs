@@ -7,16 +7,23 @@ namespace mnn.util
 {
     public delegate void AtCmdDelegate(object arg);
 
-    public class AtCmd
+    class AtCmd
     {
         public string name;
         public AtCmdDelegate func;
-        public List<object> args = new List<object>();
+        public List<object> args;
+
+        public AtCmd(string name, AtCmdDelegate func)
+        {
+            this.name = name;
+            this.func = func;
+            this.args = new List<object>();
+        }
     }
 
     public class AtCmdCenter
     {
-        List<AtCmd> atcmd_table;
+        private List<AtCmd> atcmd_table;
 
         public AtCmdCenter()
         {
@@ -35,19 +42,21 @@ namespace mnn.util
             }
         }
 
-        public void Add(AtCmd cmd)
-        {
-            atcmd_table.Add(cmd);
-        }
-
         public void Add(string name, AtCmdDelegate func)
         {
-            atcmd_table.Add(new AtCmd() { name = name, func = func });
+            lock (atcmd_table) {
+                atcmd_table.Add(new AtCmd(name, func));
+            }
         }
 
-        public void Del(AtCmd cmd)
+        public void Del(string name)
         {
-            atcmd_table.Remove(cmd);
+            lock (atcmd_table) {
+                foreach (var item in atcmd_table) {
+                    if (item.name.Equals(name))
+                        atcmd_table.Remove(item);
+                }
+            }
         }
 
         public void AppendCommand(string name, object arg)
