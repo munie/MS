@@ -5,10 +5,10 @@ using System.Text;
 
 namespace mnn.util
 {
-    public delegate void AtCmdDelegate(object arg);
-
-    class AtCmd
+    public class AtCmd
     {
+        public delegate void AtCmdDelegate(object arg);
+
         public string name;
         public AtCmdDelegate func;
         public List<object> args;
@@ -42,7 +42,7 @@ namespace mnn.util
             }
         }
 
-        public void Add(string name, AtCmdDelegate func)
+        public void Add(string name, AtCmd.AtCmdDelegate func)
         {
             lock (atcmd_table) {
                 atcmd_table.Add(new AtCmd(name, func));
