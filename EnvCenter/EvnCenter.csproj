@@ -51,9 +51,9 @@
     <Compile Include="UserUnit.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnSock\MnnSock.csproj">
+    <ProjectReference Include="..\mnn\mnn.csproj">
       <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
-      <Name>MnnSock</Name>
+      <Name>mnn</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

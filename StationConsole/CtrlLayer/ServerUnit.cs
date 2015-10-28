@@ -18,7 +18,7 @@ namespace StationConsole.CtrlLayer
         public virtual bool AutoRun { get; set; }
         public virtual bool CanStop { get; set; }
 
-        public Mnn.MnnSock.Deprecated.SockServer Server { get; set; }
+        public mnn.net.deprecated.SockServer Server { get; set; }
         public System.Timers.Timer Timer { get; set; }
     }
 }

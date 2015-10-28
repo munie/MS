@@ -116,16 +116,16 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnnSock\MnnSock.csproj">
-      <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
-      <Name>MnnSock</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="SockMaster.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\mnn\mnn.csproj">
+      <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
+      <Name>mnn</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

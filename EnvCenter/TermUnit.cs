@@ -16,9 +16,9 @@ namespace EnvCenter
     {
         public override string CCID { get; set; }
         public override string Info { get; set; }
-        public Mnn.MnnSock.SockSess Svc;
+        public mnn.net.SockSess Svc;
 
-        public TermUnit(char[] ccid, char[] info, Mnn.MnnSock.SockSess svc = null)
+        public TermUnit(char[] ccid, char[] info, mnn.net.SockSess svc = null)
         {
             CCID = new string(ccid);
             Info = new string(info);

@@ -14,6 +14,6 @@ namespace StationConsole.CtrlLayer
         public virtual string FileName { get; set; }
         public virtual string FileComment { get; set; }
 
-        public Mnn.MnnMisc.MnnModule.ModuleItem Module { get; set; }
+        public mnn.misc.module.ModuleItem Module { get; set; }
     }
 }

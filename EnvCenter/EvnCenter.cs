@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using Mnn.MnnSock;
+using mnn.net;
 
 namespace EnvCenter
 {

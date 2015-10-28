@@ -11,9 +11,9 @@ using System.Diagnostics;
 using System.Windows;
 using System.Xml;
 using System.Threading;
-using Mnn.MnnSock.Deprecated;
-using Mnn.MnnMisc.MnnModule;
-using Mnn.MnnMisc.MnnEnv;
+using mnn.net.deprecated;
+using mnn.misc.module;
+using mnn.misc.env;
 
 namespace StationConsole.CtrlLayer
 {
@@ -80,7 +80,7 @@ namespace StationConsole.CtrlLayer
                 }
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                mnn.util.Logger.WriteException(ex);
                 System.Windows.MessageBox.Show("配置文件读取错误： StationConsole.xml");
             }
 
@@ -227,7 +227,7 @@ namespace StationConsole.CtrlLayer
                 }
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                mnn.util.Logger.WriteException(ex);
                 return;
             }
 
@@ -241,7 +241,7 @@ namespace StationConsole.CtrlLayer
                 + "|DataType=" + atCmd.DataType.ToString()
                 + "|Data=" + atCmd.Data;
             App.Mindow.DisplayMessage(logFormat);
-            Mnn.MnnUtil.Logger.Write(logFormat);
+            mnn.util.Logger.Write(logFormat);
         }
 
         private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
@@ -255,7 +255,7 @@ namespace StationConsole.CtrlLayer
                 }
             }
             catch (Exception ex) {
-                Mnn.MnnUtil.Logger.WriteException(ex);
+                mnn.util.Logger.WriteException(ex);
                 return;
             }
 
@@ -267,7 +267,7 @@ namespace StationConsole.CtrlLayer
                 + "|DataType=" + atCmd.DataType.ToString()
                 + "|Data=" + atCmd.Data;
             App.Mindow.DisplayMessage(logFormat);
-            Mnn.MnnUtil.Logger.Write(logFormat);
+            mnn.util.Logger.Write(logFormat);
         }
 
         private void AtCmdServer_ExecCommand(AtCommand atCmd)
@@ -429,7 +429,7 @@ namespace StationConsole.CtrlLayer
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + coding.GetString(e.Data);
             App.Mindow.DisplayMessage(logFormat);
             // 发送数据要写日志
-            Mnn.MnnUtil.Logger.Write(logFormat);
+            mnn.util.Logger.Write(logFormat);
         }
 
         // At Command ========================================================================

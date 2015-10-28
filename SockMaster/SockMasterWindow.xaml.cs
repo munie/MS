@@ -17,7 +17,8 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 using System.Xml;
-using Mnn.MnnSock;
+using mnn.net;
+using mnn.util;
 
 namespace SockMaster
 {

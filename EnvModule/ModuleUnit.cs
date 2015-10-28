@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Net.Sockets;
-using Mnn.MnnSock;
+using mnn.net;
 
 namespace EnvModule
 {
@@ -65,6 +65,6 @@ namespace EnvModule
             }
         }
 
-        public Mnn.MnnMisc.MnnModule.ModuleItem Module { get; set; }
+        public mnn.misc.module.ModuleItem Module { get; set; }
     }
 }
