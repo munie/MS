@@ -10,8 +10,6 @@ using System.Threading;
 
 namespace mnn.net
 {
-    /// this file is converted from c proj, so still use c-style to name fileds
-
     public enum SockType
     {
         listen = 0,
@@ -65,8 +63,7 @@ namespace mnn.net
                     sess.eof = true;
 
                 sess.tick = DateTime.Now;
-            }
-            catch (Exception) {
+            } catch (Exception) {
                 sess.eof = true;
                 return;
             }
@@ -127,8 +124,7 @@ namespace mnn.net
                             if (sess_create != null)
                                 sess_create(this, sess_table.Last());
                             Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
-                        }
-                        else {
+                        } else {
                             item.func_recv(item);
                         }
                         break;
@@ -166,7 +162,6 @@ namespace mnn.net
             // Verify IPEndPoints
             IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             foreach (IPEndPoint globalEP in globalEPs) {
-                //if (ep.Equals(globalEP)) {
                 if (ep.Port == globalEP.Port) {
                     Console.Write("[Error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
                     return null;
@@ -190,8 +185,7 @@ namespace mnn.net
             Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try {
                 sock.Connect(ep);
-            }
-            catch (Exception) {
+            } catch (Exception) {
                 Console.Write("[Error]: Connected to {0} failed.\n", ep.ToString());
                 return null;
             }
@@ -214,13 +208,14 @@ namespace mnn.net
         {
             ThreadCheck(false);
 
-            if (sess.type == SockType.listen) {
-                foreach (var child in FindAcceptSession(sess))
-                    child.sock.Send(data);
-            }
-            else {
-                sess.sock.Send(data);
-            }
+            try {
+                if (sess.type == SockType.listen) {
+                    foreach (var child in FindAcceptSession(sess))
+                        child.sock.Send(data);
+                } else {
+                    sess.sock.Send(data);
+                }
+            } catch (Exception) { }
         }
 
         private void ThreadCheck(bool isSockThread)
