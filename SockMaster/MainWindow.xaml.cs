@@ -198,8 +198,7 @@ namespace SockMaster
                             }
                         }
                     }
-                }
-                else if (sess.type == SockType.connect) {
+                } else if (sess.type == SockType.connect) {
                     foreach (var item in SockTable) {
                         if (item.Sess == sess) {
                             item.State = SockState.Closed;
@@ -215,17 +214,18 @@ namespace SockMaster
             SockUnit sock = arg as SockUnit;
             if (sock == null || sock.State == SockState.Opened) return;
 
+            SockSess sess = null;
             if (sock.Type == SockType.listen) {
-                if ((sock.Sess = sesscer.MakeListen(sock.EP)) != null)
-                    sock.State = SockState.Opened;
-                else
-                    sock.State = SockState.Closed;
+                sess = sesscer.MakeListen(sock.EP);
+            } else if (sock.Type == SockType.connect) {
+                sess = sesscer.AddConnect(sock.EP);
             }
-            else if (sock.Type == SockType.connect) {
-                if ((sock.Sess = sesscer.AddConnect(sock.EP)) != null)
-                    sock.State = SockState.Opened;
-                else
-                    sock.State = SockState.Closed;
+
+            if (sess != null) {
+                sock.Sess = sess;
+                sock.State = SockState.Opened;
+            } else {
+                sock.State = SockState.Closed;
             }
         }
 
