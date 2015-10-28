@@ -168,7 +168,7 @@ namespace SockMaster
                             child.SendBuff = null;
                         //}));
                     }
-                    if (child.State == SockState.Closing && child.State != SockState.Closed) {
+                    if (child.State == SockState.Closing) {
                         sesscer.DelSession(child.Sess);
                         child.State = SockState.Closed;
                     }
@@ -271,14 +271,6 @@ namespace SockMaster
                     }
                 }
                 else if (sess.type == SockType.connect) {
-                    foreach (var item in SockTable) {
-                        if (item.Sess == sess) {
-                            item.State = SockState.Closed;
-                            return;
-                        }
-                    }
-                }
-                else if (sess.type == SockType.listen) {
                     foreach (var item in SockTable) {
                         if (item.Sess == sess) {
                             item.State = SockState.Closed;
