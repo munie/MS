@@ -391,19 +391,21 @@ namespace EnvConsole.Windows
 
         private void WorkServer_ClientDisconn(object sender, ClientEventArgs e)
         {
-            lock (clientTable) {
-                var subset = from s in clientTable
-                             where s.RemoteEP.Equals(e.RemoteEP)
-                             select s;
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (clientTable) {
+                    var subset = from s in clientTable
+                                 where s.RemoteEP.Equals(e.RemoteEP)
+                                 select s;
 
-                if (subset.Count() == 0) return;
+                    if (subset.Count() == 0) return;
 
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                {
+
                     clientTable.Remove(subset.First());
                     console.ClientDisconn();
-                }));
-            }
+
+                }
+            }));
         }
 
         private void WorkServer_ClientReadMsg(object sender, ClientEventArgs e)
