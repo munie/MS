@@ -7,7 +7,7 @@ namespace mnn.misc.module
 {
     public class SModule 
     {
-        public static readonly string FullName = "Mnn.MnnMisc.MnnModule.IModule";
+        public static readonly string FullName = "mnn.misc.module.IModule";
         public static readonly string Init = "Init";
         public static readonly string Final = "Final";
         public static readonly string GetModuleID = "GetModuleID";

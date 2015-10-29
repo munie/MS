@@ -7,7 +7,7 @@ namespace mnn.misc.env
 {
     public class SMsgProc
     {
-        public static readonly string FullName = "Mnn.MnnMisc.MnnEnv.IMsgProc";
+        public static readonly string FullName = "mnn.misc.env.IMsgProc";
         public static readonly string AppendMsg = "AppendMsg";
         public static readonly string HandleMsg = "HandleMsg";
         public static readonly string HandleMsgByte = "HandleMsgByte";
