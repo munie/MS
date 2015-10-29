@@ -65,6 +65,6 @@ namespace EnvModule
             }
         }
 
-        public mnn.misc.module.ModuleItem Module { get; set; }
+        public mnn.misc.module.ModuleNode Module { get; set; }
     }
 }

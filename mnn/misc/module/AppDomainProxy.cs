@@ -6,17 +6,10 @@ using System.Reflection;
 
 namespace mnn.misc.module
 {
-    class InterfaceUnit
-    {
-        public object Instance;
-        public List<string> InterfaceNames;
-    }
-
     class AppDomainProxy : MarshalByRefObject
     {
         private Assembly asm = null;
-        //private Dictionary<string, object> interfaceTable = new Dictionary<string, object>();
-        private List<InterfaceUnit> interfaceTable = new List<InterfaceUnit>();
+        private List<object> instance_table = new List<object>();
 
         // Methods =============================================================================
         public override object InitializeLifetimeService()
@@ -31,62 +24,50 @@ namespace mnn.misc.module
             asm = Assembly.LoadFrom(assemblyName);
         }
 
+        public bool CheckInterface(string[] ifaceNames)
+        {
+            // asm中的非抽象类型必须所有检验的接口
+            foreach (var item in ifaceNames) {
+                var types = from s in asm.GetTypes()
+                            where s.GetInterface(item) != null && !s.IsAbstract
+                            select s;
+
+                if (types.Count() == 0)
+                    return false;
+            }
+
+            return true;
+        }
+
         public object Invoke(string interfaceFullName, string methodName, params object[] args)
         {
-            //var subset = from s in interfaceTable where s.Key.Equals(interfaceName) select s;
-
-            //// 如果实例字典中还没有指定接口对应的实例，新建之
-            //if (subset.Count() == 0) {
-            //    var types = from s in asm.GetTypes()
-            //                where s.GetInterface(interfaceName) != null && s.IsAbstract == false
-            //                select s;
-
-            //    /// ** 异常：如果接口名错误
-            //    if (types.Count() == 0)
-            //        throw new ApplicationException("Specified Interface is't in this Asembly.");
-
-            //    object obj = asm.CreateInstance(types.First().FullName);
-            //    interfaceTable.Add(interfaceName, obj);
-            //}
-
-            //// 此时subset.First()必存在
-            //subset = from s in interfaceTable where s.Key.Equals(interfaceName) select s;
-
-            ///// ** 异常：如果方法名错误
-            //MethodInfo methodInfo = subset.First().Value.GetType().GetMethod(methodName);
-
-            ///// ** 异常：如果参数错误
-            //return methodInfo.Invoke(subset.First().Value, args);
-
-
-            var subset = from s in interfaceTable where s.InterfaceNames.Contains(interfaceFullName) select s;
-
-            // 如果实例字典中还没有指定接口对应的实例，新建之
-            if (subset.Count() == 0) {
+            // 1) - 查找已有实例是否提供该接口
+            var instances = from s in instance_table
+                            where s.GetType().GetInterface(interfaceFullName) != null
+                            select s;
+            
+            // 2) - 查找模块是否提供该接口
+            if (instances.Count() == 0) {
                 var types = from s in asm.GetTypes()
-                            where s.GetInterface(interfaceFullName) != null && s.IsAbstract == false
+                            where s.GetInterface(interfaceFullName) != null && !s.IsAbstract
                             select s;
 
                 /// ** 异常：如果接口名错误
                 if (types.Count() == 0)
                     throw new ApplicationException("Specified Interface is't in this Asembly.");
 
-                object obj = asm.CreateInstance(types.First().FullName);
-                List<string> inames = new List<string>();
-                foreach (var item in types.First().GetInterfaces()) {
-                    inames.Add(item.FullName);
-                }
-                interfaceTable.Add(new InterfaceUnit() { Instance = obj, InterfaceNames = inames });
+                instance_table.Add(asm.CreateInstance(types.First().FullName));
             }
 
-            // 此时subset.First()必存在
-            subset = from s in interfaceTable where s.InterfaceNames.Contains(interfaceFullName) select s;
+            // 3) - 查找实例是否提供该方法
+            MethodInfo methodInfo = instances.First().GetType().GetMethod(methodName);
 
             /// ** 异常：如果方法名错误
-            MethodInfo methodInfo = subset.First().Instance.GetType().GetMethod(methodName);
+            if (methodInfo == null)
+                throw new ApplicationException("Specified Method is't in this Asembly.");
 
             /// ** 异常：如果参数错误
-            return methodInfo.Invoke(subset.First().Instance, args);
+            return methodInfo.Invoke(instances.First(), args);
         }
     }
 }

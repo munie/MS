@@ -218,7 +218,7 @@ namespace EnvModule
 
         private void AtModuleLoad(string filePath)
         {
-            ModuleItem module = new ModuleItem();
+            ModuleNode module = new ModuleNode();
 
             try {
                 module.Load(filePath);

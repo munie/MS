@@ -12,10 +12,6 @@ namespace EnvConsole.Unit
 
         private string fileName;
         private string fileComment;
-
-        public string ID { get; set; }
-        public string Name { get; set; }
-        public string FilePath { get; set; }
         public string FileName
         {
             get { return fileName; }
@@ -37,6 +33,6 @@ namespace EnvConsole.Unit
             }
         }
 
-        public mnn.misc.module.ModuleItem Module { get; set; }
+        public mnn.misc.module.ModuleNode Module { get; set; }
     }
 }

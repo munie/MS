@@ -56,6 +56,7 @@ namespace EnvConsole.Windows
         private ObservableCollection<ModuleUnit> moduleTable;
         private ReaderWriterLock rwlockModuleTable;
         private ConsoleWindow console;
+        private ModuleCenter modcer;
 
         // Message Handle Thread
         private const int MAX_MSG_COUNT = 980;
@@ -79,6 +80,7 @@ namespace EnvConsole.Windows
             console.Owner = this;
             console.DataContext = new { ServerTable = serverTable, ClientTable = clientTable, ModuleTable = moduleTable };
             console.Show();
+            modcer = new ModuleCenter();
 
             isExitThread = false;
             sem = new Semaphore(0, MAX_MSG_COUNT);
@@ -219,7 +221,7 @@ namespace EnvConsole.Windows
             rwlockModuleTable.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 // 水库代码太恶心，没办法的办法
-                if (item.ID != "HT=" && msg.Content.Contains(item.ID)) {
+                if (item.Module.ModuleID != "HT=" && msg.Content.Contains(item.Module.ModuleID)) {
                     try {
                         item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                     } catch (Exception) { }
@@ -230,7 +232,7 @@ namespace EnvConsole.Windows
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in moduleTable) {
-                    if (item.ID == "HT=" && msg.Content.Contains(item.ID)) {
+                    if (item.Module.ModuleID == "HT=" && msg.Content.Contains(item.Module.ModuleID)) {
                         try {
                             item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
                         } catch (Exception) { }
@@ -349,7 +351,7 @@ namespace EnvConsole.Windows
                     //// 反馈发送结果
                     rwlockModuleTable.AcquireReaderLock(-1);
                     foreach (var item in moduleTable) {
-                        if (item.ID.Equals(atCmd.FromID)) {
+                        if (item.Module.ModuleID.Equals(atCmd.FromID)) {
                             try {
                                 item.Module.Invoke(SMsgProc.FullName, SMsgProc.AtCmdResult, new object[] { atCmd });
                             } catch (Exception) { }
@@ -554,36 +556,22 @@ namespace EnvConsole.Windows
 
         public void AtModuleLoad(string filePath)
         {
-            ModuleItem module = new ModuleItem();
-
-            try {
-                module.Load(filePath);
-            } catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Error");
-                return;
-            }
-
-            try {
-                module.Invoke(SModule.FullName, SModule.Init, null);
-            } catch (Exception ex) {
-                module.UnLoad();
-                MessageBox.Show(ex.Message, "Error");
+            ModuleNode module = modcer.AddModule(filePath);
+            if (module == null) {
+                MessageBox.Show(filePath + ": load failed.");
                 return;
             }
 
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
-            ModuleUnit moduleUnit = new ModuleUnit();
-            moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
-            moduleUnit.Name = fvi.ProductName;
-            moduleUnit.FilePath = filePath;
-            moduleUnit.FileName = module.AssemblyName;
-            moduleUnit.FileComment = fvi.Comments;
-            moduleUnit.Module = module;
+            ModuleUnit unit = new ModuleUnit();
+            unit.FileName = module.AssemblyName;
+            unit.FileComment = fvi.Comments;
+            unit.Module = module;
 
             // 加入 table
             rwlockModuleTable.AcquireWriterLock(-1);
-            moduleTable.Add(moduleUnit);
+            moduleTable.Add(unit);
             rwlockModuleTable.ReleaseWriterLock();
         }
 
@@ -593,12 +581,8 @@ namespace EnvConsole.Windows
 
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
-                try {
-                    subset.First().Module.Invoke(SModule.FullName, SModule.Final, null);
-                } catch (Exception) { }
-                // 卸载模块
-                subset.First().Module.UnLoad();
                 // 移出 table
+                modcer.DelModule(subset.First().Module);
                 moduleTable.Remove(subset.First());
             }
 
