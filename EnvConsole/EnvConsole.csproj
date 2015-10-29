@@ -62,11 +62,11 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Unit\ClientUnit.cs" />
-    <Page Include="Window\InputDialog.xaml">
+    <Page Include="Windows\InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Window\ConsoleWindow.xaml">
+    <Page Include="Windows\ConsoleWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -74,19 +74,19 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Window\MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />
-    <Compile Include="Window\InputDialog.xaml.cs">
+    <Compile Include="Windows\InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Window\ConsoleWindow.xaml.cs">
+    <Compile Include="Windows\ConsoleWindow.xaml.cs">
       <DependentUpon>ConsoleWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Window\MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
