@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace StationConsole
 {
-    class ModuleUnitState : CtrlLayer.ModuleUnit, INotifyPropertyChanged
+    public class ModuleUnitState : CtrlLayer.ModuleUnit, INotifyPropertyChanged
     {
         public ModuleUnitState() { }
         public ModuleUnitState(CtrlLayer.ModuleUnit module)

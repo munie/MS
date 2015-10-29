@@ -9,20 +9,20 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.ComponentModel;
-using System.Net;
-using System.Reflection;
-using System.Diagnostics;
-using System.IO;
+using System.Threading;
 using System.Collections.ObjectModel;
-using StationConsole.CtrlLayer;
+using System.IO;
+using System.Diagnostics;
+using System.Xml;
+using System.Xml.Serialization;
+using System.Net;
+using mnn.net.deprecated;
+using mnn.misc.module;
+using mnn.misc.env;
 
 namespace StationConsole
 {
-    class ClientStateTable : ObservableCollection<ClientUnitState> { }
-
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -31,375 +31,657 @@ namespace StationConsole
         public MainWindow()
         {
             InitializeComponent();
-
-            InitailizeWindowName();
-            InitailizeStatusBar();
-
-            // Data Source Binding
-            this.serverStateTable = new ObservableCollection<ServerUnitState>();
-            this.clientStateTable = (ClientStateTable)Resources["clientStateTable"];
-            this.moduleStateTable = new ObservableCollection<ModuleUnitState>();
-
-            this.lstViewServer.ItemsSource = serverStateTable;
-            //lstViewClientPoint.ItemsSource = clientStateTable;
-            this.lstViewModule.ItemsSource = moduleStateTable;
         }
-
-        private ObservableCollection<ServerUnitState> serverStateTable;
-        private ObservableCollection<ClientUnitState> clientStateTable;
-        private ObservableCollection<ModuleUnitState> moduleStateTable;
-
-        // Methods ============================================================================
-
-        private void InitailizeWindowName()
-        {
-            // Format Main Form's Name
-            Assembly asm = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
-            this.Title = string.Format("{0} {1}.{2}.{3}-{4} - Powered By {5}",
-                fvi.ProductName,
-                fvi.ProductMajorPart,
-                fvi.ProductMinorPart,
-                fvi.ProductBuildPart,
-                fvi.ProductPrivatePart,
-                fvi.CompanyName);
-        }
-
-        private void InitailizeStatusBar()
-        {
-            // Display TimeRun
-            DateTime startTime = DateTime.Now;
-            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
-            timer.Interval = new TimeSpan(0, 0, 1);
-            timer.Tick += new EventHandler((s, ea) =>
-            {
-                blockTimeRun.Text = "运行时间 " + DateTime.Now.Subtract(startTime).ToString(@"dd\-hh\:mm\:ss");
-
-                long memory = GC.GetTotalMemory(false) / 1000;
-                long diff = memory - Convert.ToInt32(blockMemory.Text);
-                blockMemory.Text = memory.ToString();
-                if (diff >= 0)
-                    blockMemoryDiff.Text = "+" + diff;
-                else
-                    blockMemoryDiff.Text = "-" + diff;
-            });
-            timer.Start();
-        }
-
-        public void AddServer(ServerUnit server)
-        {
-            ServerUnitState state = new ServerUnitState(server);
-
-            if (state.AutoRun == true)
-                state.ListenState = ServerUnitState.ListenStateStarted;
-            else
-                state.ListenState = ServerUnitState.ListenStateStoped;
-            if (state.Protocol == "tcp")
-                state.TimerState = ServerUnitState.TimerStateStoped;
-            else
-                state.TimerState = ServerUnitState.TimerStateDisable;
-            state.TimerInterval = 0;
-            state.TimerCommand = "";
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                serverStateTable.Add(state);
-            }));
-        }
-
-        public void RemoveServer(ServerUnit server)
-        {
-            string id = server.ID;
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in serverStateTable where s.ID.Equals(id) select s;
-
-                if (subset.Count() != 0)
-                    serverStateTable.Remove(subset.First());
-            }));
-        }
-
-        public void AddClient(ClientUnit client)
-        {
-            ClientUnitState state = new ClientUnitState(client);
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                this.clientStateTable.Add(state);
-
-                // set value for ObservableCollection object 
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
-                historyClientOpenCount.Text = (Convert.ToInt32(historyClientOpenCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void RemoveClient(ClientUnit client)
-        {
-            IPEndPoint remoteEP = client.RemoteEP;
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in this.clientStateTable where s.RemoteEP.Equals(remoteEP) select s;
-
-                if (subset.Count() != 0)
-                    this.clientStateTable.Remove(subset.First());
-
-                // set value for ObservableCollection object 
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
-                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void RemoveClient(IPEndPoint ep)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in this.clientStateTable where s.RemoteEP.Equals(ep) select s;
-
-                if (subset.Count() != 0)
-                    this.clientStateTable.Remove(subset.First());
-
-                // set value for ObservableCollection object 
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
-                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void UpdateClient(IPEndPoint ep, string fieldName, object value)
-        {
-            Type t = typeof(ClientUnit);
-            PropertyInfo propertyInfo = t.GetProperty(fieldName);
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in this.clientStateTable
-                                where s.RemoteEP.Equals(ep)
-                                select s;
-
-                if (subset.Count() != 0)
-                    propertyInfo.SetValue(subset.First(), value, null);
-            }));
-        }
-
-        public void AddModule(ModuleUnit module)
-        {
-            ModuleUnitState state = new ModuleUnitState(module);
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                moduleStateTable.Add(state);
-            }));
-        }
-
-        public void RemoveModule(ModuleUnit module)
-        {
-            string id = module.ID;
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in moduleStateTable where s.ID.Equals(id) select s;
-
-                if (subset.Count() != 0)
-                    moduleStateTable.Remove(subset.First());
-            }));
-        }
-
-        public void AddMessage()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                // set value for ObservableCollection object 
-                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) + 1).ToString();
-                historyMsgFetchCount.Text = (Convert.ToInt32(historyMsgFetchCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void RemoveMessage()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                // set value for ObservableCollection object 
-                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) - 1).ToString();
-                historyMsgHandledCount.Text = (Convert.ToInt32(historyMsgHandledCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void DisplayMessage(string msg)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (txtMsg.Text.Length >= 20 * 1024) {
-                    txtMsg.Clear();
-                }
-
-                txtMsg.AppendText(msg + "\r\n\r\n");
-                txtMsg.ScrollToEnd();
-            }));
-        }
-
-        // Events for itself ==================================================================
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            App.Mindow = this;
-            App.Ctrler = new Controler();
-            App.Ctrler.InitConfig();
-            App.Ctrler.InitServer();
-            App.Ctrler.InitDefaultModule();
-            App.Ctrler.InitMsgHandle();
+            this.Hide();
+            this.Init();
+            this.InitConfig();
+            this.InitServer();
+            this.InitDefaultModule();
+            this.InitMsgHandle();
         }
 
-        private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
+        // Fields ===========================================================================
+
+        public Encoding coding;
+        private ObservableCollection<ServerUnitState> serverTable;
+        private ObservableCollection<ClientUnitState> clientTable;
+        private ObservableCollection<ModuleUnitState> moduleTable;
+        private ReaderWriterLock rwlockModuleTable;
+        private ConsoleWindow console;
+
+        // Message Handle Thread
+        private const int MAX_MSG_COUNT = 980;
+        private bool isExitThread;
+        private Semaphore sem;
+        class MessageUnit
         {
-            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            public IPEndPoint EP;
+            public string Content;
+        }
+        private Queue<MessageUnit> msgQueue;
 
-            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
-            openFileDialog.FileName = "";
+        private void Init()
+        {
+            coding = Encoding.Default;
+            serverTable = new ObservableCollection<ServerUnitState>();
+            clientTable = new ObservableCollection<ClientUnitState>();
+            moduleTable = new ObservableCollection<ModuleUnitState>();
+            rwlockModuleTable = new ReaderWriterLock();
+            console = new ConsoleWindow();
+            console.Owner = this;
+            console.DataContext = new { ServerTable = serverTable, ClientTable = clientTable, ModuleTable = moduleTable };
+            console.Show();
 
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                App.Ctrler.AtModuleLoad(openFileDialog.FileName);
+            isExitThread = false;
+            sem = new Semaphore(0, MAX_MSG_COUNT);
+            msgQueue = new Queue<MessageUnit>();
         }
 
-        private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
+        private void InitConfig()
         {
-            List<ModuleUnitState> handles = new List<ModuleUnitState>();
-
-            // 保存要卸载的模块信息
-            foreach (ModuleUnitState item in lstViewModule.SelectedItems) {
-                handles.Add(item);
+            if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + @"\StationConsole.xml") == false) {
+                System.Windows.MessageBox.Show("未找到配置文件： StationConsole.xml");
+                Thread.CurrentThread.Abort();
             }
 
-            // 卸载操作
-            foreach (var item in handles) {
-                App.Ctrler.AtModuleUnload(item.FileName);
+            /// ** Initialize Start ====================================================
+            try {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(System.AppDomain.CurrentDomain.BaseDirectory + @"\StationConsole.xml");
+
+                // coding Config
+                XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
+                coding = Encoding.GetEncoding(node.InnerText);
+
+                // Server Config
+                foreach (XmlNode item in xdoc.SelectNodes("/configuration/serverconfig/server")) {
+                    ServerUnitState server = new ServerUnitState();
+                    server.ID = item.Attributes["id"].Value;
+                    server.Name = item.Attributes["name"].Value;
+                    server.ServerType = item.Attributes["type"].Value;
+                    server.Protocol = item.Attributes["protocol"].Value;
+
+                    if (server.Protocol == "pipe") {
+                        server.PipeName = item.Attributes["pipename"].Value;
+                    } else {
+                        server.IpAddress = item.Attributes["ipaddress"].Value;
+                        server.Port = int.Parse(item.Attributes["port"].Value);
+                    }
+
+                    server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
+                    server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
+
+                    server.ListenState = ServerUnitState.ListenStateStoped;
+                    if (server.Protocol == "tcp") {
+                        server.TimerState = ServerUnitState.TimerStateStoped;
+                    } else {
+                        server.TimerState = ServerUnitState.TimerStateDisable;
+                    }
+                    server.TimerInterval = 0;
+                    server.TimerCommand = "";
+
+                    serverTable.Add(server);
+                }
             }
+            catch (Exception ex) {
+                mnn.util.Logger.WriteException(ex);
+                System.Windows.MessageBox.Show("配置文件读取错误： StationConsole.xml");
+            }
+            /// ** Initialize End ====================================================
         }
 
-        private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
+        private void InitServer()
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnitState.ListenStateStarted)
-                    continue;
+            // 启动监听
+            foreach (var item in serverTable) {
+                // AtCmd Server
+                if (item.ServerType == "atcmd") {
+                    if (item.Protocol == "udp") {
+                        item.Server = new UdpServer();
+                        item.Server.ClientReadMsg += AtCmdServer_ClientReadMsg;
+                        item.Server.ClientSendMsg += AtCmdServer_ClientSendMsg;
+                        if (item.AutoRun == true) {
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                            item.ListenState = ServerUnitState.ListenStateStarted;
+                        }
+                    }
+                }
 
-                App.Ctrler.AtServerStart(item.ID,
-                    new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                item.ListenState = ServerUnitState.ListenStateStarted;
-            }
-        }
-
-        private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnitState.ListenStateStoped || item.CanStop == false)
-                    continue;
-
-                if (item.CanStop == true)
-                    App.Ctrler.AtServerStop(item.ID);
-                item.ListenState = ServerUnitState.ListenStateStoped;
-            }
-        }
-
-        private void MenuItem_SetListener_Click(object sender, RoutedEventArgs e)
-        {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "设置监听端口";
-                input.textBlock1.Text = "其他";
-                input.textBlock2.Text = "端口";
-                input.textBlock1.IsEnabled = false;
-                input.textBox1.IsEnabled = false;
-                input.textBox2.Focus();
-
-                if (input.ShowDialog() == false)
-                    return;
-
-                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                    if (item.ListenState == ServerUnitState.ListenStateStarted)
-                        continue;
-
-                    item.Port = int.Parse(input.textBox2.Text);
+                // Work Server
+                else if (item.ServerType == "work") {
+                    if (item.Protocol == "tcp") {
+                        TcpServer tcp = new TcpServer();
+                        tcp.ClientConnect += WorkServer_ClientConnect;
+                        tcp.ClientDisconn += WorkServer_ClientDisconn;
+                        tcp.ClientReadMsg += WorkServer_ClientReadMsg;
+                        tcp.ClientSendMsg += WorkServer_ClientSendMsg;
+                        item.Server = tcp;
+                        if (item.AutoRun == true) {
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                            item.ListenState = ServerUnitState.ListenStateStarted;
+                        }
+                    }
+                    else if (item.Protocol == "udp") {
+                        item.Server = new UdpServer();
+                        item.Server.ClientReadMsg += WorkServer_ClientReadMsg;
+                        item.Server.ClientSendMsg += WorkServer_ClientSendMsg;
+                        if (item.AutoRun == true) {
+                            item.Server.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                            item.ListenState = ServerUnitState.ListenStateStarted;
+                        }
+                    }
                 }
             }
         }
 
-        private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
+        private void InitDefaultModule()
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnitState.TimerStateStarted ||
-                    item.TimerState == ServerUnitState.TimerStateDisable ||
-                    item.TimerInterval <= 0 || item.TimerCommand == "")
-                    continue;
+            // 加载 DataHandles 文件夹下的所有模块
+            string modulePath = System.AppDomain.CurrentDomain.BaseDirectory + @"\Modules";
 
-                App.Ctrler.AtServerTimerStart(item.ID, item.TimerInterval * 1000, item.TimerCommand);
-                item.TimerState = ServerUnitState.TimerStateStarted;
-            }
-        }
+            if (Directory.Exists(modulePath)) {
+                string[] files = Directory.GetFiles(modulePath);
 
-        private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnitState.TimerStateStoped ||
-                    item.TimerState == ServerUnitState.TimerStateDisable)
-                    continue;
-
-                App.Ctrler.AtServerTimerStop(item.ID);
-                item.TimerState = ServerUnitState.TimerStateStoped;
-            }
-        }
-
-        private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
-        {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "设置定时器";
-                input.textBlock1.Text = "命令";
-                input.textBlock2.Text = "时间间隔";
-                input.textBox1.Text = "!A0#";
-                input.textBox2.Focus();
-
-                if (input.ShowDialog() == false)
-                    return;
-
-                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                    if (item.TimerState == ServerUnitState.TimerStateStarted)
-                        continue;
-
-                    item.TimerCommand = input.textBox1.Text;
-                    if (input.textBox2.Text != "")
-                        item.TimerInterval = Convert.ToDouble(input.textBox2.Text);
+                // Load dll files one by one
+                foreach (var item in files) {
+                    string str = item.Substring(item.LastIndexOf("\\") + 1);
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
+                        AtModuleLoad(item);
                 }
             }
         }
 
-        private void MenuItem_ClientSendMessage_Click(object sender, RoutedEventArgs e)
+        private void InitMsgHandle()
         {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "发送命令";
-                input.textBlock1.Text = "命令";
-                input.textBlock2.Text = "时间间隔";
-                input.textBlock2.IsEnabled = false;
-                input.textBox2.IsEnabled = false;
-                input.textBox1.Text = "!A1?";
-                input.textBox1.Focus();
-                input.textBox1.Select(input.textBox1.Text.Length, 0);
+            Thread thread = new Thread(() =>
+            {
+                isExitThread = false;
 
-                if (input.ShowDialog() == false)
-                    return;
+                while (true) {
+                    if (isExitThread == true) {
+                        isExitThread = false;
+                        break;
+                    }
 
-                foreach (ClientUnitState item in lstViewClient.SelectedItems) {
-                    App.Ctrler.AtClientSendMessage(item.ID, input.textBox1.Text);
+                    MsgHandle();
+                }
+            });
+
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        private void MsgHandle()
+        {
+            MessageUnit msg = null;
+
+            sem.WaitOne();
+            lock (msgQueue) {
+                msg = msgQueue.Dequeue();
+            }
+            console.MessageRemove();
+
+            bool IsHandled = false;
+            rwlockModuleTable.AcquireReaderLock(-1);
+            foreach (var item in moduleTable) {
+                // 水库代码太恶心，没办法的办法
+                if (item.ID != "HT=" && msg.Content.Contains(item.ID)) {
+                    try {
+                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
+                    }
+                    catch (Exception) { }
+                    IsHandled = true;
+                    break;
                 }
             }
+            // 水库代码太恶心，没办法的办法
+            if (IsHandled == false) {
+                foreach (var item in moduleTable) {
+                    if (item.ID == "HT=" && msg.Content.Contains(item.ID)) {
+                        try {
+                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
+                        }
+                        catch (Exception) { }
+                        break;
+                    }
+                }
+            }
+            rwlockModuleTable.ReleaseReaderLock();
         }
 
-        private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
+        public void FinalMsgHandle()
         {
-            foreach (ClientUnitState item in lstViewClient.SelectedItems) {
-                App.Ctrler.AtClientClose(item.ID);
+            isExitThread = true;
+        }
+
+        // Events for AsyncSocketListenItem =================================================
+
+        private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
+        {
+            AtCommand atCmd = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
+                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
+                }
+            }
+            catch (Exception ex) {
+                mnn.util.Logger.WriteException(ex);
+                return;
+            }
+
+            AtCmdServer_ExecCommand(atCmd);
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
+                + "|FromID=" + atCmd.FromID.ToString()
+                + "|ToID=" + atCmd.ToID
+                + "|ToEP=" + atCmd.ToEP
+                + "|DataType=" + atCmd.DataType.ToString()
+                + "|Data=" + atCmd.Data;
+            console.MessageDisplay(logFormat);
+            mnn.util.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
+        {
+            AtCommand atCmd = null;
+
+            try {
+                using (MemoryStream memory = new MemoryStream(e.Data)) {
+                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
+                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
+                }
+            }
+            catch (Exception ex) {
+                mnn.util.Logger.WriteException(ex);
+                return;
+            }
+
+            // 打印至窗口，写命令日志
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
+                + "|FromID=" + atCmd.FromID.ToString()
+                + "|ToID=" + atCmd.ToID
+                + "|ToEP=" + atCmd.ToEP
+                + "|DataType=" + atCmd.DataType.ToString()
+                + "|Data=" + atCmd.Data;
+            console.MessageDisplay(logFormat);
+            mnn.util.Logger.Write(logFormat);
+        }
+
+        private void AtCmdServer_ExecCommand(AtCommand atCmd)
+        {
+            if (atCmd.ToSchema == UnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
+                if (atCmd.DataType == AtCommandDataType.ClientUpdateID) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmd.ToEP)) {
+                                item.ID = atCmd.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    string[] strTmp = atCmd.ToEP.Split(":".ToArray());
+                    console.ClientUpdate(
+                        new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                        "ID", atCmd.Data);
+                }
+                else if (atCmd.DataType == AtCommandDataType.ClientUpdateName) {
+                    // 更新逻辑层 client
+                    lock (clientTable) {
+                        foreach (var item in clientTable) {
+                            if (item.RemoteEP.ToString().Equals(atCmd.ToEP)) {
+                                item.Name = atCmd.Data;
+                                break;
+                            }
+                        }
+                    }
+                    // 更新界面 client
+                    //string[] strTmp = atCmd.ToEP.Split(":".ToArray());
+                    //CsWin.ClientUpdate(
+                    //    new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1])),
+                    //    "Name", atCmd.Data);
+                }
+                else if (atCmd.DataType == AtCommandDataType.ClientClose) {
+                    AtClientClose(atCmd.ToID);
+                }
+                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
+                    // 设置发送结果
+                    lock (clientTable) {
+                        var subset = from s in clientTable where s.ID.Equals(atCmd.ToID) select s;
+                        if (subset.Count() != 0)
+                            atCmd.Result = subset.Count() != 0 ? "Success" : "Failure";
+                    }
+
+                    //// 发送数据
+                    AtClientSendMessage(atCmd.ToID, atCmd.Data);
+
+                    //// 反馈发送结果
+                    rwlockModuleTable.AcquireReaderLock(-1);
+                    foreach (var item in moduleTable) {
+                        if (item.ID.Equals(atCmd.FromID)) {
+                            try {
+                                item.Module.Invoke(SMsgProc.FullName, SMsgProc.AtCmdResult, new object[] { atCmd });
+                            }
+                            catch (Exception) { }
+                            break;
+                        }
+                    }
+                    rwlockModuleTable.ReleaseReaderLock();
+                }
+            }
+
+        }
+
+        private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
+        {
+            ClientUnitState client = new ClientUnitState();
+
+            client.ID = "";
+            client.Name = "";
+            client.RemoteEP = e.RemoteEP;
+            //lock (serverTable) {
+            foreach (var item in serverTable) {
+                if (item.Port.Equals(e.LocalEP.Port)) {
+                    client.ServerID = item.ID;
+                    client.ServerName = item.Name;
+                    break;
+                }
+            }
+            //}
+            client.ConnectTime = DateTime.Now;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (clientTable) {
+                    clientTable.Add(client);
+                }
+                console.ClienConnect();
+            }));
+        }
+
+        private void WorkServer_ClientDisconn(object sender, ClientEventArgs e)
+        {
+            lock (clientTable) {
+                var subset = from s in clientTable
+                             where s.RemoteEP.Equals(e.RemoteEP)
+                             select s;
+
+                if (subset.Count() == 0) return;
+
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    clientTable.Remove(subset.First());
+                    console.ClientDisconn();
+                }));
             }
         }
 
+        private void WorkServer_ClientReadMsg(object sender, ClientEventArgs e)
+        {
+            string msg = coding.GetString(e.Data);
+
+            if (msgQueue.Count() >= MAX_MSG_COUNT)
+                return;
+
+            lock (msgQueue) {
+                msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = msg });
+            }
+            sem.Release();
+            console.MessageAppend();
+
+            //bool IsHandled = false;
+            //rwlock.AcquireReaderLock(-1);
+            //foreach (var item in moduleTable) {
+            //    // 水库代码太恶心，没办法的办法
+            //    if (item.ID != "HT=" && msg.Contains(item.ID)) {
+            //        try {
+            //            item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //        }
+            //        catch (Exception) { }
+            //        IsHandled = true;
+            //        break;
+            //    }
+            //}
+            //// 水库代码太恶心，没办法的办法
+            //if (IsHandled == false) {
+            //    foreach (var item in moduleTable) {
+            //        if (item.ID == "HT=" && msg.Contains(item.ID)) {
+            //            try {
+            //                item.Module.Invoke("Mnn.IDataHandle", "AppendMsg", new object[] { e.RemoteEP, msg });
+            //            }
+            //            catch (Exception) { }
+            //            break;
+            //        }
+            //    }
+            //}
+            //rwlock.ReleaseReaderLock();
+
+            // 打印至窗口
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
+            console.MessageDisplay(logFormat);
+        }
+
+        private void WorkServer_ClientSendMsg(object sender, ClientEventArgs e)
+        {
+            // 打印至窗口
+            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + coding.GetString(e.Data);
+            console.MessageDisplay(logFormat);
+            // 发送数据要写日志
+            mnn.util.Logger.Write(logFormat);
+        }
+
+        // AtCmd ============================================================================
+
+        public void AtServerStart(string serverID)
+        {
+            //lock (serverTable) {
+            var subset = from s in serverTable
+                         where s.ID.Equals(serverID)
+                         select s;
+
+            if (subset.Count() == 0)
+                return;
+
+            // 端口可能已经被其他程序监听
+            try {
+                subset.First().Server.Start(
+                    new IPEndPoint(IPAddress.Parse(subset.First().IpAddress), subset.First().Port));
+                subset.First().ListenState = ServerUnitState.ListenStateStarted;
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Error");
+                subset.First().ListenState = ServerUnitState.ListenStateStoped;
+            }
+            //}
+        }
+
+        public void AtServerStart(string serverID, IPEndPoint ep)
+        {
+            //lock (serverTable) {
+            var subset = from s in serverTable
+                         where s.ID.Equals(serverID)
+                         select s;
+
+            if (subset.Count() == 0)
+                return;
+
+            // 端口可能已经被其他程序监听
+            try {
+                subset.First().Server.Start(ep);
+                subset.First().ListenState = ServerUnitState.ListenStateStarted;
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Error");
+                subset.First().ListenState = ServerUnitState.ListenStateStoped;
+            }
+            //}
+        }
+
+        public void AtServerStop(string serverID)
+        {
+            //lock (serverTable) {
+            var subset = from s in serverTable
+                         where s.ID.Equals(serverID)
+                         select s;
+
+            if (subset.Count() == 0)
+                return;
+
+            // 逻辑上讲，不会出现异常
+            subset.First().Server.Stop();
+            subset.First().ListenState = ServerUnitState.ListenStateStoped;
+            //}
+        }
+
+        public void AtServerTimerStart(string serverID, double interval, string timerCommand)
+        {
+            //lock (serverTable) {
+            var subset = from s in serverTable
+                         where s.ID.Equals(serverID) && s.Server is TcpServer
+                         select s;
+
+            if (subset.Count() == 0)
+                return;
+
+            subset.First().Timer = new System.Timers.Timer(interval);
+            // limbda 不会锁住serverTable
+            subset.First().Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+            {
+                try {
+                    (subset.First().Server as TcpServer).Send(coding.GetBytes(timerCommand));
+                }
+                catch (Exception) { }
+            });
+            subset.First().Timer.Start();
+            subset.First().TimerState = ServerUnitState.TimerStateStarted;
+            //}
+        }
+
+        public void AtServerTimerStop(string serverID)
+        {
+            //lock (serverTable) {
+            foreach (var item in serverTable) {
+                if (item.ID.Equals(serverID) && item.Server is TcpServer) {
+                    item.Timer.Stop();
+                    item.Timer.Close();
+                    item.TimerState = ServerUnitState.TimerStateStoped;
+                    break;
+                }
+            }
+            //}
+        }
+
+        public void AtModuleLoad(string filePath)
+        {
+            ModuleItem module = new ModuleItem();
+
+            try {
+                module.Load(filePath);
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Error");
+                return;
+            }
+
+            try {
+                module.Invoke(SModule.FullName, SModule.Init, null);
+            }
+            catch (Exception ex) {
+                module.UnLoad();
+                MessageBox.Show(ex.Message, "Error");
+                return;
+            }
+
+            // 加载模块已经成功
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
+            ModuleUnitState moduleUnit = new ModuleUnitState();
+            moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
+            moduleUnit.Name = fvi.ProductName;
+            moduleUnit.FilePath = filePath;
+            moduleUnit.FileName = module.AssemblyName;
+            moduleUnit.FileComment = fvi.Comments;
+            moduleUnit.Module = module;
+
+            // 加入 table
+            rwlockModuleTable.AcquireWriterLock(-1);
+            moduleTable.Add(moduleUnit);
+            rwlockModuleTable.ReleaseWriterLock();
+        }
+
+        public void AtModuleUnload(string fileName)
+        {
+            rwlockModuleTable.AcquireWriterLock(-1);
+
+            var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
+            if (subset.Count() != 0) {
+                try {
+                    subset.First().Module.Invoke(SModule.FullName, SModule.Final, null);
+                }
+                catch (Exception) { }
+                // 卸载模块
+                subset.First().Module.UnLoad();
+                // 移出 table
+                moduleTable.Remove(subset.First());
+            }
+
+            rwlockModuleTable.ReleaseWriterLock();
+        }
+
+        public void AtClientSendMessage(string clientID, string msg)
+        {
+            // Find IPEndPoint of Client
+            string serverID = null;
+            IPEndPoint ep = null;
+            lock (clientTable) {
+                var subset = from s in clientTable where s.ID.Equals(clientID) select s;
+                if (subset.Count() != 0) {
+                    serverID = subset.First().ServerID;
+                    ep = subset.First().RemoteEP;
+                }
+            }
+            if (string.IsNullOrEmpty(serverID) || ep == null)
+                return;
+
+            //lock (serverTable) { //会死锁
+            try {
+                var subset = from s in serverTable where s.ID.Equals(serverID) select s;
+                if (subset.Count() != 0)
+                    subset.First().Server.Send(ep, coding.GetBytes(msg));
+            }
+            catch (Exception) { }
+            //}
+        }
+
+        public void AtClientClose(string clientID)
+        {
+            // Find IPEndPoint of Client
+            string serverID = null;
+            IPEndPoint ep = null;
+            lock (clientTable) {
+                var subset = from s in clientTable where s.ID.Equals(clientID) select s;
+                if (subset.Count() != 0) {
+                    serverID = subset.First().ServerID;
+                    ep = subset.First().RemoteEP;
+                }
+            }
+            if (string.IsNullOrEmpty(serverID) || ep == null)
+                return;
+
+            // Close Client
+            //lock (serverTable) {
+            var subserver = from s in serverTable where s.ID.Equals(serverID) select s;
+            if (subserver.Count() != 0 && subserver.First().Server is TcpServer) {
+                TcpServer tcp = subserver.First().Server as TcpServer;
+                tcp.CloseClient(ep);
+            }
+            //}
+        }
     }
 }

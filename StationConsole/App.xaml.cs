@@ -13,7 +13,5 @@ namespace StationConsole
     /// </summary>
     public partial class App : Application
     {
-        public static Controler Ctrler;
-        public static MainWindow Mindow;
     }
 }
