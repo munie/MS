@@ -175,7 +175,7 @@ namespace StationConsole
                 if (item.ListenState == ServerUnitState.ListenStateStarted)
                     continue;
 
-                (this.Owner as MainWindow).AtServerStart(item.ID, new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                (this.Owner as MainWindow).AtServerStart(item);
             }
         }
 
@@ -186,7 +186,7 @@ namespace StationConsole
                     continue;
 
                 if (item.CanStop == true)
-                    (this.Owner as MainWindow).AtServerStop(item.ID);
+                    (this.Owner as MainWindow).AtServerStop(item);
             }
         }
 
@@ -221,7 +221,7 @@ namespace StationConsole
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                (this.Owner as MainWindow).AtServerTimerStart(item.ID, item.TimerInterval * 1000, item.TimerCommand);
+                (this.Owner as MainWindow).AtServerTimerStart(item);
             }
         }
 
@@ -232,7 +232,7 @@ namespace StationConsole
                     item.TimerState == ServerUnitState.TimerStateDisable)
                     continue;
 
-                (this.Owner as MainWindow).AtServerTimerStop(item.ID);
+                (this.Owner as MainWindow).AtServerTimerStop(item);
             }
         }
 
@@ -277,7 +277,7 @@ namespace StationConsole
                     return;
 
                 foreach (ClientUnitState item in lstViewClient.SelectedItems) {
-                    (this.Owner as MainWindow).AtClientSendMessage(item.ID, input.textBox1.Text);
+                    (this.Owner as MainWindow).AtClientSendMessage(item, input.textBox1.Text);
                 }
             }
         }
@@ -285,7 +285,7 @@ namespace StationConsole
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
             foreach (ClientUnitState item in lstViewClient.SelectedItems) {
-                (this.Owner as MainWindow).AtClientClose(item.ID);
+                (this.Owner as MainWindow).AtClientClose(item);
             }
         }
     }
