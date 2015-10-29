@@ -6,23 +6,17 @@ using System.ComponentModel;
 
 namespace StationConsole
 {
-    public class ModuleUnitState : CtrlLayer.ModuleUnit, INotifyPropertyChanged
+    public class ModuleUnitState : INotifyPropertyChanged
     {
-        public ModuleUnitState() { }
-        public ModuleUnitState(CtrlLayer.ModuleUnit module)
-        {
-            ID = module.ID;
-            Name = module.Name;
-
-            FilePath = module.FilePath;
-            FileName = module.FileName;
-            FileComment = module.FileComment;
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string fileName;
-        public override string FileName
+        private string fileComment;
+
+        public string ID { get; set; }
+        public string Name { get; set; }
+        public string FilePath { get; set; }
+        public string FileName
         {
             get { return fileName; }
             set
@@ -32,8 +26,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("FileName"));
             }
         }
-        private string fileComment;
-        public override string FileComment
+        public string FileComment
         {
             get { return fileComment; }
             set
@@ -44,5 +37,6 @@ namespace StationConsole
             }
         }
 
+        public mnn.misc.module.ModuleItem Module { get; set; }
     }
 }

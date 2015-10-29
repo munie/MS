@@ -8,20 +8,8 @@ using StationConsole.CtrlLayer;
 
 namespace StationConsole
 {
-    public class ClientUnitState : ClientUnit, INotifyPropertyChanged
+    public class ClientUnitState : INotifyPropertyChanged
     {
-        public ClientUnitState() { }
-        public ClientUnitState(ClientUnit client)
-        {
-            ID = client.ID;
-            Name = client.Name;
-
-            RemoteEP = client.RemoteEP;
-            ServerID = client.ServerID;
-            ServerName = client.ServerName;
-            ConnectTime = client.ConnectTime;
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;
@@ -31,7 +19,7 @@ namespace StationConsole
         private string serverName;
         private DateTime connectTime;
 
-        public override string ID
+        public string ID
         {
             get { return id; }
             set
@@ -41,7 +29,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("ID"));
             }
         }
-        public override string Name
+        public string Name
         {
             get { return name; }
             set
@@ -51,7 +39,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("Name"));
             }
         }
-        public override IPEndPoint RemoteEP
+        public IPEndPoint RemoteEP
         {
             get { return remoteEP; }
             set {
@@ -60,7 +48,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("RemoteIP"));
             }
         }
-        public override string ServerID
+        public string ServerID
         {
             get { return serverID; }
             set
@@ -70,7 +58,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("ServerID"));
             }
         }
-        public override string ServerName
+        public string ServerName
         {
             get { return serverName; }
             set
@@ -80,7 +68,7 @@ namespace StationConsole
                     PropertyChanged(this, new PropertyChangedEventArgs("ServerName"));
             }
         }
-        public override DateTime ConnectTime
+        public DateTime ConnectTime
         {
             get { return connectTime; }
             set {

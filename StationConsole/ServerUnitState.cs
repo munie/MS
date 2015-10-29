@@ -9,22 +9,8 @@ using StationConsole.CtrlLayer;
 
 namespace StationConsole
 {
-    public class ServerUnitState : ServerUnit, INotifyPropertyChanged
+    public class ServerUnitState : INotifyPropertyChanged
     {
-        public ServerUnitState() { }
-        public ServerUnitState(ServerUnit server)
-        {
-            ID = server.ID;
-            Name = server.Name;
-
-            Protocol = server.Protocol;
-            IpAddress = server.IpAddress;
-            Port = server.Port;
-            PipeName = server.PipeName;
-            AutoRun = server.AutoRun;
-            CanStop = server.CanStop;
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public static readonly string ListenStateStarted = "已启动";
@@ -33,11 +19,29 @@ namespace StationConsole
         public static readonly string TimerStateStoped = "未运行";
         public static readonly string TimerStateDisable = "不支持";
 
+        private int port;
         private string listenState;
         private string timerState;
         private double timerInterval;       // 单位为秒，启动定时器时需乘1000
         private string timerCommand;
 
+        public string ID { get; set; }
+        public string Name { get; set; }
+        public string ServerType { get; set; }
+        public string Protocol { get; set; }
+        public string IpAddress { get; set; }
+        public int Port
+        {
+            get { return port; }
+            set
+            {
+                port = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("Port"));
+            }
+        }
+        public bool AutoRun { get; set; }
+        public bool CanStop { get; set; }
         public string ListenState
         {
             get { return listenState; }
@@ -79,23 +83,7 @@ namespace StationConsole
             }
         }
 
-        //public override string ID { get; set; }
-        //public override string Name { get; set; }
-        //public override string ServerType { get; set; }
-        //public override string Protocol { get; set; }
-        //public override string IpAddress { get; set; }
-        private int port;
-        public override int Port
-        {
-            get { return port; }
-            set
-            {
-                port = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Port"));
-            }
-        }
-        //public override string PipeName { get; set; }
-
+        public mnn.net.deprecated.SockServer SockServer { get; set; }
+        public System.Timers.Timer Timer { get; set; }
     }
 }

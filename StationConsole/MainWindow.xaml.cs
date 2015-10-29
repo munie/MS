@@ -87,7 +87,7 @@ namespace StationConsole
         private void InitConfig()
         {
             if (File.Exists(CONF_PATH) == false) {
-                System.Windows.MessageBox.Show("未找到配置文件： " + CONF_NAME);
+                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
                 Thread.CurrentThread.Abort();
             }
 
@@ -101,20 +101,14 @@ namespace StationConsole
                 coding = Encoding.GetEncoding(node.InnerText);
 
                 // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/serverconfig/server")) {
+                foreach (XmlNode item in xdoc.SelectNodes("/configuration/servers/server")) {
                     ServerUnitState server = new ServerUnitState();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
                     server.ServerType = item.Attributes["type"].Value;
                     server.Protocol = item.Attributes["protocol"].Value;
-
-                    if (server.Protocol == "pipe") {
-                        server.PipeName = item.Attributes["pipename"].Value;
-                    } else {
-                        server.IpAddress = item.Attributes["ipaddress"].Value;
-                        server.Port = int.Parse(item.Attributes["port"].Value);
-                    }
-
+                    server.IpAddress = item.Attributes["ipaddress"].Value;
+                    server.Port = int.Parse(item.Attributes["port"].Value);
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
 
@@ -131,7 +125,7 @@ namespace StationConsole
                 }
             } catch (Exception ex) {
                 mnn.util.Logger.WriteException(ex);
-                System.Windows.MessageBox.Show("配置文件读取错误： " + CONF_NAME);
+                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
             /// ** Initialize End ====================================================
         }
