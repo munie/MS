@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
-using System.Collections.ObjectModel;
-using System.Net;
-using StationConsole.CtrlLayer;
 
-namespace StationConsole
+namespace EnvConsole.Unit
 {
-    public class ServerUnitState : INotifyPropertyChanged
+    public class ServerUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

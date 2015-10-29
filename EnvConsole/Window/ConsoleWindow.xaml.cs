@@ -17,9 +17,9 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
-using StationConsole.CtrlLayer;
+using EnvConsole.Unit;
 
-namespace StationConsole
+namespace EnvConsole.Windows
 {
     /// <summary>
     /// ConsoleWindow.xaml 的交互逻辑
@@ -156,10 +156,10 @@ namespace StationConsole
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
         {
-            List<ModuleUnitState> handles = new List<ModuleUnitState>();
+            List<ModuleUnit> handles = new List<ModuleUnit>();
 
             // 保存要卸载的模块信息
-            foreach (ModuleUnitState item in lstViewModule.SelectedItems) {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
                 handles.Add(item);
             }
 
@@ -171,8 +171,8 @@ namespace StationConsole
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnitState.ListenStateStarted)
+            foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
 
                 (this.Owner as MainWindow).AtServerStart(item);
@@ -181,8 +181,8 @@ namespace StationConsole
 
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnitState.ListenStateStoped || item.CanStop == false)
+            foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                if (item.ListenState == ServerUnit.ListenStateStoped || item.CanStop == false)
                     continue;
 
                 if (item.CanStop == true)
@@ -204,8 +204,8 @@ namespace StationConsole
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                    if (item.ListenState == ServerUnitState.ListenStateStarted)
+                foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                    if (item.ListenState == ServerUnit.ListenStateStarted)
                         continue;
 
                     item.Port = int.Parse(input.textBox2.Text);
@@ -215,9 +215,9 @@ namespace StationConsole
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnitState.TimerStateStarted ||
-                    item.TimerState == ServerUnitState.TimerStateDisable ||
+            foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                if (item.TimerState == ServerUnit.TimerStateStarted ||
+                    item.TimerState == ServerUnit.TimerStateDisable ||
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
@@ -227,9 +227,9 @@ namespace StationConsole
 
         private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnitState.TimerStateStoped ||
-                    item.TimerState == ServerUnitState.TimerStateDisable)
+            foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                if (item.TimerState == ServerUnit.TimerStateStoped ||
+                    item.TimerState == ServerUnit.TimerStateDisable)
                     continue;
 
                 (this.Owner as MainWindow).AtServerTimerStop(item);
@@ -249,8 +249,8 @@ namespace StationConsole
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (ServerUnitState item in lstViewServer.SelectedItems) {
-                    if (item.TimerState == ServerUnitState.TimerStateStarted)
+                foreach (ServerUnit item in lstViewServer.SelectedItems) {
+                    if (item.TimerState == ServerUnit.TimerStateStarted)
                         continue;
 
                     item.TimerCommand = input.textBox1.Text;
@@ -276,7 +276,7 @@ namespace StationConsole
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (ClientUnitState item in lstViewClient.SelectedItems) {
+                foreach (ClientUnit item in lstViewClient.SelectedItems) {
                     (this.Owner as MainWindow).AtClientSendMessage(item, input.textBox1.Text);
                 }
             }
@@ -284,7 +284,7 @@ namespace StationConsole
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ClientUnitState item in lstViewClient.SelectedItems) {
+            foreach (ClientUnit item in lstViewClient.SelectedItems) {
                 (this.Owner as MainWindow).AtClientClose(item);
             }
         }

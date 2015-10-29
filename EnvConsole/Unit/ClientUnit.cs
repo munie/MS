@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.ComponentModel;
-using StationConsole.CtrlLayer;
 
-namespace StationConsole
+namespace EnvConsole.Unit
 {
-    public class ClientUnitState : INotifyPropertyChanged
+    public class ClientUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

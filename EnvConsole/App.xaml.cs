@@ -4,9 +4,8 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
-using StationConsole.CtrlLayer;
 
-namespace StationConsole
+namespace EnvConsole
 {
     /// <summary>
     /// App.xaml 的交互逻辑

@@ -8,8 +8,8 @@
     <ProjectGuid>{C39F4B50-C1D3-4A3D-AD6E-29A18FA64FE7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>StationConsole</RootNamespace>
-    <AssemblyName>StationConsole</AssemblyName>
+    <RootNamespace>EnvConsole</RootNamespace>
+    <AssemblyName>EnvConsole</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>StationConsole.App</StartupObject>
+    <StartupObject>EnvConsole.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -61,14 +61,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="CtrlLayer\ModuleUnit.cs" />
-    <Compile Include="ClientUnitState.cs" />
-    <Compile Include="CtrlLayer\ClientUnit.cs" />
-    <Page Include="InputDialog.xaml">
+    <Compile Include="Unit\ClientUnit.cs" />
+    <Page Include="Window\InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ConsoleWindow.xaml">
+    <Page Include="Window\ConsoleWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -76,20 +74,19 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Window\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModuleUnitState.cs" />
-    <Compile Include="ServerUnitState.cs" />
-    <Compile Include="CtrlLayer\ServerUnit.cs" />
-    <Compile Include="InputDialog.xaml.cs">
+    <Compile Include="Unit\ModuleUnit.cs" />
+    <Compile Include="Unit\ServerUnit.cs" />
+    <Compile Include="Window\InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ConsoleWindow.xaml.cs">
+    <Compile Include="Window\ConsoleWindow.xaml.cs">
       <DependentUpon>ConsoleWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Window\MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -123,7 +120,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="StationConsole.xml">
+    <Content Include="EnvConsole.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace StationConsole
+namespace EnvConsole.Unit
 {
-    public class ModuleUnitState : INotifyPropertyChanged
+    public class ModuleUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -20,8 +20,9 @@ using System.Net;
 using mnn.net.deprecated;
 using mnn.misc.module;
 using mnn.misc.env;
+using EnvConsole.Unit;
 
-namespace StationConsole
+namespace EnvConsole.Windows
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -46,13 +47,13 @@ namespace StationConsole
         // Fields ===========================================================================
 
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
-        public static readonly string CONF_NAME = "StationConsole.xml";
+        public static readonly string CONF_NAME = "EnvConsole.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         public static readonly string Module_PATH = BASE_DIR + "Modules";
         public Encoding coding;
-        private ObservableCollection<ServerUnitState> serverTable;
-        private ObservableCollection<ClientUnitState> clientTable;
-        private ObservableCollection<ModuleUnitState> moduleTable;
+        private ObservableCollection<ServerUnit> serverTable;
+        private ObservableCollection<ClientUnit> clientTable;
+        private ObservableCollection<ModuleUnit> moduleTable;
         private ReaderWriterLock rwlockModuleTable;
         private ConsoleWindow console;
 
@@ -70,9 +71,9 @@ namespace StationConsole
         private void Init()
         {
             coding = Encoding.Default;
-            serverTable = new ObservableCollection<ServerUnitState>();
-            clientTable = new ObservableCollection<ClientUnitState>();
-            moduleTable = new ObservableCollection<ModuleUnitState>();
+            serverTable = new ObservableCollection<ServerUnit>();
+            clientTable = new ObservableCollection<ClientUnit>();
+            moduleTable = new ObservableCollection<ModuleUnit>();
             rwlockModuleTable = new ReaderWriterLock();
             console = new ConsoleWindow();
             console.Owner = this;
@@ -102,7 +103,7 @@ namespace StationConsole
 
                 // Server Config
                 foreach (XmlNode item in xdoc.SelectNodes("/configuration/servers/server")) {
-                    ServerUnitState server = new ServerUnitState();
+                    ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
                     server.ServerType = item.Attributes["type"].Value;
@@ -112,11 +113,11 @@ namespace StationConsole
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
 
-                    server.ListenState = ServerUnitState.ListenStateStoped;
+                    server.ListenState = ServerUnit.ListenStateStoped;
                     if (server.Protocol == "tcp") {
-                        server.TimerState = ServerUnitState.TimerStateStoped;
+                        server.TimerState = ServerUnit.TimerStateStoped;
                     } else {
-                        server.TimerState = ServerUnitState.TimerStateDisable;
+                        server.TimerState = ServerUnit.TimerStateDisable;
                     }
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
@@ -141,7 +142,7 @@ namespace StationConsole
                         item.SockServer.ClientSendMsg += AtCmdServer_ClientSendMsg;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnitState.ListenStateStarted;
+                            item.ListenState = ServerUnit.ListenStateStarted;
                         }
                     }
                 } else if (item.ServerType == "work") {
@@ -154,7 +155,7 @@ namespace StationConsole
                         item.SockServer = tcp;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnitState.ListenStateStarted;
+                            item.ListenState = ServerUnit.ListenStateStarted;
                         }
                     } else if (item.Protocol == "udp") {
                         item.SockServer = new UdpServer();
@@ -162,7 +163,7 @@ namespace StationConsole
                         item.SockServer.ClientSendMsg += WorkServer_ClientSendMsg;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnitState.ListenStateStarted;
+                            item.ListenState = ServerUnit.ListenStateStarted;
                         }
                     }
                 }
@@ -363,7 +364,7 @@ namespace StationConsole
 
         private void WorkServer_ClientConnect(object sender, ClientEventArgs e)
         {
-            ClientUnitState client = new ClientUnitState();
+            ClientUnit client = new ClientUnit();
 
             client.ID = "";
             client.Name = "";
@@ -434,15 +435,15 @@ namespace StationConsole
 
         // AtCmd ============================================================================
 
-        public void AtServerStart(ServerUnitState server)
+        public void AtServerStart(ServerUnit server)
         {
             // 端口可能已经被其他程序监听
             try {
                 server.SockServer.Start(new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port));
-                server.ListenState = ServerUnitState.ListenStateStarted;
+                server.ListenState = ServerUnit.ListenStateStarted;
             } catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
-                server.ListenState = ServerUnitState.ListenStateStoped;
+                server.ListenState = ServerUnit.ListenStateStoped;
             }
         }
 
@@ -460,22 +461,22 @@ namespace StationConsole
             try {
                 subset.First().SockServer.Start(
                     new IPEndPoint(IPAddress.Parse(subset.First().IpAddress), subset.First().Port));
-                subset.First().ListenState = ServerUnitState.ListenStateStarted;
+                subset.First().ListenState = ServerUnit.ListenStateStarted;
             } catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error");
-                subset.First().ListenState = ServerUnitState.ListenStateStoped;
+                subset.First().ListenState = ServerUnit.ListenStateStoped;
             }
             //}
         }
 
-        public void AtServerStop(ServerUnitState server)
+        public void AtServerStop(ServerUnit server)
         {
             // 逻辑上讲，不会出现异常
             server.SockServer.Stop();
-            server.ListenState = ServerUnitState.ListenStateStoped;
+            server.ListenState = ServerUnit.ListenStateStoped;
         }
 
-        public void AtServerTimerStart(ServerUnitState server)
+        public void AtServerTimerStart(ServerUnit server)
         {
             server.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
             // limbda 不会锁住serverTable
@@ -486,14 +487,14 @@ namespace StationConsole
                 } catch (Exception) { }
             });
             server.Timer.Start();
-            server.TimerState = ServerUnitState.TimerStateStarted;
+            server.TimerState = ServerUnit.TimerStateStarted;
         }
 
-        public void AtServerTimerStop(ServerUnitState server)
+        public void AtServerTimerStop(ServerUnit server)
         {
             server.Timer.Stop();
             server.Timer.Close();
-            server.TimerState = ServerUnitState.TimerStateStoped;
+            server.TimerState = ServerUnit.TimerStateStoped;
         }
 
         public void AtServerStop(string serverID)
@@ -508,7 +509,7 @@ namespace StationConsole
 
             // 逻辑上讲，不会出现异常
             subset.First().SockServer.Stop();
-            subset.First().ListenState = ServerUnitState.ListenStateStoped;
+            subset.First().ListenState = ServerUnit.ListenStateStoped;
             //}
         }
 
@@ -531,7 +532,7 @@ namespace StationConsole
                 } catch (Exception) { }
             });
             subset.First().Timer.Start();
-            subset.First().TimerState = ServerUnitState.TimerStateStarted;
+            subset.First().TimerState = ServerUnit.TimerStateStarted;
             //}
         }
 
@@ -542,7 +543,7 @@ namespace StationConsole
                 if (item.ID.Equals(serverID) && item.SockServer is TcpServer) {
                     item.Timer.Stop();
                     item.Timer.Close();
-                    item.TimerState = ServerUnitState.TimerStateStoped;
+                    item.TimerState = ServerUnit.TimerStateStoped;
                     break;
                 }
             }
@@ -570,7 +571,7 @@ namespace StationConsole
 
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
-            ModuleUnitState moduleUnit = new ModuleUnitState();
+            ModuleUnit moduleUnit = new ModuleUnit();
             moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
             moduleUnit.Name = fvi.ProductName;
             moduleUnit.FilePath = filePath;
@@ -602,7 +603,7 @@ namespace StationConsole
             rwlockModuleTable.ReleaseWriterLock();
         }
 
-        public void AtClientSendMessage(ClientUnitState client, string msg)
+        public void AtClientSendMessage(ClientUnit client, string msg)
         {
             try {
                 var subset = from s in serverTable where s.ID.Equals(client.ServerID) select s;
@@ -635,7 +636,7 @@ namespace StationConsole
             //}
         }
 
-        public void AtClientClose(ClientUnitState client)
+        public void AtClientClose(ClientUnit client)
         {
             var subserver = from s in serverTable where s.ID.Equals(client.ServerID) select s;
 
