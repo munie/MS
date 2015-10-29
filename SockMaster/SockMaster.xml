@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
-  <socket>
+  <sockets>
     <sockitem id="0" name="munie" type="listen" ep="0.0.0.0:5964" autorun="True" />
     <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000" autorun="False" />
     <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002" autorun="False" />
     <sockitem id="10" name="munie" type="connect" ep="127.0.0.1:5964" autorun="False" />
     <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000" autorun="False" />
     <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
-  </socket>
-  <command>
+  </sockets>
+  <commands>
     <cmditem id="4230" name="流量数据" content="|HT=Z8|CCID=89860113836037156496|csq=24|voltage=0852|water_amount=01030A000000EC3EA4AECA0001BD69|GPS_N=2904.059|GPS_E=12133.733" comment="字符流数据" />
     <cmditem id="4630" name="气象数据" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|DEPTH=0575|GPS_N=2826.904|GPS_E=12154.028" comment="字符流数据" />
     <cmditem id="4830" name="地下数据" content="|HT=D8|CCID=898600C6111596013370|csq=22|voltage=0762|DEPTH=0021|GPS_N=2839.158|GPS_E=12126.774" comment="字符流数据" />
@@ -21,5 +21,5 @@
     <cmditem id="92" name="发送终端" content="0x9200#0x1B00#89860113836037156496#*OK" comment="" />
     <cmditem id="94" name="信息终端" content="0x9400#0x1800#00000000000000000000" comment="" />
     <cmditem id="94-1" name="信息终端" content="0x9400#0x1800#89860113836037156496" comment="" />
-  </command>
+  </commands>
 </configuration>

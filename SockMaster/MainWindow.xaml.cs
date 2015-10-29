@@ -91,7 +91,7 @@ namespace SockMaster
         private void config()
         {
             if (File.Exists(BASE_DIR + CONF_NAME) == false) {
-                System.Windows.MessageBox.Show("未找到配置文件");
+                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
                 return;
             }
 
@@ -101,7 +101,7 @@ namespace SockMaster
                 doc.Load(BASE_DIR + CONF_NAME);
 
                 // socket
-                foreach (XmlNode item in doc.SelectNodes("/configuration/socket/sockitem")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/sockets/sockitem")) {
                     SockUnit sock = new SockUnit();
                     sock.ID = item.Attributes["id"].Value;
                     sock.Name = item.Attributes["name"].Value;
@@ -121,7 +121,7 @@ namespace SockMaster
                 }
 
                 // command
-                foreach (XmlNode item in doc.SelectNodes("/configuration/command/cmditem")) {
+                foreach (XmlNode item in doc.SelectNodes("/configuration/commands/cmditem")) {
                     CmdUnit cmd = new CmdUnit();
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
@@ -130,7 +130,7 @@ namespace SockMaster
                     CmdTable.Add(cmd);
                 }
             } catch (Exception) {
-                System.Windows.MessageBox.Show("配置文件读取错误");
+                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
             /// ** Initialize End ====================================================
         }
