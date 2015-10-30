@@ -3,6 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:EnvConsole"
         Title="ConsoleWindow" Height="576" Width="1024" WindowStartupLocation="CenterScreen" Closed="Window_Closed">
+    <Window.Resources>
+        <CollectionViewSource x:Key='clients' Source="{Binding Path=ClientTable}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="ServerName" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+    </Window.Resources>
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="640*" />
@@ -15,7 +22,7 @@
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <ListView x:Name="lstViewServer" Margin="5,5,0,5" Grid.Row="1" HorizontalAlignment="Left" Width="397" ItemsSource="{Binding  ServerTable}">
+        <ListView x:Name="lstViewServer" Margin="5,5,0,5" Grid.Row="1" HorizontalAlignment="Left" Width="397" ItemsSource="{Binding ServerTable}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -50,7 +57,7 @@
             </ListView.ContextMenu>
         </ListView>
 
-        <ListView x:Name="lstViewModule" Margin="405,5,5,5" Grid.Row="1" ItemsSource="{Binding  ModuleTable}">
+        <ListView x:Name="lstViewModule" Margin="405,5,5,5" Grid.Row="1" ItemsSource="{Binding ModuleTable}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="模块名" Width="100"
@@ -69,7 +76,7 @@
 
         <GridSplitter Height="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"></GridSplitter>
 
-        <ListView x:Name="lstViewClient" Margin="5" Grid.Row="2" ItemsSource="{Binding  ClientTable}">
+        <ListView x:Name="lstViewClient" Margin="5" Grid.Row="2" ItemsSource="{Binding Source={StaticResource clients}}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="left" />
