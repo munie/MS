@@ -208,7 +208,7 @@ namespace EnvConsole.Windows
             }
             
             // 如果没有得到处理，尝试翻译模块处理
-            var subset = from s in moduleTable where s.Module.ModuleID.Equals("Translate") select s;
+            var subset = from s in moduleTable where s.Module.CheckInterface(new string[] { SMsgTrans.FULL_NAME }) select s;
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
