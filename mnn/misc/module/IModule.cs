@@ -16,6 +16,7 @@ namespace mnn.misc.module {
         void Init();
         void Final();
         string GetModuleID();
+        // Not used, so return anything is all right, like "MMMMNNNNNNNNCCCC" ...
         string GetModuleInfo();
     }
 }
