@@ -89,8 +89,6 @@ namespace mnn.net
         public SessDeleteDelegate sess_delete;
         public SessParseDelegate sess_parse;
 
-        // Methods ============================================================================
-
         public SessCenter()
         {
             sess_table = new List<SockSess>();
@@ -100,6 +98,8 @@ namespace mnn.net
             sess_delete = null;
             sess_parse = null;
         }
+
+        // Methods ============================================================================
 
         public void Perform(int next)
         {
@@ -218,14 +218,7 @@ namespace mnn.net
             } catch (Exception) { }
         }
 
-        private void ThreadCheck(bool isSockThread)
-        {
-            if (isSockThread && thread == null)
-                thread = Thread.CurrentThread;
-
-            if (thread != null && thread != Thread.CurrentThread)
-                throw new ApplicationException("Only socket thread can call this function!");
-        }
+        // Self Methods ========================================================================
 
         private void DeleteSession(SockSess sess)
         {
@@ -252,6 +245,15 @@ namespace mnn.net
             }
 
             return retval.ToArray();
+        }
+
+        private void ThreadCheck(bool isSockThread)
+        {
+            if (isSockThread && thread == null)
+                thread = Thread.CurrentThread;
+
+            if (thread != null && thread != Thread.CurrentThread)
+                throw new ApplicationException("Only socket thread can call this function!");
         }
     }
 }

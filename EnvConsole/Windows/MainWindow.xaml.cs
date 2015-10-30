@@ -43,13 +43,7 @@ namespace EnvConsole.Windows
             this.InitServer();
             this.InitDefaultModule();
 
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    cmdcer.Perform(1000);
-                    modcer.Perform(0);
-                }
-            });
+            Thread thread = new Thread(() => { while (true) { cmdcer.Perform(1000); } });
             thread.IsBackground = true;
             thread.Start();
         }

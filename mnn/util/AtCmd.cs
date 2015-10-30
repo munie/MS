@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace mnn.util
 {
@@ -24,59 +25,80 @@ namespace mnn.util
     public class AtCmdCenter
     {
         private List<AtCmd> atcmd_table;
-        private int atcmd_count;
+        private Dictionary<string, object> cmd_dic;
+        private Thread thread;
 
         public AtCmdCenter()
         {
             atcmd_table = new List<AtCmd>();
-            atcmd_count = 0;
+            cmd_dic = new Dictionary<string, object>();
         }
 
         public void Perform(int next)
         {
-            if (atcmd_count == 0) {
+            ThreadCheck(true);
+
+            // ** none
+            if (cmd_dic.Count == 0) {
                 System.Threading.Thread.Sleep(next);
                 return;
             }
 
-            lock (atcmd_table) {
-                foreach (var item in atcmd_table) {
-                    foreach (var arg in item.args.ToArray()) {
-                        item.func(arg);
-                        item.args.Remove(arg);
-                        atcmd_count--;
+            // ** read
+            lock (cmd_dic) {
+                foreach (var item in cmd_dic) {
+                    foreach (var atcmd in atcmd_table) {
+                        if (atcmd.name.Equals(item.Key)) {
+                            atcmd.args.Add(item.Value);
+                            break;
+                        }
                     }
+                }
+                cmd_dic.Clear();
+            }
+
+            // ** func
+            foreach (var item in atcmd_table) {
+                foreach (var arg in item.args.ToArray()) {
+                    item.func(arg);
+                    item.args.Remove(arg);
                 }
             }
         }
 
         public void Add(string name, AtCmd.AtCmdDelegate func)
         {
-            lock (atcmd_table) {
-                atcmd_table.Add(new AtCmd(name, func));
-            }
+            ThreadCheck(false);
+
+            atcmd_table.Add(new AtCmd(name, func));
         }
 
         public void Del(string name)
         {
-            lock (atcmd_table) {
-                foreach (var item in atcmd_table) {
-                    if (item.name.Equals(name))
-                        atcmd_table.Remove(item);
-                }
+            ThreadCheck(false);
+
+            foreach (var item in atcmd_table) {
+                if (item.name.Equals(name))
+                    atcmd_table.Remove(item);
             }
         }
 
         public void AppendCommand(string name, object arg)
         {
-            lock (atcmd_table) {
-                foreach (var item in atcmd_table) {
-                    if (item.name.Equals(name)) {
-                        item.args.Add(arg);
-                        atcmd_count++;
-                    }
-                }
+            lock (cmd_dic) {
+                cmd_dic.Add(name, arg);
             }
+        }
+
+        // Self Methods ========================================================================
+
+        private void ThreadCheck(bool isSockThread)
+        {
+            if (isSockThread && thread == null)
+                thread = Thread.CurrentThread;
+
+            if (thread != null && thread != Thread.CurrentThread)
+                throw new ApplicationException("Only socket thread can call this function!");
         }
     }
 }

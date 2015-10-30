@@ -68,10 +68,7 @@ namespace mnn.misc.module
                 return null;
             }
 
-            lock (module_table) {
-                module_table.Add(module);
-            }
-
+            module_table.Add(module);
             return module;
         }
 
@@ -87,8 +84,10 @@ namespace mnn.misc.module
 
         public void AppendModuleCall(ModuleNode module, ModuleCall call)
         {
-            module.ModuleCallTable.Add(call);
-            module_call_count++;
+            lock (module_table) {
+                module.ModuleCallTable.Add(call);
+                module_call_count++;
+            }
         }
     }
 }
