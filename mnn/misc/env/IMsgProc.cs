@@ -7,11 +7,11 @@ namespace mnn.misc.env
 {
     public class SMsgProc
     {
-        public static readonly string FullName = "mnn.misc.env.IMsgProc";
-        public static readonly string AppendMsg = "AppendMsg";
-        public static readonly string HandleMsg = "HandleMsg";
-        public static readonly string HandleMsgByte = "HandleMsgByte";
-        public static readonly string AtCmdResult = "AtCmdResult";
+        public static readonly string FULL_NAME = "mnn.misc.env.IMsgProc";
+        public static readonly string TRANSLATE = "Translate";
+        public static readonly string APPEND_MSG = "AppendMsg";
+        public static readonly string HANDLE_MSG = "HandleMsg";
+        public static readonly string ATCMD_RESULT = "AtCmdResult";
     }
 
     public interface IMsgProc

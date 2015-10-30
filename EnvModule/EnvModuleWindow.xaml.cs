@@ -164,7 +164,7 @@ namespace EnvModule
                 foreach (var item in moduleTable) {
                     if (item.ID != "HT=" && msgstr.Contains(item.ID)) {
                         try {
-                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { ep, msgstr });
+                            item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { ep, msgstr });
                         }
                         catch (Exception) { }
                         IsHandled = true;
@@ -176,7 +176,7 @@ namespace EnvModule
                     foreach (var item in moduleTable) {
                         if (item.ID == "HT=" && msgstr.Contains(item.ID)) {
                             try {
-                                item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { ep, msgstr });
+                                item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { ep, msgstr });
                             }
                             catch (Exception) { }
                             break;
@@ -229,7 +229,7 @@ namespace EnvModule
             }
 
             try {
-                module.Invoke(SModule.FullName, SModule.Init, null);
+                module.Invoke(SModule.FULL_NAME, SModule.INIT, null);
             }
             catch (Exception ex) {
                 module.UnLoad();
@@ -240,9 +240,9 @@ namespace EnvModule
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit moduleUnit = new ModuleUnit();
-            moduleUnit.ID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
+            moduleUnit.ID = (string)module.Invoke(SModule.FULL_NAME, SModule.GET_MODULE_ID, null);
             moduleUnit.Name = fvi.ProductName;
-            moduleUnit.TermInfo = (string)module.Invoke(SModule.FullName, SModule.GetModuleInfo, null);
+            moduleUnit.TermInfo = (string)module.Invoke(SModule.FULL_NAME, SModule.GET_MODULE_INFO, null);
             moduleUnit.State = SockState.Closed;
             moduleUnit.FilePath = filePath;
             moduleUnit.FileName = module.AssemblyName;
@@ -262,7 +262,7 @@ namespace EnvModule
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 try {
-                    subset.First().Module.Invoke(SModule.FullName, SModule.Final, null);
+                    subset.First().Module.Invoke(SModule.FULL_NAME, SModule.FINAL, null);
                 }
                 catch (Exception) { }
                 // 卸载模块

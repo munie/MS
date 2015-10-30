@@ -8,21 +8,25 @@ namespace mnn.misc.module
     public class ModuleCenter
     {
         private List<ModuleNode> module_table;
-        private int unhandled_message_count;
         public delegate void ModuleCallReturn(ModuleCall call);
         public ModuleCallReturn FuncModuleCallReturn;
+        private int current_call_count;
 
         public ModuleCenter()
         {
             module_table = new List<ModuleNode>();
-            unhandled_message_count = 0;
+            FuncModuleCallReturn = null;
+            current_call_count = 0;
         }
 
         // Methods ==========================================================
 
-        public void Perform()
+        public void Perform(int next)
         {
-            if (unhandled_message_count == 0) return;
+            if (current_call_count == 0) {
+                System.Threading.Thread.Sleep(next);
+                return;
+            }
 
             lock (module_table) {
                 foreach (var item in module_table) {
@@ -34,14 +38,14 @@ namespace mnn.misc.module
                         } catch (Exception) {
                         } finally {
                             item.ModuleCallTable.Remove(call);
-                            unhandled_message_count--;
+                            current_call_count--;
                         }
                     }
                 }
             }
         }
 
-        public ModuleNode AddModule(string filePath)
+        public ModuleNode Add(string filePath)
         {
             ModuleNode module = new ModuleNode();
 
@@ -51,14 +55,14 @@ namespace mnn.misc.module
                 return null;
             }
 
-            if (!module.CheckInterface(new string[] { SModule.FullName })) {
+            if (!module.CheckInterface(new string[] { SModule.FULL_NAME })) {
                 module.UnLoad();
                 return null;
             }
 
             try {
-                module.Invoke(SModule.FullName, SModule.Init, null);
-                module.ModuleID = (string)module.Invoke(SModule.FullName, SModule.GetModuleID, null);
+                module.Invoke(SModule.FULL_NAME, SModule.INIT, null);
+                module.ModuleID = (string)module.Invoke(SModule.FULL_NAME, SModule.GET_MODULE_ID, null);
             } catch (Exception) {
                 module.UnLoad();
                 return null;
@@ -71,10 +75,10 @@ namespace mnn.misc.module
             return module;
         }
 
-        public void DelModule(ModuleNode module)
+        public void Del(ModuleNode module)
         {
             try {
-                module.Invoke(SModule.FullName, SModule.Final, null);
+                module.Invoke(SModule.FULL_NAME, SModule.FINAL, null);
             } catch (Exception) { }
             // 卸载模块
             module.UnLoad();
@@ -84,7 +88,7 @@ namespace mnn.misc.module
         public void AppendModuleCall(ModuleNode module, ModuleCall call)
         {
             module.ModuleCallTable.Add(call);
-            unhandled_message_count++;
+            current_call_count++;
         }
     }
 }

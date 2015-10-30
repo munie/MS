@@ -7,11 +7,11 @@ namespace mnn.misc.module
 {
     public class SModule 
     {
-        public static readonly string FullName = "mnn.misc.module.IModule";
-        public static readonly string Init = "Init";
-        public static readonly string Final = "Final";
-        public static readonly string GetModuleID = "GetModuleID";
-        public static readonly string GetModuleInfo = "GetModuleInfo";
+        public static readonly string FULL_NAME = "mnn.misc.module.IModule";
+        public static readonly string INIT = "Init";
+        public static readonly string FINAL = "Final";
+        public static readonly string GET_MODULE_ID = "GetModuleID";
+        public static readonly string GET_MODULE_INFO = "GetModuleInfo";
     }
 
     public interface IModule

@@ -24,19 +24,27 @@ namespace mnn.util
     public class AtCmdCenter
     {
         private List<AtCmd> atcmd_table;
+        private int current_atcmd_count;
 
         public AtCmdCenter()
         {
             atcmd_table = new List<AtCmd>();
+            current_atcmd_count = 0;
         }
 
-        public void Perform()
+        public void Perform(int next)
         {
+            if (current_atcmd_count == 0) {
+                System.Threading.Thread.Sleep(next);
+                return;
+            }
+
             lock (atcmd_table) {
                 foreach (var item in atcmd_table) {
                     foreach (var arg in item.args.ToArray()) {
                         item.func(arg);
                         item.args.Remove(arg);
+                        current_atcmd_count--;
                     }
                 }
             }
@@ -63,8 +71,10 @@ namespace mnn.util
         {
             lock (atcmd_table) {
                 foreach (var item in atcmd_table) {
-                    if (item.name.Equals(name))
+                    if (item.name.Equals(name)) {
                         item.args.Add(arg);
+                        current_atcmd_count++;
+                    }
                 }
             }
         }

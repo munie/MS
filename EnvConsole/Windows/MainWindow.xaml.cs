@@ -45,8 +45,10 @@ namespace EnvConsole.Windows
 
             Thread thread = new Thread(() =>
             {
-                cmdcer.Perform();
-                modcer.Perform();
+                while (true) {
+                    cmdcer.Perform(1000);
+                    modcer.Perform(0);
+                }
             });
             thread.IsBackground = true;
             thread.Start();
@@ -198,30 +200,69 @@ namespace EnvConsole.Windows
             PackUnit pack = arg as PackUnit;
             console.PackParsed();
 
-            bool IsHandled = false;
+            // 加锁
             rwlockModuleTable.AcquireReaderLock(-1);
+
+            // 调用模块处理消息
             foreach (var item in moduleTable) {
-                // 水库代码太恶心，没办法的办法
-                if (item.Module.ModuleID != "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
+                if (pack.Content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { pack.EP, pack.Content });
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
                     } catch (Exception) { }
-                    IsHandled = true;
-                    break;
+                    goto _out;
                 }
             }
-            // 水库代码太恶心，没办法的办法
-            if (IsHandled == false) {
-                foreach (var item in moduleTable) {
-                    if (item.Module.ModuleID == "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
-                        try {
-                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { pack.EP, pack.Content });
-                        } catch (Exception) { }
-                        break;
-                    }
+            
+            // 如果没有得到处理，尝试翻译模块处理
+            var subset = from s in moduleTable where s.Module.ModuleID.Equals("Translate") select s;
+            if (subset.Count() == 0) goto _out;
+            ModuleNode node = subset.First().Module as ModuleNode;
+            try {
+                pack.Content = (string)node.Invoke(SMsgProc.FULL_NAME, SMsgProc.TRANSLATE, new object[] { pack.Content });
+                if (string.IsNullOrEmpty(pack.Content))
+                    goto _out;
+            } catch (Exception) {
+                goto _out;
+            }
+
+            // 再次调用模块处理消息
+            foreach (var item in moduleTable) {
+                if (pack.Content.Contains(item.Module.ModuleID)) {
+                    try {
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
+                    } catch (Exception) { }
+                    goto _out;
                 }
             }
+
+        _out:
+            // 解锁
             rwlockModuleTable.ReleaseReaderLock();
+
+            //bool IsHandled = false;
+            //rwlockModuleTable.AcquireReaderLock(-1);
+            //foreach (var item in moduleTable) {
+            //    // 水库代码太恶心，没办法的办法
+            //    if (item.Module.ModuleID != "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
+            //        try {
+            //            item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
+            //        } catch (Exception) { }
+            //        IsHandled = true;
+            //        break;
+            //    }
+            //}
+            //// 水库代码太恶心，没办法的办法
+            //if (IsHandled == false) {
+            //    foreach (var item in moduleTable) {
+            //        if (item.Module.ModuleID == "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
+            //            try {
+            //                item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
+            //            } catch (Exception) { }
+            //            break;
+            //        }
+            //    }
+            //}
+            //rwlockModuleTable.ReleaseReaderLock();
         }
 
         private void AtCmdServer_ClientRecvPack(object sender, ClientEventArgs e)
@@ -327,7 +368,7 @@ namespace EnvConsole.Windows
                     foreach (var item in moduleTable) {
                         if (item.Module.ModuleID.Equals(atCmd.FromID)) {
                             try {
-                                item.Module.Invoke(SMsgProc.FullName, SMsgProc.AtCmdResult, new object[] { atCmd });
+                                item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.ATCMD_RESULT, new object[] { atCmd });
                             } catch (Exception) { }
                             break;
                         }
@@ -524,14 +565,14 @@ namespace EnvConsole.Windows
 
         public void AtModuleLoad(string filePath)
         {
-            ModuleNode module = modcer.AddModule(filePath);
+            ModuleNode module = modcer.Add(filePath);
             if (module == null) {
                 MessageBox.Show(filePath + ": load failed.");
                 return;
             }
             // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
-            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { SMsgProc.FullName })) {
-                modcer.DelModule(module);
+            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { SMsgProc.FULL_NAME })) {
+                modcer.Del(module);
                 MessageBox.Show(filePath + ": load failed.");
                 return;
             }
@@ -556,7 +597,7 @@ namespace EnvConsole.Windows
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 // 移出 table
-                modcer.DelModule(subset.First().Module);
+                modcer.Del(subset.First().Module);
                 moduleTable.Remove(subset.First());
             }
 
