@@ -35,6 +35,8 @@ namespace mnn.util {
             user_cmd_table = new List<UserCmd>();
         }
 
+        // Methods =============================================================================
+
         public void Perform(int next)
         {
             ThreadCheck(true);

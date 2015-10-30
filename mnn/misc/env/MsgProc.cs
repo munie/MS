@@ -31,8 +31,8 @@ namespace mnn.misc.env
         private IPEndPoint atCmdEP = null;
         //private IPEndPoint atCmdEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
 
-        public abstract string LogPrefix { get; }
-        public abstract string ErrLogPrefix { get; }
+        protected abstract string LogPrefix { get; }
+        protected abstract string ErrLogPrefix { get; }
 
         // IModule ========================================================================
 
@@ -77,6 +77,10 @@ namespace mnn.misc.env
 
         // IMsgProc ========================================================================
 
+        public virtual string Translate(string msg) { return msg; }
+
+        public virtual void AtCmdResult(AtCommand atCmd) { }
+
         public void AppendMsg(System.Net.IPEndPoint ep, string msg)
         {
             if (msgQueue.Count() >= max_msg_count)
@@ -90,13 +94,11 @@ namespace mnn.misc.env
 
         public abstract void HandleMsg(IPEndPoint ep, string msg);
 
-        public abstract void HandleAlive(IPEndPoint ep, IDictionary<string, string> dc);
+        protected abstract void HandleAlive(IPEndPoint ep, IDictionary<string, string> dc);
 
-        public abstract void HandleAlarm(IPEndPoint ep, IDictionary<string, string> dc);
+        protected abstract void HandleAlarm(IPEndPoint ep, IDictionary<string, string> dc);
 
-        public abstract void HandleDetect(IPEndPoint ep, IDictionary<string, string> dc);
-
-        public virtual void AtCmdResult(AtCommand atCmd) { }
+        protected abstract void HandleDetect(IPEndPoint ep, IDictionary<string, string> dc);
 
         // Private Tools ===========================================================================
 
@@ -195,6 +197,5 @@ namespace mnn.misc.env
             string logFormat = ep.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + msg;
             util.Logger.Write(logFormat, LogPrefix);
         }
-
     }
 }

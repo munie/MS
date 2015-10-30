@@ -14,11 +14,8 @@ namespace mnn.misc.module {
 
     public interface IModule {
         void Init();
-
         void Final();
-
         string GetModuleID();
-
         string GetModuleInfo();
     }
 }

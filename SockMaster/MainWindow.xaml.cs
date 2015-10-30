@@ -40,7 +40,7 @@ namespace SockMaster
             Thread thread = new Thread(() =>
             {
                 while (true) {
-                    cmdcer.Perform();
+                    cmdcer.Perform(0);
                     sesscer.Perform(1000);
                 }
             });
