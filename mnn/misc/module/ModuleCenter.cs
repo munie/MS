@@ -10,20 +10,20 @@ namespace mnn.misc.module
         private List<ModuleNode> module_table;
         public delegate void ModuleCallReturn(ModuleCall call);
         public ModuleCallReturn FuncModuleCallReturn;
-        private int current_call_count;
+        private int module_call_count;
 
         public ModuleCenter()
         {
             module_table = new List<ModuleNode>();
             FuncModuleCallReturn = null;
-            current_call_count = 0;
+            module_call_count = 0;
         }
 
         // Methods ==========================================================
 
         public void Perform(int next)
         {
-            if (current_call_count == 0) {
+            if (module_call_count == 0) {
                 System.Threading.Thread.Sleep(next);
                 return;
             }
@@ -38,7 +38,7 @@ namespace mnn.misc.module
                         } catch (Exception) {
                         } finally {
                             item.ModuleCallTable.Remove(call);
-                            current_call_count--;
+                            module_call_count--;
                         }
                     }
                 }
@@ -88,7 +88,7 @@ namespace mnn.misc.module
         public void AppendModuleCall(ModuleNode module, ModuleCall call)
         {
             module.ModuleCallTable.Add(call);
-            current_call_count++;
+            module_call_count++;
         }
     }
 }
