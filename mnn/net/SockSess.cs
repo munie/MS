@@ -85,9 +85,9 @@ namespace mnn.net
         public delegate void SessCreateDelegate(object sender, SockSess sess);
         public delegate void SessDeleteDelegate(object sender, SockSess sess);
         public delegate void SessParseDelegate(object sender, SockSess sess);
-        public event SessCreateDelegate sess_create;
-        public event SessDeleteDelegate sess_delete;
-        public event SessParseDelegate sess_parse;
+        public SessCreateDelegate sess_create;
+        public SessDeleteDelegate sess_delete;
+        public SessParseDelegate sess_parse;
 
         // Methods ============================================================================
 

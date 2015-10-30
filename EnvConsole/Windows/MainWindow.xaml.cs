@@ -561,6 +561,12 @@ namespace EnvConsole.Windows
                 MessageBox.Show(filePath + ": load failed.");
                 return;
             }
+            // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
+            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { SMsgProc.FullName })) {
+                modcer.DelModule(module);
+                MessageBox.Show(filePath + ": load failed.");
+                return;
+            }
 
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
