@@ -9,10 +9,8 @@ using System.Threading;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace mnn.net.deprecated
-{
-    public class TcpServer : SockServer
-    {
+namespace mnn.net.deprecated {
+    public class TcpServer : SockServer {
         // listen socket
         private Socket server;
         // client sockets
@@ -21,7 +19,7 @@ namespace mnn.net.deprecated
         // removing client sockets
         private List<Socket> socketRemoving = new List<Socket>();
         // socket locker for socketTable & socketRemoving
-        private string socketLocker = "Socket Locker"; 
+        private string socketLocker = "Socket Locker";
         // buffer for reading
         private byte[] readbuffer = new byte[8192];
         private byte[] KeepAliveTime
@@ -84,8 +82,7 @@ namespace mnn.net.deprecated
                                         if (ListenStopped != null)
                                             ListenStopped(this, new ListenEventArgs(item.LocalEndPoint));
                                         item.Close();
-                                    }
-                                    else {
+                                    } else {
                                         /// ** Report ClientConnect event
                                         if (ClientDisconn != null)
                                             ClientDisconn(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, null));
@@ -131,8 +128,7 @@ namespace mnn.net.deprecated
                             if (ClientConnect != null)
                                 ClientConnect(this, new ClientEventArgs(client.LocalEndPoint, client.RemoteEndPoint, null));
 
-                        }
-                        catch (Exception) { }
+                        } catch (Exception) { }
                         continue;
                     }
 
@@ -140,13 +136,11 @@ namespace mnn.net.deprecated
                     int bytesRead = 0;
                     try {
                         bytesRead = item.Receive(readbuffer, 0, readbuffer.Length, 0);
-                    }
-                    catch (Exception) { }
+                    } catch (Exception) { }
 
                     if (bytesRead == 0) {
                         socketRemoving.Add(item);
-                    }
-                    else {
+                    } else {
                         /// ** Report ClientReadMsg event
                         if (ClientRecvPack != null)
                             ClientRecvPack(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readbuffer.Take(bytesRead).ToArray()));
@@ -240,8 +234,7 @@ namespace mnn.net.deprecated
                             socketRemoving.Add(item);
                             break;
                         }
-                    }
-                    catch (Exception) { }
+                    } catch (Exception) { }
                 }
             }
         }

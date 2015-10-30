@@ -5,10 +5,8 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 
-namespace mnn.net.deprecated
-{
-    public class AsyncSocketSender
-    {
+namespace mnn.net.deprecated {
+    public class AsyncSocketSender {
         public enum AsyncState {
             ConnectSuccess = 0,
             ConnectFail = 1,
@@ -49,8 +47,7 @@ namespace mnn.net.deprecated
                 Array.Clear(readbuffer, 0, readbuffer.Length);
                 sender.BeginReceive(readbuffer, 0, readbuffer.Length, 0,
                     new AsyncCallback(ReceiveCallback), sender);
-            }
-            catch (Exception) {
+            } catch (Exception) {
                 sender.Close();
 
                 if (messageReceiver != null)
@@ -77,12 +74,10 @@ namespace mnn.net.deprecated
                 // restart the receiver
                 sender.BeginReceive(readbuffer, 0, readbuffer.Length, 0,
                     new AsyncCallback(ReceiveCallback), sender);
-            }
-            catch (SocketException ex) {
+            } catch (SocketException ex) {
                 Close();
                 Logger.WriteException(ex);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Logger.WriteException(ex);
             }
         }
@@ -121,8 +116,7 @@ namespace mnn.net.deprecated
                     else
                         messageReceiver(null, AsyncState.SendFail);
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Logger.WriteException(ex);
             }
         }

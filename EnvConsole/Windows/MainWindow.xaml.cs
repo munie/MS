@@ -212,7 +212,7 @@ namespace EnvConsole.Windows
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
-                pack.Content = (string)node.Invoke(SMsgProc.FULL_NAME, SMsgProc.TRANSLATE, new object[] { pack.Content });
+                pack.Content = (string)node.Invoke(SMsgTrans.FULL_NAME, SMsgTrans.TRANSLATE, new object[] { pack.Content });
                 if (string.IsNullOrEmpty(pack.Content))
                     goto _out;
             } catch (Exception) {

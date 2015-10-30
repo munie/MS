@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.env
-{
+namespace mnn.misc.env {
     /// <summary>
     /// Socket数据的key值
     /// </summary>
-    public class MsgKey
-    {
+    public class MsgKey {
         /// <summary>
         /// 数据处理类型判断标志
         /// </summary>

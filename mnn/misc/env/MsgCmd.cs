@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.env
-{
-    public class MsgCmd
-    {
+namespace mnn.misc.env {
+    public class MsgCmd {
         /// <summary>
         /// 回复心跳指令
         /// </summary>

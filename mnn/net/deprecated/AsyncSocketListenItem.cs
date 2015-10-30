@@ -7,15 +7,12 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 
-namespace mnn.net.deprecated
-{
-    public partial class AsyncSocketListenItem : IDisposable
-    {
+namespace mnn.net.deprecated {
+    public partial class AsyncSocketListenItem : IDisposable {
         /// <summary>
         /// Definition for recording connected client's state
         /// </summary>
-        class ClientState
-        {
+        class ClientState {
             // Listen Socket's IPEndPoint
             public IPEndPoint localEP = null;
             // Accept result's IPEndPoint
@@ -29,8 +26,7 @@ namespace mnn.net.deprecated
         }
     }
 
-    public partial class AsyncSocketListenItem : IDisposable
-    {
+    public partial class AsyncSocketListenItem : IDisposable {
         // Listen IPEndPoint
         private IPEndPoint listenEP = null;
         // Listen Socket
@@ -136,8 +132,7 @@ namespace mnn.net.deprecated
                         try {
                             handler.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
                                 new AsyncCallback(ReadCallback), cltState);
-                        }
-                        catch (Exception ex) {
+                        } catch (Exception ex) {
                             cltState.workSocket.Dispose();
                             Logger.WriteException(ex);
                             continue;
@@ -151,8 +146,7 @@ namespace mnn.net.deprecated
                             ClientConnect(this, new ClientEventArgs(cltState.localEP, cltState.remoteEP, null));
                     }
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 item.listenSocket.Dispose();
 
                 /// ** Report ListenerStopped event
@@ -181,14 +175,13 @@ namespace mnn.net.deprecated
                     // Restart receive message from client
                     cltState.workSocket.BeginReceive(cltState.buffer, 0, ClientState.BufferSize, 0,
                         new AsyncCallback(ReadCallback), cltState);
-                }
-                else {
+                } else {
                     // Just for closing the client socket, so the ErrorCode is Shutdown
                     throw new SocketException((int)SocketError.Shutdown);
                 }
             }
-            //catch (SocketException ex) {
-            //}
+                //catch (SocketException ex) {
+                //}
             catch (Exception ex) {
                 // Close socket of client & remove it form clientState
                 lock (clientStateTable) {
@@ -253,8 +246,7 @@ namespace mnn.net.deprecated
 
                 // Complete sending the data to the remote device.
                 int bytesSent = cltState.workSocket.EndSend(ar);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Logger.WriteException(ex);
             }
         }

@@ -10,12 +10,9 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace mnn.misc.env
-{
-    public abstract class MsgProc : module.IModule, IMsgProc
-    {
-        class DataHandleMsg
-        {
+namespace mnn.misc.env {
+    public abstract class MsgProc : module.IModule, IMsgProc {
+        class DataHandleMsg {
             public IPEndPoint EP;
             public string Content;
         }
@@ -55,8 +52,7 @@ namespace mnn.misc.env
                     }
                     try {
                         HandleMsg(msg.EP, msg.Content);
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                         util.Logger.WriteException(ex, ErrLogPrefix);
                     }
                 }
@@ -76,8 +72,6 @@ namespace mnn.misc.env
         public abstract string GetModuleInfo();
 
         // IMsgProc ========================================================================
-
-        public virtual string Translate(string msg) { return msg; }
 
         public virtual void AtCmdResult(AtCommand atCmd) { }
 
@@ -117,8 +111,7 @@ namespace mnn.misc.env
                             break;
                         }
                     }
-                }
-                catch (Exception) { }
+                } catch (Exception) { }
 
                 if (atCmdEP == null)
                     atCmdEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);

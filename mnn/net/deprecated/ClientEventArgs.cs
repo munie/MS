@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.net.deprecated
-{
+namespace mnn.net.deprecated {
     /// <summary>
     /// EventArgs for client events like "clientConnect"
     /// </summary>
-    public class ClientEventArgs : EventArgs
-    {
+    public class ClientEventArgs : EventArgs {
         public ClientEventArgs(EndPoint lep, EndPoint rep, byte[] msg)
         {
             LocalEP = (IPEndPoint)lep;

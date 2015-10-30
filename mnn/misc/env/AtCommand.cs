@@ -3,23 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.env
-{
-    public enum UnitSchema
-    {
+namespace mnn.misc.env {
+    public enum UnitSchema {
         Server,
         Client,
         Module,
     }
 
-    public enum AtCommandDirect
-    {
+    public enum AtCommandDirect {
         Request,
         Respond,
-    };
+    }
 
-    public enum AtCommandDataType
-    {
+    public enum AtCommandDataType {
         ClientClose,
         ClientUpdateID,
         ClientUpdateName,
@@ -27,8 +23,7 @@ namespace mnn.misc.env
     }
 
     [Serializable]
-    public class AtCommand
-    {
+    public class AtCommand {
         public AtCommandDirect Direct;
         public string ID;
         public string FromID;

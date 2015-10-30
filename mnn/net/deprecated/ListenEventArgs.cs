@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.net.deprecated
-{
+namespace mnn.net.deprecated {
     /// <summary>
     /// EventArgs for listener events like "listenerStarted"
     /// </summary>
-    public class ListenEventArgs : EventArgs
-    {
+    public class ListenEventArgs : EventArgs {
         public ListenEventArgs(EndPoint ep)
         {
             ListenEP = (IPEndPoint)ep;

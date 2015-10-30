@@ -7,10 +7,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Xml.Serialization;
 
-namespace mnn.net.deprecated
-{
-    public class PipeServer
-    {
+namespace mnn.net.deprecated {
+    public class PipeServer {
         public event EventHandler<ClientEventArgs> ClientReadMsg;
 
         private string pipeName;
@@ -37,8 +35,7 @@ namespace mnn.net.deprecated
                         Thread.Sleep(500);
                         NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
                         pipeServer.BeginWaitForConnection(ReadCallback, pipeServer);
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                         Logger.WriteException(ex);
                     }
                 }
@@ -67,22 +64,18 @@ namespace mnn.net.deprecated
 
                         if (ClientReadMsg != null)
                             ClientReadMsg(this, new ClientEventArgs(null, null, readbuffer.Take(bytesRead).ToArray()));
-                    }
-                    catch (InvalidOperationException ex) {
+                    } catch (InvalidOperationException ex) {
                         // From XmlSerializer when xml syntax is wrong
                         Logger.WriteException(ex);
                         break;
-                    }
-                    catch (IOException) {
+                    } catch (IOException) {
                         break;
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                         Logger.WriteException(ex);
                         break;
                     }
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Logger.WriteException(ex);
             }
         }

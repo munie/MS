@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.serial
-{
-    public class AsyncSerailPortEventArgs : EventArgs
-    {
+namespace mnn.misc.serial {
+    public class AsyncSerailPortEventArgs : EventArgs {
         public string PortName { get; set; }
         public int BaudRate { get; set; }
         public int DataBits { get; set; }

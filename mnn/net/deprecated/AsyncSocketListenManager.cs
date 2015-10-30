@@ -7,10 +7,8 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 
-namespace mnn.net.deprecated
-{
-    public class AsyncSocketListenManager
-    {
+namespace mnn.net.deprecated {
+    public class AsyncSocketListenManager {
         public List<AsyncSocketListenItem> Items = new List<AsyncSocketListenItem>();
 
 

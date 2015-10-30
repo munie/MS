@@ -5,10 +5,8 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 
-namespace mnn.misc.serial
-{
-    public class AsyncSerailPort
-    {
+namespace mnn.misc.serial {
+    public class AsyncSerailPort {
         public event EventHandler<AsyncSerailPortEventArgs> PortOpen;
         public event EventHandler<AsyncSerailPortEventArgs> PortClose;
         public event EventHandler<AsyncSerailPortEventArgs> PortReadMsg;
@@ -93,6 +91,6 @@ namespace mnn.misc.serial
                     Data = data,
                 });
             }
-        } 
+        }
     }
 }

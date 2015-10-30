@@ -5,10 +5,8 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 
-namespace mnn.net.deprecated
-{
-    public class UdpServer : SockServer
-    {
+namespace mnn.net.deprecated {
+    public class UdpServer : SockServer {
         private Socket server;
         private byte[] readbuffer = new byte[8192];
         private bool isExitThread = false;
@@ -23,7 +21,8 @@ namespace mnn.net.deprecated
 
         public override void Start(IPEndPoint ep)
         {
-            System.Threading.Thread thread = new System.Threading.Thread(() => {
+            System.Threading.Thread thread = new System.Threading.Thread(() =>
+            {
                 server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 server.Bind(ep);
 
@@ -40,8 +39,7 @@ namespace mnn.net.deprecated
                         /// ** Report ClientReadMsg event
                         if (ClientRecvPack != null)
                             ClientRecvPack(this, new ClientEventArgs(ep, epClient, readbuffer.Take(bytesRead).ToArray()));
-                    }
-                    else if (isExitThread == true) {
+                    } else if (isExitThread == true) {
                         isExitThread = false;
                         break;
                     }
