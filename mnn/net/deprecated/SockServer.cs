@@ -11,8 +11,8 @@ namespace mnn.net.deprecated
         // Events of listener and client
         public abstract event EventHandler<ListenEventArgs> ListenStarted;
         public abstract event EventHandler<ListenEventArgs> ListenStopped;
-        public abstract event EventHandler<ClientEventArgs> ClientReadMsg;
-        public abstract event EventHandler<ClientEventArgs> ClientSendMsg;
+        public abstract event EventHandler<ClientEventArgs> ClientRecvPack;
+        public abstract event EventHandler<ClientEventArgs> ClientSendPack;
 
         // Methods ============================================================================
 

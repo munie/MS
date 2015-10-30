@@ -58,7 +58,7 @@ namespace EnvConsole.Windows
         public static readonly string CONF_NAME = "EnvConsole.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         public static readonly string Module_PATH = BASE_DIR + "Modules";
-        public static readonly string MSG_PARSE = "MsgParse";
+        public static readonly string PACK_PARSE = "PackParse";
         public Encoding coding;
         private ObservableCollection<ServerUnit> serverTable;
         private ObservableCollection<ClientUnit> clientTable;
@@ -67,7 +67,7 @@ namespace EnvConsole.Windows
         private ConsoleWindow console;
         private ModuleCenter modcer;
         private AtCmdCenter cmdcer;
-        class MsgUnit
+        class PackUnit
         {
             public IPEndPoint EP;
             public string Content;
@@ -86,7 +86,7 @@ namespace EnvConsole.Windows
             console.Show();
             modcer = new ModuleCenter();
             cmdcer = new AtCmdCenter();
-            cmdcer.Add(MSG_PARSE, MsgParse);
+            cmdcer.Add(PACK_PARSE, PackParse);
         }
 
         private void InitConfig()
@@ -142,8 +142,8 @@ namespace EnvConsole.Windows
                 if (item.ServerType == "atcmd") {
                     if (item.Protocol == "udp") {
                         item.SockServer = new UdpServer();
-                        item.SockServer.ClientReadMsg += AtCmdServer_ClientReadMsg;
-                        item.SockServer.ClientSendMsg += AtCmdServer_ClientSendMsg;
+                        item.SockServer.ClientRecvPack += AtCmdServer_ClientRecvPack;
+                        item.SockServer.ClientSendPack += AtCmdServer_ClientSendPack;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
                             item.ListenState = ServerUnit.ListenStateStarted;
@@ -154,8 +154,8 @@ namespace EnvConsole.Windows
                         TcpServer tcp = new TcpServer();
                         tcp.ClientConnect += WorkServer_ClientConnect;
                         tcp.ClientDisconn += WorkServer_ClientDisconn;
-                        tcp.ClientReadMsg += WorkServer_ClientReadMsg;
-                        tcp.ClientSendMsg += WorkServer_ClientSendMsg;
+                        tcp.ClientRecvPack += WorkServer_ClientRecvPack;
+                        tcp.ClientSendPack += WorkServer_ClientSendPack;
                         item.SockServer = tcp;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
@@ -163,8 +163,8 @@ namespace EnvConsole.Windows
                         }
                     } else if (item.Protocol == "udp") {
                         item.SockServer = new UdpServer();
-                        item.SockServer.ClientReadMsg += WorkServer_ClientReadMsg;
-                        item.SockServer.ClientSendMsg += WorkServer_ClientSendMsg;
+                        item.SockServer.ClientRecvPack += WorkServer_ClientRecvPack;
+                        item.SockServer.ClientSendPack += WorkServer_ClientSendPack;
                         if (item.AutoRun == true) {
                             item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
                             item.ListenState = ServerUnit.ListenStateStarted;
@@ -189,18 +189,18 @@ namespace EnvConsole.Windows
             }
         }
 
-        private void MsgParse(object arg)
+        private void PackParse(object arg)
         {
-            MsgUnit msg = arg as MsgUnit;
-            console.MessageRemove();
+            PackUnit pack = arg as PackUnit;
+            console.PackParsed();
 
             bool IsHandled = false;
             rwlockModuleTable.AcquireReaderLock(-1);
             foreach (var item in moduleTable) {
                 // 水库代码太恶心，没办法的办法
-                if (item.Module.ModuleID != "HT=" && msg.Content.Contains(item.Module.ModuleID)) {
+                if (item.Module.ModuleID != "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
+                        item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { pack.EP, pack.Content });
                     } catch (Exception) { }
                     IsHandled = true;
                     break;
@@ -209,9 +209,9 @@ namespace EnvConsole.Windows
             // 水库代码太恶心，没办法的办法
             if (IsHandled == false) {
                 foreach (var item in moduleTable) {
-                    if (item.Module.ModuleID == "HT=" && msg.Content.Contains(item.Module.ModuleID)) {
+                    if (item.Module.ModuleID == "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
                         try {
-                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { msg.EP, msg.Content });
+                            item.Module.Invoke(SMsgProc.FullName, SMsgProc.HandleMsg, new object[] { pack.EP, pack.Content });
                         } catch (Exception) { }
                         break;
                     }
@@ -222,7 +222,7 @@ namespace EnvConsole.Windows
 
         // Events for AsyncSocketListenItem =================================================
 
-        private void AtCmdServer_ClientReadMsg(object sender, ClientEventArgs e)
+        private void AtCmdServer_ClientRecvPack(object sender, ClientEventArgs e)
         {
             AtCommand atCmd = null;
 
@@ -249,7 +249,7 @@ namespace EnvConsole.Windows
             mnn.util.Logger.Write(logFormat);
         }
 
-        private void AtCmdServer_ClientSendMsg(object sender, ClientEventArgs e)
+        private void AtCmdServer_ClientSendPack(object sender, ClientEventArgs e)
         {
             AtCommand atCmd = null;
 
@@ -382,19 +382,19 @@ namespace EnvConsole.Windows
             }));
         }
 
-        private void WorkServer_ClientReadMsg(object sender, ClientEventArgs e)
+        private void WorkServer_ClientRecvPack(object sender, ClientEventArgs e)
         {
             string msg = coding.GetString(e.Data);
 
-            cmdcer.AppendCommand(MSG_PARSE, new MsgUnit() { EP = e.RemoteEP, Content = msg });
-            console.MessageAppend();
+            cmdcer.AppendCommand(PACK_PARSE, new PackUnit() { EP = e.RemoteEP, Content = msg });
+            console.PackRecved();
 
             // 打印至窗口
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收数据：" + msg;
             console.MessageDisplay(logFormat);
         }
 
-        private void WorkServer_ClientSendMsg(object sender, ClientEventArgs e)
+        private void WorkServer_ClientSendPack(object sender, ClientEventArgs e)
         {
             // 打印至窗口
             string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + coding.GetString(e.Data);

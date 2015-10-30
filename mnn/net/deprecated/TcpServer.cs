@@ -40,8 +40,8 @@ namespace mnn.net.deprecated
         // Events of listener and client
         public override event EventHandler<ListenEventArgs> ListenStarted;
         public override event EventHandler<ListenEventArgs> ListenStopped;
-        public override event EventHandler<ClientEventArgs> ClientReadMsg;
-        public override event EventHandler<ClientEventArgs> ClientSendMsg;
+        public override event EventHandler<ClientEventArgs> ClientRecvPack;
+        public override event EventHandler<ClientEventArgs> ClientSendPack;
         public event EventHandler<ClientEventArgs> ClientConnect;
         public event EventHandler<ClientEventArgs> ClientDisconn;
 
@@ -148,8 +148,8 @@ namespace mnn.net.deprecated
                     }
                     else {
                         /// ** Report ClientReadMsg event
-                        if (ClientReadMsg != null)
-                            ClientReadMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readbuffer.Take(bytesRead).ToArray()));
+                        if (ClientRecvPack != null)
+                            ClientRecvPack(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, readbuffer.Take(bytesRead).ToArray()));
                     }
                 }
             }
@@ -182,8 +182,8 @@ namespace mnn.net.deprecated
                         item.Send(data, 0, data.Length, 0);
 
                         /// ** Report ClientSendMsg event
-                        if (ClientSendMsg != null)
-                            ClientSendMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
+                        if (ClientSendPack != null)
+                            ClientSendPack(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
 
                         break;
                     }
@@ -205,8 +205,8 @@ namespace mnn.net.deprecated
                     item.Send(data, 0, data.Length, 0);
 
                     /// ** Report ClientSendMsg event
-                    if (ClientSendMsg != null)
-                        ClientSendMsg(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
+                    if (ClientSendPack != null)
+                        ClientSendPack(this, new ClientEventArgs(item.LocalEndPoint, item.RemoteEndPoint, data));
 
                 }
             }
@@ -245,6 +245,5 @@ namespace mnn.net.deprecated
                 }
             }
         }
-
     }
 }

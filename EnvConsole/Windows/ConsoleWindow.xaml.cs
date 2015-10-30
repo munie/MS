@@ -110,21 +110,21 @@ namespace EnvConsole.Windows
             //}));
         }
 
-        public void MessageAppend()
+        public void PackRecved()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) + 1).ToString();
-                historyMsgFetchCount.Text = (Convert.ToInt32(historyMsgFetchCount.Text) + 1).ToString();
+                currentPackCount.Text = (Convert.ToInt32(currentPackCount.Text) + 1).ToString();
+                historyPackFetchedCount.Text = (Convert.ToInt32(historyPackFetchedCount.Text) + 1).ToString();
             }));
         }
 
-        public void MessageRemove()
+        public void PackParsed()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                currentMsgCount.Text = (Convert.ToInt32(currentMsgCount.Text) - 1).ToString();
-                historyMsgHandledCount.Text = (Convert.ToInt32(historyMsgHandledCount.Text) + 1).ToString();
+                currentPackCount.Text = (Convert.ToInt32(currentPackCount.Text) - 1).ToString();
+                historyPackParsedCount.Text = (Convert.ToInt32(historyPackParsedCount.Text) + 1).ToString();
             }));
         }
 

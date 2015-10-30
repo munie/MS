@@ -149,13 +149,13 @@
                 <TextBlock x:Name="historyClientCloseCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="currentMsgCount">0</TextBlock>
+                <TextBlock x:Name="currentPackCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyMsgFetchCount">0</TextBlock>
+                <TextBlock x:Name="historyPackFetchedCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyMsgHandledCount">0</TextBlock>
+                <TextBlock x:Name="historyPackParsedCount">0</TextBlock>
             </StatusBarItem>
         </StatusBar>
     </Grid>

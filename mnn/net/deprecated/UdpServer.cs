@@ -16,8 +16,8 @@ namespace mnn.net.deprecated
         // Events of listener and client
         public override event EventHandler<ListenEventArgs> ListenStarted;
         public override event EventHandler<ListenEventArgs> ListenStopped;
-        public override event EventHandler<ClientEventArgs> ClientReadMsg;
-        public override event EventHandler<ClientEventArgs> ClientSendMsg;
+        public override event EventHandler<ClientEventArgs> ClientRecvPack;
+        public override event EventHandler<ClientEventArgs> ClientSendPack;
 
         // Methods ============================================================================
 
@@ -38,8 +38,8 @@ namespace mnn.net.deprecated
                         int bytesRead = server.ReceiveFrom(readbuffer, readbuffer.Length, SocketFlags.None, ref epClient);
 
                         /// ** Report ClientReadMsg event
-                        if (ClientReadMsg != null)
-                            ClientReadMsg(this, new ClientEventArgs(ep, epClient, readbuffer.Take(bytesRead).ToArray()));
+                        if (ClientRecvPack != null)
+                            ClientRecvPack(this, new ClientEventArgs(ep, epClient, readbuffer.Take(bytesRead).ToArray()));
                     }
                     else if (isExitThread == true) {
                         isExitThread = false;
@@ -68,8 +68,8 @@ namespace mnn.net.deprecated
             server.SendTo(data, ep);
 
             /// ** Report ClientSendMsg event
-            if (ClientSendMsg != null)
-                ClientSendMsg(this, new ClientEventArgs(server.LocalEndPoint, ep, data));
+            if (ClientSendPack != null)
+                ClientSendPack(this, new ClientEventArgs(server.LocalEndPoint, ep, data));
         }
     }
 }
