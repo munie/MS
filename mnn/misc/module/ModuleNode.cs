@@ -5,18 +5,15 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace mnn.misc.module
-{
-    public class ModuleCall
-    {
+namespace mnn.misc.module {
+    public class ModuleCall {
         public string iface;
         public string method;
         public object[] args;
         public object retval;
     }
 
-    public class ModuleNode
-    {
+    public class ModuleNode {
         private AppDomain domain;
         private AppDomainProxy proxy;
         private string AssemblyPath;

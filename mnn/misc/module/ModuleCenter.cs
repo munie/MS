@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.module
-{
-    public class ModuleCenter
-    {
+namespace mnn.misc.module {
+    public class ModuleCenter {
         private List<ModuleNode> module_table;
         public delegate void ModuleCallReturn(ModuleCall call);
         public ModuleCallReturn FuncModuleCallReturn;

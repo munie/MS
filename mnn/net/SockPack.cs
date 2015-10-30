@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace mnn.net
-{
-    public class SockPack
-    {
-        public enum PackName : ushort
-        {
+namespace mnn.net {
+    public class SockPack {
+        public enum PackName : ushort {
             alive = 0x000C,
 
             cnt_read,
@@ -30,8 +27,7 @@ namespace mnn.net
         /// Common Header
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct PackHeader
-        {
+        public struct PackHeader {
             public PackName name;
             public UInt16 len;
         }
@@ -40,8 +36,7 @@ namespace mnn.net
         /// IRQ
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntIRQ
-        {
+        public struct CntIRQ {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
@@ -51,8 +46,7 @@ namespace mnn.net
         /// Register Terminal
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntRegTerm
-        {
+        public struct CntRegTerm {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
@@ -64,8 +58,7 @@ namespace mnn.net
         /// Send Terminal
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntSendTerm
-        {
+        public struct CntSendTerm {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid;
@@ -75,8 +68,7 @@ namespace mnn.net
         /// Info Terminal
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntInfoTerm
-        {
+        public struct CntInfoTerm {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public char[] ccid; // "0...0" mains all
@@ -86,8 +78,7 @@ namespace mnn.net
         /// Register Service
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntRegSvc
-        {
+        public struct CntRegSvc {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] term_info;
@@ -97,8 +88,7 @@ namespace mnn.net
         /// Login User
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntLoginUser
-        {
+        public struct CntLoginUser {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 23 + 1)]
             public char[] userid;
@@ -110,8 +100,7 @@ namespace mnn.net
         /// Info User
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CntInfoUser
-        {
+        public struct CntInfoUser {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 23 + 1)]
             public char[] userid;  // "0...0" mains all
@@ -121,8 +110,7 @@ namespace mnn.net
         /// Service Handle
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct SvcHandle
-        {
+        public struct SvcHandle {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] ccid;
@@ -132,8 +120,7 @@ namespace mnn.net
         /// Terminal Handle
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct TermHandle
-        {
+        public struct TermHandle {
             public PackHeader hdr;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public char[] ccid;

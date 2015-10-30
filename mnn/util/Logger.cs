@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace mnn.util
-{
-    public class Logger
-    {
+namespace mnn.util {
+    public class Logger {
         public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string LogDirectory = BaseDirectory + @"\Log\";
         public static readonly string ErrorDirectory = BaseDirectory + @"\ErrLog\";
@@ -26,8 +24,7 @@ namespace mnn.util
                     sw.WriteLine("---------------------------------------------------------");
                     sw.Close();
                 }
-            }
-            catch (Exception) { }
+            } catch (Exception) { }
         }
 
         public static void WriteException(Exception ex, string prefix = @"ErrLog")
@@ -44,8 +41,7 @@ namespace mnn.util
                     sw.WriteLine("---------------------------------------------------------");
                     sw.Close();
                 }
-            }
-            catch (Exception) { }
+            } catch (Exception) { }
         }
     }
 }

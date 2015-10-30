@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace mnn.net
-{
-    public class SockConvert
-    {
+namespace mnn.net {
+    public class SockConvert {
         /// 将结构转换为字节数组
         /// 结构对象
         /// 字节数组

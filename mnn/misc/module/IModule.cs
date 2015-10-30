@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.misc.module
-{
-    public class SModule 
-    {
+namespace mnn.misc.module {
+    public class SModule {
         public static readonly string FULL_NAME = "mnn.misc.module.IModule";
         public static readonly string INIT = "Init";
         public static readonly string FINAL = "Final";
@@ -14,8 +12,7 @@ namespace mnn.misc.module
         public static readonly string GET_MODULE_INFO = "GetModuleInfo";
     }
 
-    public interface IModule
-    {
+    public interface IModule {
         void Init();
 
         void Final();

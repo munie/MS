@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 
-namespace mnn.misc.module
-{
-    class AppDomainProxy : MarshalByRefObject
-    {
+namespace mnn.misc.module {
+    class AppDomainProxy : MarshalByRefObject {
         private Assembly asm = null;
         private List<object> instance_table = new List<object>();
 
@@ -45,7 +43,7 @@ namespace mnn.misc.module
             var instances = from s in instance_table
                             where s.GetType().GetInterface(interfaceFullName) != null
                             select s;
-            
+
             // 2) - 查找模块是否提供该接口
             if (instances.Count() == 0) {
                 var types = from s in asm.GetTypes()

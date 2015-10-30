@@ -8,17 +8,14 @@ using System.Net.NetworkInformation;
 using System.Collections;
 using System.Threading;
 
-namespace mnn.net
-{
-    public enum SockType
-    {
+namespace mnn.net {
+    public enum SockType {
         listen = 0,
         accept = 2,
         connect = 1,
     }
 
-    public class SockSess
-    {
+    public class SockSess {
         public Socket sock;
         public SockType type;
         public IPEndPoint lep;
@@ -76,8 +73,7 @@ namespace mnn.net
         }
     }
 
-    public class SessCenter
-    {
+    public class SessCenter {
         public List<SockSess> sess_table;
         private int stall_time;
         private Thread thread;

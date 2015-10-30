@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace mnn.util
-{
-    public class ExprSolve
-    {
+namespace mnn.util {
+    public class ExprSolve {
         static private int check_expr(string expr)
         {
             // 有英文字符，则非法
@@ -24,15 +22,15 @@ namespace mnn.util
                 return -1;
 
             // 末位不能是除 数字、）、以外的字符
-            if (char.IsDigit(expr[expr.Length-1]) == false && expr[expr.Length-1] != ')')
+            if (char.IsDigit(expr[expr.Length - 1]) == false && expr[expr.Length - 1] != ')')
                 return -1;
 
             // 除首末位以外的字符验证
-            for (int i = 1; i < expr.Length-1; ++i) {
+            for (int i = 1; i < expr.Length - 1; ++i) {
                 //printf("expression:%c, length:%d\n", expr[i], i);
                 // 数字前面不能是），数字后面不能是（
                 if (char.IsDigit(expr[i])) {
-                    if (expr[i-1] == ')')
+                    if (expr[i - 1] == ')')
                         return -1;
                     else
                         continue;
@@ -40,7 +38,7 @@ namespace mnn.util
 
                 // . 前后必须都是数字
                 if (expr[i] == '.') {
-                    if (char.IsDigit(expr[i-1]) && char.IsDigit(expr[i+1]))
+                    if (char.IsDigit(expr[i - 1]) && char.IsDigit(expr[i + 1]))
                         continue;
                     else
                         return -1;
@@ -48,7 +46,7 @@ namespace mnn.util
 
                 // （ 前面不能是 数字、）
                 if (expr[i] == '(') {
-                    if (char.IsDigit(expr[i-1]) || expr[i-1] == ')' )
+                    if (char.IsDigit(expr[i - 1]) || expr[i - 1] == ')')
                         return -1;
                     else
                         continue;
@@ -56,27 +54,27 @@ namespace mnn.util
 
                 // ）前面不能是 （、+、-、*、/、%、^，或者说其前面必须是 数字、）
                 if (expr[i] == ')') {
-                     if (char.IsDigit(expr[i-1]) || expr[i-1] == ')')
-                         continue;
-                     else
-                         return -1;
+                    if (char.IsDigit(expr[i - 1]) || expr[i - 1] == ')')
+                        continue;
+                    else
+                        return -1;
                 }
 
                 // 加减乘除模指 前面不能是 自身、（
                 if (expr[i] == '+' || expr[i] == '-') {
-                    if (expr[i-1] == '+' || expr[i-1] == '-' ||
-                        expr[i-1] == '*' || expr[i-1] == '/' ||
-                        expr[i-1] == '%' || expr[i-1] == '^')
+                    if (expr[i - 1] == '+' || expr[i - 1] == '-' ||
+                        expr[i - 1] == '*' || expr[i - 1] == '/' ||
+                        expr[i - 1] == '%' || expr[i - 1] == '^')
                         return -1;
                     else
                         continue;
                 }
                 if (expr[i] == '*' || expr[i] == '/' ||
                     expr[i] == '%' || expr[i] == '^') {
-                    if (expr[i-1] == '+' || expr[i-1] == '-' ||
-                        expr[i-1] == '*' || expr[i-1] == '/' ||
-                        expr[i-1] == '%' || expr[i-1] == '^' ||
-                        expr[i-1] == '(')
+                    if (expr[i - 1] == '+' || expr[i - 1] == '-' ||
+                        expr[i - 1] == '*' || expr[i - 1] == '/' ||
+                        expr[i - 1] == '%' || expr[i - 1] == '^' ||
+                        expr[i - 1] == '(')
                         return -1;
                     else
                         continue;
@@ -91,21 +89,21 @@ namespace mnn.util
             int retValue = 0;
 
             switch (oper) {
-                    case '+':
-                    case '-':
-                        retValue = 1;
-                        break;
+                case '+':
+                case '-':
+                    retValue = 1;
+                    break;
 
-                    case '*':
-                    case '/':
-                    case '%':
-                        retValue = 2;
-                        break;
+                case '*':
+                case '/':
+                case '%':
+                    retValue = 2;
+                    break;
 
-                    case '^':
-                        retValue = 3;
-                        break;
-                }
+                case '^':
+                    retValue = 3;
+                    break;
+            }
 
             return retValue;
         }
@@ -129,7 +127,7 @@ namespace mnn.util
 
             stack.Push('#');
 
-            for (int i = 0; i < expr.Length+1; ++i) {
+            for (int i = 0; i < expr.Length + 1; ++i) {
                 if (i == expr.Length) {
                     while (stack.Peek() != '#') {
                         char tmp = stack.Pop();
@@ -144,15 +142,13 @@ namespace mnn.util
                 if (char.IsDigit(expr[i]) || expr[i] == '.') {
                     //result[location++] = expr[i];
                     result.Append(expr[i]);
-                    if (i == expr.Length-1 || char.IsDigit(expr[i+1]) == false && expr[i+1] != '.')
+                    if (i == expr.Length - 1 || char.IsDigit(expr[i + 1]) == false && expr[i + 1] != '.')
                         //result[location++] = ' ';
                         result.Append(' ');
 
-                }
-                else if (expr[i] == '(') {
+                } else if (expr[i] == '(') {
                     stack.Push(expr[i]);
-                }
-                else if (expr[i] == ')') {
+                } else if (expr[i] == ')') {
                     while (stack.Peek() != '(') {
                         if (stack.Peek() == '#')
                             return -1;
@@ -163,12 +159,11 @@ namespace mnn.util
                         result.Append(' ');
                     }
                     stack.Pop();
-                }
-                else if (expr[i] == '+' || expr[i] == '-'
-                        || expr[i] == '*' || expr[i] == '/'
-                        || expr[i] == '^' || expr[i] == '%') {
+                } else if (expr[i] == '+' || expr[i] == '-'
+                          || expr[i] == '*' || expr[i] == '/'
+                          || expr[i] == '^' || expr[i] == '%') {
                     if (expr[i] == '+' || expr[i] == '-') {
-                        if (i == 0 || expr[i-1] == '(') {
+                        if (i == 0 || expr[i - 1] == '(') {
                             //result[location++] = '0';
                             //result[location++] = ' ';
                             result.Append('0');
@@ -207,19 +202,18 @@ namespace mnn.util
                     //tmp[location++] = expr[i];
                     tmp.Append(expr[i]);
 
-                    if (expr[i+1] == ' ') {
+                    if (expr[i + 1] == ' ') {
                         //tmp[location] = '\0';
                         double operand = Convert.ToDouble(tmp.ToString());
                         stack.Push(operand);
                         //location = 0;
                         tmp.Clear();
                     }
-                }
-                else if (expr[i] != ' '){
-                     double operand_left = stack.Pop();
+                } else if (expr[i] != ' ') {
+                    double operand_left = stack.Pop();
 
-                     double result = 0;
-                     switch (expr[i]) {
+                    double result = 0;
+                    switch (expr[i]) {
                         case '+':
                             result = stack.Pop() + operand_left;
                             break;
@@ -238,7 +232,7 @@ namespace mnn.util
                         case '%':
                             result = stack.Pop() % operand_left;
                             break;
-                     }
+                    }
 
                     stack.Push(result);
                 }
@@ -273,7 +267,7 @@ namespace mnn.util
 
             if (!string.IsNullOrEmpty(replace))
                 expr = expr.Replace(replace, "(" + value + ")");
-            
+
             StringBuilder postOrderExpr = new StringBuilder();
 
             if (ExprSolve.preorder_to_postorder_expr(out postOrderExpr, expr) != 0)
