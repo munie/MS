@@ -52,7 +52,7 @@ namespace EnvConsole.Windows
             thread.Start();
         }
 
-        // Fields ===========================================================================
+        // Fields & init ========================================================================
 
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "EnvConsole.xml";
@@ -64,9 +64,9 @@ namespace EnvConsole.Windows
         private ObservableCollection<ClientUnit> clientTable;
         private ObservableCollection<ModuleUnit> moduleTable;
         private ReaderWriterLock rwlockModuleTable;
-        private ConsoleWindow console;
-        private ModuleCenter modcer;
         private AtCmdCenter cmdcer;
+        private ModuleCenter modcer;
+        private ConsoleWindow console;
         class PackUnit
         {
             public IPEndPoint EP;
@@ -80,13 +80,15 @@ namespace EnvConsole.Windows
             clientTable = new ObservableCollection<ClientUnit>();
             moduleTable = new ObservableCollection<ModuleUnit>();
             rwlockModuleTable = new ReaderWriterLock();
+
+            cmdcer = new AtCmdCenter();
+            cmdcer.Add(PACK_PARSE, PackParse);
+            modcer = new ModuleCenter();
+
             console = new ConsoleWindow();
             console.Owner = this;
             console.DataContext = new { ServerTable = serverTable, ClientTable = clientTable, ModuleTable = moduleTable };
             console.Show();
-            modcer = new ModuleCenter();
-            cmdcer = new AtCmdCenter();
-            cmdcer.Add(PACK_PARSE, PackParse);
         }
 
         private void InitConfig()
@@ -189,6 +191,8 @@ namespace EnvConsole.Windows
             }
         }
 
+        // Perfrom =========================================================================
+
         private void PackParse(object arg)
         {
             PackUnit pack = arg as PackUnit;
@@ -219,8 +223,6 @@ namespace EnvConsole.Windows
             }
             rwlockModuleTable.ReleaseReaderLock();
         }
-
-        // Events for AsyncSocketListenItem =================================================
 
         private void AtCmdServer_ClientRecvPack(object sender, ClientEventArgs e)
         {
@@ -403,7 +405,7 @@ namespace EnvConsole.Windows
             mnn.util.Logger.Write(logFormat);
         }
 
-        // AtCmd ============================================================================
+        // Methods ============================================================================
 
         public void AtServerStart(ServerUnit server)
         {
