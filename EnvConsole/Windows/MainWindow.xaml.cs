@@ -20,6 +20,7 @@ using System.Net;
 using mnn.net.deprecated;
 using mnn.misc.module;
 using mnn.misc.env;
+using mnn.util;
 using EnvConsole.Unit;
 
 namespace EnvConsole.Windows
@@ -41,7 +42,14 @@ namespace EnvConsole.Windows
             this.InitConfig();
             this.InitServer();
             this.InitDefaultModule();
-            this.InitMsgHandle();
+
+            Thread thread = new Thread(() =>
+            {
+                cmdcer.Perform();
+                modcer.Perform();
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         // Fields ===========================================================================
@@ -50,6 +58,7 @@ namespace EnvConsole.Windows
         public static readonly string CONF_NAME = "EnvConsole.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         public static readonly string Module_PATH = BASE_DIR + "Modules";
+        public static readonly string MSG_PARSE = "MsgParse";
         public Encoding coding;
         private ObservableCollection<ServerUnit> serverTable;
         private ObservableCollection<ClientUnit> clientTable;
@@ -57,17 +66,12 @@ namespace EnvConsole.Windows
         private ReaderWriterLock rwlockModuleTable;
         private ConsoleWindow console;
         private ModuleCenter modcer;
-
-        // Message Handle Thread
-        private const int MAX_MSG_COUNT = 980;
-        private bool isExitThread;
-        private Semaphore sem;
-        class MessageUnit
+        private AtCmdCenter cmdcer;
+        class MsgUnit
         {
             public IPEndPoint EP;
             public string Content;
         }
-        private Queue<MessageUnit> msgQueue;
 
         private void Init()
         {
@@ -81,10 +85,8 @@ namespace EnvConsole.Windows
             console.DataContext = new { ServerTable = serverTable, ClientTable = clientTable, ModuleTable = moduleTable };
             console.Show();
             modcer = new ModuleCenter();
-
-            isExitThread = false;
-            sem = new Semaphore(0, MAX_MSG_COUNT);
-            msgQueue = new Queue<MessageUnit>();
+            cmdcer = new AtCmdCenter();
+            cmdcer.Add(MSG_PARSE, MsgParse);
         }
 
         private void InitConfig()
@@ -187,34 +189,9 @@ namespace EnvConsole.Windows
             }
         }
 
-        private void InitMsgHandle()
+        private void MsgParse(object arg)
         {
-            Thread thread = new Thread(() =>
-            {
-                isExitThread = false;
-
-                while (true) {
-                    if (isExitThread == true) {
-                        isExitThread = false;
-                        break;
-                    }
-
-                    MsgHandle();
-                }
-            });
-
-            thread.IsBackground = true;
-            thread.Start();
-        }
-
-        private void MsgHandle()
-        {
-            MessageUnit msg = null;
-
-            sem.WaitOne();
-            lock (msgQueue) {
-                msg = msgQueue.Dequeue();
-            }
+            MsgUnit msg = arg as MsgUnit;
             console.MessageRemove();
 
             bool IsHandled = false;
@@ -241,11 +218,6 @@ namespace EnvConsole.Windows
                 }
             }
             rwlockModuleTable.ReleaseReaderLock();
-        }
-
-        public void FinalMsgHandle()
-        {
-            isExitThread = true;
         }
 
         // Events for AsyncSocketListenItem =================================================
@@ -414,13 +386,7 @@ namespace EnvConsole.Windows
         {
             string msg = coding.GetString(e.Data);
 
-            if (msgQueue.Count() >= MAX_MSG_COUNT)
-                return;
-
-            lock (msgQueue) {
-                msgQueue.Enqueue(new MessageUnit() { EP = e.RemoteEP, Content = msg });
-            }
-            sem.Release();
+            cmdcer.AppendCommand(MSG_PARSE, new MsgUnit() { EP = e.RemoteEP, Content = msg });
             console.MessageAppend();
 
             // 打印至窗口
