@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn.util
-{
-    public class AtCmd
-    {
+namespace mnn.util {
+    public class AtCmd {
         public delegate void AtCmdDelegate(object arg);
 
         public string name;
@@ -22,16 +20,19 @@ namespace mnn.util
         }
     }
 
-    public class AtCmdCenter
-    {
+    public class AtCmdCenter {
         private List<AtCmd> atcmd_table;
-        private Dictionary<string, object> cmd_dic;
+        class UserCmd {
+            public string name;
+            public object arg;
+        }
+        private List<UserCmd> user_cmd_table;
         private Thread thread;
 
         public AtCmdCenter()
         {
             atcmd_table = new List<AtCmd>();
-            cmd_dic = new Dictionary<string, object>();
+            user_cmd_table = new List<UserCmd>();
         }
 
         public void Perform(int next)
@@ -39,22 +40,22 @@ namespace mnn.util
             ThreadCheck(true);
 
             // ** none
-            if (cmd_dic.Count == 0) {
+            if (user_cmd_table.Count == 0) {
                 System.Threading.Thread.Sleep(next);
                 return;
             }
 
             // ** read
-            lock (cmd_dic) {
-                foreach (var item in cmd_dic) {
+            lock (user_cmd_table) {
+                foreach (var item in user_cmd_table) {
                     foreach (var atcmd in atcmd_table) {
-                        if (atcmd.name.Equals(item.Key)) {
-                            atcmd.args.Add(item.Value);
+                        if (atcmd.name.Equals(item.name)) {
+                            atcmd.args.Add(item.arg);
                             break;
                         }
                     }
                 }
-                cmd_dic.Clear();
+                user_cmd_table.Clear();
             }
 
             // ** func
@@ -69,6 +70,12 @@ namespace mnn.util
         public void Add(string name, AtCmd.AtCmdDelegate func)
         {
             ThreadCheck(false);
+
+            // Check if same AtCmd is already added
+            foreach (var item in atcmd_table) {
+                if (item.name.Equals(name))
+                    return;
+            }
 
             atcmd_table.Add(new AtCmd(name, func));
         }
@@ -85,8 +92,8 @@ namespace mnn.util
 
         public void AppendCommand(string name, object arg)
         {
-            lock (cmd_dic) {
-                cmd_dic.Add(name, arg);
+            lock (user_cmd_table) {
+                user_cmd_table.Add(new UserCmd() { name = name, arg = arg });
             }
         }
 
