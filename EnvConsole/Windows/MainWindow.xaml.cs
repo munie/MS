@@ -38,6 +38,7 @@ namespace EnvConsole.Windows
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.Hide();
+            this.ShowInTaskbar = false;
             this.Init();
             this.InitConfig();
             this.InitServer();
@@ -143,8 +144,12 @@ namespace EnvConsole.Windows
                         item.SockServer.ClientRecvPack += AtCmdServer_ClientRecvPack;
                         item.SockServer.ClientSendPack += AtCmdServer_ClientSendPack;
                         if (item.AutoRun == true) {
-                            item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnit.ListenStateStarted;
+                            try {
+                                item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                                item.ListenState = ServerUnit.ListenStateStarted;
+                            } catch (Exception ex) {
+                                MessageBox.Show(ex.Message, "Error");
+                            }
                         }
                     }
                 } else if (item.ServerType == "work") {
@@ -156,16 +161,24 @@ namespace EnvConsole.Windows
                         tcp.ClientSendPack += WorkServer_ClientSendPack;
                         item.SockServer = tcp;
                         if (item.AutoRun == true) {
-                            item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnit.ListenStateStarted;
+                            try {
+                                item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                                item.ListenState = ServerUnit.ListenStateStarted;
+                            } catch (Exception ex) {
+                                MessageBox.Show(ex.Message, "Error");
+                            }
                         }
                     } else if (item.Protocol == "udp") {
                         item.SockServer = new UdpServer();
                         item.SockServer.ClientRecvPack += WorkServer_ClientRecvPack;
                         item.SockServer.ClientSendPack += WorkServer_ClientSendPack;
                         if (item.AutoRun == true) {
-                            item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnit.ListenStateStarted;
+                            try {
+                                item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
+                                item.ListenState = ServerUnit.ListenStateStarted;
+                            } catch (Exception ex) {
+                                MessageBox.Show(ex.Message, "Error");
+                            }
                         }
                     }
                 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 
 namespace mnn.net.deprecated {
     public class UdpServer : SockServer {
@@ -21,6 +22,13 @@ namespace mnn.net.deprecated {
 
         public override void Start(IPEndPoint ep)
         {
+            // Verify IPEndPoints
+            IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
+            foreach (IPEndPoint globalEP in globalEPs) {
+                if (ep.Equals(globalEP))
+                    throw new ApplicationException(ep.ToString() + " is in listening.");
+            }
+
             System.Threading.Thread thread = new System.Threading.Thread(() =>
             {
                 server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
