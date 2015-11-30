@@ -42,5 +42,10 @@ namespace mnn.misc.env {
         /// 警报
         /// </summary>
         public static readonly string ALARM = "ALARM";
+
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public static readonly string TIME = "TIME";
     }
 }
