@@ -70,6 +70,7 @@
     <Compile Include="util\ConvertUtil.cs" />
     <Compile Include="util\CrcUtil.cs" />
     <Compile Include="util\DegreeUtil.cs" />
+    <Compile Include="util\EncryptSym.cs" />
     <Compile Include="util\ExprSolve.cs" />
     <Compile Include="util\HumiUtil.cs" />
     <Compile Include="util\Logger.cs" />
