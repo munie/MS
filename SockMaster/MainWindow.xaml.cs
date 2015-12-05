@@ -23,11 +23,11 @@ using mnn.util;
 namespace SockMaster
 {
     /// <summary>
-    /// SockMasterWindow.xaml 的交互逻辑
+    /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class SockMasterWindow : Window
+    public partial class MainWindow : Window
     {
-        public SockMasterWindow()
+        public MainWindow()
         {
             InitializeComponent();
 
@@ -40,7 +40,7 @@ namespace SockMaster
         private static readonly string CONF_NAME = "SockMaster.xml";
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
-        private ControlCenter.ControlCenter center;
+        private CtlCenter center;
 
         private void Initailize()
         {
@@ -66,7 +66,7 @@ namespace SockMaster
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
 
-            center = new ControlCenter.ControlCenter();
+            center = new CtlCenter();
             center.Init();
             center.Config();
             Thread thread = new Thread(() => { while (true) center.Perform(1000); });
@@ -120,7 +120,7 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Closed) return;
 
             sock.State = SockState.Opening;
-            center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_OPEN, treeSock.SelectedItem);
+            center.cmdctl.AppendCommand(CtlCenter.SOCK_OPEN, treeSock.SelectedItem);
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -129,7 +129,7 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Opened) return;
 
             sock.State = SockState.Closing;
-            center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_CLOSE, treeSock.SelectedItem);
+            center.cmdctl.AppendCommand(CtlCenter.SOCK_CLOSE, treeSock.SelectedItem);
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -207,8 +207,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(ControlCenter.ControlCenter.CONF_PATH)) {
-                doc.Load(ControlCenter.ControlCenter.CONF_PATH);
+            if (File.Exists(CtlCenter.CONF_PATH)) {
+                doc.Load(CtlCenter.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/socket");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -231,7 +231,7 @@ namespace SockMaster
                 config.AppendChild(sockitem);
             }
 
-            doc.Save(ControlCenter.ControlCenter.CONF_PATH);
+            doc.Save(CtlCenter.CONF_PATH);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -261,7 +261,7 @@ namespace SockMaster
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 sock.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_SEND, sock);
+                center.cmdctl.AppendCommand(CtlCenter.SOCK_SEND, sock);
                 break;
             }
         }
@@ -326,8 +326,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(ControlCenter.ControlCenter.CONF_PATH)) {
-                doc.Load(ControlCenter.ControlCenter.CONF_PATH);
+            if (File.Exists(CtlCenter.CONF_PATH)) {
+                doc.Load(CtlCenter.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/command");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -347,7 +347,7 @@ namespace SockMaster
                 config.AppendChild(cmd);
             }
 
-            doc.Save(ControlCenter.ControlCenter.CONF_PATH);
+            doc.Save(CtlCenter.CONF_PATH);
         }
 
         //private void MenuItem_CmdOpen_Click(object sender, RoutedEventArgs e)

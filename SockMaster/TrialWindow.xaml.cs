@@ -46,7 +46,7 @@ namespace SockMaster
             InitializeComponent();
 
             //init();
-            SockMasterWindow mgrwindow = new SockMasterWindow();
+            MainWindow mgrwindow = new MainWindow();
             //mgrwindow.Owner = this;
             mgrwindow.Show();
             this.Hide();

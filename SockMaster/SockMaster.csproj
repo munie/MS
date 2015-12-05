@@ -59,15 +59,14 @@
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="CmdUnit.cs" />
-    <Compile Include="ControlCenter\ControlCenter.cs" />
-    <Compile Include="ControlCenter\DataUI.cs" />
-    <Compile Include="ControlCenter\RequestDispatcher.cs" />
+    <Compile Include="CtlCenter.cs" />
+    <Compile Include="DataUI.cs" />
     <Compile Include="SockInputDialog.xaml.cs">
       <DependentUpon>SockInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="SockUnit.cs" />
-    <Compile Include="SockMasterWindow.xaml.cs">
-      <DependentUpon>SockMasterWindow.xaml</DependentUpon>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -89,7 +88,7 @@
       <DependentUpon>TrialWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="SockMasterWindow.xaml">
+    <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

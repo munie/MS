@@ -52,6 +52,10 @@
     <Compile Include="misc\module\ModuleCtl.cs" />
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
+    <Compile Include="net\ControlCenter.cs" />
+    <Compile Include="net\PackRequest.cs" />
+    <Compile Include="net\Dispatcher.cs" />
+    <Compile Include="net\PackResponse.cs" />
     <Compile Include="util\AtCmd.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenItem.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenManager.cs" />

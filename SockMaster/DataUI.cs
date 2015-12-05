@@ -5,7 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 
-namespace SockMaster.ControlCenter {
+namespace SockMaster {
     class DataUI : INotifyPropertyChanged {
         public DataUI()
         {

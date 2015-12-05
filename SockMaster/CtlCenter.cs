@@ -8,8 +8,8 @@ using System.Net;
 using mnn.net;
 using mnn.util;
 
-namespace SockMaster.ControlCenter {
-    class ControlCenter {
+namespace SockMaster {
+    class CtlCenter : ControlCenter {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
@@ -17,31 +17,18 @@ namespace SockMaster.ControlCenter {
         public static readonly string SOCK_CLOSE = "sock_close";
         public static readonly string SOCK_SEND = "sock_send";
 
-        // session control
-        private SessCtl sessctl;
         // self request control
         public AtCmdCtl cmdctl;
-        // other request control
-        private RequestDispatcher dispatcher;
         // hook for ui to display socket infomation
         public DataUI DataUI { get; set; }
 
         public void Init()
         {
-            // init sesscer
-            sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessParseDelegate(sess_parse);
-            sessctl.sess_create += new SessCtl.SessCreateDelegate(sess_create);
-            sessctl.sess_delete += new SessCtl.SessDeleteDelegate(sess_delete);
-
             // init cmdcer
             cmdctl = new AtCmdCtl();
             cmdctl.Register(SOCK_OPEN, sock_open);
             cmdctl.Register(SOCK_CLOSE, sock_close);
             cmdctl.Register(SOCK_SEND, sock_send);
-
-            // init dispatcher
-            dispatcher = new RequestDispatcher();
 
             // init SockTable
             DataUI = new DataUI();
@@ -90,11 +77,8 @@ namespace SockMaster.ControlCenter {
 
         // Session Event ==================================================================================
 
-        private void sess_parse(object sender, SockSess sess)
+        protected override void sess_parse(object sender, SockSess sess)
         {
-            // use dispatcher to handle request
-            //dispatcher.handle();
-
             byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
             sess.rdata_size = 0;
 
@@ -105,7 +89,7 @@ namespace SockMaster.ControlCenter {
             }));
         }
 
-        private void sess_create(object sender, SockSess sess)
+        protected override void sess_create(object sender, SockSess sess)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -130,7 +114,7 @@ namespace SockMaster.ControlCenter {
             }));
         }
 
-        private void sess_delete(object sender, SockSess sess)
+        protected override void sess_delete(object sender, SockSess sess)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
