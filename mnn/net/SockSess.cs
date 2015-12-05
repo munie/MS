@@ -71,6 +71,47 @@ namespace mnn.net {
             sess.sock.Send(sess.wdata.Take(sess.wdata_size).ToArray());
             sess.wdata_size = 0;
         }
+
+        public static SockSess Accept(SockSess sess)
+        {
+            try {
+                Socket sock = sess.sock.Accept();
+                return new SockSess(SockType.accept, sock);
+            } catch (Exception) {
+                return null;
+            }
+        }
+
+        public static SockSess Listen(IPEndPoint ep)
+        {
+            // Verify IPEndPoints
+            IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            foreach (IPEndPoint globalEP in globalEPs) {
+                if (ep.Port == globalEP.Port)
+                    return null;
+            }
+
+            // Initialize the listenEP field of ListenerState
+            try {
+                Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                sock.Bind(ep);
+                sock.Listen(100);
+                return new SockSess(SockType.listen, sock);
+            } catch (Exception) {
+                return null;
+            }
+        }
+
+        public static SockSess Connect(IPEndPoint ep)
+        {
+            try {
+                Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                sock.Connect(ep);
+                return new SockSess(SockType.connect, sock);
+            } catch (Exception) {
+                return null;
+            }
+        }
     }
 
     public class SessCenter {
@@ -115,14 +156,11 @@ namespace mnn.net {
                 foreach (var item in sess_table) {
                     if (item.sock == i) {
                         if (item.type == SockType.listen) {
-                            Socket sock = item.sock.Accept();
-                            sess_table.Add(new SockSess(SockType.accept, sock));
-                            if (sess_create != null)
-                                sess_create(this, sess_table.Last());
-                            Console.Write("[Info]: Session #A accepted to {0}.\n", sock.RemoteEndPoint.ToString());
-                        } else {
+                            SockSess retval = SockSess.Accept(item);
+                            if (retval == null) continue;
+                            AddSession(retval);
+                        } else
                             item.func_recv(item);
-                        }
                         break;
                     }
                 }
@@ -144,8 +182,6 @@ namespace mnn.net {
                         foreach (var i in FindAcceptSession(item))
                             i.eof = true;
                     }
-                    if (sess_delete != null && item.type != SockType.listen)
-                        sess_delete(this, item);
                     DeleteSession(item);
                 }
             }
@@ -155,42 +191,28 @@ namespace mnn.net {
         {
             ThreadCheck(false);
 
-            // Verify IPEndPoints
-            IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
-            foreach (IPEndPoint globalEP in globalEPs) {
-                if (ep.Port == globalEP.Port) {
-                    Console.Write("[Error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
-                    return null;
-                }
+            SockSess retval = SockSess.Listen(ep);
+            if (retval == null) {
+                Console.Write("[Error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
+                return null;
             }
 
-            // Initialize the listenEP field of ListenerState
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            sock.Bind(ep);
-            sock.Listen(100);
-
-            sess_table.Add(new SockSess(SockType.listen, sock));
-            Console.Write("[Info]: Session #L listened at {0}.\n", ep.ToString());
-            return sess_table.Last();
+            AddSession(retval);
+            return retval;
         }
 
         public SockSess AddConnect(IPEndPoint ep)
         {
             ThreadCheck(false);
 
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            try {
-                sock.Connect(ep);
-            } catch (Exception) {
+            SockSess retval = SockSess.Connect(ep);
+            if (retval == null) {
                 Console.Write("[Error]: Connected to {0} failed.\n", ep.ToString());
                 return null;
             }
 
-            sess_table.Add(new SockSess(SockType.connect, sock));
-            if (sess_create != null)
-                sess_create(this, sess_table.Last());
-            Console.Write("[Info]: Session #C connected to {0}.\n", ep.ToString());
-            return sess_table.Last();
+            AddSession(retval);
+            return retval;
         }
 
         public void DelSession(SockSess sess)
@@ -216,14 +238,33 @@ namespace mnn.net {
 
         // Self Methods ========================================================================
 
+        private void AddSession(SockSess sess)
+        {
+            sess_table.Add(sess);
+
+            if (sess_create != null && sess.type != SockType.listen)
+                sess_create(this, sess);
+
+            if (sess.type == SockType.listen)
+                Console.Write("[Info]: Session #L listened at {0}.\n", sess.lep.ToString());
+            else if (sess.type == SockType.accept)
+                Console.Write("[Info]: Session #A accepted to {0}.\n", sess.rep.ToString());
+            else if (sess.type == SockType.connect)
+                Console.Write("[Info]: Session #C connected to {0}.\n", sess.rep.ToString());
+        }
+
         private void DeleteSession(SockSess sess)
         {
+            if (sess_delete != null && sess.type != SockType.listen)
+                sess_delete(this, sess);
+
             if (sess.type == SockType.listen)
                 Console.Write("[Info]: Session #* deleted from {0}.\n", sess.lep.ToString());
             else {
                 Console.Write("[Info]: Session #* deleted from {0}.\n", sess.rep.ToString());
                 sess.sock.Shutdown(SocketShutdown.Both);
             }
+
             sess.sock.Close();
             sess_table.Remove(sess);
         }
