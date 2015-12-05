@@ -79,7 +79,7 @@ namespace EnvConsole.Windows
             rwlockModuleTable = new ReaderWriterLock();
 
             cmdcer = new AtCmdCenter();
-            cmdcer.Add(PACK_PARSE, PackParse);
+            cmdcer.Register(PACK_PARSE, PackParse);
             modcer = new ModuleCenter();
 
             console = new ConsoleWindow();

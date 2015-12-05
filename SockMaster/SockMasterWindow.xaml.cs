@@ -31,8 +31,50 @@ namespace SockMaster
         {
             InitializeComponent();
 
+            Initailize();
             InitailizeWindowName();
             InitailizeStatusBar();
+        }
+
+        private static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string CONF_NAME = "SockMaster.xml";
+        private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
+        private ObservableCollection<CmdUnit> cmdTable;
+        private ControlCenter.ControlCenter center;
+
+        private void Initailize()
+        {
+            cmdTable = new ObservableCollection<CmdUnit>();
+            try {
+                if (File.Exists(BASE_DIR + CONF_NAME) == false) {
+                    System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
+                    return;
+                }
+
+                XmlDocument doc = new XmlDocument();
+                doc.Load(BASE_DIR + CONF_NAME);
+
+                foreach (XmlNode item in doc.SelectNodes("/configuration/commands/cmditem")) {
+                    CmdUnit cmd = new CmdUnit();
+                    cmd.ID = item.Attributes["id"].Value;
+                    cmd.Name = item.Attributes["name"].Value;
+                    cmd.Cmd = item.Attributes["content"].Value;
+                    cmd.Comment = item.Attributes["comment"].Value;
+                    cmdTable.Add(cmd);
+                }
+            } catch (Exception) {
+                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
+            }
+
+            center = new ControlCenter.ControlCenter();
+            center.Init();
+            center.Config();
+            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
+            thread.IsBackground = true;
+            thread.Start();
+
+            DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable };
+            this.txtBoxMsg.SetBinding(TextBox.TextProperty, new Binding("Log") { Source = center.DataUI });
         }
 
         private void InitailizeWindowName()
@@ -70,11 +112,6 @@ namespace SockMaster
             timer.Start();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            (this.Owner as MainWindow).Close();
-        }
-
         // Menu methods for TreeView =============================================================
 
         private void MenuItem_SockOpen_Click(object sender, RoutedEventArgs e)
@@ -83,7 +120,7 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Closed) return;
 
             sock.State = SockState.Opening;
-            (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_OPEN, treeSock.SelectedItem);
+            center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_OPEN, treeSock.SelectedItem);
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -92,7 +129,7 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Opened) return;
 
             sock.State = SockState.Closing;
-            (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_CLOSE, treeSock.SelectedItem);
+            center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_CLOSE, treeSock.SelectedItem);
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -153,7 +190,7 @@ namespace SockMaster
                     sock.Type = SockType.connect;
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
-                (this.Owner as MainWindow).SockTable.Add(sock);
+                (treeSock.ItemsSource as ObservableCollection<SockUnit>).Add(sock);
             }
         }
 
@@ -162,7 +199,7 @@ namespace SockMaster
             SockUnit sock = treeSock.SelectedItem as SockUnit;
             if (sock == null || sock.State != SockState.Closed) return;
 
-            (this.Owner as MainWindow).SockTable.Remove(sock);
+            (treeSock.ItemsSource as ObservableCollection<SockUnit>).Remove(sock);
         }
 
         private void MenuItem_SockSave_Click(object sender, RoutedEventArgs e)
@@ -170,8 +207,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(MainWindow.CONF_PATH)) {
-                doc.Load(MainWindow.CONF_PATH);
+            if (File.Exists(ControlCenter.ControlCenter.CONF_PATH)) {
+                doc.Load(ControlCenter.ControlCenter.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/socket");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -182,7 +219,7 @@ namespace SockMaster
             }
 
             config.RemoveAll();
-            foreach (var item in (this.Owner as MainWindow).SockTable) {
+            foreach (var item in (treeSock.ItemsSource as ObservableCollection<SockUnit>)) {
                 if (item.Type == SockType.accept) continue;
 
                 XmlElement sockitem = doc.CreateElement("sockitem");
@@ -194,7 +231,7 @@ namespace SockMaster
                 config.AppendChild(sockitem);
             }
 
-            doc.Save(MainWindow.CONF_PATH);
+            doc.Save(ControlCenter.ControlCenter.CONF_PATH);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -224,7 +261,7 @@ namespace SockMaster
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 sock.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                (this.Owner as MainWindow).cmdcer.AppendCommand(MainWindow.SOCK_SEND, sock);
+                center.cmdctl.AppendCommand(ControlCenter.ControlCenter.SOCK_SEND, sock);
                 break;
             }
         }
@@ -269,7 +306,7 @@ namespace SockMaster
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Comment = input.textBoxComment.Text;
-                (this.Owner as MainWindow).CmdTable.Add(cmd);
+                cmdTable.Add(cmd);
             }
         }
 
@@ -281,7 +318,7 @@ namespace SockMaster
                 tmp.Add(item);
 
             foreach (var item in tmp)
-                (this.Owner as MainWindow).CmdTable.Remove(item);
+                cmdTable.Remove(item);
         }
 
         private void MenuItem_CmdSave_Click(object sender, RoutedEventArgs e)
@@ -289,8 +326,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(MainWindow.CONF_PATH)) {
-                doc.Load(MainWindow.CONF_PATH);
+            if (File.Exists(ControlCenter.ControlCenter.CONF_PATH)) {
+                doc.Load(ControlCenter.ControlCenter.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/command");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -301,7 +338,7 @@ namespace SockMaster
             }
 
             config.RemoveAll();
-            foreach (var item in (this.Owner as MainWindow).CmdTable) {
+            foreach (var item in cmdTable) {
                 XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
@@ -310,7 +347,7 @@ namespace SockMaster
                 config.AppendChild(cmd);
             }
 
-            doc.Save(MainWindow.CONF_PATH);
+            doc.Save(ControlCenter.ControlCenter.CONF_PATH);
         }
 
         //private void MenuItem_CmdOpen_Click(object sender, RoutedEventArgs e)

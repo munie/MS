@@ -242,7 +242,7 @@ namespace mnn.net {
         {
             sess_table.Add(sess);
 
-            if (sess_create != null && sess.type != SockType.listen)
+            if (sess_create != null)
                 sess_create(this, sess);
 
             if (sess.type == SockType.listen)
@@ -255,7 +255,7 @@ namespace mnn.net {
 
         private void DeleteSession(SockSess sess)
         {
-            if (sess_delete != null && sess.type != SockType.listen)
+            if (sess_delete != null)
                 sess_delete(this, sess);
 
             if (sess.type == SockType.listen)

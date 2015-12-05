@@ -69,7 +69,7 @@ namespace mnn.util {
             }
         }
 
-        public void Add(string name, AtCmd.AtCmdDelegate func)
+        public void Register(string name, AtCmd.AtCmdDelegate func)
         {
             ThreadCheck(false);
 
@@ -82,7 +82,7 @@ namespace mnn.util {
             atcmd_table.Add(new AtCmd(name, func));
         }
 
-        public void Del(string name)
+        public void Deregister(string name)
         {
             ThreadCheck(false);
 
