@@ -80,7 +80,7 @@ namespace EnvCenter
         {
             // 兼容老版本字符流
             if (sess.rdata[0] == '|' && sess.rdata[1] == 'H' && sess.rdata[2] == 'T') {
-                IDictionary<string, string> dc = AnalyzeString(Encoding.Default.GetString(sess.rdata));
+                IDictionary<string, string> dc = AnalyzeString(Encoding.UTF8.GetString(sess.rdata));
 
                 string term_info;
                 if (dc["HT"][0] == 'Z')
@@ -164,13 +164,13 @@ namespace EnvCenter
             foreach (var item in term_table) {
                 if ((item.sdata as TermUnit).CCID.Equals(term.CCID)) {
                     sess.sock.Send(StructPack(reg_term,
-                        Encoding.ASCII.GetBytes("Register term failed: Similar term already registered!")));
+                        Encoding.UTF8.GetBytes("Register term failed: Similar term already registered!")));
                     sess.eof = true;
                     return;
                 }
             }
             // 发送注册成功信息
-            sess.sock.Send(StructPack(reg_term, Encoding.ASCII.GetBytes("Register term success!")));
+            sess.sock.Send(StructPack(reg_term, Encoding.UTF8.GetBytes("Register term success!")));
 
             // 更新终端表，必须放在验证之后
             sess.sdata = term;
@@ -242,12 +242,12 @@ namespace EnvCenter
             foreach (var item in svc_table) {
                 if ((item.sdata as SvcUnit).TermInfo.Equals(svc.TermInfo)) {
                     sess.sock.Send(StructPack(reg_svc,
-                        Encoding.ASCII.GetBytes("Register svc failed: Similar svc already registered!")));
+                        Encoding.UTF8.GetBytes("Register svc failed: Similar svc already registered!")));
                     sess.eof = true;
                     return;
                 }
             }
-            sess.sock.Send(StructPack(reg_svc, Encoding.ASCII.GetBytes("Register svc success!")));
+            sess.sock.Send(StructPack(reg_svc, Encoding.UTF8.GetBytes("Register svc success!")));
 
             // 更新模块表，必须放在验证之后
             sess.sdata = svc;

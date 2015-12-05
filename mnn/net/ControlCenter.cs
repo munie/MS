@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
-using System.Xml;
-using System.Net;
-using mnn.util;
 
 namespace mnn.net {
-    public abstract class ControlCenter {
+    public class ControlCenter {
+        // session control
+        protected SessCtl sessctl;
+        // other request control
+        protected Dispatcher dispatcher;
+
         public ControlCenter()
         {
             // init sesscer
@@ -21,23 +22,22 @@ namespace mnn.net {
             dispatcher = new Dispatcher();
         }
 
-        // session control
-        protected SessCtl sessctl;
-        // other request control
-        protected Dispatcher dispatcher;
-
         // Session Event ==================================================================================
 
         protected virtual void sess_parse(object sender, SockSess sess)
         {
-            PackRequest request = new PackRequest();
-            PackResponse response = new PackResponse();
+            byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
+            sess.rdata_size = 0;
+
+            SockRequest request = new SockRequest() { lep = sess.lep, rep = sess.rep, data = data };
+            SockResponse response = new SockResponse() { data = null };
             dispatcher.handle(request, response);
-            sess.sock.Send(new byte[] { 31, 32});
+            if (response.data != null && response.data.Length != 0)
+                sess.sock.Send(response.data);
         }
 
-        protected abstract void sess_create(object sender, SockSess sess);
+        protected virtual void sess_create(object sender, SockSess sess) { }
 
-        protected abstract void sess_delete(object sender, SockSess sess);
+        protected virtual void sess_delete(object sender, SockSess sess) { }
     }
 }

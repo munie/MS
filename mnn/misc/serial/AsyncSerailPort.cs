@@ -30,7 +30,7 @@ namespace mnn.misc.serial {
             {
                 Thread.Sleep(500);
                 int bytesRead = serialPort.Read(buffer, 0, buffer.Count());
-                sb.Append(Encoding.GetEncoding(936).GetString(buffer, 0, bytesRead));
+                sb.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
 
                 if (PortReadMsg != null) {
                     PortReadMsg.Invoke(this, new AsyncSerailPortEventArgs()

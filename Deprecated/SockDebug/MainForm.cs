@@ -27,7 +27,7 @@ namespace SockDebug
             InitializeComponent();
 
             // Default vaule
-            coding = Encoding.GetEncoding(936);
+            coding = Encoding.UTF8;
             ipaddress = IPAddress.Parse("127.0.0.1");
             port = 5964;
    

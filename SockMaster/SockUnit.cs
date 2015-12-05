@@ -26,7 +26,6 @@ namespace SockMaster
         private string id;
         private string name;
         private SockType type;
-        private SockSess sess;
         private IPEndPoint ep;
         private SockState state;
         private string title;
@@ -69,16 +68,6 @@ namespace SockMaster
                 type = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("Type"));
-            }
-        }
-        public SockSess Sess
-        {
-            get { return sess; }
-            set
-            {
-                sess = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Sess"));
             }
         }
         public IPEndPoint EP

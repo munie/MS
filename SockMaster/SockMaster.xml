@@ -1,12 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <sockets>
-    <sockitem id="0" name="munie" type="listen" ep="0.0.0.0:5964" autorun="True" />
-    <sockitem id="1" name="cmd" type="listen" ep="0.0.0.0:2000" autorun="False" />
-    <sockitem id="2" name="zls" type="listen" ep="0.0.0.0:3002" autorun="False" />
-    <sockitem id="10" name="munie" type="connect" ep="127.0.0.1:5964" autorun="False" />
-    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000" autorun="False" />
-    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
+    <sockitem id="1" name="zls" type="listen" ep="0.0.0.0:3002" autorun="True" />
+    <sockitem id="2" name="qx" type="listen" ep="0.0.0.0:3006" autorun="False" />
+    <sockitem id="11" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
+    <sockitem id="12" name="qx" type="connect" ep="127.0.0.1:3006" autorun="False" />
   </sockets>
   <commands>
     <cmditem id="4230" name="流量数据" content="|HT=Z8|CCID=89860113836037156496|csq=24|voltage=0852|water_amount=01030A000000EC3EA4AECA0001BD69|GPS_N=2904.059|GPS_E=12133.733" comment="字符流数据" />

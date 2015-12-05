@@ -17,6 +17,7 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 using System.Xml;
+using System.Net.Sockets;
 using mnn.net;
 using mnn.util;
 
@@ -120,7 +121,17 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Closed) return;
 
             sock.State = SockState.Opening;
-            center.cmdctl.AppendCommand(CtlCenter.SOCK_OPEN, treeSock.SelectedItem);
+
+            byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
+                + ",ip:" + sock.EP.Address.ToString()
+                + ",port:" + sock.EP.Port.ToString());
+            buffer = new byte[] { 0x01, 0x12 }.Concat(buffer).ToArray();
+
+            Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+            cmdSock.Send(buffer);
+            cmdSock.Shutdown(SocketShutdown.Both);
+            cmdSock.Dispose();
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -129,7 +140,17 @@ namespace SockMaster
             if (sock == null || sock.State != SockState.Opened) return;
 
             sock.State = SockState.Closing;
-            center.cmdctl.AppendCommand(CtlCenter.SOCK_CLOSE, treeSock.SelectedItem);
+
+            byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
+                + ",ip:" + sock.EP.Address.ToString()
+                + ",port:" + sock.EP.Port.ToString());
+            buffer = new byte[] { 0x02, 0x12 }.Concat(buffer).ToArray();
+
+            Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+            cmdSock.Send(buffer);
+            cmdSock.Disconnect(true);
+            cmdSock.Dispose();
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -260,8 +281,18 @@ namespace SockMaster
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                sock.SendBuff = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                center.cmdctl.AppendCommand(CtlCenter.SOCK_SEND, sock);
+                byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
+                    + ",ip:" + sock.EP.Address.ToString()
+                    + ",port:" + sock.EP.Port.ToString()
+                    + ",data:");
+                buffer = buffer.Concat(SockConvert.ParseCmdstrToBytes(item.Cmd, '#')).ToArray();
+                buffer = new byte[] { 0x03, 0x12 }.Concat(buffer).ToArray();
+
+                Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+                cmdSock.Send(buffer);
+                cmdSock.Disconnect(true);
+                cmdSock.Dispose();
                 break;
             }
         }
@@ -354,5 +385,10 @@ namespace SockMaster
         //{
         //    System.Diagnostics.Process.Start("Explorer.exe", MainWindow.BASE_DIR);
         //}
+
+        private void txtBoxMsg_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            txtBoxMsg.ScrollToEnd();
+        }
     }
 }

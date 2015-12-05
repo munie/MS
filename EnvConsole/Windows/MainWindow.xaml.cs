@@ -72,7 +72,7 @@ namespace EnvConsole.Windows
 
         private void Init()
         {
-            coding = Encoding.Default;
+            coding = Encoding.UTF8;
             serverTable = new ObservableCollection<ServerUnit>();
             clientTable = new ObservableCollection<ClientUnit>();
             moduleTable = new ObservableCollection<ModuleUnit>();

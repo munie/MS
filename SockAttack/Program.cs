@@ -13,7 +13,7 @@ namespace SockAttack
     {
         static void Main(string[] args)
         {
-            Encoding coding = Encoding.Default;
+            Encoding coding = Encoding.UTF8;
             IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
             Random random = new Random();
             List<SockAttack> attackerTable = new List<SockAttack>();

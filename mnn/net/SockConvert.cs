@@ -87,7 +87,7 @@ namespace mnn.net {
                 if (item.Contains("0x"))
                     retval = retval.Concat(ParseHexstrToBytes(item)).ToArray();
                 else
-                    retval = retval.Concat(Encoding.Default.GetBytes(item)).ToArray();
+                    retval = retval.Concat(Encoding.UTF8.GetBytes(item)).ToArray();
             }
 
             //byte[] retval = cmd.Split(' ').Select(

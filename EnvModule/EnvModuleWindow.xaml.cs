@@ -110,7 +110,7 @@ namespace EnvModule
                         item.State = SockState.Opened;
                         // 向中心站注册
                         byte[] data = new byte[] { 0xA0, 0x00, 0x14, 0x00 };
-                        data = data.Concat(Encoding.ASCII.GetBytes(item.TermInfo)).ToArray();
+                        data = data.Concat(Encoding.UTF8.GetBytes(item.TermInfo)).ToArray();
                         sessctl.SendSession(item.Sess, data);
                     }
                     else
@@ -158,7 +158,7 @@ namespace EnvModule
             if (sess.rdata[0] == '|' && sess.rdata[1] == 'H' && sess.rdata[2] == 'T') {
                 rwlock.AcquireReaderLock(-1);
                 bool IsHandled = false;
-                string msgstr = Encoding.Default.GetString(data);
+                string msgstr = Encoding.UTF8.GetString(data);
                 // 水库代码太恶心，没办法的办法
                 // 除水库以外，相对正常数据处理
                 foreach (var item in moduleTable) {

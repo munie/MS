@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 
 namespace mnn.net {
-    public class PackRequest {
-
+    public class SockResponse {
+        public byte[] data { get; set; }
     }
 }

@@ -13,22 +13,20 @@ namespace SockMaster {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        public static readonly string SOCK_OPEN = "sock_open";
-        public static readonly string SOCK_CLOSE = "sock_close";
-        public static readonly string SOCK_SEND = "sock_send";
 
-        // self request control
-        public AtCmdCtl cmdctl;
         // hook for ui to display socket infomation
         public DataUI DataUI { get; set; }
 
         public void Init()
         {
-            // init cmdcer
-            cmdctl = new AtCmdCtl();
-            cmdctl.Register(SOCK_OPEN, sock_open);
-            cmdctl.Register(SOCK_CLOSE, sock_close);
-            cmdctl.Register(SOCK_SEND, sock_send);
+            // open ctlcenter port
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 5964));
+
+            // dispatcher register
+            dispatcher.RegisterDefaultController("default_controller", default_controller);
+            dispatcher.Register("sock_open_controller", sock_open_controller, 0x1201);
+            dispatcher.Register("sock_close_controller", sock_close_controller, 0x1202);
+            dispatcher.Register("sock_send_controller", sock_send_controller, 0x1203);
 
             // init SockTable
             DataUI = new DataUI();
@@ -60,8 +58,15 @@ namespace SockMaster {
                     DataUI.SockTable.Add(sock);
 
                     if (sock.Autorun) {
-                        sock.State = SockState.Opening;
-                        cmdctl.AppendCommand(SOCK_OPEN, sock);
+                        SockSess result;
+                        if (sock.Type == SockType.listen)
+                            result = sessctl.MakeListen(sock.EP);
+                        else
+                            result = sessctl.AddConnect(sock.EP);
+                        if (result == null)
+                            sock.State = SockState.Closed;
+                        else
+                            sock.State = SockState.Opened;
                     }
                 }
             } catch (Exception) {
@@ -72,22 +77,9 @@ namespace SockMaster {
         public void Perform(int next)
         {
             sessctl.Perform(next);
-            cmdctl.Perform(0);
         }
 
-        // Session Event ==================================================================================
-
-        protected override void sess_parse(object sender, SockSess sess)
-        {
-            byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
-            sess.rdata_size = 0;
-
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                DataUI.Log = DateTime.Now + " (" + sess.rep.ToString() + " => " + sess.lep.ToString() + ")\n";
-                DataUI.Log = SockConvert.ParseBytesToString(data) + "\n\n";
-            }));
-        }
+        // Override Session Event ==========================================================================
 
         protected override void sess_create(object sender, SockSess sess)
         {
@@ -104,7 +96,6 @@ namespace SockMaster {
                             ID = "-",
                             Name = "accept",
                             Type = sess.type,
-                            Sess = sess,
                             EP = sess.rep,
                             State = SockState.Opened,
                         });
@@ -124,55 +115,114 @@ namespace SockMaster {
                         if (item.Childs.Count == 0) continue;
 
                         foreach (var child in item.Childs) {
-                            if (child.Sess == sess) {
+                            if (child.EP.Equals(sess.rep)) {
                                 item.Childs.Remove(child);
                                 return;
                             }
+                        }
+                    }
+                } else if (sess.type == SockType.connect) {
+                    foreach (var item in DataUI.SockTable) {
+                        if (item.EP.Equals(sess.rep)) {
+                            item.State = SockState.Closed;
+                            break;
                         }
                     }
                 }
             }));
         }
 
-        // Self Request Control ===========================================================================
+        // Self Request Controller =========================================================================
 
-        private void sock_open(object arg)
+        private Dictionary<string, string> msg_parse(string msg)
         {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State == SockState.Opened) return;
+            Dictionary<string, string> dc = new Dictionary<string, string>();
 
-            SockSess sess = null;
-            if (sock.Type == SockType.listen) {
-                sess = sessctl.MakeListen(sock.EP);
-            } else if (sock.Type == SockType.connect) {
-                sess = sessctl.AddConnect(sock.EP);
+            msg = msg.Replace(", ", ",");
+            string[] values = msg.Split(',');
+            foreach (var item in values) {
+                string[] tmp = item.Split(':');
+                dc.Add(tmp[0], tmp[1]);
             }
 
-            if (sess != null) {
-                sock.Sess = sess;
-                sock.State = SockState.Opened;
-            } else {
-                sock.State = SockState.Closed;
+            return dc;
+        }
+
+        private void default_controller(SockRequest request, SockResponse response)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                DataUI.Log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+                DataUI.Log = SockConvert.ParseBytesToString(request.data) + "\n\n";
+            }));
+        }
+
+        private void sock_open_controller(SockRequest request, SockResponse response)
+        {
+            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            Dictionary<string, string> dc = msg_parse(msg);
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+
+            SockSess result = null;
+            if (dc["type"] == SockType.listen.ToString())
+                result = sessctl.MakeListen(ep);
+            else if (dc["type"] == SockType.connect.ToString())
+                result = sessctl.AddConnect(ep);
+
+            // update DataUI
+            foreach (var item in DataUI.SockTable) {
+                if (item.EP.Equals(ep)) {
+                    if (result != null) {
+                        item.State = SockState.Opened;
+                    } else {
+                        item.State = SockState.Closed;
+                    }
+                }
             }
         }
 
-        private void sock_close(object arg)
+        private void sock_close_controller(SockRequest request, SockResponse response)
         {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State == SockState.Closed) return;
+            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            Dictionary<string, string> dc = msg_parse(msg);
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
 
-            sessctl.DelSession(sock.Sess);
-            sock.State = SockState.Closed;
+            foreach (var item in sessctl.sess_table) {
+                IPEndPoint tmpep;
+                if (item.type == SockType.listen)
+                    tmpep = item.lep;
+                else
+                    tmpep = item.rep;
+                if (tmpep.Equals(ep)) {
+                    sessctl.DelSession(item);
+                    break;
+                }
+            }
+
+            // update DataUI
+            foreach (var item in DataUI.SockTable) {
+                if (item.EP.Equals(ep)) {
+                    item.State = SockState.Closed;
+                }
+            }
         }
 
-        private void sock_send(object arg)
+        private void sock_send_controller(SockRequest request, SockResponse response)
         {
-            SockUnit sock = arg as SockUnit;
-            if (sock == null || sock.State != SockState.Opened) return;
+            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            Dictionary<string, string> dc = msg_parse(msg);
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
 
-            if (sock.SendBuff != null) {
-                sessctl.SendSession(sock.Sess, sock.SendBuff);
-                sock.SendBuff = null;
+            foreach (var item in sessctl.sess_table) {
+                IPEndPoint tmpep;
+                if (item.type == SockType.listen)
+                    tmpep = item.lep;
+                else
+                    tmpep = item.rep;
+                if (tmpep.Equals(ep)) {
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(dc["data"]));
+                    break;
+                }
             }
         }
     }
