@@ -44,7 +44,7 @@ namespace EnvConsole.Windows
             this.InitServer();
             this.InitDefaultModule();
 
-            Thread thread = new Thread(() => { while (true) { cmdcer.Perform(1000); } });
+            Thread thread = new Thread(() => { while (true) { cmdctl.Perform(1000); } });
             thread.IsBackground = true;
             thread.Start();
         }
@@ -61,8 +61,8 @@ namespace EnvConsole.Windows
         private ObservableCollection<ClientUnit> clientTable;
         private ObservableCollection<ModuleUnit> moduleTable;
         private ReaderWriterLock rwlockModuleTable;
-        private AtCmdCenter cmdcer;
-        private ModuleCenter modcer;
+        private AtCmdCtl cmdctl;
+        private ModuleCtl modctl;
         private ConsoleWindow console;
         class PackUnit
         {
@@ -78,9 +78,9 @@ namespace EnvConsole.Windows
             moduleTable = new ObservableCollection<ModuleUnit>();
             rwlockModuleTable = new ReaderWriterLock();
 
-            cmdcer = new AtCmdCenter();
-            cmdcer.Register(PACK_PARSE, PackParse);
-            modcer = new ModuleCenter();
+            cmdctl = new AtCmdCtl();
+            cmdctl.Register(PACK_PARSE, PackParse);
+            modctl = new ModuleCtl();
 
             console = new ConsoleWindow();
             console.Owner = this;
@@ -436,7 +436,7 @@ namespace EnvConsole.Windows
         {
             string msg = coding.GetString(e.Data);
 
-            cmdcer.AppendCommand(PACK_PARSE, new PackUnit() { EP = e.RemoteEP, Content = msg });
+            cmdctl.AppendCommand(PACK_PARSE, new PackUnit() { EP = e.RemoteEP, Content = msg });
             console.PackRecved();
 
             // 打印至窗口
@@ -572,14 +572,14 @@ namespace EnvConsole.Windows
 
         public void AtModuleLoad(string filePath)
         {
-            ModuleNode module = modcer.Add(filePath);
+            ModuleNode module = modctl.Add(filePath);
             if (module == null) {
                 MessageBox.Show(filePath + ": load failed.");
                 return;
             }
             // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
             if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { SMsgProc.FULL_NAME })) {
-                modcer.Del(module);
+                modctl.Del(module);
                 MessageBox.Show(filePath + ": load failed.");
                 return;
             }
@@ -604,7 +604,7 @@ namespace EnvConsole.Windows
             var subset = from s in moduleTable where s.FileName.Equals(fileName) select s;
             if (subset.Count() != 0) {
                 // 移出 table
-                modcer.Del(subset.First().Module);
+                modctl.Del(subset.First().Module);
                 moduleTable.Remove(subset.First());
             }
 

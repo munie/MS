@@ -114,7 +114,7 @@ namespace mnn.net {
         }
     }
 
-    public class SessCenter {
+    public class SessCtl {
         public List<SockSess> sess_table;
         private int stall_time;
         private Thread thread;
@@ -126,7 +126,7 @@ namespace mnn.net {
         public SessDeleteDelegate sess_delete;
         public SessParseDelegate sess_parse;
 
-        public SessCenter()
+        public SessCtl()
         {
             sess_table = new List<SockSess>();
             stall_time = 60 * 12;

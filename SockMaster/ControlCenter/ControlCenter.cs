@@ -18,9 +18,9 @@ namespace SockMaster.ControlCenter {
         public static readonly string SOCK_SEND = "sock_send";
 
         // session control
-        private SessCenter sessctl;
+        private SessCtl sessctl;
         // self request control
-        public AtCmdCenter cmdctl;
+        public AtCmdCtl cmdctl;
         // other request control
         private RequestDispatcher dispatcher;
         // hook for ui to display socket infomation
@@ -29,13 +29,13 @@ namespace SockMaster.ControlCenter {
         public void Init()
         {
             // init sesscer
-            sessctl = new SessCenter();
-            sessctl.sess_parse += new SessCenter.SessParseDelegate(sess_parse);
-            sessctl.sess_create += new SessCenter.SessCreateDelegate(sess_create);
-            sessctl.sess_delete += new SessCenter.SessDeleteDelegate(sess_delete);
+            sessctl = new SessCtl();
+            sessctl.sess_parse += new SessCtl.SessParseDelegate(sess_parse);
+            sessctl.sess_create += new SessCtl.SessCreateDelegate(sess_create);
+            sessctl.sess_delete += new SessCtl.SessDeleteDelegate(sess_delete);
 
             // init cmdcer
-            cmdctl = new AtCmdCenter();
+            cmdctl = new AtCmdCtl();
             cmdctl.Register(SOCK_OPEN, sock_open);
             cmdctl.Register(SOCK_CLOSE, sock_close);
             cmdctl.Register(SOCK_SEND, sock_send);

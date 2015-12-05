@@ -13,7 +13,7 @@ namespace EnvCenter
 {
     class EvnCenter
     {
-        private SessCenter sesscer;
+        private SessCtl sesscer;
         private SockSess[] term_table
         {
             get
@@ -51,16 +51,16 @@ namespace EnvCenter
             }
         }
 
-        public EvnCenter(SessCenter sessmgr)
+        public EvnCenter(SessCtl sessctl)
         {
-            this.sesscer = sessmgr;
-            sessmgr.sess_parse += new SessCenter.SessParseDelegate(sessmgr_sess_parse);
-            sessmgr.sess_delete += new SessCenter.SessDeleteDelegate(sessmgr_sess_delete);
-            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
-            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
-            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
-            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
-            sessmgr.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
+            this.sesscer = sessctl;
+            sessctl.sess_parse += new SessCtl.SessParseDelegate(sessmgr_sess_parse);
+            sessctl.sess_delete += new SessCtl.SessDeleteDelegate(sessmgr_sess_delete);
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 2000));
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3000));
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3002));
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3006));
+            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3008));
         }
 
         // Parse Methods ======================================================================

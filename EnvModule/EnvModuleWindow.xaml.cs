@@ -35,7 +35,7 @@ namespace EnvModule
             init();
         }
 
-        private SessCenter sesscer;
+        private SessCtl sessctl;
         // rwlock for moduleTable
         private ReaderWriterLock rwlock = new ReaderWriterLock();
         private ObservableCollection<ModuleUnit> moduleTable;
@@ -46,9 +46,9 @@ namespace EnvModule
         private void init()
         {
             // 初始化变量
-            sesscer = new SessCenter();
-            sesscer.sess_parse += new SessCenter.SessParseDelegate(sessmgr_sess_parse);
-            sesscer.sess_delete += new SessCenter.SessDeleteDelegate(sessmgr_sess_delete);
+            sessctl = new SessCtl();
+            sessctl.sess_parse += new SessCtl.SessParseDelegate(sessmgr_sess_parse);
+            sessctl.sess_delete += new SessCtl.SessDeleteDelegate(sessmgr_sess_delete);
             moduleTable = new ObservableCollection<ModuleUnit>();
             clientTable = new ObservableCollection<ClientUnit>();
             DataContext = new { ModuleTable = moduleTable, ClientTable = clientTable };
@@ -77,7 +77,7 @@ namespace EnvModule
             {
                 while (true) {
                     perform();
-                    sesscer.Perform(1000);
+                    sessctl.Perform(1000);
                 }
             });
             thread.IsBackground = true;
@@ -91,14 +91,14 @@ namespace EnvModule
                 tick = DateTime.Now;
                 foreach (var item in moduleTable) {
                     if (item.State == SockState.Opened)
-                        sesscer.SendSession(item.Sess, new byte[] { 0x0C, 0x00, 0x04, 0x00 });
+                        sessctl.SendSession(item.Sess, new byte[] { 0x0C, 0x00, 0x04, 0x00 });
                 }
             }
 
             foreach (var item in moduleTable) {
                 /// ** second handle sending data
                 if (item.SendBuffSize != 0 && item.State == SockState.Opened) {
-                    sesscer.SendSession(item.Sess, item.SendBuff);
+                    sessctl.SendSession(item.Sess, item.SendBuff);
                     //Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                     item.SendBuffSize = 0;
                     //}));
@@ -106,18 +106,18 @@ namespace EnvModule
 
                 /// ** third handle open or close
                 if (item.State == SockState.Opening) {
-                    if ((item.Sess = sesscer.AddConnect(ep)) != null) {
+                    if ((item.Sess = sessctl.AddConnect(ep)) != null) {
                         item.State = SockState.Opened;
                         // 向中心站注册
                         byte[] data = new byte[] { 0xA0, 0x00, 0x14, 0x00 };
                         data = data.Concat(Encoding.ASCII.GetBytes(item.TermInfo)).ToArray();
-                        sesscer.SendSession(item.Sess, data);
+                        sessctl.SendSession(item.Sess, data);
                     }
                     else
                         item.State = SockState.Closed;
                 }
                 else if (item.State == SockState.Closing) {
-                    sesscer.DelSession(item.Sess);
+                    sessctl.DelSession(item.Sess);
                     item.State = SockState.Closed;
                 }
             }

@@ -11,11 +11,11 @@ namespace EnvCenter
     {
         static void Main(string[] args)
         {
-            SessCenter sesscer = new SessCenter();
-            EvnCenter cter = new EvnCenter(sesscer);
+            SessCtl sessctl = new SessCtl();
+            EvnCenter cter = new EvnCenter(sessctl);
 
             while(true) {
-                sesscer.Perform(1000);
+                sessctl.Perform(1000);
             }
         }
     }

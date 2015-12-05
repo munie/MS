@@ -20,7 +20,7 @@ namespace mnn.util {
         }
     }
 
-    public class AtCmdCenter {
+    public class AtCmdCtl {
         private List<AtCmd> atcmd_table;
         class UserCmd {
             public string name;
@@ -29,7 +29,7 @@ namespace mnn.util {
         private List<UserCmd> user_cmd_table;
         private Thread thread;
 
-        public AtCmdCenter()
+        public AtCmdCtl()
         {
             atcmd_table = new List<AtCmd>();
             user_cmd_table = new List<UserCmd>();
