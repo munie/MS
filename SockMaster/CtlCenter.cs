@@ -85,6 +85,9 @@ namespace SockMaster {
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                DataUI.CurrentAcceptCount++;
+                DataUI.HistoryAcceptOpenCount++;
+
                 // update SockTable
                 if (sess.type == SockType.accept) {
                     var subset = from s in DataUI.SockTable
@@ -109,6 +112,9 @@ namespace SockMaster {
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                DataUI.CurrentAcceptCount--;
+                DataUI.HistoryAcceptCloseCount++;
+
                 // update SockTable
                 if (sess.type == SockType.accept) {
                     foreach (var item in DataUI.SockTable) {

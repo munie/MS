@@ -42,6 +42,7 @@ namespace SockMaster
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
         private CtlCenter center;
+        private Socket cmdSock;
 
         private void Initailize()
         {
@@ -74,8 +75,14 @@ namespace SockMaster
             thread.IsBackground = true;
             thread.Start();
 
+            cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+
             DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable };
             this.txtBoxMsg.SetBinding(TextBox.TextProperty, new Binding("Log") { Source = center.DataUI });
+            this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("CurrentAcceptCount") { Source = center.DataUI });
+            this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("HistoryAcceptOpenCount") { Source = center.DataUI });
+            this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("HistoryAcceptCloseCount") { Source = center.DataUI });
         }
 
         private void InitailizeWindowName()
@@ -126,12 +133,7 @@ namespace SockMaster
                 + ",ip:" + sock.EP.Address.ToString()
                 + ",port:" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x12 }.Concat(buffer).ToArray();
-
-            Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
             cmdSock.Send(buffer);
-            cmdSock.Shutdown(SocketShutdown.Both);
-            cmdSock.Dispose();
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -145,12 +147,7 @@ namespace SockMaster
                 + ",ip:" + sock.EP.Address.ToString()
                 + ",port:" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x02, 0x12 }.Concat(buffer).ToArray();
-
-            Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
             cmdSock.Send(buffer);
-            cmdSock.Disconnect(true);
-            cmdSock.Dispose();
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -287,12 +284,7 @@ namespace SockMaster
                     + ",data:");
                 buffer = buffer.Concat(SockConvert.ParseCmdstrToBytes(item.Cmd, '#')).ToArray();
                 buffer = new byte[] { 0x03, 0x12 }.Concat(buffer).ToArray();
-
-                Socket cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
                 cmdSock.Send(buffer);
-                cmdSock.Disconnect(true);
-                cmdSock.Dispose();
                 break;
             }
         }
