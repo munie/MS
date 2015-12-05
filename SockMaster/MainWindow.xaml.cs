@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Xml;
 using System.Net.Sockets;
 using mnn.net;
-using mnn.util;
 
 namespace SockMaster
 {
@@ -377,6 +376,11 @@ namespace SockMaster
         //{
         //    System.Diagnostics.Process.Start("Explorer.exe", MainWindow.BASE_DIR);
         //}
+
+        private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)
+        {
+            txtBoxMsg.Text = "";
+        }
 
         private void txtBoxMsg_TextChanged(object sender, TextChangedEventArgs e)
         {

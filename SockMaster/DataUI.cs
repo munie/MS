@@ -28,7 +28,7 @@ namespace SockMaster {
             get { return log.ToString(); }
             set
             {
-                if (log.Length >= 20 * 1024)
+                if (log.Length >= 20 * 1024 || value == "")
                     log.Clear();
                 log.Append(value);
                 if (PropertyChanged != null)
