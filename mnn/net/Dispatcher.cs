@@ -35,7 +35,8 @@ namespace mnn.net {
         {
             try {
                 foreach (var item in ctler_table) {
-                    if ((item.Value.key & 0xff) == request.data[0] && (item.Value.key >> 8 & 0xff) == request.data[1]) {
+                    if ((item.Value.key & 0xff) == request.data[0] && (item.Value.key >> 8 & 0xff) == request.data[1]
+                        && request.data[2] + (request.data[3] << 8) == request.data.Length) {
                         item.Value.func(request, response);
                         return;
                     }
@@ -43,9 +44,7 @@ namespace mnn.net {
 
                 if (default_controller != null)
                     default_controller.func(request, response);
-            } catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
-            }
+            } catch (Exception) { }
         }
 
         public void Register(string name, Controller.ControllerDelegate func, int key)
