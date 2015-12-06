@@ -40,11 +40,19 @@ namespace SockMaster
         private static readonly string CONF_NAME = "SockMaster.xml";
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
-        private CtlCenter center;
         private Socket cmdSock;
 
         private void Initailize()
         {
+            // init ctlcenter
+            CtlCenter center = new CtlCenter();
+            center.Init();
+            center.Config();
+            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
+            thread.IsBackground = true;
+            thread.Start();
+
+            // init cmdtable
             cmdTable = new ObservableCollection<CmdUnit>();
             try {
                 if (File.Exists(BASE_DIR + CONF_NAME) == false) {
@@ -67,21 +75,16 @@ namespace SockMaster
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
 
-            center = new CtlCenter();
-            center.Init();
-            center.Config();
-            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
-            thread.IsBackground = true;
-            thread.Start();
-
+            // init cmdsock
             cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
 
-            DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable };
+            // init context
+            DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
             this.txtBoxMsg.SetBinding(TextBox.TextProperty, new Binding("Log") { Source = center.DataUI });
-            this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("CurrentAcceptCount") { Source = center.DataUI });
-            this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("HistoryAcceptOpenCount") { Source = center.DataUI });
-            this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("HistoryAcceptCloseCount") { Source = center.DataUI });
+            this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
+            this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
+            this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
         }
 
         private void InitailizeWindowName()

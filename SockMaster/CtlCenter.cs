@@ -18,6 +18,9 @@ namespace SockMaster {
 
         public void Init()
         {
+            /// ** init DataUI
+            DataUI = new DataUI();
+
             // open ctlcenter port
             sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 5964));
 
@@ -26,9 +29,6 @@ namespace SockMaster {
             dispatcher.Register("sock_open_controller", sock_open_controller, 0x0C01);
             dispatcher.Register("sock_close_controller", sock_close_controller, 0x0C02);
             dispatcher.Register("sock_send_controller", sock_send_controller, 0x0C03);
-
-            // init SockTable
-            DataUI = new DataUI();
         }
 
         public void Config()
@@ -42,7 +42,7 @@ namespace SockMaster {
                 XmlDocument doc = new XmlDocument();
                 doc.Load(BASE_DIR + CONF_NAME);
 
-                // socket
+                /// ** config DataUI
                 foreach (XmlNode item in doc.SelectNodes("/configuration/sockets/sockitem")) {
                     SockUnit sock = new SockUnit();
                     sock.ID = item.Attributes["id"].Value;
@@ -82,59 +82,14 @@ namespace SockMaster {
 
         protected override void sess_create(object sender, SockSess sess)
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                DataUI.CurrentAcceptCount++;
-                DataUI.HistoryAcceptOpenCount++;
-
-                // update SockTable
-                if (sess.type == SockType.accept) {
-                    var subset = from s in DataUI.SockTable
-                                 where s.Type == SockType.listen && s.EP.Port == sess.lep.Port
-                                 select s;
-                    foreach (var item in subset) {
-                        item.Childs.Add(new SockUnit()
-                        {
-                            ID = "-",
-                            Name = "accept",
-                            Type = sess.type,
-                            EP = sess.rep,
-                            State = SockState.Opened,
-                        });
-                        break;
-                    }
-                }
-            }));
+            /// ** update DataUI
+            DataUI.SockAdd(sess);
         }
 
         protected override void sess_delete(object sender, SockSess sess)
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                DataUI.CurrentAcceptCount--;
-                DataUI.HistoryAcceptCloseCount++;
-
-                // update SockTable
-                if (sess.type == SockType.accept) {
-                    foreach (var item in DataUI.SockTable) {
-                        if (item.Childs.Count == 0) continue;
-
-                        foreach (var child in item.Childs) {
-                            if (child.EP.Equals(sess.rep)) {
-                                item.Childs.Remove(child);
-                                return;
-                            }
-                        }
-                    }
-                } else if (sess.type == SockType.connect) {
-                    foreach (var item in DataUI.SockTable) {
-                        if (item.EP.Equals(sess.rep)) {
-                            item.State = SockState.Closed;
-                            break;
-                        }
-                    }
-                }
-            }));
+            /// ** update DataUI
+            DataUI.SockDel(sess);
         }
 
         // Self Request Controller =========================================================================
@@ -155,11 +110,11 @@ namespace SockMaster {
 
         private void default_controller(SockRequest request, SockResponse response)
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                DataUI.Log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
-                DataUI.Log = SockConvert.ParseBytesToString(request.data) + "\n\n";
-            }));
+            string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+            log += SockConvert.ParseBytesToString(request.data) + "\n\n";
+
+            /// ** update DataUI
+            DataUI.Logger(log);
         }
 
         private void sock_open_controller(SockRequest request, SockResponse response)
@@ -174,16 +129,11 @@ namespace SockMaster {
             else if (dc["type"] == SockType.connect.ToString())
                 result = sessctl.AddConnect(ep);
 
-            // update DataUI
-            foreach (var item in DataUI.SockTable) {
-                if (item.EP.Equals(ep)) {
-                    if (result != null) {
-                        item.State = SockState.Opened;
-                    } else {
-                        item.State = SockState.Closed;
-                    }
-                }
-            }
+            /// ** update DataUI
+            if (result != null)
+                DataUI.SockOpen(ep);
+            else
+                DataUI.SockClose(ep);
         }
 
         private void sock_close_controller(SockRequest request, SockResponse response)
@@ -204,12 +154,8 @@ namespace SockMaster {
                 }
             }
 
-            // update DataUI
-            foreach (var item in DataUI.SockTable) {
-                if (item.EP.Equals(ep)) {
-                    item.State = SockState.Closed;
-                }
-            }
+            /// ** update DataUI
+            DataUI.SockClose(ep);
         }
 
         private void sock_send_controller(SockRequest request, SockResponse response)
