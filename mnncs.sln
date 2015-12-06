@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockAttack", "SockAttack\SockAttack.csproj", "{2C1C92B9-6401-49DB-A162-E185A6F5D16B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvnCenter", "EnvCenter\EvnCenter.csproj", "{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvModule", "EnvModule\EnvModule.csproj", "{8B27CA98-1781-4630-B3E0-7D99BF6BF400}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleDXS", "ModuleDXS\ModuleDXS.csproj", "{B29B0D6C-54D2-44DB-9159-AEC77DF3ACD9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleQX", "ModuleQX\ModuleQX.csproj", "{26235DFE-9D52-4B8F-9071-394FDA2797AD}"
@@ -51,26 +47,6 @@ Global
 		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|Mixed Platforms.Build.0 = Release|x86
 		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|x86.ActiveCfg = Release|x86
 		{2C1C92B9-6401-49DB-A162-E185A6F5D16B}.Release|x86.Build.0 = Release|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Debug|x86.ActiveCfg = Debug|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Debug|x86.Build.0 = Debug|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Release|Any CPU.ActiveCfg = Release|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Release|Mixed Platforms.Build.0 = Release|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Release|x86.ActiveCfg = Release|x86
-		{FCC6BB75-C6A5-487D-8D40-EEC3636FECCC}.Release|x86.Build.0 = Release|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Debug|x86.ActiveCfg = Debug|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Debug|x86.Build.0 = Debug|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|Any CPU.ActiveCfg = Release|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|Mixed Platforms.Build.0 = Release|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|x86.ActiveCfg = Release|x86
-		{8B27CA98-1781-4630-B3E0-7D99BF6BF400}.Release|x86.Build.0 = Release|x86
 		{B29B0D6C-54D2-44DB-9159-AEC77DF3ACD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B29B0D6C-54D2-44DB-9159-AEC77DF3ACD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B29B0D6C-54D2-44DB-9159-AEC77DF3ACD9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
