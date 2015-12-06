@@ -77,22 +77,22 @@ namespace SockMaster {
             historyAcceptCloseCount = 0;
         }
 
-        public void SockAdd(SockSess sess)
+        public void SockAdd(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // update SockTable
-                if (sess.type == SockType.accept) {
+                if (type == SockType.accept) {
                     var subset = from s in SockTable
-                                 where s.Type == SockType.listen && s.EP.Port == sess.lep.Port
+                                 where s.Type == SockType.listen && s.EP.Port == lep.Port
                                  select s;
                     foreach (var item in subset) {
                         item.Childs.Add(new SockUnit()
                         {
                             ID = "-",
                             Name = "accept",
-                            Type = sess.type,
-                            EP = sess.rep,
+                            Type = type,
+                            EP = rep,
                             State = SockState.Opened,
                         });
                         break;
@@ -103,25 +103,25 @@ namespace SockMaster {
             }));
         }
 
-        public void SockDel(SockSess sess)
+        public void SockDel(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 // update SockTable
-                if (sess.type == SockType.accept) {
+                if (type == SockType.accept) {
                     foreach (var item in SockTable) {
                         if (item.Childs.Count == 0) continue;
 
                         foreach (var child in item.Childs) {
-                            if (child.EP.Equals(sess.rep)) {
+                            if (child.EP.Equals(rep)) {
                                 item.Childs.Remove(child);
                                 return;
                             }
                         }
                     }
-                } else if (sess.type == SockType.connect) {
+                } else if (type == SockType.connect) {
                     foreach (var item in SockTable) {
-                        if (item.EP.Equals(sess.rep)) {
+                        if (item.EP.Equals(rep)) {
                             item.State = SockState.Closed;
                             break;
                         }

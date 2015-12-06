@@ -83,13 +83,13 @@ namespace SockMaster {
         protected override void sess_create(object sender, SockSess sess)
         {
             /// ** update DataUI
-            DataUI.SockAdd(sess);
+            DataUI.SockAdd(sess.type, sess.lep, sess.rep);
         }
 
         protected override void sess_delete(object sender, SockSess sess)
         {
             /// ** update DataUI
-            DataUI.SockDel(sess);
+            DataUI.SockDel(sess.type, sess.lep, sess.rep);
         }
 
         // Self Request Controller =========================================================================
