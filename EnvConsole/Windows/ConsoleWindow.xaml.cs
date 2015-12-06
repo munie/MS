@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Threading;
 using EnvConsole.Unit;
 
 namespace EnvConsole.Windows
@@ -30,11 +31,33 @@ namespace EnvConsole.Windows
         {
             InitializeComponent();
 
+            Initailize();
             InitailizeWindowName();
             InitailizeStatusBar();
         }
 
+        private CtlCenter center;
+
         // Methods ============================================================================
+
+        private void Initailize()
+        {
+            center = new CtlCenter();
+            center.Config();
+            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
+            thread.IsBackground = true;
+            thread.Start();
+
+            DataContext = new { ServerTable = center.DataUI.ServerTable, ClientTable = center.DataUI.ClientTable,
+                ModuleTable = center.DataUI.ModuleTable, DataUI = center.DataUI };
+            this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
+            this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
+            this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
+            this.historyClientCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
+            this.currentPackCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentPackCount"));
+            this.historyPackFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackFetchedCount"));
+            this.historyPackParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackParsedCount"));
+        }
 
         private void InitailizeWindowName()
         {
@@ -71,76 +94,6 @@ namespace EnvConsole.Windows
             timer.Start();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            (this.Owner as MainWindow).Close();
-        }
-
-        public void ClienConnect()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) + 1).ToString();
-                historyClientOpenCount.Text = (Convert.ToInt32(historyClientOpenCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void ClientDisconn()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                currentClientCount.Text = (Convert.ToInt32(currentClientCount.Text) - 1).ToString();
-                historyClientCloseCount.Text = (Convert.ToInt32(historyClientCloseCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void ClientUpdate(IPEndPoint ep, string fieldName, object value)
-        {
-            //Type t = typeof(ClientUnit);
-            //PropertyInfo propertyInfo = t.GetProperty(fieldName);
-
-            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            //{
-            //    var subset = from s in this.clientStateTable
-            //                 where s.RemoteEP.Equals(ep)
-            //                 select s;
-
-            //    if (subset.Count() != 0)
-            //        propertyInfo.SetValue(subset.First(), value, null);
-            //}));
-        }
-
-        public void PackRecved()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                currentPackCount.Text = (Convert.ToInt32(currentPackCount.Text) + 1).ToString();
-                historyPackFetchedCount.Text = (Convert.ToInt32(historyPackFetchedCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void PackParsed()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                currentPackCount.Text = (Convert.ToInt32(currentPackCount.Text) - 1).ToString();
-                historyPackParsedCount.Text = (Convert.ToInt32(historyPackParsedCount.Text) + 1).ToString();
-            }));
-        }
-
-        public void MessageDisplay(string msg)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (txtMsg.Text.Length >= 20 * 1024) {
-                    txtMsg.Clear();
-                }
-
-                txtMsg.AppendText(msg + "\r\n\r\n");
-                txtMsg.ScrollToEnd();
-            }));
-        }
-
         // Events for itself ==================================================================
 
         private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
@@ -151,7 +104,7 @@ namespace EnvConsole.Windows
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                (this.Owner as MainWindow).AtModuleLoad(openFileDialog.FileName);
+                center.ModuleLoad(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
@@ -159,14 +112,12 @@ namespace EnvConsole.Windows
             List<ModuleUnit> handles = new List<ModuleUnit>();
 
             // 保存要卸载的模块信息
-            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems)
                 handles.Add(item);
-            }
 
             // 卸载操作
-            foreach (var item in handles) {
-                (this.Owner as MainWindow).AtModuleUnload(item.FileName);
-            }
+            foreach (var item in handles)
+                center.ModuleUnload(item.FileName);
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
@@ -175,7 +126,7 @@ namespace EnvConsole.Windows
                 if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
 
-                (this.Owner as MainWindow).AtServerStart(item);
+                center.ServerStart(item.IpAddress, item.Port, item.Protocol);
             }
         }
 
@@ -186,7 +137,7 @@ namespace EnvConsole.Windows
                     continue;
 
                 if (item.CanStop == true)
-                    (this.Owner as MainWindow).AtServerStop(item);
+                    center.ServerStop(item.IpAddress, item.Port, item.Protocol);
             }
         }
 
@@ -221,7 +172,7 @@ namespace EnvConsole.Windows
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                (this.Owner as MainWindow).AtServerTimerStart(item);
+                center.ServerTimerStart(item);
             }
         }
 
@@ -232,7 +183,7 @@ namespace EnvConsole.Windows
                     item.TimerState == ServerUnit.TimerStateDisable)
                     continue;
 
-                (this.Owner as MainWindow).AtServerTimerStop(item);
+                center.ServerTimerStop(item);
             }
         }
 
@@ -276,17 +227,25 @@ namespace EnvConsole.Windows
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                    (this.Owner as MainWindow).AtClientSendMessage(item, input.textBox1.Text);
-                }
+                foreach (ClientUnit item in lstViewClient.SelectedItems)
+                    center.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
             }
         }
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                (this.Owner as MainWindow).AtClientClose(item);
-            }
+            foreach (ClientUnit item in lstViewClient.SelectedItems)
+                center.ClientClose(item.RemoteEP.Address.ToString(), item.RemoteEP.Port);
+        }
+
+        private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)
+        {
+            txtMsg.Text = "";
+        }
+
+        private void txtMsg_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            txtMsg.ScrollToEnd();
         }
     }
 }

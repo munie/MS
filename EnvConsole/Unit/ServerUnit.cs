@@ -24,7 +24,7 @@ namespace EnvConsole.Unit
 
         public string ID { get; set; }
         public string Name { get; set; }
-        public string ServerType { get; set; }
+        public string Target { get; set; }
         public string Protocol { get; set; }
         public string IpAddress { get; set; }
         public int Port

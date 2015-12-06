@@ -122,12 +122,14 @@ namespace SockMaster {
             string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-
             SockSess result = null;
-            if (dc["type"] == SockType.listen.ToString())
+
+            if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
                 result = sessctl.MakeListen(ep);
-            else if (dc["type"] == SockType.connect.ToString())
+            else if (dc["type"] == SockType.connect.ToString() && sessctl.FindSession(SockType.connect, null, ep) == null)
                 result = sessctl.AddConnect(ep);
+            else
+                return;
 
             /// ** update DataUI
             if (result != null)
@@ -141,13 +143,13 @@ namespace SockMaster {
             string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-
             SockSess result = null;
+
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
                 result = sessctl.FindSession(SockType.connect, null, ep);
-            else if (dc["type"] == SockType.accept.ToString())
+            else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
             if (result != null)
@@ -163,13 +165,13 @@ namespace SockMaster {
             string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-
             SockSess result = null;
+
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
                 result = sessctl.FindSession(SockType.connect, null, ep);
-            else if (dc["type"] == SockType.accept.ToString())
+            else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
             if (result != null)

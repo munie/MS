@@ -126,6 +126,8 @@ namespace mnn.net {
         public SessDeleteDelegate sess_delete;
         public SessParseDelegate sess_parse;
 
+        private List<Delegate> dispatcher_delegate_table;
+
         public SessCtl()
         {
             sess_table = new List<SockSess>();
@@ -134,6 +136,7 @@ namespace mnn.net {
             sess_create = null;
             sess_delete = null;
             sess_parse = null;
+            dispatcher_delegate_table = new List<Delegate>();
         }
 
         // Methods ============================================================================
@@ -141,6 +144,12 @@ namespace mnn.net {
         public void Perform(int next)
         {
             ThreadCheck(true);
+
+            lock (dispatcher_delegate_table) {
+                foreach (var item in dispatcher_delegate_table)
+                    item.Method.Invoke(item.Target, null);
+                dispatcher_delegate_table.Clear();
+            }
 
             // ** none
             if (sess_table.Count == 0) {
@@ -271,6 +280,13 @@ namespace mnn.net {
         {
             ThreadCheck(false);
             return new List<SockSess>(sess_table);
+        }
+
+        public void BeginInvoke(Delegate method)
+        {
+            lock (dispatcher_delegate_table) {
+                dispatcher_delegate_table.Add(method);
+            }
         }
 
         // Self Methods ========================================================================

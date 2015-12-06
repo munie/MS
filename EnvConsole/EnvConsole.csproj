@@ -74,9 +74,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Windows\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Windows\CtlCenter.cs" />
+    <Compile Include="Windows\DataUI.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />
     <Compile Include="Windows\InputDialog.xaml.cs">
@@ -86,10 +85,6 @@
       <DependentUpon>ConsoleWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Windows\MainWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
