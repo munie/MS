@@ -6,6 +6,12 @@ using System.ComponentModel;
 
 namespace EnvConsole.Unit
 {
+    public enum ServerTarget
+    {
+        center = 0,
+        worker = 1,
+    }
+
     public class ServerUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;

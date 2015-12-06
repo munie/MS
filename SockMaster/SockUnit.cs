@@ -8,19 +8,16 @@ using System.Net;
 using System.Net.Sockets;
 using mnn.net;
 
-namespace SockMaster
-{
-    public enum SockState
-	{
+namespace SockMaster {
+    public enum SockState {
         //None = 0,
         Opening = 1,
         Closing = 2,
         Opened = 3,
         Closed = 4,
-	}
+    }
 
-    public class SockUnit : INotifyPropertyChanged
-    {
+    public class SockUnit : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;

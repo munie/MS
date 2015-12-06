@@ -79,7 +79,8 @@ namespace EnvConsole
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
                     server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == "center" ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
+                    server.TimerState = server.Target == ServerTarget.center.ToString()
+                        ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
                     server.SockServer = null;
@@ -325,6 +326,12 @@ namespace EnvConsole
 
         private void client_list_controller(SockRequest request, SockResponse response)
         {
+            /// ** dangerous !!!
+            var subset = from s in DataUI.ServerTable
+                         where s.Target == ServerTarget.center.ToString() && s.Port == request.lep.Port
+                         select s;
+            if (subset.Count() == 0) return;
+
             StringBuilder sb = new StringBuilder();
 
             /// ** dangerous !!!

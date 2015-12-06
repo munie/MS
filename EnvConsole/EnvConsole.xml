@@ -8,10 +8,10 @@
     <!-- not modify above here -->
 
     <!-- add new server below here -->
-    <server target="serv" protocol="tcp" ipaddress="0.0.0.0" port="3000" autorun="false" canstop="true" id="SK" name="水库 服务" />
-    <server target="serv" protocol="tcp" ipaddress="0.0.0.0" port="3002" autorun="false" canstop="true" id="ZLS" name="流量 服务" />
-    <server target="serv" protocol="tcp" ipaddress="0.0.0.0" port="3006" autorun="false" canstop="true" id="QX" name="气象 服务" />
-    <server target="serv" protocol="tcp" ipaddress="0.0.0.0" port="3008" autorun="false" canstop="true" id="DXS" name="地下水 服务" />
+    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3000" autorun="false" canstop="true" id="SK" name="水库 服务" />
+    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3002" autorun="false" canstop="true" id="ZLS" name="流量 服务" />
+    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3006" autorun="false" canstop="true" id="QX" name="气象 服务" />
+    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3008" autorun="false" canstop="true" id="DXS" name="地下水 服务" />
   </servers>
 
   <timers>

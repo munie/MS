@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace SockMaster
-{
-    public class CmdUnit : INotifyPropertyChanged
-    {
+namespace SockMaster {
+    public class CmdUnit : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;
