@@ -6,17 +6,17 @@ using System.Threading;
 
 namespace mnn.util {
     public class AtCmd {
-        public delegate void AtCmdDelegate(object arg);
+        public delegate void AtCmdDelegate(object[] args);
 
         public string name;
         public AtCmdDelegate func;
-        public List<object> args;
+        public List<object[]> args_table;
 
         public AtCmd(string name, AtCmdDelegate func)
         {
             this.name = name;
             this.func = func;
-            this.args = new List<object>();
+            this.args_table = new List<object[]>();
         }
     }
 
@@ -24,7 +24,7 @@ namespace mnn.util {
         private List<AtCmd> atcmd_table;
         class UserCmd {
             public string name;
-            public object arg;
+            public object[] args;
         }
         private List<UserCmd> user_cmd_table;
         private Thread thread;
@@ -52,7 +52,7 @@ namespace mnn.util {
                 foreach (var item in user_cmd_table) {
                     foreach (var atcmd in atcmd_table) {
                         if (atcmd.name.Equals(item.name)) {
-                            atcmd.args.Add(item.arg);
+                            atcmd.args_table.Add(item.args);
                             break;
                         }
                     }
@@ -62,9 +62,9 @@ namespace mnn.util {
 
             // ** func
             foreach (var item in atcmd_table) {
-                foreach (var arg in item.args.ToArray()) {
-                    item.func(arg);
-                    item.args.Remove(arg);
+                foreach (var args in item.args_table.ToArray()) {
+                    item.func(args);
+                    item.args_table.Remove(args);
                 }
             }
         }
@@ -92,10 +92,10 @@ namespace mnn.util {
             }
         }
 
-        public void AppendCommand(string name, object arg)
+        public void AppendCommand(string name, object[] args)
         {
             lock (user_cmd_table) {
-                user_cmd_table.Add(new UserCmd() { name = name, arg = arg });
+                user_cmd_table.Add(new UserCmd() { name = name, args = args });
             }
         }
 

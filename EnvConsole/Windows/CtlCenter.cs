@@ -234,11 +234,6 @@ namespace EnvConsole.Windows
 
         // Request Controller =========================================================================
 
-        class PackUnit
-        {
-            public IPEndPoint EP;
-            public string Content;
-        }
         private AtCmdCtl cmdctl;
         private void InitPackParse()
         {
@@ -248,9 +243,10 @@ namespace EnvConsole.Windows
             thread.IsBackground = true;
             thread.Start();
         }
-        private void PackParse(object arg)
+        private void PackParse(object[] args)
         {
-            PackUnit pack = arg as PackUnit;
+            SockRequest request = args[0] as SockRequest;
+            string content = Coding.GetString(request.data);
             DataUI.PackParsed();
 
             // 加锁
@@ -258,9 +254,9 @@ namespace EnvConsole.Windows
 
             // 调用模块处理消息
             foreach (var item in DataUI.ModuleTable) {
-                if (pack.Content.Contains(item.Module.ModuleID)) {
+                if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { request.rep, content });
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -271,8 +267,8 @@ namespace EnvConsole.Windows
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
-                pack.Content = (string)node.Invoke(SMsgTrans.FULL_NAME, SMsgTrans.TRANSLATE, new object[] { pack.Content });
-                if (string.IsNullOrEmpty(pack.Content))
+                content = (string)node.Invoke(SMsgTrans.FULL_NAME, SMsgTrans.TRANSLATE, new object[] { content });
+                if (string.IsNullOrEmpty(content))
                     goto _out;
             } catch (Exception) {
                 goto _out;
@@ -280,9 +276,9 @@ namespace EnvConsole.Windows
 
             // 再次调用模块处理消息
             foreach (var item in DataUI.ModuleTable) {
-                if (pack.Content.Contains(item.Module.ModuleID)) {
+                if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { request.rep, content });
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -326,7 +322,7 @@ namespace EnvConsole.Windows
             DataUI.Logger(log);
             DataUI.PackRecved();
 
-            cmdctl.AppendCommand(PACK_PARSE, new PackUnit() { EP = request.rep, Content = Coding.GetString(request.data) });
+            cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
         }
 
         // Methods ============================================================================
