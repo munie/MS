@@ -131,7 +131,7 @@ namespace SockMaster
             byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
                 + ",ip:" + sock.EP.Address.ToString()
                 + ",port:" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x12 }.Concat(buffer).ToArray();
+            buffer = new byte[] { 0x01, 0x0C }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -145,7 +145,7 @@ namespace SockMaster
             byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
                 + ",ip:" + sock.EP.Address.ToString()
                 + ",port:" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x02, 0x12 }.Concat(buffer).ToArray();
+            buffer = new byte[] { 0x02, 0x0C }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -282,7 +282,7 @@ namespace SockMaster
                     + ",port:" + sock.EP.Port.ToString()
                     + ",data:");
                 buffer = buffer.Concat(SockConvert.ParseCmdstrToBytes(item.Cmd, '#')).ToArray();
-                buffer = new byte[] { 0x03, 0x12 }.Concat(buffer).ToArray();
+                buffer = new byte[] { 0x03, 0x0C }.Concat(buffer).ToArray();
                 cmdSock.Send(buffer);
                 break;
             }

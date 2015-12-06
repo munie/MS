@@ -23,9 +23,9 @@ namespace SockMaster {
 
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("sock_open_controller", sock_open_controller, 0x1201);
-            dispatcher.Register("sock_close_controller", sock_close_controller, 0x1202);
-            dispatcher.Register("sock_send_controller", sock_send_controller, 0x1203);
+            dispatcher.Register("sock_open_controller", sock_open_controller, 0x0C01);
+            dispatcher.Register("sock_close_controller", sock_close_controller, 0x0C02);
+            dispatcher.Register("sock_send_controller", sock_send_controller, 0x0C03);
 
             // init SockTable
             DataUI = new DataUI();
