@@ -11,7 +11,7 @@ using System.Reflection;
 using mnn.net;
 using EnvConsole.Unit;
 
-namespace EnvConsole.Windows
+namespace EnvConsole
 {
     class DataUI : INotifyPropertyChanged
     {

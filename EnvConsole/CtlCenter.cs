@@ -15,7 +15,7 @@ using mnn.misc.module;
 using mnn.misc.env;
 using EnvConsole.Unit;
 
-namespace EnvConsole.Windows
+namespace EnvConsole
 {
     class CtlCenter : ControlCenter
     {

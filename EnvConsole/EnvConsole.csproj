@@ -66,7 +66,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Windows\ConsoleWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -74,15 +74,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Windows\CtlCenter.cs" />
-    <Compile Include="Windows\DataUI.cs" />
+    <Compile Include="CtlCenter.cs" />
+    <Compile Include="DataUI.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />
     <Compile Include="Windows\InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Windows\ConsoleWindow.xaml.cs">
-      <DependentUpon>ConsoleWindow.xaml</DependentUpon>
+    <Compile Include="Windows\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
