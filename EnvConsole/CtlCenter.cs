@@ -37,9 +37,7 @@ namespace EnvConsole
 
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
-            //dispatcher.Register("sock_open_controller", sock_open_controller, 0x0C01);
-            //dispatcher.Register("sock_close_controller", sock_close_controller, 0x0C02);
-            //dispatcher.Register("sock_send_controller", sock_send_controller, 0x0C03);
+            dispatcher.Register("client_list_controller", client_list_controller, 0x1201);
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {
@@ -323,6 +321,24 @@ namespace EnvConsole
             DataUI.PackRecved();
 
             cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
+        }
+
+        private void client_list_controller(SockRequest request, SockResponse response)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            /// ** dangerous !!!
+            foreach (var item in DataUI.ClientTable.ToArray()) {
+                sb.Append("{"
+                    + "\"dev\":\"" + item.ServerID + "\""
+                    + "\"ip\":\"" + item.RemoteEP.ToString() + "\""
+                    + "\"time\":\"" + item.ConnectTime + "\""
+                    + "\"ccid\":\"" + item.ID + "\""
+                    + "\"name\":\"" + item.Name + "\""
+                    + "}");
+            }
+
+            response.data = Coding.GetBytes(sb.ToString());
         }
 
         // Methods ============================================================================
