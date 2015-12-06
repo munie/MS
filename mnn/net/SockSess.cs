@@ -115,7 +115,7 @@ namespace mnn.net {
     }
 
     public class SessCtl {
-        public List<SockSess> sess_table;
+        private List<SockSess> sess_table;
         private int stall_time;
         private Thread thread;
 
@@ -234,6 +234,43 @@ namespace mnn.net {
                     sess.sock.Send(data);
                 }
             } catch (Exception) { }
+        }
+
+        public SockSess FindSession(SockType type, IPEndPoint lep, IPEndPoint rep)
+        {
+            ThreadCheck(false);
+
+            SockSess retval = null;
+
+            switch (type) {
+                case SockType.listen:
+                    foreach (var item in sess_table) {
+                        if (item.type == type && item.lep.Equals(lep)) {
+                            retval = item;
+                            break;
+                        }
+                    }
+                    break;
+                case SockType.accept:
+                case SockType.connect:
+                    foreach (var item in sess_table) {
+                        if (item.type == type && item.rep.Equals(rep)) {
+                            retval = item;
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return retval;
+        }
+
+        public List<SockSess> GetSessionTable()
+        {
+            ThreadCheck(false);
+            return new List<SockSess>(sess_table);
         }
 
         // Self Methods ========================================================================

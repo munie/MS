@@ -19,7 +19,7 @@ namespace EnvCenter
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sesscer.sess_table) {
+                foreach (var item in sesscer.GetSessionTable()) {
                     if ((item.sdata as TermUnit) != null)
                         list.Add(item);
                 }
@@ -31,7 +31,7 @@ namespace EnvCenter
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sesscer.sess_table) {
+                foreach (var item in sesscer.GetSessionTable()) {
                     if ((item.sdata as SvcUnit) != null)
                         list.Add(item);
                 }
@@ -43,7 +43,7 @@ namespace EnvCenter
             get
             {
                 List<SockSess> list = new List<SockSess>();
-                foreach (var item in sesscer.sess_table) {
+                foreach (var item in sesscer.GetSessionTable()) {
                     if ((item.sdata as UserUnit) != null)
                         list.Add(item);
                 }

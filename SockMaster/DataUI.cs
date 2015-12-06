@@ -81,7 +81,6 @@ namespace SockMaster {
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // update SockTable
                 if (type == SockType.accept) {
                     var subset = from s in SockTable
                                  where s.Type == SockType.listen && s.EP.Port == lep.Port
@@ -107,7 +106,6 @@ namespace SockMaster {
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // update SockTable
                 if (type == SockType.accept) {
                     foreach (var item in SockTable) {
                         if (item.Childs.Count == 0) continue;
