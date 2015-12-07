@@ -38,6 +38,7 @@ namespace EnvConsole
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
             dispatcher.Register("client_list_controller", client_list_controller, Encoding.UTF8.GetBytes("/center/clientlist"));
+            dispatcher.Register("client_send_controller", client_send_controller, Encoding.UTF8.GetBytes("/center/clientsend"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {
@@ -72,14 +73,14 @@ namespace EnvConsole
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
-                    server.Target = item.Attributes["target"].Value;
+                    server.Target = (ServerTarget)Enum.Parse(typeof(ServerTarget), item.Attributes["target"].Value);
                     server.Protocol = item.Attributes["protocol"].Value;
                     server.IpAddress = item.Attributes["ipaddress"].Value;
                     server.Port = int.Parse(item.Attributes["port"].Value);
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
                     server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == ServerTarget.center.ToString()
+                    server.TimerState = server.Target == ServerTarget.admin
                         ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
@@ -322,19 +323,36 @@ namespace EnvConsole
             DataUI.PackRecved();
 
             cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
+
+            /// ** dangerous !!! access DataUI
+            foreach (var item in DataUI.ServerTable.ToArray()) {
+                if (item.Target == ServerTarget.admin && item.Protocol == "tcp") {
+                    SockSess result = sessctl.FindSession(SockType.listen,
+                        new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port), null);
+                    if (result != null)
+                        sessctl.SendSession(result, request.data);
+                }
+            }
+        }
+
+        private bool checkTargetCenter(int port)
+        {
+            /// ** dangerous !!! access DataUI
+            var subset = from s in DataUI.ServerTable
+                         where s.Target == ServerTarget.admin && s.Port == port
+                         select s;
+            if (subset.Count() == 0)
+                return false;
+            else
+                return true;
         }
 
         private void client_list_controller(SockRequest request, SockResponse response)
         {
-            /// ** dangerous !!!
-            var subset = from s in DataUI.ServerTable
-                         where s.Target == ServerTarget.center.ToString() && s.Port == request.lep.Port
-                         select s;
-            if (subset.Count() == 0) return;
+            if (!checkTargetCenter(request.lep.Port)) return;
 
+            /// ** dangerous !!! access DataUI
             StringBuilder sb = new StringBuilder();
-
-            /// ** dangerous !!!
             foreach (var item in DataUI.ClientTable.ToArray()) {
                 sb.Append("{"
                     + "\"dev\":\"" + item.ServerID + "\""
@@ -344,8 +362,35 @@ namespace EnvConsole
                     + "\"name\":\"" + item.Name + "\""
                     + "}");
             }
-
             response.data = Coding.GetBytes(sb.ToString());
+        }
+
+        private void client_send_controller(SockRequest request, SockResponse response)
+        {
+            if (!checkTargetCenter(request.lep.Port)) return;
+
+            string msg = Encoding.UTF8.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            SockSess result = null;
+
+            if (dc["type"] == SockType.listen.ToString())
+                result = sessctl.FindSession(SockType.listen, ep, null);
+            else if (dc["type"] == SockType.connect.ToString())
+                result = sessctl.FindSession(SockType.connect, null, ep);
+            else// if (dc["type"] == SockType.accept.ToString())
+                result = sessctl.FindSession(SockType.accept, null, ep);
+
+            if (result != null)
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
+
+            if (result != null)
+                response.data = Encoding.UTF8.GetBytes("OK");
+            else
+                response.data = Encoding.UTF8.GetBytes("no such client");
         }
 
         // Methods ============================================================================

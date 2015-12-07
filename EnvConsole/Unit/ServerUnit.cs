@@ -8,7 +8,7 @@ namespace EnvConsole.Unit
 {
     public enum ServerTarget
     {
-        center = 0,
+        admin = 0,
         worker = 1,
     }
 
@@ -30,7 +30,7 @@ namespace EnvConsole.Unit
 
         public string ID { get; set; }
         public string Name { get; set; }
-        public string Target { get; set; }
+        public ServerTarget Target { get; set; }
         public string Protocol { get; set; }
         public string IpAddress { get; set; }
         public int Port
