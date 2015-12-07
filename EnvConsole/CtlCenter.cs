@@ -37,8 +37,8 @@ namespace EnvConsole
 
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("client_list_controller", client_list_controller, Encoding.UTF8.GetBytes("/center/clientlist"));
-            dispatcher.Register("client_send_controller", client_send_controller, Encoding.UTF8.GetBytes("/center/clientsend"));
+            dispatcher.Register("client_list_controller", client_list_controller, Coding.GetBytes("/center/clientlist"));
+            dispatcher.Register("client_send_controller", client_send_controller, Coding.GetBytes("/center/clientsend"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {
@@ -369,7 +369,7 @@ namespace EnvConsole
         {
             if (!checkTargetCenter(request.lep.Port)) return;
 
-            string msg = Encoding.UTF8.GetString(request.data);
+            string msg = Coding.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
 
@@ -385,12 +385,12 @@ namespace EnvConsole
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
             if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
+                sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
 
             if (result != null)
-                response.data = Encoding.UTF8.GetBytes("OK");
+                response.data = Coding.GetBytes("OK");
             else
-                response.data = Encoding.UTF8.GetBytes("no such client");
+                response.data = Coding.GetBytes("no such client");
         }
 
         // Methods ============================================================================
