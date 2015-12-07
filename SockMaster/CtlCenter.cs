@@ -119,7 +119,7 @@ namespace SockMaster {
 
         private void sock_open_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
@@ -140,7 +140,7 @@ namespace SockMaster {
 
         private void sock_close_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
@@ -162,7 +162,7 @@ namespace SockMaster {
 
         private void sock_send_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(2).ToArray());
+            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
             Dictionary<string, string> dc = msg_parse(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
