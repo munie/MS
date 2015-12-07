@@ -11,7 +11,7 @@ namespace SockMaster {
         private string id;
         private string name;
         private string cmd;
-        private string comment;
+        private bool encrypt;
 
         public string ID
         {
@@ -43,14 +43,14 @@ namespace SockMaster {
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
             }
         }
-        public string Comment
+        public bool Encrypt
         {
-            get { return comment; }
+            get { return encrypt; }
             set
             {
-                comment = value;
+                encrypt = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Comment"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("Encrypt"));
             }
         }
     }

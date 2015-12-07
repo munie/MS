@@ -17,7 +17,7 @@ using EnvConsole.Unit;
 
 namespace EnvConsole
 {
-    class CtlCenter : ControlCenter
+    class CtlCenter : CtlCenterBase
     {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "EnvConsole.xml";
@@ -36,9 +36,10 @@ namespace EnvConsole
             modctl = new ModuleCtl();
 
             // dispatcher register
-            dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("client_list_controller", client_list_controller, Coding.GetBytes("/center/clientlist"));
-            dispatcher.Register("client_send_controller", client_send_controller, Coding.GetBytes("/center/clientsend"));
+            dispatcher = new Dispatcher();
+            dispatcher.RegisterDefaultService("default_service", default_service);
+            dispatcher.Register("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
+            dispatcher.Register("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {
@@ -314,7 +315,7 @@ namespace EnvConsole
             //DataUI.RwlockModuleTable.ReleaseReaderLock();
         }
 
-        private void default_controller(SockRequest request, SockResponse response)
+        private void default_service(SockRequest request, SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += Coding.GetString(request.data) + "\n\n";
@@ -347,7 +348,7 @@ namespace EnvConsole
                 return true;
         }
 
-        private void client_list_controller(SockRequest request, SockResponse response)
+        private void client_list_service(SockRequest request, SockResponse response)
         {
             if (!checkTargetCenter(request.lep.Port)) return;
 
@@ -365,7 +366,7 @@ namespace EnvConsole
             response.data = Coding.GetBytes(sb.ToString());
         }
 
-        private void client_send_controller(SockRequest request, SockResponse response)
+        private void client_send_service(SockRequest request, SockResponse response)
         {
             if (!checkTargetCenter(request.lep.Port)) return;
 

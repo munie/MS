@@ -61,6 +61,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="Unit\ClientUnit.cs" />
     <Page Include="Windows\InputDialog.xaml">
       <SubType>Designer</SubType>

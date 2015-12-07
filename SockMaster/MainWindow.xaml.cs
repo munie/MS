@@ -68,7 +68,7 @@ namespace SockMaster
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
                     cmd.Cmd = item.Attributes["content"].Value;
-                    cmd.Comment = item.Attributes["comment"].Value;
+                    cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
                     cmdTable.Add(cmd);
                 }
             } catch (Exception) {
@@ -231,12 +231,12 @@ namespace SockMaster
 
             if (File.Exists(CtlCenter.CONF_PATH)) {
                 doc.Load(CtlCenter.CONF_PATH);
-                config = doc.SelectSingleNode("/configuration/socket");
+                config = doc.SelectSingleNode("/configuration/sockets");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("socket"); // 创建根节点album
+                config = doc.CreateElement("sockets"); // 创建根节点album
                 root.AppendChild(config);
             }
 
@@ -282,11 +282,19 @@ namespace SockMaster
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
+                byte[] data = null;
+                if (item.Encrypt) {
+                    data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+                    string tmp = EncryptSym.AESEncrypt(Encoding.UTF8.GetString(data));
+                    data = Encoding.UTF8.GetBytes(tmp);
+                } else
+                    data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+
                 byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend?type=" + sock.Type.ToString()
                     + "&ip=" + sock.EP.Address.ToString()
                     + "&port=" + sock.EP.Port.ToString()
                     + "&data=");
-                buffer = buffer.Concat(SockConvert.ParseCmdstrToBytes(item.Cmd, '#')).ToArray();
+                buffer = buffer.Concat(data).ToArray();
                 buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
                     (byte)(buffer.Length >> 8 & 0xff) }.Concat(buffer).ToArray();
                 cmdSock.Send(buffer);
@@ -304,7 +312,7 @@ namespace SockMaster
                 input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
-                input.textBoxComment.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Comment;
+                input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
@@ -314,7 +322,7 @@ namespace SockMaster
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.Cmd = input.textBoxCmd.Text;
-                    item.Comment = input.textBoxComment.Text;
+                    item.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                     break;
                 }
             }
@@ -333,7 +341,7 @@ namespace SockMaster
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
-                cmd.Comment = input.textBoxComment.Text;
+                cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                 cmdTable.Add(cmd);
             }
         }
@@ -356,12 +364,12 @@ namespace SockMaster
 
             if (File.Exists(CtlCenter.CONF_PATH)) {
                 doc.Load(CtlCenter.CONF_PATH);
-                config = doc.SelectSingleNode("/configuration/command");
+                config = doc.SelectSingleNode("/configuration/commands");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
                 XmlElement root = doc.CreateElement("configuration"); // 创建根节点album
                 doc.AppendChild(root);
-                config = doc.CreateElement("command"); // 创建根节点album
+                config = doc.CreateElement("commands"); // 创建根节点album
                 root.AppendChild(config);
             }
 
@@ -370,8 +378,8 @@ namespace SockMaster
                 XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
+                cmd.SetAttribute("encrypt", item.Encrypt.ToString());
                 cmd.SetAttribute("content", item.Cmd);
-                cmd.SetAttribute("comment", item.Comment);
                 config.AppendChild(cmd);
             }
 

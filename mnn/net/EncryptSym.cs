@@ -5,7 +5,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace mnn.util {
+namespace mnn.net {
     public class EncryptSym {
         /// <summary>
         /// 获取密钥

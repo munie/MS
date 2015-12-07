@@ -8,7 +8,7 @@ using System.Net;
 using mnn.net;
 
 namespace SockMaster {
-    class CtlCenter : ControlCenter {
+    class CtlCenter : CtlCenterBase {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
@@ -25,10 +25,10 @@ namespace SockMaster {
             sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 5964));
 
             // dispatcher register
-            dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("sock_open_controller", sock_open_controller, Encoding.UTF8.GetBytes("/center/sockopen"));
-            dispatcher.Register("sock_close_controller", sock_close_controller, Encoding.UTF8.GetBytes("/center/sockclose"));
-            dispatcher.Register("sock_send_controller", sock_send_controller, Encoding.UTF8.GetBytes("/center/socksend"));
+            dispatcher.RegisterDefaultService("default_service", default_service);
+            dispatcher.Register("sock_open_service", sock_open_service, Encoding.UTF8.GetBytes("/center/sockopen"));
+            dispatcher.Register("sock_close_service", sock_close_service, Encoding.UTF8.GetBytes("/center/sockclose"));
+            dispatcher.Register("sock_send_service", sock_send_service, Encoding.UTF8.GetBytes("/center/socksend"));
         }
 
         public void Config()
@@ -94,7 +94,7 @@ namespace SockMaster {
 
         // Self Request Controller =========================================================================
 
-        private void default_controller(SockRequest request, SockResponse response)
+        private void default_service(SockRequest request, SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
@@ -103,7 +103,7 @@ namespace SockMaster {
             DataUI.Logger(log);
         }
 
-        private void sock_open_controller(SockRequest request, SockResponse response)
+        private void sock_open_service(SockRequest request, SockResponse response)
         {
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
@@ -127,7 +127,7 @@ namespace SockMaster {
                 DataUI.SockClose(ep);
         }
 
-        private void sock_close_controller(SockRequest request, SockResponse response)
+        private void sock_close_service(SockRequest request, SockResponse response)
         {
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
@@ -152,13 +152,20 @@ namespace SockMaster {
                 DataUI.SockClose(ep);
         }
 
-        private void sock_send_controller(SockRequest request, SockResponse response)
+        private void sock_send_service(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
+            // retrieve param_list of url
+            string param_list = Encoding.UTF8.GetString(request.data);
+            if (!param_list.Contains('?')) return;
+            param_list = param_list.Substring(param_list.IndexOf('?') + 1);
 
-            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+            // retrieve param_data
+            int index_data = param_list.IndexOf("&data=");
+            if (index_data == -1) return;
+            string param_data = param_list.Substring(index_data + 6);
+            param_list = param_list.Substring(0, index_data);
+
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(param_list);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
 
@@ -170,7 +177,7 @@ namespace SockMaster {
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
             if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
         }
     }
 }

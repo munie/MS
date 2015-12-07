@@ -57,9 +57,9 @@
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="Name" Width="60"
                                     DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="Comment" Width="120"
-                                    DisplayMemberBinding="{Binding Comment}" />
-                    <GridViewColumn Header="Cmd" Width="300"
+                    <GridViewColumn Header="Encrypt" Width="50"
+                                    DisplayMemberBinding="{Binding Encrypt}" />
+                    <GridViewColumn Header="Cmd" Width="360"
                                     DisplayMemberBinding="{Binding Cmd}" />
                 </GridView>
             </ListView.View>

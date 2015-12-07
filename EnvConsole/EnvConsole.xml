@@ -3,7 +3,7 @@
   <encoding>gbk</encoding>
 
   <servers>
-    <server target="admin" protocol="tcp" ipaddress="0.0.0.0" port="5964" autorun="true" canstop="false" id="ctl" name="命令 服务" />
+    <server target="admin" protocol="tcp" ipaddress="0.0.0.0" port="2000" autorun="true" canstop="false" id="ctl" name="命令 服务" />
     <server target="admin" protocol="udp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="mod" name="命令 服务" />
     <!-- not modify above here -->
 
