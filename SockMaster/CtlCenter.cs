@@ -26,9 +26,9 @@ namespace SockMaster {
 
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("sock_open_controller", sock_open_controller, 0x0C01);
-            dispatcher.Register("sock_close_controller", sock_close_controller, 0x0C02);
-            dispatcher.Register("sock_send_controller", sock_send_controller, 0x0C03);
+            dispatcher.Register("sock_open_controller", sock_open_controller, Encoding.UTF8.GetBytes("/center/sockopen"));
+            dispatcher.Register("sock_close_controller", sock_close_controller, Encoding.UTF8.GetBytes("/center/sockclose"));
+            dispatcher.Register("sock_send_controller", sock_send_controller, Encoding.UTF8.GetBytes("/center/socksend"));
         }
 
         public void Config()
@@ -94,20 +94,6 @@ namespace SockMaster {
 
         // Self Request Controller =========================================================================
 
-        private Dictionary<string, string> msg_parse(string msg)
-        {
-            Dictionary<string, string> dc = new Dictionary<string, string>();
-
-            msg = msg.Replace(", ", ",");
-            string[] values = msg.Split(',');
-            foreach (var item in values) {
-                string[] tmp = item.Split(':');
-                dc.Add(tmp[0], tmp[1]);
-            }
-
-            return dc;
-        }
-
         private void default_controller(SockRequest request, SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
@@ -119,8 +105,11 @@ namespace SockMaster {
 
         private void sock_open_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
-            Dictionary<string, string> dc = msg_parse(msg);
+            string msg = Encoding.UTF8.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
 
@@ -140,8 +129,11 @@ namespace SockMaster {
 
         private void sock_close_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
-            Dictionary<string, string> dc = msg_parse(msg);
+            string msg = Encoding.UTF8.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
 
@@ -162,8 +154,11 @@ namespace SockMaster {
 
         private void sock_send_controller(SockRequest request, SockResponse response)
         {
-            string msg = Encoding.UTF8.GetString(request.data.Skip(4).ToArray());
-            Dictionary<string, string> dc = msg_parse(msg);
+            string msg = Encoding.UTF8.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
 

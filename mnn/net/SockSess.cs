@@ -16,17 +16,20 @@ namespace mnn.net {
     }
 
     public class SockSess {
-        public Socket sock;
+        public Socket sock { get; private set; }
         public SockType type;
         public IPEndPoint lep;
         public IPEndPoint rep;
         public bool eof;
         public DateTime tick;
 
-        public byte[] rdata;
-        public int rdata_max = 8192, rdata_size, rdata_pos;
-        public byte[] wdata;
-        public int wdata_max = 8192, wdata_size;
+        public byte[] rdata { get; private set; }
+        public int rdata_max = 8192;
+        public int rdata_size { get; private set; }
+        public int rdata_pos { get; private set; }
+        public byte[] wdata { get; private set; }
+        public int wdata_max = 8192;
+        public int wdata_size { get; private set; }
         public object sdata;
 
         public delegate void RecvDelegate(SockSess sess);
@@ -53,10 +56,24 @@ namespace mnn.net {
             func_send = Send;
         }
 
+        public void RfifoSkip(int size)
+        {
+            if (size > rdata_size)
+                size = rdata_size;
+
+            rdata_size -= size;
+            for (int i = 0; i < rdata_size; i++)
+                rdata[i] = rdata[i + size];
+        }
+
         public static void Recv(SockSess sess)
         {
             try {
-                if ((sess.rdata_size = sess.sock.Receive(sess.rdata)) == 0)
+                int result = sess.sock.Receive(sess.rdata, sess.rdata_size,
+                    sess.rdata_max - sess.rdata_size, SocketFlags.None);
+                sess.rdata_size += result;
+
+                if (result == 0)
                     sess.eof = true;
 
                 sess.tick = DateTime.Now;
@@ -145,10 +162,12 @@ namespace mnn.net {
         {
             ThreadCheck(true);
 
-            lock (dispatcher_delegate_table) {
-                foreach (var item in dispatcher_delegate_table)
-                    item.Method.Invoke(item.Target, null);
-                dispatcher_delegate_table.Clear();
+            if (dispatcher_delegate_table.Count != 0) {
+                lock (dispatcher_delegate_table) {
+                    foreach (var item in dispatcher_delegate_table)
+                        item.Method.Invoke(item.Target, null);
+                    dispatcher_delegate_table.Clear();
+                }
             }
 
             // ** none

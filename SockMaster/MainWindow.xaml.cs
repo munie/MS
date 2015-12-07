@@ -131,9 +131,9 @@ namespace SockMaster
 
             sock.State = SockState.Opening;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
-                + ",ip:" + sock.EP.Address.ToString()
-                + ",port:" + sock.EP.Port.ToString());
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen?type=" + sock.Type.ToString()
+                + "&ip=" + sock.EP.Address.ToString()
+                + "&port=" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
                 (byte)(buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
@@ -146,10 +146,10 @@ namespace SockMaster
 
             sock.State = SockState.Closing;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
-                + ",ip:" + sock.EP.Address.ToString()
-                + ",port:" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x02, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose?type=" + sock.Type.ToString()
+                + "&ip=" + sock.EP.Address.ToString()
+                + "&port=" + sock.EP.Port.ToString());
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
                 (byte)(buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
@@ -282,12 +282,12 @@ namespace SockMaster
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                byte[] buffer = Encoding.UTF8.GetBytes("type:" + sock.Type.ToString()
-                    + ",ip:" + sock.EP.Address.ToString()
-                    + ",port:" + sock.EP.Port.ToString()
-                    + ",data:");
+                byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend?type=" + sock.Type.ToString()
+                    + "&ip=" + sock.EP.Address.ToString()
+                    + "&port=" + sock.EP.Port.ToString()
+                    + "&data=");
                 buffer = buffer.Concat(SockConvert.ParseCmdstrToBytes(item.Cmd, '#')).ToArray();
-                buffer = new byte[] { 0x03, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
+                buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
                     (byte)(buffer.Length >> 8 & 0xff) }.Concat(buffer).ToArray();
                 cmdSock.Send(buffer);
                 break;

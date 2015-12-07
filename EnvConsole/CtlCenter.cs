@@ -37,7 +37,7 @@ namespace EnvConsole
 
             // dispatcher register
             dispatcher.RegisterDefaultController("default_controller", default_controller);
-            dispatcher.Register("client_list_controller", client_list_controller, 0x1201);
+            dispatcher.Register("client_list_controller", client_list_controller, Encoding.UTF8.GetBytes("/center/clientlist"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {

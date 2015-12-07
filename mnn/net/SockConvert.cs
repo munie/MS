@@ -119,5 +119,21 @@ namespace mnn.net {
 
             return sb.ToString();
         }
+
+        public static IDictionary<string, string> ParseHttpQueryParam(string query)
+        {
+            Dictionary<string, string> dc = new Dictionary<string, string>();
+
+            string[] values = query.Split('&');
+            foreach (var item in values) {
+                int index = item.IndexOf('=');
+                if (index == -1) continue;
+                dc.Add(item.Substring(0, index), item.Substring(index+1));
+                //string[] tmp = item.Split('=');
+                //dc.Add(tmp[0], tmp[1]);
+            }
+
+            return dc;
+        }
     }
 }

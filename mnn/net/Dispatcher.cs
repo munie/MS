@@ -7,15 +7,13 @@ namespace mnn.net {
     public class Controller {
         public delegate void ControllerDelegate(SockRequest request, SockResponse response);
 
-        public string name;
+        public byte[] keyname;
         public ControllerDelegate func;
-        public int key;
 
-        public Controller(string name, ControllerDelegate func, int key)
+        public Controller(byte[] key, ControllerDelegate func)
         {
-            this.name = name;
+            this.keyname = key;
             this.func = func;
-            this.key = key;
         }
     }
 
@@ -31,31 +29,45 @@ namespace mnn.net {
 
         // Methods =============================================================================
 
+        private bool byteArrayCmp(byte[] first, byte[] second)
+        {
+            if (first.Length != second.Length)
+                return false;
+
+            for (int i = 0; i < first.Length; i++) {
+                if (first[i] != second[i])
+                    return false;
+            }
+
+            return true;
+        }
+
         public virtual void handle(SockRequest request, SockResponse response)
         {
             try {
-                foreach (var item in ctler_table) {
-                    if ((item.Value.key & 0xff) == request.data[0] && (item.Value.key >> 8 & 0xff) == request.data[1]
-                        && request.data[2] + (request.data[3] << 8) == request.data.Length) {
-                        item.Value.func(request, response);
-                        return;
-                    }
+                if (request.type == SockRequestType.unknown) {
+                    default_controller.func(request, response);
+                    return;
                 }
 
-                if (default_controller != null)
-                    default_controller.func(request, response);
+                foreach (var item in ctler_table) {
+                    if (byteArrayCmp(item.Value.keyname, request.data.Take(item.Value.keyname.Length).ToArray())) {
+                        item.Value.func(request, response);
+                        break;
+                    }
+                }
             } catch (Exception) { }
         }
 
-        public void Register(string name, Controller.ControllerDelegate func, int key)
+        public void Register(string name, Controller.ControllerDelegate func, byte[] key)
         {
             if (!ctler_table.ContainsKey(name))
-                ctler_table.Add(name, new Controller(name, func, key));
+                ctler_table.Add(name, new Controller(key, func));
         }
 
-        public void RegisterDefaultController(string name, Controller.ControllerDelegate func, int key = 0)
+        public void RegisterDefaultController(string name, Controller.ControllerDelegate func)
         {
-            default_controller = new Controller(name, func, key);
+            default_controller = new Controller(new byte[] {0}, func);
         }
 
         public void Deregister(string name)
