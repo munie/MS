@@ -50,7 +50,8 @@ namespace EnvConsole.Windows
 
             DataContext = new { ServerTable = center.DataUI.ServerTable, ClientTable = center.DataUI.ClientTable,
                 ModuleTable = center.DataUI.ModuleTable, DataUI = center.DataUI };
-            this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
+            center.DataUI.msgBox = txtMsg;
+            //this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
             this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
             this.historyClientCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
@@ -243,9 +244,9 @@ namespace EnvConsole.Windows
             txtMsg.Text = "";
         }
 
-        private void txtMsg_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            txtMsg.ScrollToEnd();
-        }
+        //private void txtMsg_TextChanged(object sender, TextChangedEventArgs e)
+        //{
+        //    txtMsg.ScrollToEnd();
+        //}
     }
 }

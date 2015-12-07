@@ -23,6 +23,7 @@ namespace EnvConsole
         public event PropertyChangedEventHandler PropertyChanged;
 
         // socket parse log
+        public System.Windows.Controls.TextBox msgBox;
         private StringBuilder log;
         public string Log
         {
@@ -109,7 +110,7 @@ namespace EnvConsole
             get { return historyPackParsedCount; }
             set
             {
-                historyPackFetchedCount = value;
+                historyPackParsedCount = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("HistoryPackParsedCount"));
             }
@@ -207,7 +208,12 @@ namespace EnvConsole
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                Log = log;
+                //Log = log;
+                if (msgBox.Text.Length >= 20 * 1024)
+                    msgBox.Clear();
+
+                msgBox.AppendText(log);
+                msgBox.ScrollToEnd();
             }));
         }
 

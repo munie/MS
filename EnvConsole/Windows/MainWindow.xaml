@@ -130,7 +130,7 @@
         
         <GridSplitter Width="2" Grid.Row="1" Grid.RowSpan="2" ></GridSplitter>
 
-        <TextBox Name="txtMsg" Grid.Column="1" Grid.Row="1" Margin="5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" UndoLimit="0" Grid.RowSpan="2" TextChanged="txtMsg_TextChanged">
+        <TextBox Name="txtMsg" Grid.Column="1" Grid.Row="1" Margin="5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" UndoLimit="0" Grid.RowSpan="2">
             <TextBox.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="clear" Click="MenuItem_MsgClear_Click"/>
