@@ -285,8 +285,11 @@ namespace SockMaster
                 byte[] data = null;
                 if (item.Encrypt) {
                     data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                    string tmp = EncryptSym.AESEncrypt(Encoding.UTF8.GetString(data));
+                    data = EncryptSym.AESEncrypt(data.Skip(4).ToArray());
+                    string tmp = Convert.ToBase64String(data);
                     data = Encoding.UTF8.GetBytes(tmp);
+                    data = new byte[] { 0x01, 0x0C, (byte)(0x04 + data.Length & 0xff),
+                        (byte)(data.Length >> 8 & 0xff) }.Concat(data).ToArray();
                 } else
                     data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
 

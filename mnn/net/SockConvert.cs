@@ -51,6 +51,8 @@ namespace mnn.net {
             return obj;
         }
 
+        #region SockMaster's command parse and message display convert
+
         /// <summary>
         /// 0x3020050040 => new byte[] { 30, 20, 05, 00, 40 }
         /// </summary>
@@ -119,6 +121,8 @@ namespace mnn.net {
 
             return sb.ToString();
         }
+
+        #endregion SockMaster's command parse and message display convert
 
         public static IDictionary<string, string> ParseHttpQueryParam(string query)
         {

@@ -11,8 +11,8 @@ namespace EnvConsole
         public override void handle(SockRequest request, SockResponse response)
         {
             if (request.type != SockRequestType.unknown) {
-                char[] tmp = Encoding.UTF8.GetChars(request.data);
-                request.data = EncryptSym.AESDecrypt(Convert.FromBase64CharArray(tmp, 0, tmp.Length));
+                request.data = EncryptSym.AESDecrypt(
+                    Convert.FromBase64String(Encoding.UTF8.GetString(request.data)));
                 if (request.data == null) return;
             }
 

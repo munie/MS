@@ -125,6 +125,33 @@ namespace mnn.net {
         }
 
         /// <summary>
+        /// AES加密
+        /// </summary>
+        /// <param name="plainStr">明文字符串</param>
+        /// <returns>密文</returns>
+        public static byte[] AESEncrypt(byte[] plainArray)
+        {
+            try {
+                byte[] bKey = Encoding.UTF8.GetBytes(AESKey);
+                byte[] bIV = Encoding.UTF8.GetBytes(AESIV);
+                byte[] retval = null;
+
+                Rijndael aes = Rijndael.Create();
+                using (MemoryStream mStream = new MemoryStream()) {
+                    using (CryptoStream cStream = new CryptoStream(mStream, aes.CreateEncryptor(bKey, bIV), CryptoStreamMode.Write)) {
+                        cStream.Write(plainArray, 0, plainArray.Length);
+                        cStream.FlushFinalBlock();
+                        retval = mStream.ToArray();
+                    }
+                }
+                aes.Clear();
+                return retval;
+            } catch {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// AES解密
         /// </summary>
         /// <param name="encryptStr">密文字符串</param>
