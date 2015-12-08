@@ -97,11 +97,8 @@ namespace mnn.misc.env {
 
         // Private Tools ===========================================================================
 
-        protected void SendClientClose(string ip, int port)
+        private void SendToClient(string url)
         {
-            string url = "/center/clientclose"
-                + "?type=accept" + "&ip=" + ip + "&port=" + port;
-
             url = mnn.net.EncryptSym.AESEncrypt(url);
             byte[] buffer = Encoding.UTF8.GetBytes(url);
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
@@ -109,8 +106,16 @@ namespace mnn.misc.env {
 
             if (!socket.Connected)
                 socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-            socket.Send(buffer);
-            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+            if (!socket.Connected)
+                socket.Send(buffer);
+        }
+
+        protected void SendClientClose(string ip, int port)
+        {
+            string url = "/center/clientclose"
+                + "?type=accept" + "&ip=" + ip + "&port=" + port;
+
+            SendToClient(url);
         }
 
         protected void SendClientMsg(string ip, int port, string msg)
@@ -118,15 +123,15 @@ namespace mnn.misc.env {
             string url = "/center/clientsend"
                 + "?type=accept" + "&ip=" + ip + "&port=" + port + "&data=" + msg;
 
-            url = mnn.net.EncryptSym.AESEncrypt(url);
-            byte[] buffer = Encoding.UTF8.GetBytes(url);
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+            SendToClient(url);
+        }
 
-            if (!socket.Connected)
-                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-            socket.Send(buffer);
-            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+        protected void SendClientMsgByCcid(string ccid, string msg)
+        {
+            string url = "/center/clientsendbyccid"
+                + "?type=accept" + "&ccid=" + ccid + "&data=" + msg;
+
+            SendToClient(url);
         }
 
         protected void SendClientUpdate(string ip, int port, string ccid, string name)

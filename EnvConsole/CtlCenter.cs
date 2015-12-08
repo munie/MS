@@ -41,6 +41,7 @@ namespace EnvConsole
             dispatcher.Register("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
             dispatcher.Register("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
             dispatcher.Register("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
+            dispatcher.Register("client_send_by_ccid_service", client_send_by_ccid_service, Coding.GetBytes("/center/clientsendbyccid"));
             dispatcher.Register("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
@@ -227,12 +228,21 @@ namespace EnvConsole
 
         protected override void sess_create(object sender, SockSess sess)
         {
-            if (sess.type == SockType.accept)
+            if (sess.type == SockType.accept) {
+                sess.sdata = new SessData() {
+                    Ccid = "",
+                    Name = "",
+                    TimeConn = DateTime.Now,
+                    IsAdmin = checkServerTargetCenter(sess.lep.Port),
+                };
+                /// ** update DataUI
                 DataUI.ClientAdd(sess.lep, sess.rep);
+            }
         }
 
         protected override void sess_delete(object sender, SockSess sess)
         {
+            /// ** update DataUI
             if (sess.type == SockType.accept)
                 DataUI.ClientDel(sess.rep);
         }
@@ -319,28 +329,7 @@ namespace EnvConsole
             //DataUI.RwlockModuleTable.ReleaseReaderLock();
         }
 
-        private void default_service(SockRequest request, SockResponse response)
-        {
-            string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
-            log += Coding.GetString(request.data) + "\n\n";
-
-            DataUI.Logger(log);
-            DataUI.PackRecved();
-
-            cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
-
-            /// ** dangerous !!! access DataUI
-            foreach (var item in DataUI.ServerTable.ToArray()) {
-                if (item.Target == ServerTarget.center && item.Protocol == "tcp") {
-                    SockSess result = sessctl.FindSession(SockType.listen,
-                        new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port), null);
-                    if (result != null)
-                        sessctl.SendSession(result, request.data);
-                }
-            }
-        }
-
-        private bool checkTargetCenter(int port)
+        private bool checkServerTargetCenter(int port)
         {
             /// ** dangerous !!! access DataUI
             var subset = from s in DataUI.ServerTable
@@ -352,28 +341,51 @@ namespace EnvConsole
                 return true;
         }
 
+        private void default_service(SockRequest request, SockResponse response)
+        {
+            string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+            log += Coding.GetString(request.data) + "\n\n";
+
+            /// ** update DataUI
+            DataUI.Logger(log);
+            DataUI.PackRecved();
+
+            cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
+
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                if (sd.IsAdmin)
+                    sessctl.SendSession(item, request.data);
+            }
+        }
+
         private void client_list_service(SockRequest request, SockResponse response)
         {
-            if (!checkTargetCenter(request.lep.Port)) return;
+            if (!checkServerTargetCenter(request.lep.Port)) return;
 
-            /// ** dangerous !!! access DataUI
             StringBuilder sb = new StringBuilder();
-            foreach (var item in DataUI.ClientTable.ToArray()) {
+            foreach (var item in sessctl.GetSessionTable()) {
+                if (item.type != SockType.accept) continue;
+                SessData sd = item.sdata as SessData;
+                if (String.IsNullOrEmpty(sd.Ccid)) continue;
                 sb.Append("{"
-                    + "\"dev\":\"" + item.ServerID + "\""
-                    + "\"ip\":\"" + item.RemoteEP.ToString() + "\""
-                    + "\"time\":\"" + item.ConnectTime + "\""
-                    + "\"ccid\":\"" + item.ID + "\""
-                    + "\"name\":\"" + item.Name + "\""
+                    + "\"dev\":\"" + item.lep.Port + "\""
+                    + "\"ip\":\"" + item.rep.ToString() + "\""
+                    + "\"time\":\"" + sd.TimeConn + "\""
+                    + "\"ccid\":\"" + sd.Ccid + "\""
+                    + "\"name\":\"" + sd.Name + "\""
                     + "}");
             }
+            sb.Insert(0, '[');
+            sb.Append(']');
+            sb.Replace("}{", "},{");
             response.data = Coding.GetBytes(sb.ToString());
         }
 
         private void client_close_service(SockRequest request, SockResponse response)
         {
             // check target center
-            if (!checkTargetCenter(request.lep.Port)) return;
+            if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -392,6 +404,7 @@ namespace EnvConsole
             if (result != null)
                 DataUI.ClientDel(ep);
 
+            // respond
             if (result != null)
                 response.data = Coding.GetBytes("OK");
             else
@@ -401,7 +414,7 @@ namespace EnvConsole
         private void client_send_service(SockRequest request, SockResponse response)
         {
             // check target center
-            if (!checkTargetCenter(request.lep.Port)) return;
+            if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string msg = Coding.GetString(request.data);
@@ -411,13 +424,38 @@ namespace EnvConsole
 
             // find session and send message
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
+
+            if (result != null)
+                sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
+
+            if (result != null)
+                response.data = Coding.GetBytes("OK");
+            else
+                response.data = Coding.GetBytes("no such client");
+        }
+
+        private void client_send_by_ccid_service(SockRequest request, SockResponse response)
+        {
+            // check target center
+            if (!checkServerTargetCenter(request.lep.Port)) return;
+
+            // get param string & parse to dictionary
+            string msg = Coding.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            // find session and send message
             SockSess result = null;
-            if (dc["type"] == SockType.listen.ToString())
-                result = sessctl.FindSession(SockType.listen, ep, null);
-            else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, null, ep);
-            else// if (dc["type"] == SockType.accept.ToString())
-                result = sessctl.FindSession(SockType.accept, null, ep);
+            foreach (var item in sessctl.GetSessionTable()) {
+                if (item.type != SockType.accept) continue;
+                SessData sd = item.sdata as SessData;
+                if (sd.Ccid == dc["ccid"]) {
+                    result = item;
+                    break;
+                }
+            }
 
             if (result != null)
                 sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
@@ -431,7 +469,7 @@ namespace EnvConsole
         private void client_update_service(SockRequest request, SockResponse response)
         {
             // check target center
-            if (!checkTargetCenter(request.lep.Port)) return;
+            if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string msg = Coding.GetString(request.data);
@@ -439,7 +477,15 @@ namespace EnvConsole
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
 
-            /// ** dangerous !!! access DataUI
+            // update sess data
+            SockSess sess = sessctl.FindSession(SockType.accept, null, ep);
+            if (sess != null) {
+                SessData sd = sess.sdata as SessData;
+                sd.Ccid = dc["ccid"];
+                sd.Name = dc["name"];
+            }
+
+            /// ** update DataUI
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
             DataUI.ClientUpdate(ep, "Name", dc["name"]);
