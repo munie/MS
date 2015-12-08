@@ -105,14 +105,15 @@ namespace SockMaster {
 
         private void sock_open_service(SockRequest request, SockResponse response)
         {
+            // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
-
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
-
             if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
                 result = sessctl.MakeListen(ep);
             else if (dc["type"] == SockType.connect.ToString() && sessctl.FindSession(SockType.connect, null, ep) == null)
@@ -129,14 +130,15 @@ namespace SockMaster {
 
         private void sock_close_service(SockRequest request, SockResponse response)
         {
+            // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
-
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            // find session and close
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
-
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
@@ -165,10 +167,12 @@ namespace SockMaster {
             string param_data = param_list.Substring(index_data + 6);
             param_list = param_list.Substring(0, index_data);
 
+            // retrieve param to dictionary
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(param_list);
+
+            // find session and send message
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
-
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())

@@ -131,11 +131,12 @@ namespace SockMaster
 
             sock.State = SockState.Opening;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen?type=" + sock.Type.ToString()
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen"
+                + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                (byte)(0x04 + buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -146,11 +147,12 @@ namespace SockMaster
 
             sock.State = SockState.Closing;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose?type=" + sock.Type.ToString()
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose"
+                + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                (byte)(0x04 + buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -293,13 +295,14 @@ namespace SockMaster
                 } else
                     data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
 
-                byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend?type=" + sock.Type.ToString()
+                byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend"
+                    + "?type=" + sock.Type.ToString()
                     + "&ip=" + sock.EP.Address.ToString()
                     + "&port=" + sock.EP.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                    (byte)(0x04 + buffer.Length >> 8 & 0xff) }.Concat(buffer).ToArray();
+                buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                    .Concat(buffer).ToArray();
                 cmdSock.Send(buffer);
                 break;
             }
