@@ -149,7 +149,8 @@ namespace EnvConsole
                 + "|ToID=" + atCmd.ToID
                 + "|ToEP=" + atCmd.ToEP
                 + "|DataType=" + atCmd.DataType.ToString()
-                + "|Data=" + atCmd.Data;
+                + "|Data=" + atCmd.Data
+                + "\n\n";
             mnn.util.Logger.Write(logFormat);
             DataUI.Logger(logFormat);
         }

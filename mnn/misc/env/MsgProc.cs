@@ -24,6 +24,7 @@ namespace mnn.misc.env {
         private Queue<DataHandleMsg> msgQueue = new Queue<DataHandleMsg>();
 
         // Socket for sending @Cmd to StationConsole
+        private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private Socket atCmdSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private IPEndPoint atCmdEP = null;
         //private IPEndPoint atCmdEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
@@ -95,6 +96,54 @@ namespace mnn.misc.env {
         protected abstract void HandleDetect(IPEndPoint ep, IDictionary<string, string> dc);
 
         // Private Tools ===========================================================================
+
+        protected void SendClientClose(string ip, int port)
+        {
+            string url = "/center/clientclose"
+                + "?type=accept" + "&ip=" + ip + "&port=" + port;
+
+            url = mnn.net.EncryptSym.AESEncrypt(url);
+            byte[] buffer = Encoding.UTF8.GetBytes(url);
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
+
+            if (!socket.Connected)
+                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+            socket.Send(buffer);
+            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+        }
+
+        protected void SendClientMsg(string ip, int port, string msg)
+        {
+            string url = "/center/clientsend"
+                + "?type=accept" + "&ip=" + ip + "&port=" + port + "&data=" + msg;
+
+            url = mnn.net.EncryptSym.AESEncrypt(url);
+            byte[] buffer = Encoding.UTF8.GetBytes(url);
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
+
+            if (!socket.Connected)
+                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+            socket.Send(buffer);
+            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+        }
+
+        protected void SendClientUpdate(string ip, int port, string ccid, string name)
+        {
+            string url = "/center/clientupdate"
+                + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
+
+            url = mnn.net.EncryptSym.AESEncrypt(url);
+            byte[] buffer = Encoding.UTF8.GetBytes(url);
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
+
+            if (!socket.Connected)
+                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+            socket.Send(buffer);
+            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+        }
 
         protected void SendAtCmd(AtCommand atCmd)
         {
