@@ -135,7 +135,7 @@ namespace SockMaster
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                (byte)(buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
+                (byte)(0x04 + buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -150,7 +150,7 @@ namespace SockMaster
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                (byte)(buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
+                (byte)(0x04 + buffer.Length >> 8 & 0xff)  }.Concat(buffer).ToArray();
             cmdSock.Send(buffer);
         }
 
@@ -299,7 +299,7 @@ namespace SockMaster
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
                 buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff),
-                    (byte)(buffer.Length >> 8 & 0xff) }.Concat(buffer).ToArray();
+                    (byte)(0x04 + buffer.Length >> 8 & 0xff) }.Concat(buffer).ToArray();
                 cmdSock.Send(buffer);
                 break;
             }
