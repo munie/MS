@@ -39,7 +39,9 @@ namespace EnvConsole
             dispatcher = new Dispatcher();
             dispatcher.RegisterDefaultService("default_service", default_service);
             dispatcher.Register("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
+            dispatcher.Register("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
             dispatcher.Register("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
+            dispatcher.Register("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(Module_PATH)) {
@@ -81,7 +83,7 @@ namespace EnvConsole
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
                     server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == ServerTarget.admin
+                    server.TimerState = server.Target == ServerTarget.center
                         ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
@@ -172,7 +174,8 @@ namespace EnvConsole
                 + "|ToID=" + atCmd.ToID
                 + "|ToEP=" + atCmd.ToEP
                 + "|DataType=" + atCmd.DataType.ToString()
-                + "|Data=" + atCmd.Data;
+                + "|Data=" + atCmd.Data
+                + "\n\n";
             mnn.util.Logger.Write(logFormat);
             DataUI.Logger(logFormat);
         }
@@ -230,7 +233,7 @@ namespace EnvConsole
         protected override void sess_delete(object sender, SockSess sess)
         {
             if (sess.type == SockType.accept)
-                DataUI.ClientDel(sess.lep, sess.rep);
+                DataUI.ClientDel(sess.rep);
         }
 
         // Request Controller =========================================================================
@@ -327,7 +330,7 @@ namespace EnvConsole
 
             /// ** dangerous !!! access DataUI
             foreach (var item in DataUI.ServerTable.ToArray()) {
-                if (item.Target == ServerTarget.admin && item.Protocol == "tcp") {
+                if (item.Target == ServerTarget.center && item.Protocol == "tcp") {
                     SockSess result = sessctl.FindSession(SockType.listen,
                         new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port), null);
                     if (result != null)
@@ -340,7 +343,7 @@ namespace EnvConsole
         {
             /// ** dangerous !!! access DataUI
             var subset = from s in DataUI.ServerTable
-                         where s.Target == ServerTarget.admin && s.Port == port
+                         where s.Target == ServerTarget.center && s.Port == port
                          select s;
             if (subset.Count() == 0)
                 return false;
@@ -366,18 +369,48 @@ namespace EnvConsole
             response.data = Coding.GetBytes(sb.ToString());
         }
 
-        private void client_send_service(SockRequest request, SockResponse response)
+        private void client_close_service(SockRequest request, SockResponse response)
         {
+            // check target center
             if (!checkTargetCenter(request.lep.Port)) return;
 
+            // get param string & parse to dictionary
+            string msg = Encoding.UTF8.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            // find session and close
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
+
+            if (result != null)
+                sessctl.DelSession(result);
+
+            /// ** update DataUI
+            if (result != null)
+                DataUI.ClientDel(ep);
+
+            if (result != null)
+                response.data = Coding.GetBytes("OK");
+            else
+                response.data = Coding.GetBytes("no such client");
+        }
+
+        private void client_send_service(SockRequest request, SockResponse response)
+        {
+            // check target center
+            if (!checkTargetCenter(request.lep.Port)) return;
+
+            // get param string & parse to dictionary
             string msg = Coding.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
-
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            // find session and send message
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
-
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
@@ -392,6 +425,23 @@ namespace EnvConsole
                 response.data = Coding.GetBytes("OK");
             else
                 response.data = Coding.GetBytes("no such client");
+        }
+
+        private void client_update_service(SockRequest request, SockResponse response)
+        {
+            // check target center
+            if (!checkTargetCenter(request.lep.Port)) return;
+
+            // get param string & parse to dictionary
+            string msg = Coding.GetString(request.data);
+            if (!msg.Contains('?')) return;
+            msg = msg.Substring(msg.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+
+            /// ** dangerous !!! access DataUI
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
+            DataUI.ClientUpdate(ep, "Name", dc["name"]);
         }
 
         // Methods ============================================================================

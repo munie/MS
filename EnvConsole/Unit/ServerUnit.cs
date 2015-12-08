@@ -8,7 +8,7 @@ namespace EnvConsole.Unit
 {
     public enum ServerTarget
     {
-        admin = 0,
+        center = 0,
         worker = 1,
     }
 

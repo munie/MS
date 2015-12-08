@@ -175,7 +175,7 @@ namespace EnvConsole
             }));
         }
 
-        public void ClientDel(IPEndPoint lep, IPEndPoint rep)
+        public void ClientDel(IPEndPoint rep)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
