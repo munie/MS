@@ -22,6 +22,7 @@ namespace mnn.misc.env {
         ClientSendMsg,
     }
 
+    [Obsolete]
     [Serializable]
     public class AtCommand {
         public AtCommandDirect Direct;

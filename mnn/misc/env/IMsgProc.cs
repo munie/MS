@@ -6,7 +6,6 @@ using mnn.net;
 
 namespace mnn.misc.env {
     public class SMsgProc {
-        public static readonly string FULL_NAME = "mnn.misc.env.IMsgProc";
         public static readonly string HANDLE_MSG = "HandleMsg";
     }
 

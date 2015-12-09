@@ -53,14 +53,14 @@ namespace mnn.misc.module {
                 return null;
             }
 
-            if (!module.CheckInterface(new string[] { SModule.FULL_NAME })) {
+            if (!module.CheckInterface(new string[] { typeof(IModule).FullName })) {
                 module.UnLoad();
                 return null;
             }
 
             try {
-                module.Invoke(SModule.FULL_NAME, SModule.INIT, null);
-                module.ModuleID = (string)module.Invoke(SModule.FULL_NAME, SModule.GET_MODULE_ID, null);
+                module.Invoke(typeof(IModule).FullName, SModule.INIT, null);
+                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, SModule.GET_MODULE_ID, null);
             } catch (Exception) {
                 module.UnLoad();
                 return null;
@@ -73,7 +73,7 @@ namespace mnn.misc.module {
         public void Del(ModuleNode module)
         {
             try {
-                module.Invoke(SModule.FULL_NAME, SModule.FINAL, null);
+                module.Invoke(typeof(IModule).FullName, SModule.FINAL, null);
             } catch (Exception) { }
             // 卸载模块
             module.UnLoad();
