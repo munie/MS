@@ -9,61 +9,19 @@ using System.Collections;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using mnn.net;
 
 namespace mnn.misc.env {
     public abstract class MsgProc : module.IModule, IMsgProc {
-        class DataHandleMsg {
-            public IPEndPoint EP;
-            public string Content;
-        }
-
-        // Fileds for Main Thread
-        private const int max_msg_count = 1000;
-        private bool isExitThread = false;
-        private Semaphore sem = new Semaphore(0, max_msg_count);
-        private Queue<DataHandleMsg> msgQueue = new Queue<DataHandleMsg>();
-
-        // Socket for sending cmd
-        protected Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
+        protected Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         // IModule ========================================================================
 
-        public void Init()
-        {
-            Thread thread = new Thread(() =>
-            {
-                isExitThread = false;
-                DataHandleMsg msg = null;
+        public void Init() { }
 
-                while (true) {
-                    if (isExitThread == true) {
-                        isExitThread = false;
-                        break;
-                    }
-
-                    sem.WaitOne();
-                    lock (msgQueue) {
-                        msg = msgQueue.Dequeue();
-                    }
-                    try {
-                        HandleMsg(msg.EP, msg.Content);
-                    } catch (Exception ex) {
-                        util.Logger.WriteException(ex, ErrLogPrefix);
-                    }
-                }
-            });
-
-            //thread.IsBackground = true;
-            //thread.Start();
-        }
-
-        public void Final()
-        {
-            isExitThread = true;
-        }
+        public void Final() { }
 
         public abstract string GetModuleID();
 
@@ -71,26 +29,13 @@ namespace mnn.misc.env {
 
         // IMsgProc ========================================================================
 
-        public virtual void AtCmdResult(AtCommand atCmd) { }
+        public abstract void HandleMsg(SockRequest request, SockResponse response);
 
-        public void AppendMsg(System.Net.IPEndPoint ep, string msg)
-        {
-            if (msgQueue.Count() >= max_msg_count)
-                return;
+        protected abstract void HandleAlive(SockRequest request, SockResponse response, IDictionary<string, string> dc);
 
-            lock (msgQueue) {
-                msgQueue.Enqueue(new DataHandleMsg() { EP = ep, Content = msg });
-            }
-            sem.Release();
-        }
+        protected abstract void HandleAlarm(SockRequest request, SockResponse response, IDictionary<string, string> dc);
 
-        public abstract void HandleMsg(IPEndPoint ep, string msg);
-
-        protected abstract void HandleAlive(IPEndPoint ep, IDictionary<string, string> dc);
-
-        protected abstract void HandleAlarm(IPEndPoint ep, IDictionary<string, string> dc);
-
-        protected abstract void HandleDetect(IPEndPoint ep, IDictionary<string, string> dc);
+        protected abstract void HandleDetect(SockRequest request, SockResponse response, IDictionary<string, string> dc);
 
         // Private Tools ===========================================================================
 

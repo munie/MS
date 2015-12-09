@@ -11,6 +11,7 @@ namespace mnn.net {
         unknown = 0x0CFF,
     }
 
+    [Serializable]
     public class SockRequest {
         public IPEndPoint lep { get; set; }
         public IPEndPoint rep { get; set; }

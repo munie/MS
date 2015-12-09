@@ -161,7 +161,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { request.rep, content });
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { args[0], args[1] });
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -175,6 +175,7 @@ namespace EnvConsole
                 content = (string)node.Invoke(SMsgTrans.FULL_NAME, SMsgTrans.TRANSLATE, new object[] { content });
                 if (string.IsNullOrEmpty(content))
                     goto _out;
+                request.data = Encoding.UTF8.GetBytes(content);
             } catch (Exception) {
                 goto _out;
             }
@@ -183,7 +184,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { request.rep, content });
+                        item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { args[0], args[1] });
                     } catch (Exception) { }
                     goto _out;
                 }

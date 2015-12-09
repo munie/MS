@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 
 namespace mnn.net {
+    [Serializable]
     public class SockResponse {
         public byte[] data { get; set; }
     }
