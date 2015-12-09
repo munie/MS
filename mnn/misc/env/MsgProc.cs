@@ -23,11 +23,8 @@ namespace mnn.misc.env {
         private Semaphore sem = new Semaphore(0, max_msg_count);
         private Queue<DataHandleMsg> msgQueue = new Queue<DataHandleMsg>();
 
-        // Socket for sending @Cmd to StationConsole
-        private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        private Socket atCmdSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        private IPEndPoint atCmdEP = null;
-        //private IPEndPoint atCmdEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
+        // Socket for sending cmd
+        protected Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
@@ -109,8 +106,9 @@ namespace mnn.misc.env {
                     socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
                 if (socket.Connected)
                     socket.Send(buffer);
-            } catch (Exception) {
-                util.Logger.Write("Connect to Center(port: 2000) failed!", ErrLogPrefix);
+            } catch (Exception ex) {
+                util.Logger.WriteException(ex, ErrLogPrefix);
+                //util.Logger.Write("Connect to Center(port: 2000) failed!", ErrLogPrefix);
             }
         }
 
@@ -144,101 +142,6 @@ namespace mnn.misc.env {
                 + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
 
             SendToClient(url);
-        }
-
-        protected void SendAtCmd(AtCommand atCmd)
-        {
-            if (atCmdEP == null) {
-                try {
-                    XmlDocument xdoc = new XmlDocument();
-                    xdoc.Load(AppDomain.CurrentDomain.BaseDirectory + "\\config.xml");
-
-                    foreach (XmlNode item in xdoc.SelectNodes("/configuration/serverconfig/server")) {
-                        if (item.Attributes["type"].Value == "atcmd" && item.Attributes["protocol"].Value == "udp") {
-                            atCmdEP = new IPEndPoint(
-                                IPAddress.Parse(item.Attributes["ipaddress"].Value),
-                                int.Parse(item.Attributes["port"].Value));
-                            break;
-                        }
-                    }
-                } catch (Exception) { }
-
-                if (atCmdEP == null)
-                    atCmdEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000);
-            }
-
-            byte[] atCmdBuffer = new byte[2048];
-            MemoryStream memoryStream = new MemoryStream(atCmdBuffer);
-            XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
-            //xmlFormat.Serialize(atCmdPipeClientStream, atCmdUnit);
-            xmlFormat.Serialize(memoryStream, atCmd);
-
-            atCmdSocket.SendTo(atCmdBuffer, (int)memoryStream.Position, SocketFlags.None, atCmdEP);
-            memoryStream.Close();
-        }
-
-        protected void SendAtCmdClientClose(string ccid, IPEndPoint ep)
-        {
-            /// ** Report ClientUpdateID to Console
-            AtCommand atCmd = new AtCommand();
-            atCmd.Direct = AtCommandDirect.Request;
-            atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetModuleID();
-            atCmd.FromSchema = UnitSchema.Module;
-            atCmd.ToID = ccid;
-            atCmd.ToSchema = UnitSchema.Client;
-            atCmd.ToEP = ep.ToString();
-            atCmd.DataType = AtCommandDataType.ClientClose;
-            atCmd.Data = "";
-            SendAtCmd(atCmd);
-        }
-
-        protected void SendAtCmdClientUpdate(string ccid, string name, IPEndPoint ep)
-        {
-            /// ** Report ClientUpdateID to Console
-            AtCommand atCmd = new AtCommand();
-            atCmd.Direct = AtCommandDirect.Request;
-            atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetModuleID();
-            atCmd.FromSchema = UnitSchema.Module;
-            atCmd.ToID = ccid;
-            atCmd.ToSchema = UnitSchema.Client;
-            atCmd.ToEP = ep.ToString();
-            atCmd.DataType = AtCommandDataType.ClientUpdateID;
-            atCmd.Data = ccid;
-            SendAtCmd(atCmd);
-
-            /// ** Report ClientUpdateName to Console
-            atCmd = new AtCommand();
-            atCmd.Direct = AtCommandDirect.Request;
-            atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetModuleID();
-            atCmd.FromSchema = UnitSchema.Module;
-            atCmd.ToID = ccid;
-            atCmd.ToSchema = UnitSchema.Client;
-            atCmd.ToEP = ep.ToString();
-            atCmd.DataType = AtCommandDataType.ClientUpdateName;
-            atCmd.Data = name;
-            SendAtCmd(atCmd);
-        }
-
-        protected void SendAtCmdClientSendMsg(string ccid, IPEndPoint ep, string msg)
-        {
-            /// ** Report ClientUpdateID to Console
-            AtCommand atCmd = new AtCommand();
-            atCmd.Direct = AtCommandDirect.Request;
-            atCmd.ID = Guid.NewGuid().ToString();
-            atCmd.FromID = GetModuleID();
-            atCmd.FromSchema = UnitSchema.Module;
-            atCmd.ToID = ccid;
-            atCmd.ToSchema = UnitSchema.Client;
-            atCmd.ToEP = ep.ToString();
-            atCmd.DataType = AtCommandDataType.ClientSendMsg;
-            atCmd.Data = msg;
-            SendAtCmd(atCmd);
-
-            string logFormat = ep.ToString() + " " + DateTime.Now.ToString() + "发送数据：" + msg;
-            util.Logger.Write(logFormat, LogPrefix);
         }
     }
 }

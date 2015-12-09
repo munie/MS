@@ -86,7 +86,6 @@ namespace EnvConsole.Unit
             }
         }
 
-        public mnn.net.deprecated.SockServer SockServer { get; set; }
         public System.Timers.Timer Timer { get; set; }
     }
 }

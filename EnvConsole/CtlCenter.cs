@@ -88,14 +88,8 @@ namespace EnvConsole
                         ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
-                    server.SockServer = null;
                     server.Timer = null;
                     DataUI.ServerTable.Add(server);
-                    if (server.Protocol == "udp") {
-                        server.SockServer = new UdpServer();
-                        server.SockServer.ClientRecvPack += AtCmdServer_ClientRecvPack;
-                        server.SockServer.ClientSendPack += AtCmdServer_ClientSendPack;
-                    }
                 }
             } catch (Exception ex) {
                 mnn.util.Logger.WriteException(ex);
@@ -110,12 +104,6 @@ namespace EnvConsole
                         if (result != null)
                             item.ListenState = ServerUnit.ListenStateStarted;
                     } else if (item.Protocol == "udp") {
-                        try {
-                            item.SockServer.Start(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                            item.ListenState = ServerUnit.ListenStateStarted;
-                        } catch (Exception ex) {
-                            System.Windows.MessageBox.Show(ex.Message, "Error");
-                        }
                     }
                 }
             }
@@ -124,104 +112,6 @@ namespace EnvConsole
         public void Perform(int next)
         {
             sessctl.Perform(next);
-        }
-
-        // SockServer =========================================================================
-
-        private void AtCmdServer_ClientRecvPack(object sender, ClientEventArgs e)
-        {
-            AtCommand atCmd = null;
-
-            try {
-                using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
-                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
-                }
-            } catch (Exception ex) {
-                mnn.util.Logger.WriteException(ex);
-                return;
-            }
-
-            AtCmdServer_ExecCommand(atCmd);
-
-            // 打印至窗口，写命令日志
-            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "接收命令："
-                + "|FromID=" + atCmd.FromID.ToString()
-                + "|ToID=" + atCmd.ToID
-                + "|ToEP=" + atCmd.ToEP
-                + "|DataType=" + atCmd.DataType.ToString()
-                + "|Data=" + atCmd.Data
-                + "\n\n";
-            mnn.util.Logger.Write(logFormat);
-            DataUI.Logger(logFormat);
-        }
-
-        private void AtCmdServer_ClientSendPack(object sender, ClientEventArgs e)
-        {
-            AtCommand atCmd = null;
-
-            try {
-                using (MemoryStream memory = new MemoryStream(e.Data)) {
-                    XmlSerializer xmlFormat = new XmlSerializer(typeof(AtCommand));
-                    atCmd = xmlFormat.Deserialize(memory) as AtCommand;
-                }
-            } catch (Exception ex) {
-                mnn.util.Logger.WriteException(ex);
-                return;
-            }
-
-            // 打印至窗口，写命令日志
-            string logFormat = e.RemoteEP.ToString() + " " + DateTime.Now.ToString() + "发送命令："
-                + "|FromID=" + atCmd.FromID.ToString()
-                + "|ToID=" + atCmd.ToID
-                + "|ToEP=" + atCmd.ToEP
-                + "|DataType=" + atCmd.DataType.ToString()
-                + "|Data=" + atCmd.Data
-                + "\n\n";
-            mnn.util.Logger.Write(logFormat);
-            DataUI.Logger(logFormat);
-        }
-
-        private void AtCmdServer_ExecCommand(AtCommand atCmd)
-        {
-            string[] strTmp = atCmd.ToEP.Split(':');
-            IPEndPoint toep = new IPEndPoint(IPAddress.Parse(strTmp[0]), Convert.ToInt32(strTmp[1]));
-
-            if (atCmd.ToSchema == UnitSchema.Client && atCmd.Direct == AtCommandDirect.Request) {
-                // update DataUI => client's id
-                if (atCmd.DataType == AtCommandDataType.ClientUpdateID)
-                    DataUI.ClientUpdate(toep, "ID", atCmd.Data);
-                // update DataUI => client's name
-                else if (atCmd.DataType == AtCommandDataType.ClientUpdateName)
-                    DataUI.ClientUpdate(toep, "Name", atCmd.Data);
-                // close client
-                else if (atCmd.DataType == AtCommandDataType.ClientClose)
-                    ClientClose(strTmp[0], int.Parse(strTmp[1]));
-                // send msg to client
-                else if (atCmd.DataType == AtCommandDataType.ClientSendMsg) {
-                    // 设置发送结果
-                    lock (DataUI.ClientTable) {
-                        var subset = from s in DataUI.ClientTable where s.ID.Equals(atCmd.ToID) select s;
-                        if (subset.Count() != 0)
-                            atCmd.Result = subset.Count() != 0 ? "Success" : "Failure";
-                    }
-
-                    //// 发送数据
-                    ClientSendMessage(strTmp[0], int.Parse(strTmp[1]), atCmd.Data);
-
-                    //// 反馈发送结果
-                    DataUI.RwlockModuleTable.AcquireReaderLock(-1);
-                    foreach (var item in DataUI.ModuleTable) {
-                        if (item.Module.ModuleID.Equals(atCmd.FromID)) {
-                            try {
-                                item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.ATCMD_RESULT, new object[] { atCmd });
-                            } catch (Exception) { }
-                            break;
-                        }
-                    }
-                    DataUI.RwlockModuleTable.ReleaseReaderLock();
-                }
-            }
         }
 
         // Override Session Event ==========================================================================
