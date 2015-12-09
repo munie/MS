@@ -35,6 +35,11 @@ namespace mnn.net {
             }
         }
 
+        public Socket GetSocket()
+        {
+            return sock;
+        }
+
         public void Send(byte[] buffer)
         {
             if (!IsSocketConnected(sock))

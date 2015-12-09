@@ -41,11 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="misc\env\AtCommand.cs" />
+    <Compile Include="misc\env\EnvModule.cs" />
     <Compile Include="misc\env\IMsgProc.cs" />
     <Compile Include="misc\env\IMsgTrans.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />
     <Compile Include="misc\env\MsgKey.cs" />
-    <Compile Include="misc\env\MsgProc.cs" />
     <Compile Include="misc\module\AppDomainProxy.cs" />
     <Compile Include="misc\module\IModule.cs" />
     <Compile Include="misc\module\ModuleNode.cs" />
@@ -53,6 +53,7 @@
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
     <Compile Include="net\CtlCenterBase.cs" />
+    <Compile Include="net\SockClientTcp.cs" />
     <Compile Include="net\SockRequest.cs" />
     <Compile Include="net\DispatcherBase.cs" />
     <Compile Include="net\SockResponse.cs" />

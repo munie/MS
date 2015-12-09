@@ -3,39 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System.Collections;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
+using mnn.misc.module;
 using mnn.net;
 
 namespace mnn.misc.env {
-    public abstract class MsgProc : module.IModule, IMsgProc {
+    public abstract  class EnvModule : IModule {
+        protected static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
+        protected static readonly string CONF_NAME = "EnvConsole.xml";
+        protected static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
+        protected SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
-        protected SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
 
         // IModule ========================================================================
 
-        public void Init() { }
+        public virtual void Init() { }
 
-        public void Final() { }
+        public virtual void Final() { }
 
         public abstract string GetModuleID();
-
-        public abstract string GetModuleInfo();
-
-        // IMsgProc ========================================================================
-
-        public abstract void HandleMsg(SockRequest request, SockResponse response);
-
-        protected abstract void HandleAlive(SockRequest request, SockResponse response, IDictionary<string, string> dc);
-
-        protected abstract void HandleAlarm(SockRequest request, SockResponse response, IDictionary<string, string> dc);
-
-        protected abstract void HandleDetect(SockRequest request, SockResponse response, IDictionary<string, string> dc);
 
         // Private Tools ===========================================================================
 
