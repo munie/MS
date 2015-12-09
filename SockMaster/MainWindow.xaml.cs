@@ -40,7 +40,7 @@ namespace SockMaster
         private static readonly string CONF_NAME = "SockMaster.xml";
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
-        private Socket cmdSock;
+        private SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
 
         private void Initailize()
         {
@@ -74,9 +74,6 @@ namespace SockMaster
             } catch (Exception) {
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
-
-            // init cmdsock
-            cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             // init context
             DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
@@ -123,39 +120,6 @@ namespace SockMaster
 
         // Menu methods for TreeView =============================================================
 
-        private bool IsSocketConnected(Socket client)
-        {
-            bool blockingState = client.Blocking;
-            try {
-                byte[] tmp = new byte[1];
-                client.Blocking = false;
-                client.Send(tmp, 0, 0);
-                return true;
-            } catch (SocketException e) {
-                // 产生 10035 == WSAEWOULDBLOCK 错误，说明被阻止了，但是还是连接的
-                if (e.NativeErrorCode.Equals(10035))
-                    return true;
-                else
-                    return false;
-            } finally {
-                client.Blocking = blockingState;    // 恢复状态
-            }
-        }
-
-        private bool SendCmdToCenter(byte[] buffer)
-        {
-            try {
-                if (!IsSocketConnected(cmdSock))
-                    cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
-                cmdSock.Send(buffer);
-            } catch (Exception ex) {
-                MessageBox.Show(ex.ToString());
-                return false;
-            }
-
-            return true;
-        }
-
         private void MenuItem_SockOpen_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
@@ -163,15 +127,16 @@ namespace SockMaster
 
             sock.State = SockState.Opening;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen"
+            string url = "/center/sockopen"
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+                + "&port=" + sock.EP.Port.ToString();
 
-            if (!SendCmdToCenter(buffer))
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) {
                 sock.State = SockState.Closed;
+            }
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -181,15 +146,16 @@ namespace SockMaster
 
             sock.State = SockState.Closing;
 
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose"
+            string url = "/center/sockclose"
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+                + "&port=" + sock.EP.Port.ToString();
 
-            if (!SendCmdToCenter(buffer))
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) {
                 sock.State = SockState.Opened;
+            }
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -340,7 +306,9 @@ namespace SockMaster
                 buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                     .Concat(buffer).ToArray();
 
-                SendCmdToCenter(buffer);
+                try {
+                    tcp.Send(buffer);
+                } catch (Exception) { }
                 break;
             }
         }

@@ -15,7 +15,7 @@ namespace mnn.misc.env {
     public abstract class MsgProc : module.IModule, IMsgProc {
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
-        protected Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        protected SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
 
         // IModule ========================================================================
 
@@ -39,47 +39,14 @@ namespace mnn.misc.env {
 
         // Private Tools ===========================================================================
 
-        private bool IsSocketConnected(Socket client)
-        {
-            bool blockingState = client.Blocking;
-            try {
-                byte[] tmp = new byte[1];
-                client.Blocking = false;
-                client.Send(tmp, 0, 0);
-                return true;
-            } catch (SocketException e) {
-                // 产生 10035 == WSAEWOULDBLOCK 错误，说明被阻止了，但是还是连接的
-                if (e.NativeErrorCode.Equals(10035))
-                    return true;
-                else
-                    return false;
-            } finally {
-                client.Blocking = blockingState;    // 恢复状态
-            }
-        }
-
-        private void SendToClient(string url)
-        {
-            url = mnn.net.EncryptSym.AESEncrypt(url);
-            byte[] buffer = Encoding.UTF8.GetBytes(url);
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
-
-            try {
-                if (!IsSocketConnected(socket))
-                    socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-                socket.Send(buffer);
-            } catch (Exception ex) {
-                util.Logger.WriteException(ex, ErrLogPrefix);
-            }
-        }
-
         protected void SendClientClose(string ip, int port)
         {
             string url = "/center/clientclose"
                 + "?type=accept" + "&ip=" + ip + "&port=" + port;
 
-            SendToClient(url);
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) { }
         }
 
         protected void SendClientMsg(string ip, int port, string msg)
@@ -87,7 +54,9 @@ namespace mnn.misc.env {
             string url = "/center/clientsend"
                 + "?type=accept" + "&ip=" + ip + "&port=" + port + "&data=" + msg;
 
-            SendToClient(url);
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) { }
         }
 
         protected void SendClientMsgByCcid(string ccid, string msg)
@@ -95,7 +64,9 @@ namespace mnn.misc.env {
             string url = "/center/clientsendbyccid"
                 + "?type=accept" + "&ccid=" + ccid + "&data=" + msg;
 
-            SendToClient(url);
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) { }
         }
 
         protected void SendClientUpdate(string ip, int port, string ccid, string name)
@@ -103,7 +74,9 @@ namespace mnn.misc.env {
             string url = "/center/clientupdate"
                 + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
 
-            SendToClient(url);
+            try {
+                tcp.SendEncryptUrl(url);
+            } catch (Exception) { }
         }
     }
 }
