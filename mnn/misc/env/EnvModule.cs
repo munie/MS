@@ -27,8 +27,7 @@ namespace mnn.misc.env {
 
         protected void SendClientClose(string ip, int port)
         {
-            string url = "/center/clientclose"
-                + "?type=accept" + "&ip=" + ip + "&port=" + port;
+            string url = "/center/clientclose" + "?ip=" + ip + "&port=" + port;
 
             try {
                 tcp.SendEncryptUrl(url);
@@ -37,8 +36,7 @@ namespace mnn.misc.env {
 
         protected void SendClientMsg(string ip, int port, string msg)
         {
-            string url = "/center/clientsend"
-                + "?type=accept" + "&ip=" + ip + "&port=" + port + "&data=" + msg;
+            string url = "/center/clientsend" + "?ip=" + ip + "&port=" + port + "&data=" + msg;
 
             try {
                 tcp.SendEncryptUrl(url);
@@ -47,8 +45,7 @@ namespace mnn.misc.env {
 
         protected void SendClientMsgByCcid(string ccid, string msg)
         {
-            string url = "/center/clientsendbyccid"
-                + "?type=accept" + "&ccid=" + ccid + "&data=" + msg;
+            string url = "/center/clientsendbyccid" + "?ccid=" + ccid + "&data=" + msg;
 
             try {
                 tcp.SendEncryptUrl(url);
@@ -57,8 +54,7 @@ namespace mnn.misc.env {
 
         protected void SendClientUpdate(string ip, int port, string ccid, string name)
         {
-            string url = "/center/clientupdate"
-                + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
+            string url = "/center/clientupdate" + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
 
             try {
                 tcp.SendEncryptUrl(url);

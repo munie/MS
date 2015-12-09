@@ -78,7 +78,7 @@ namespace SockMaster {
             sessctl.Perform(next);
         }
 
-        // Override Session Event ==========================================================================
+        // Session Event ==========================================================================
 
         protected override void sess_create(object sender, SockSess sess)
         {
@@ -92,9 +92,9 @@ namespace SockMaster {
             DataUI.SockDel(sess.type, sess.lep, sess.rep);
         }
 
-        // Self Request Controller =========================================================================
+        // Center Service =========================================================================
 
-        private void default_service(SockRequest request, SockResponse response)
+        protected override void default_service(SockRequest request, SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
@@ -103,7 +103,7 @@ namespace SockMaster {
             DataUI.Logger(log);
         }
 
-        private void sock_open_service(SockRequest request, SockResponse response)
+        protected override void sock_open_service(SockRequest request, SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -128,7 +128,7 @@ namespace SockMaster {
                 DataUI.SockClose(ep);
         }
 
-        private void sock_close_service(SockRequest request, SockResponse response)
+        protected override void sock_close_service(SockRequest request, SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -152,36 +152,6 @@ namespace SockMaster {
             /// ** update DataUI
             if (result != null)
                 DataUI.SockClose(ep);
-        }
-
-        private void sock_send_service(SockRequest request, SockResponse response)
-        {
-            // retrieve param_list of url
-            string param_list = Encoding.UTF8.GetString(request.data);
-            if (!param_list.Contains('?')) return;
-            param_list = param_list.Substring(param_list.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(param_list);
-
-            // find session and send message
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess result = null;
-            if (dc["type"] == SockType.listen.ToString())
-                result = sessctl.FindSession(SockType.listen, ep, null);
-            else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, null, ep);
-            else// if (dc["type"] == SockType.accept.ToString())
-                result = sessctl.FindSession(SockType.accept, null, ep);
-
-            if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
         }
     }
 }

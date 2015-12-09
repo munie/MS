@@ -38,6 +38,7 @@ namespace EnvConsole
             // dispatcher register
             dispatcher = new Dispatcher();
             dispatcher.RegisterDefaultService("default_service", default_service);
+            dispatcher.Register("sock_send_service", sock_send_service, Coding.GetBytes("/center/socksend"));
             dispatcher.Register("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
             dispatcher.Register("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
             dispatcher.Register("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
@@ -114,7 +115,7 @@ namespace EnvConsole
             sessctl.Perform(next);
         }
 
-        // Override Session Event ==========================================================================
+        // Session Event ==========================================================================
 
         protected override void sess_create(object sender, SockSess sess)
         {
@@ -137,7 +138,7 @@ namespace EnvConsole
                 DataUI.ClientDel(sess.rep);
         }
 
-        // Request Controller =========================================================================
+        // Center Service =========================================================================
 
         private AtCmdCtl cmdctl;
         private void InitPackParse()
@@ -229,19 +230,7 @@ namespace EnvConsole
             //DataUI.RwlockModuleTable.ReleaseReaderLock();
         }
 
-        private bool checkServerTargetCenter(int port)
-        {
-            /// ** dangerous !!! access DataUI
-            var subset = from s in DataUI.ServerTable
-                         where s.Target == ServerTarget.center && s.Port == port
-                         select s;
-            if (subset.Count() == 0)
-                return false;
-            else
-                return true;
-        }
-
-        private void default_service(SockRequest request, SockResponse response)
+        protected override void default_service(SockRequest request, SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += Coding.GetString(request.data) + "\n\n";
@@ -257,6 +246,18 @@ namespace EnvConsole
                 if (sd.IsAdmin)
                     sessctl.SendSession(item, request.data);
             }
+        }
+
+        private bool checkServerTargetCenter(int port)
+        {
+            /// ** dangerous !!! access DataUI
+            var subset = from s in DataUI.ServerTable
+                         where s.Target == ServerTarget.center && s.Port == port
+                         select s;
+            if (subset.Count() == 0)
+                return false;
+            else
+                return true;
         }
 
         private void client_list_service(SockRequest request, SockResponse response)
