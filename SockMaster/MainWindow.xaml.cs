@@ -127,13 +127,15 @@ namespace SockMaster
 
             sock.State = SockState.Opening;
 
-            string url = "/center/sockopen"
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen"
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString();
+                + "&port=" + sock.EP.Port.ToString());
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.Send(buffer);
             } catch (Exception) {
                 sock.State = SockState.Closed;
             }
@@ -146,13 +148,15 @@ namespace SockMaster
 
             sock.State = SockState.Closing;
 
-            string url = "/center/sockclose"
+            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose"
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString();
+                + "&port=" + sock.EP.Port.ToString());
+            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.Send(buffer);
             } catch (Exception) {
                 sock.State = SockState.Opened;
             }
