@@ -5,11 +5,11 @@ using System.Text;
 using mnn.net;
 
 namespace mnn.misc.env {
-    public class SMsgProc {
+    public class SEnvHandler {
         public static readonly string HANDLE_MSG = "HandleMsg";
     }
 
-    public interface IMsgProc {
+    public interface IEnvHandler {
         void HandleMsg(SockRequest request, SockResponse response);
     }
 }

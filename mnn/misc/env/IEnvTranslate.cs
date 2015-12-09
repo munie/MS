@@ -8,7 +8,7 @@ namespace mnn.misc.env {
         public static readonly string TRANSLATE = "Translate";
     }
 
-    public interface IMsgTrans {
+    public interface IEnvTranslate {
         string Translate(string msg);
     }
 }

@@ -42,8 +42,8 @@
   <ItemGroup>
     <Compile Include="misc\env\AtCommand.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
-    <Compile Include="misc\env\IMsgProc.cs" />
-    <Compile Include="misc\env\IMsgTrans.cs" />
+    <Compile Include="misc\env\IEnvHandler.cs" />
+    <Compile Include="misc\env\IEnvTranslate.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />
     <Compile Include="misc\env\MsgKey.cs" />
     <Compile Include="misc\module\AppDomainProxy.cs" />

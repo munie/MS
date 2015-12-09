@@ -161,19 +161,19 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, ref args);
+                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
                     } catch (Exception) { }
                     goto _out;
                 }
             }
 
             // 如果没有得到处理，尝试翻译模块处理
-            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IMsgTrans).FullName }) select s;
+            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvTranslate).FullName }) select s;
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
                 object[] tmp = new object[] { content };
-                content = (string)node.Invoke(typeof(IMsgTrans).FullName, SMsgTrans.TRANSLATE, ref tmp);
+                content = (string)node.Invoke(typeof(IEnvTranslate).FullName, SMsgTrans.TRANSLATE, ref tmp);
                 if (string.IsNullOrEmpty(content))
                     goto _out;
                 request.data = Encoding.UTF8.GetBytes(content);
@@ -185,7 +185,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, ref args);
+                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -401,7 +401,7 @@ namespace EnvConsole
                 return;
             }
             // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
-            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { typeof(IMsgProc).FullName })) {
+            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
                 modctl.Del(module);
                 System.Windows.MessageBox.Show(filePath + ": load failed.");
                 return;
