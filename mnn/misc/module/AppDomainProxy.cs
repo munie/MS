@@ -37,7 +37,7 @@ namespace mnn.misc.module {
             return true;
         }
 
-        public object Invoke(string interfaceFullName, string methodName, params object[] args)
+        public object Invoke(string interfaceFullName, string methodName, ref /*params*/ object[] args)
         {
             // 1) - 查找已有实例是否提供该接口
             var instances = from s in instance_table

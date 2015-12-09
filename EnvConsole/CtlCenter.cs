@@ -161,7 +161,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, new object[] { args[0], args[1] });
+                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, ref args);
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -172,7 +172,8 @@ namespace EnvConsole
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
-                content = (string)node.Invoke(typeof(IMsgTrans).FullName, SMsgTrans.TRANSLATE, new object[] { content });
+                object[] tmp = new object[] { content };
+                content = (string)node.Invoke(typeof(IMsgTrans).FullName, SMsgTrans.TRANSLATE, ref tmp);
                 if (string.IsNullOrEmpty(content))
                     goto _out;
                 request.data = Encoding.UTF8.GetBytes(content);
@@ -184,7 +185,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, new object[] { args[0], args[1] });
+                        item.Module.Invoke(typeof(IMsgProc).FullName, SMsgProc.HANDLE_MSG, ref args);
                     } catch (Exception) { }
                     goto _out;
                 }
@@ -193,6 +194,14 @@ namespace EnvConsole
         _out:
             // 解锁
             DataUI.RwlockModuleTable.ReleaseReaderLock();
+            SockResponse response = args[1] as SockResponse;
+            if (response.data != null && response.data.Length > 0) {
+                sessctl.BeginInvoke(new Action(() => {
+                    SockSess result = sessctl.FindSession(SockType.accept, request.lep, request.rep);
+                    if (result != null)
+                        sessctl.SendSession(result, response.data);
+                }));
+            }
 
             //bool IsHandled = false;
             //DataUI.RwlockModuleTable.AcquireReaderLock(-1);

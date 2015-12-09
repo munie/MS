@@ -55,9 +55,9 @@ namespace mnn.misc.module {
             return proxy.CheckInterface(interfaceNames);
         }
 
-        public object Invoke(string interfaceName, string methodName, params object[] args)
+        public object Invoke(string interfaceName, string methodName, ref /*params*/ object[] args)
         {
-            return proxy.Invoke(interfaceName, methodName, args);
+            return proxy.Invoke(interfaceName, methodName, ref args);
         }
     }
 }

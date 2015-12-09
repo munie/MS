@@ -30,7 +30,7 @@ namespace mnn.misc.module {
                 foreach (var item in module_table) {
                     foreach (var call in item.ModuleCallTable.ToArray()) {
                         try {
-                            call.retval = item.Invoke(call.iface, call.method, call.args);
+                            call.retval = item.Invoke(call.iface, call.method, ref call.args);
                             if (FuncModuleCallReturn != null)
                                 FuncModuleCallReturn(call);
                         } catch (Exception) {
@@ -59,8 +59,9 @@ namespace mnn.misc.module {
             }
 
             try {
-                module.Invoke(typeof(IModule).FullName, SModule.INIT, null);
-                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, SModule.GET_MODULE_ID, null);
+                object[] tmp = new object[] {};
+                module.Invoke(typeof(IModule).FullName, SModule.INIT, ref tmp);
+                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, SModule.GET_MODULE_ID, ref tmp);
             } catch (Exception) {
                 module.UnLoad();
                 return null;
@@ -73,7 +74,8 @@ namespace mnn.misc.module {
         public void Del(ModuleNode module)
         {
             try {
-                module.Invoke(typeof(IModule).FullName, SModule.FINAL, null);
+                object[] tmp = new object[] { };
+                module.Invoke(typeof(IModule).FullName, SModule.FINAL, ref tmp);
             } catch (Exception) { }
             // 卸载模块
             module.UnLoad();

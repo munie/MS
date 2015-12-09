@@ -123,15 +123,33 @@ namespace SockMaster
 
         // Menu methods for TreeView =============================================================
 
+        private bool IsSocketConnected(Socket client)
+        {
+            bool blockingState = client.Blocking;
+            try {
+                byte[] tmp = new byte[1];
+                client.Blocking = false;
+                client.Send(tmp, 0, 0);
+                return true;
+            } catch (SocketException e) {
+                // 产生 10035 == WSAEWOULDBLOCK 错误，说明被阻止了，但是还是连接的
+                if (e.NativeErrorCode.Equals(10035))
+                    return true;
+                else
+                    return false;
+            } finally {
+                client.Blocking = blockingState;    // 恢复状态
+            }
+        }
+
         private bool SendCmdToCenter(byte[] buffer)
         {
             try {
-                if (!cmdSock.Connected)
+                if (!IsSocketConnected(cmdSock))
                     cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
-                if (cmdSock.Connected)
-                    cmdSock.Send(buffer);
-            } catch (Exception) {
-                MessageBox.Show("[Error]: Connect to Center failed!");
+                cmdSock.Send(buffer);
+            } catch (Exception ex) {
+                MessageBox.Show(ex.ToString());
                 return false;
             }
 
