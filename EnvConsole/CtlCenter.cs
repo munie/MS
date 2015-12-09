@@ -478,6 +478,7 @@ namespace EnvConsole
             IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
 
             // update sess data
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess sess = sessctl.FindSession(SockType.accept, null, ep);
             if (sess != null) {
                 SessData sd = sess.sdata as SessData;
@@ -486,7 +487,6 @@ namespace EnvConsole
             }
 
             /// ** update DataUI
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
             DataUI.ClientUpdate(ep, "Name", dc["name"]);
         }

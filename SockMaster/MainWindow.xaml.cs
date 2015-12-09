@@ -77,7 +77,6 @@ namespace SockMaster
 
             // init cmdsock
             cmdSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
 
             // init context
             DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
@@ -124,6 +123,21 @@ namespace SockMaster
 
         // Menu methods for TreeView =============================================================
 
+        private bool SendCmdToCenter(byte[] buffer)
+        {
+            try {
+                if (!cmdSock.Connected)
+                    cmdSock.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+                if (cmdSock.Connected)
+                    cmdSock.Send(buffer);
+            } catch (Exception) {
+                MessageBox.Show("[Error]: Connect to Center failed!");
+                return false;
+            }
+
+            return true;
+        }
+
         private void MenuItem_SockOpen_Click(object sender, RoutedEventArgs e)
         {
             SockUnit sock = treeSock.SelectedItem as SockUnit;
@@ -137,7 +151,9 @@ namespace SockMaster
                 + "&port=" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                 .Concat(buffer).ToArray();
-            cmdSock.Send(buffer);
+
+            if (!SendCmdToCenter(buffer))
+                sock.State = SockState.Closed;
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -153,7 +169,9 @@ namespace SockMaster
                 + "&port=" + sock.EP.Port.ToString());
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                 .Concat(buffer).ToArray();
-            cmdSock.Send(buffer);
+
+            if (!SendCmdToCenter(buffer))
+                sock.State = SockState.Opened;
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -303,7 +321,8 @@ namespace SockMaster
                 buffer = buffer.Concat(data).ToArray();
                 buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                     .Concat(buffer).ToArray();
-                cmdSock.Send(buffer);
+
+                SendCmdToCenter(buffer);
                 break;
             }
         }

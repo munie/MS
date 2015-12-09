@@ -7,23 +7,25 @@ namespace mnn.net {
     public class Service {
         public delegate void ServiceDelegate(SockRequest request, SockResponse response);
 
+        public string name;
         public byte[] keyname;
         public ServiceDelegate func;
 
-        public Service(byte[] key, ServiceDelegate func)
+        public Service(string name, byte[] key, ServiceDelegate func)
         {
+            this.name = name;
             this.keyname = key;
             this.func = func;
         }
     }
 
     public class DispatcherBase {
-        protected Dictionary<string, Service> service_table;
+        protected List<Service> service_table;
         protected Service default_service;
 
         public DispatcherBase()
         {
-            service_table = new Dictionary<string, Service>();
+            service_table = new List<Service>();
             default_service = null;
         }
 
@@ -50,8 +52,8 @@ namespace mnn.net {
                     return;
                 }
                 foreach (var item in service_table) {
-                    if (byteArrayCmp(item.Value.keyname, request.data.Take(item.Value.keyname.Length).ToArray())) {
-                        item.Value.func(request, response);
+                    if (byteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
+                        item.func(request, response);
                         return;
                     }
                 }
@@ -62,19 +64,35 @@ namespace mnn.net {
 
         public void Register(string name, Service.ServiceDelegate func, byte[] key)
         {
-            if (!service_table.ContainsKey(name))
-                service_table.Add(name, new Service(key, func));
+            var subset = from s in service_table where s.name.Equals(name) select s;
+            if (subset.Count() != 0) return;
+
+            // insert new service to table sorted by length of keyname decended
+            Service tmp = null;
+            for (int i = 0; i < service_table.Count; i++) {
+                if (service_table[i].keyname.Length < key.Length) {
+                    tmp = new Service(name, key, func);
+                    service_table.Insert(i, tmp);
+                    break;
+                }
+            }
+            if (tmp == null)
+                service_table.Add(new Service(name, key, func));
         }
 
         public void RegisterDefaultService(string name, Service.ServiceDelegate func)
         {
-            default_service = new Service(new byte[] {0}, func);
+            default_service = new Service(name, new byte[] {0}, func);
         }
 
         public void Deregister(string name)
         {
-            if (service_table.ContainsKey(name))
-                service_table.Remove(name);
+            foreach (var item in service_table) {
+                if (item.name.Equals(name)) {
+                    service_table.Remove(item);
+                    break;
+                }
+            }
         }
     }
 }

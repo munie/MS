@@ -104,10 +104,14 @@ namespace mnn.misc.env {
             buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                 .Concat(buffer).ToArray();
 
-            if (!socket.Connected)
-                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-            if (!socket.Connected)
-                socket.Send(buffer);
+            try {
+                if (!socket.Connected)
+                    socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+                if (socket.Connected)
+                    socket.Send(buffer);
+            } catch (Exception) {
+                util.Logger.Write("Connect to Center(port: 2000) failed!", ErrLogPrefix);
+            }
         }
 
         protected void SendClientClose(string ip, int port)
@@ -139,15 +143,7 @@ namespace mnn.misc.env {
             string url = "/center/clientupdate"
                 + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
 
-            url = mnn.net.EncryptSym.AESEncrypt(url);
-            byte[] buffer = Encoding.UTF8.GetBytes(url);
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
-
-            if (!socket.Connected)
-                socket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
-            socket.Send(buffer);
-            //atCmdSocket.SendTo(buffer, buffer.Length, SocketFlags.None, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+            SendToClient(url);
         }
 
         protected void SendAtCmd(AtCommand atCmd)
