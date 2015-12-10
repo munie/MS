@@ -51,8 +51,7 @@ namespace mnn.net {
         {
             url = EncryptSym.AESEncrypt(url);
             byte[] buffer = Encoding.UTF8.GetBytes(url);
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+            SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             if (!IsSocketConnected(sock))
                 sock.Connect(toep);

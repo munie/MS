@@ -131,8 +131,7 @@ namespace SockMaster
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+            SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
                 tcp.Send(buffer);
@@ -152,8 +151,7 @@ namespace SockMaster
                 + "?type=" + sock.Type.ToString()
                 + "&ip=" + sock.EP.Address.ToString()
                 + "&port=" + sock.EP.Port.ToString());
-            buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
+            SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
                 tcp.Send(buffer);
@@ -307,8 +305,7 @@ namespace SockMaster
                     + "&port=" + sock.EP.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                buffer = new byte[] { 0x01, 0x0C, (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                    .Concat(buffer).ToArray();
+                SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
                 try {
                     tcp.Send(buffer);

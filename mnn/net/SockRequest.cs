@@ -7,7 +7,7 @@ using System.Net;
 namespace mnn.net {
     public enum SockRequestType {
         sock = 0x0C00,
-        http = 0x0C01,
+        url = 0x0C01,
         unknown = 0x0CFF,
     }
 

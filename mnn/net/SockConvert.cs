@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace mnn.net {
     public class SockConvert {
+
+        #region C/C++ struct convert
+
         /// 将结构转换为字节数组
         /// 结构对象
         /// 字节数组
@@ -50,6 +53,8 @@ namespace mnn.net {
             //返回结构
             return obj;
         }
+
+        #endregion C/C++ struct convert
 
         #region SockMaster's command parse and message display convert
 
@@ -124,7 +129,17 @@ namespace mnn.net {
 
         #endregion SockMaster's command parse and message display convert
 
-        public static IDictionary<string, string> ParseHttpQueryParam(string query)
+        public static void InsertSockHeader(SockRequestType type, ref byte[] buffer)
+        {
+            if (buffer == null) return;
+
+            short tmp = (short)type;
+            buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
+                (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
+        }
+
+        public static IDictionary<string, string> ParseUrlQueryParam(string query)
         {
             Dictionary<string, string> dc = new Dictionary<string, string>();
 

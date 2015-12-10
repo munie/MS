@@ -66,7 +66,7 @@ namespace mnn.net {
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
             // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -85,7 +85,7 @@ namespace mnn.net {
             string msg = Encoding.UTF8.GetString(request.data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(msg);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
             // find session and close
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -115,7 +115,7 @@ namespace mnn.net {
             param_list = param_list.Substring(0, index_data);
 
             // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseHttpQueryParam(param_list);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session and send message
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
