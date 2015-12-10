@@ -23,7 +23,8 @@ namespace SockMaster {
         private string id;
         private string name;
         private SockType type;
-        private IPEndPoint ep;
+        private IPEndPoint lep;
+        private IPEndPoint rep;
         private SockState state;
         private string title;
         private bool autorun;
@@ -65,14 +66,24 @@ namespace SockMaster {
                     PropertyChanged(this, new PropertyChangedEventArgs("Type"));
             }
         }
-        public IPEndPoint EP
+        public IPEndPoint Lep
         {
-            get { return ep; }
+            get { return lep; }
             set
             {
-                ep = value;
+                lep = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("EP"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("Lep"));
+            }
+        }
+        public IPEndPoint Rep
+        {
+            get { return rep; }
+            set
+            {
+                rep = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("Rep"));
             }
         }
         public SockState State
@@ -109,7 +120,7 @@ namespace SockMaster {
 
         public void UpdateTitle()
         {
-            if (ID == null || EP == null)
+            if (ID == null)
                 return;
 
             StringBuilder sb = new StringBuilder(ID);
@@ -117,19 +128,19 @@ namespace SockMaster {
                 sb.Append(" ");
 
             if (Type == SockType.accept)
-                Title = ID.ToString() + " A " + EP.ToString() + " " + State;
+                Title = "- " + "A " + Rep.ToString() + " " + State;
             else if (Type == SockType.listen && State == SockState.Opening)
-                Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listening";
+                Title = sb.ToString() + "L " + Lep.ToString() + "    " + "Listening";
             else if (Type == SockType.listen && State == SockState.Opened)
-                Title = sb.ToString() + "L " + EP.ToString() + "    " + "Listened";
+                Title = sb.ToString() + "L " + Lep.ToString() + "    " + "Listened";
             else if (Type == SockType.connect && State == SockState.Opening)
-                Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connecting";
+                Title = sb.ToString() + "C " + Rep.ToString() + "    " + "Connecting";
             else if (Type == SockType.connect && State == SockState.Opened)
-                Title = sb.ToString() + "C " + EP.ToString() + "    " + "Connected";
+                Title = sb.ToString() + "C " + Rep.ToString() + "    " + "Connected";
             else if (Type == SockType.listen)
-                Title = sb.ToString() + "L " + EP.ToString() + "    " + State;
+                Title = sb.ToString() + "L " + Lep.ToString() + "    " + State;
             else if (Type == SockType.connect)
-                Title = sb.ToString() + "C " + EP.ToString() + "    " + State;
+                Title = sb.ToString() + "C " + Rep.ToString() + "    " + State;
         }
     }
 }

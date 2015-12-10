@@ -22,7 +22,11 @@ namespace SockMaster {
             DataUI = new DataUI();
 
             // open ctlcenter port
-            sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 5964));
+            SockSess result = null;
+            do {
+                DataUI.Port = 5964 + new Random().Next() % 1024;
+                result = sessctl.MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), DataUI.Port));
+            } while (result == null);
 
             // dispatcher register
             dispatcher.RegisterDefaultService("default_service", default_service);
@@ -48,10 +52,10 @@ namespace SockMaster {
                     sock.ID = item.Attributes["id"].Value;
                     sock.Name = item.Attributes["name"].Value;
                     sock.Type = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
-                    //sock.Type = item.Attributes["type"].Value == "listen" ? SockType.listen : SockType.connect;
                     string[] str = item.Attributes["ep"].Value.Split(':');
-                    if (str.Count() == 2)
-                        sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                    sock.Lep = sock.Type == SockType.listen ? ep : null;
+                    sock.Rep = sock.Type == SockType.connect ? ep : null;
                     sock.Autorun = bool.Parse(item.Attributes["autorun"].Value);
                     sock.UpdateTitle();
                     DataUI.SockTable.Add(sock);
@@ -59,9 +63,9 @@ namespace SockMaster {
                     if (sock.Autorun) {
                         SockSess result;
                         if (sock.Type == SockType.listen)
-                            result = sessctl.MakeListen(sock.EP);
+                            result = sessctl.MakeListen(sock.Lep);
                         else
-                            result = sessctl.AddConnect(sock.EP);
+                            result = sessctl.AddConnect(sock.Rep);
                         if (result == null)
                             sock.State = SockState.Closed;
                         else
@@ -116,16 +120,16 @@ namespace SockMaster {
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
                 result = sessctl.MakeListen(ep);
-            else if (dc["type"] == SockType.connect.ToString() && sessctl.FindSession(SockType.connect, null, ep) == null)
+            else if (dc["type"] == SockType.connect.ToString())
                 result = sessctl.AddConnect(ep);
             else
-                return;
+                result = null;
 
             /// ** update DataUI
             if (result != null)
-                DataUI.SockOpen(ep);
+                DataUI.SockOpen(dc["id"], result.lep, result.rep);
             else
-                DataUI.SockClose(ep);
+                DataUI.SockClose(dc["id"]);
         }
 
         protected override void sock_close_service(SockRequest request, SockResponse response)
@@ -136,22 +140,23 @@ namespace SockMaster {
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
-            // find session and close
+            // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, null, ep);
+                result = sessctl.FindSession(SockType.connect, ep, null);
             else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
+            // close session
             if (result != null)
                 sessctl.DelSession(result);
 
             /// ** update DataUI
             if (result != null)
-                DataUI.SockClose(ep);
+                DataUI.SockClose(dc["id"]);
         }
     }
 }

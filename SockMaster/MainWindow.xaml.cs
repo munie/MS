@@ -40,7 +40,7 @@ namespace SockMaster
         private static readonly string CONF_NAME = "SockMaster.xml";
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
-        private SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5964));
+        private SockClientTcp tcp;
 
         private void Initailize()
         {
@@ -74,6 +74,10 @@ namespace SockMaster
             } catch (Exception) {
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
+
+            // init tcp
+            tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), center.DataUI.Port));
+            this.txtPromote.Text += " At " + center.DataUI.Port;
 
             // init context
             DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
@@ -127,10 +131,12 @@ namespace SockMaster
 
             sock.State = SockState.Opening;
 
+            IPEndPoint ep = sock.Type == SockType.listen ? sock.Lep : sock.Rep;
             byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen"
                 + "?type=" + sock.Type.ToString()
-                + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString());
+                + "&ip=" + ep.Address.ToString()
+                + "&port=" + ep.Port.ToString()
+                + "&id=" + sock.ID);
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
@@ -147,10 +153,12 @@ namespace SockMaster
 
             sock.State = SockState.Closing;
 
+            IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
             byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose"
                 + "?type=" + sock.Type.ToString()
-                + "&ip=" + sock.EP.Address.ToString()
-                + "&port=" + sock.EP.Port.ToString());
+                + "&ip=" + ep.Address.ToString()
+                + "&port=" + ep.Port.ToString()
+                + "&id=" + sock.ID);
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
@@ -170,11 +178,13 @@ namespace SockMaster
                 input.Title = "Edit";
                 input.textBoxID.Text = sock.ID;
                 input.textBoxName.Text = sock.Name;
-                input.textBoxEP.Text = sock.EP.ToString();
-                if (sock.Type == SockType.listen)
+                if (sock.Type == SockType.listen) {
+                    input.textBoxEP.Text = sock.Lep.ToString();
                     input.radioButtonListen.IsChecked = true;
-                else
+                } else {
+                    input.textBoxEP.Text = sock.Rep.ToString();
                     input.radioButtonConnect.IsChecked = true;
+                }
                 input.checkBoxAutorun.IsChecked = sock.Autorun;
                 input.textBoxEP.Focus();
                 input.textBoxEP.SelectionStart = input.textBoxEP.Text.Length;
@@ -184,13 +194,18 @@ namespace SockMaster
 
                 sock.ID = input.textBoxID.Text;
                 sock.Name = input.textBoxName.Text;
+
                 string[] str = input.textBoxEP.Text.Split(':');
-                if (str.Count() == 2)
-                    sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
-                if (input.radioButtonListen.IsChecked == true)
+                if (str.Count() != 2)
+                    return;
+                if (input.radioButtonListen.IsChecked == true) {
                     sock.Type = SockType.listen;
-                else
+                    sock.Lep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                } else {
                     sock.Type = SockType.connect;
+                    sock.Rep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                }
+
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
             }
@@ -209,13 +224,18 @@ namespace SockMaster
                 SockUnit sock = new SockUnit();
                 sock.ID = input.textBoxID.Text;
                 sock.Name = input.textBoxName.Text;
+
                 string[] str = input.textBoxEP.Text.Split(':');
-                if (str.Count() == 2)
-                    sock.EP = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
-                if (input.radioButtonListen.IsChecked == true)
+                if (str.Count() != 2)
+                    return;
+                if (input.radioButtonListen.IsChecked == true) {
                     sock.Type = SockType.listen;
-                else
+                    sock.Lep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                } else {
                     sock.Type = SockType.connect;
+                    sock.Rep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                }
+
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
                 sock.UpdateTitle();
                 (treeSock.ItemsSource as ObservableCollection<SockUnit>).Add(sock);
@@ -254,7 +274,7 @@ namespace SockMaster
                 sockitem.SetAttribute("id", item.ID);
                 sockitem.SetAttribute("name", item.Name);
                 sockitem.SetAttribute("type", item.Type.ToString());
-                sockitem.SetAttribute("ep", item.EP.ToString());
+                sockitem.SetAttribute("ep", item.Rep.ToString());
                 sockitem.SetAttribute("autorun", item.Autorun.ToString());
                 config.AppendChild(sockitem);
             }
@@ -299,10 +319,11 @@ namespace SockMaster
                 } else
                     data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
 
+                IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
                 byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend"
                     + "?type=" + sock.Type.ToString()
-                    + "&ip=" + sock.EP.Address.ToString()
-                    + "&port=" + sock.EP.Port.ToString()
+                    + "&ip=" + ep.Address.ToString()
+                    + "&port=" + ep.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
                 SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);

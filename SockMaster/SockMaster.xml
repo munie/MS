@@ -3,9 +3,9 @@
   <sockets>
     <sockitem id="1" name="zls" type="listen" ep="0.0.0.0:3002" autorun="True" />
     <sockitem id="2" name="qx" type="listen" ep="0.0.0.0:3006" autorun="False" />
-    <sockitem id="11" name="zls" type="connect" ep="127.0.0.1:2000" autorun="False" />
-    <sockitem id="11" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
-    <sockitem id="12" name="qx" type="connect" ep="127.0.0.1:3006" autorun="False" />
+    <sockitem id="11" name="cmd" type="connect" ep="127.0.0.1:2000" autorun="False" />
+    <sockitem id="12" name="zls" type="connect" ep="127.0.0.1:3002" autorun="False" />
+    <sockitem id="13" name="qx" type="connect" ep="127.0.0.1:3006" autorun="False" />
   </sockets>
   <commands>
     <!--

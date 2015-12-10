@@ -11,6 +11,19 @@ namespace SockMaster {
     class DataUI : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        // center port
+        private int port;
+        public int Port
+        {
+            get { return port; }
+            set
+            {
+                port = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("Port"));
+            }
+        }
+
         // socket information
         public ObservableCollection<SockUnit> SockTable { get; set; }
 
@@ -83,15 +96,16 @@ namespace SockMaster {
             {
                 if (type == SockType.accept) {
                     var subset = from s in SockTable
-                                 where s.Type == SockType.listen && s.EP.Port == lep.Port
+                                 where s.Type == SockType.listen && s.Lep.Port == lep.Port
                                  select s;
                     foreach (var item in subset) {
                         item.Childs.Add(new SockUnit()
                         {
-                            ID = "-",
+                            ID = "at" + rep.ToString(),
                             Name = "accept",
                             Type = type,
-                            EP = rep,
+                            Lep = lep,
+                            Rep = rep,
                             State = SockState.Opened,
                         });
                         break;
@@ -111,7 +125,7 @@ namespace SockMaster {
                         if (item.Childs.Count == 0) continue;
 
                         foreach (var child in item.Childs) {
-                            if (child.EP.Equals(rep)) {
+                            if (child.Rep.Equals(rep)) {
                                 item.Childs.Remove(child);
                                 return;
                             }
@@ -119,7 +133,7 @@ namespace SockMaster {
                     }
                 } else if (type == SockType.connect) {
                     foreach (var item in SockTable) {
-                        if (item.EP.Equals(rep)) {
+                        if (item.Lep != null && item.Lep.Equals(lep)) {
                             item.State = SockState.Closed;
                             break;
                         }
@@ -130,19 +144,25 @@ namespace SockMaster {
             }));
         }
 
-        public void SockOpen(IPEndPoint ep)
+        public void SockOpen(string id, IPEndPoint lep, IPEndPoint rep)
         {
             foreach (var item in SockTable) {
-                if (item.EP.Equals(ep))
+                if (item.ID.Equals(id)) {
+                    item.Lep = lep;
+                    item.Rep = rep;
                     item.State = SockState.Opened;
+                    break;
+                }
             }
         }
 
-        public void SockClose(IPEndPoint ep)
+        public void SockClose(string id)
         {
             foreach (var item in SockTable) {
-                if (item.EP.Equals(ep))
+                if (item.ID.Equals(id)) {
                     item.State = SockState.Closed;
+                    break;
+                }
             }
         }
 

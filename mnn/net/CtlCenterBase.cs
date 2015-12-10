@@ -74,7 +74,7 @@ namespace mnn.net {
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
                 result = sessctl.MakeListen(ep);
-            else if (dc["type"] == SockType.connect.ToString() && sessctl.FindSession(SockType.connect, null, ep) == null)
+            else if (dc["type"] == SockType.connect.ToString())
                 result = sessctl.AddConnect(ep);
             else
                 result = null;
@@ -100,7 +100,7 @@ namespace mnn.net {
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, null, ep);
+                result = sessctl.FindSession(SockType.connect, ep, null);
             else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
@@ -137,7 +137,7 @@ namespace mnn.net {
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, null, ep);
+                result = sessctl.FindSession(SockType.connect, ep, null);
             else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 

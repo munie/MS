@@ -272,6 +272,7 @@ namespace mnn.net {
 
             switch (type) {
                 case SockType.listen:
+                case SockType.connect:
                     foreach (var item in sess_table) {
                         if (item.type == type && item.lep.Equals(lep)) {
                             retval = item;
@@ -280,7 +281,6 @@ namespace mnn.net {
                     }
                     break;
                 case SockType.accept:
-                case SockType.connect:
                     foreach (var item in sess_table) {
                         if (item.type == type && item.rep.Equals(rep)) {
                             retval = item;
