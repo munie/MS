@@ -3,17 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using System.IO;
+using System.Xml;
 using mnn.misc.module;
 using mnn.net;
 
 namespace mnn.misc.env {
     public abstract  class EnvModule : IModule {
-        protected static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
-        protected static readonly string CONF_NAME = "EnvConsole.xml";
-        protected static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        protected SockClientTcp tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2000));
+        protected SockClientTcp tcp;
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
+
+        public EnvModule()
+        {
+            XmlDocument xdoc = new XmlDocument();
+            xdoc.Load(EnvConst.CONF_PATH);
+
+            foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
+                if (item.Attributes["target"].Value == "center" && item.Attributes["protocol"].Value == "tcp") {
+                    tcp = new SockClientTcp(new IPEndPoint(
+                            IPAddress.Parse(item.Attributes["ipaddress"].Value),
+                            int.Parse(item.Attributes["port"].Value)
+                            ));
+                    break;
+                }
+            }
+        }
 
         // IModule ========================================================================
 

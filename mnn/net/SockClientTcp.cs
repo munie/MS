@@ -58,11 +58,6 @@ namespace mnn.net {
             //}
         }
 
-        public Socket GetSocket()
-        {
-            return sock;
-        }
-
         public void Send(byte[] buffer, SockClientTcpSendCallback method)
         {
             if (!IsSocketConnected(sock)) {

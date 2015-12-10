@@ -19,11 +19,6 @@ namespace EnvConsole
 {
     class CtlCenter : CtlCenterBase
     {
-        public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
-        public static readonly string CONF_NAME = "EnvConsole.xml";
-        public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        public static readonly string Module_PATH = BASE_DIR + "Modules";
-        public static readonly string PACK_PARSE = "PackParse";
         public Encoding Coding { get; set; }
         public DataUI DataUI { get; set; }
         private ModuleCtl modctl;
@@ -46,8 +41,8 @@ namespace EnvConsole
             dispatcher.Register("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
-            if (Directory.Exists(Module_PATH)) {
-                foreach (var item in Directory.GetFiles(Module_PATH)) {
+            if (Directory.Exists(EnvConst.Module_PATH)) {
+                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
                     string str = item.Substring(item.LastIndexOf("\\") + 1);
                     if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
                         ModuleLoad(item);
@@ -60,21 +55,21 @@ namespace EnvConsole
 
         public void Config()
         {
-            if (File.Exists(CONF_PATH) == false) {
-                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
+            if (File.Exists(EnvConst.CONF_PATH) == false) {
+                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": can't find it.");
                 Thread.CurrentThread.Abort();
             }
 
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(CONF_PATH);
+                xdoc.Load(EnvConst.CONF_PATH);
 
                 // coding Config
-                XmlNode node = xdoc.SelectSingleNode("/configuration/encoding");
+                XmlNode node = xdoc.SelectSingleNode(EnvConst.CONF_ENCODING);
                 Coding = Encoding.GetEncoding(node.InnerText);
 
                 // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes("/configuration/servers/server")) {
+                foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
@@ -94,7 +89,7 @@ namespace EnvConsole
                 }
             } catch (Exception ex) {
                 mnn.util.Logger.WriteException(ex);
-                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
+                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
             }
 
             // autorun
@@ -140,6 +135,7 @@ namespace EnvConsole
 
         // Center Service =========================================================================
 
+        private static readonly string PACK_PARSE = "PackParse";
         private AtCmdCtl cmdctl;
         private void InitPackParse()
         {

@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="misc\env\AtCommand.cs" />
+    <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
     <Compile Include="misc\env\IEnvHandler.cs" />
     <Compile Include="misc\env\IEnvTranslate.cs" />

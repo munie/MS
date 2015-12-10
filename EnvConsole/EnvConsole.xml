@@ -3,7 +3,7 @@
   <encoding>utf-8</encoding>
 
   <servers>
-    <server target="center" protocol="tcp" ipaddress="0.0.0.0" port="2000" autorun="true" canstop="false" id="ctl" name="命令 服务" />
+    <server target="center" protocol="tcp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="ctl" name="命令 服务" />
     <!-- not modify above here -->
 
     <!-- add new server below here -->

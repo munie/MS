@@ -24,19 +24,19 @@ namespace EnvConsole
 
         // socket parse log
         public System.Windows.Controls.TextBox MsgBox { get; set; }
-        private StringBuilder log;
-        public string Log
-        {
-            get { return log.ToString(); }
-            set
-            {
-                if (log.Length >= 20 * 1024 || value == "")
-                    log.Clear();
-                log.Append(value);
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Log"));
-            }
-        }
+        //private StringBuilder log;
+        //public string Log
+        //{
+        //    get { return log.ToString(); }
+        //    set
+        //    {
+        //        if (log.Length >= 20 * 1024 || value == "")
+        //            log.Clear();
+        //        log.Append(value);
+        //        if (PropertyChanged != null)
+        //            PropertyChanged(this, new PropertyChangedEventArgs("Log"));
+        //    }
+        //}
 
         // currentAcceptCount
         private int currentAcceptCount;
