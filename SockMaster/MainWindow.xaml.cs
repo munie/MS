@@ -134,7 +134,7 @@ namespace SockMaster
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
-                tcp.Send(buffer);
+                tcp.Send(buffer, null);
             } catch (Exception) {
                 sock.State = SockState.Closed;
             }
@@ -154,7 +154,7 @@ namespace SockMaster
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
             try {
-                tcp.Send(buffer);
+                tcp.Send(buffer, null);
             } catch (Exception) {
                 sock.State = SockState.Opened;
             }
@@ -308,7 +308,7 @@ namespace SockMaster
                 SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
                 try {
-                    tcp.Send(buffer);
+                    tcp.Send(buffer, null);
                 } catch (Exception) { }
                 break;
             }

@@ -57,7 +57,8 @@ namespace mnn.net {
 
         protected virtual void default_service(SockRequest request, SockResponse response)
         {
-            response.data = new byte[] { 0x34, 0x30, 0x34 };
+            // write response
+            response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
         protected virtual void sock_open_service(SockRequest request, SockResponse response)
@@ -76,7 +77,13 @@ namespace mnn.net {
             else if (dc["type"] == SockType.connect.ToString() && sessctl.FindSession(SockType.connect, null, ep) == null)
                 result = sessctl.AddConnect(ep);
             else
-                return;
+                result = null;
+
+            // write response
+            if (result != null)
+                response.data = Encoding.UTF8.GetBytes("Success: " + dc["type"] + " " + ep.ToString() + "\r\n");
+            else
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         protected virtual void sock_close_service(SockRequest request, SockResponse response)
@@ -87,7 +94,7 @@ namespace mnn.net {
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
-            // find session and close
+            // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString())
@@ -97,8 +104,15 @@ namespace mnn.net {
             else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
+            // close session
             if (result != null)
                 sessctl.DelSession(result);
+
+            // write response
+            if (result != null)
+                response.data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
+            else
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         protected virtual void sock_send_service(SockRequest request, SockResponse response)
@@ -117,7 +131,7 @@ namespace mnn.net {
             // retrieve param to dictionary
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
-            // find session and send message
+            // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString())
@@ -127,8 +141,15 @@ namespace mnn.net {
             else// if (dc["type"] == SockType.accept.ToString())
                 result = sessctl.FindSession(SockType.accept, null, ep);
 
+            // send message
             if (result != null)
                 sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
+
+            // write response
+            if (result != null)
+                response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
+            else
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
     }
 }

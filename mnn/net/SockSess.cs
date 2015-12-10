@@ -148,7 +148,7 @@ namespace mnn.net {
         public SessCtl()
         {
             sess_table = new List<SockSess>();
-            stall_time = 60 * 12;
+            stall_time = 60 * 36;
             thread = null;
             sess_create = null;
             sess_delete = null;

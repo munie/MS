@@ -242,6 +242,7 @@ namespace EnvConsole
             cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
 
             foreach (var item in sessctl.GetSessionTable()) {
+                if (item.type != SockType.accept) continue;
                 SessData sd = item.sdata as SessData;
                 if (sd.IsAdmin)
                     sessctl.SendSession(item, request.data);
@@ -280,6 +281,7 @@ namespace EnvConsole
             sb.Insert(0, '[');
             sb.Append(']');
             sb.Replace("}{", "},{");
+            sb.Append("\r\n");
             response.data = Coding.GetBytes(sb.ToString());
         }
 
@@ -294,22 +296,23 @@ namespace EnvConsole
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
-            // find session and close
+            // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = sessctl.FindSession(SockType.accept, null, ep);
 
+            // close session
             if (result != null)
                 sessctl.DelSession(result);
+
+            // write response
+            if (result != null)
+                response.data = Coding.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
+            else
+                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
 
             /// ** update DataUI
             if (result != null)
                 DataUI.ClientDel(ep);
-
-            // respond
-            if (result != null)
-                response.data = Coding.GetBytes("OK");
-            else
-                response.data = Coding.GetBytes("no such client");
         }
 
         private void client_send_service(SockRequest request, SockResponse response)
@@ -323,17 +326,19 @@ namespace EnvConsole
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
-            // find session and send message
+            // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = sessctl.FindSession(SockType.accept, null, ep);
 
+            // send message
             if (result != null)
                 sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
 
+            // write response
             if (result != null)
-                response.data = Coding.GetBytes("OK");
+                response.data = Coding.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
             else
-                response.data = Coding.GetBytes("no such client");
+                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         private void client_send_by_ccid_service(SockRequest request, SockResponse response)
@@ -347,7 +352,7 @@ namespace EnvConsole
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
-            // find session and send message
+            // find session
             SockSess result = null;
             foreach (var item in sessctl.GetSessionTable()) {
                 if (item.type != SockType.accept) continue;
@@ -358,13 +363,15 @@ namespace EnvConsole
                 }
             }
 
+            // send message
             if (result != null)
                 sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
 
+            // write response
             if (result != null)
-                response.data = Coding.GetBytes("OK");
+                response.data = Coding.GetBytes("Success: sendto " + dc["ccid"] + "\r\n");
             else
-                response.data = Coding.GetBytes("no such client");
+                response.data = Coding.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
         }
 
         private void client_update_service(SockRequest request, SockResponse response)
@@ -380,16 +387,24 @@ namespace EnvConsole
 
             // update sess data
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess sess = sessctl.FindSession(SockType.accept, null, ep);
-            if (sess != null) {
-                SessData sd = sess.sdata as SessData;
+            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
+            if (result != null) {
+                SessData sd = result.sdata as SessData;
                 sd.Ccid = dc["ccid"];
                 sd.Name = dc["name"];
             }
 
+            // write response
+            if (result != null)
+                response.data = Coding.GetBytes("Success: update " + ep.ToString() + "\r\n");
+            else
+                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+
             /// ** update DataUI
-            DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
-            DataUI.ClientUpdate(ep, "Name", dc["name"]);
+            if (result != null) {
+                DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
+                DataUI.ClientUpdate(ep, "Name", dc["name"]);
+            }
         }
 
         // Methods ============================================================================

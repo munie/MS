@@ -25,39 +25,39 @@ namespace mnn.misc.env {
 
         // Private Tools ===========================================================================
 
-        protected void SendClientClose(string ip, int port)
+        protected void SendClientClose(string ip, int port, SockClientTcpSendCallback method = null)
         {
             string url = "/center/clientclose" + "?ip=" + ip + "&port=" + port;
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.SendEncryptUrl(url, method);
             } catch (Exception) { }
         }
 
-        protected void SendClientMsg(string ip, int port, string msg)
+        protected void SendClientMsg(string ip, int port, string msg, SockClientTcpSendCallback method = null)
         {
             string url = "/center/clientsend" + "?ip=" + ip + "&port=" + port + "&data=" + msg;
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.SendEncryptUrl(url, method);
             } catch (Exception) { }
         }
 
-        protected void SendClientMsgByCcid(string ccid, string msg)
+        protected void SendClientMsgByCcid(string ccid, string msg, SockClientTcpSendCallback method = null)
         {
             string url = "/center/clientsendbyccid" + "?ccid=" + ccid + "&data=" + msg;
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.SendEncryptUrl(url, method);
             } catch (Exception) { }
         }
 
-        protected void SendClientUpdate(string ip, int port, string ccid, string name)
+        protected void SendClientUpdate(string ip, int port, string ccid, string name, SockClientTcpSendCallback method = null)
         {
             string url = "/center/clientupdate" + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
 
             try {
-                tcp.SendEncryptUrl(url);
+                tcp.SendEncryptUrl(url, method);
             } catch (Exception) { }
         }
     }
