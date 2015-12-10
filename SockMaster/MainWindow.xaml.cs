@@ -81,7 +81,7 @@ namespace SockMaster
 
             // init context
             DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
-            this.txtBoxMsg.SetBinding(TextBox.TextProperty, new Binding("Log") { Source = center.DataUI });
+            center.DataUI.MsgBox = this.txtBoxMsg;
             this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
             this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
@@ -427,11 +427,6 @@ namespace SockMaster
         private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)
         {
             txtBoxMsg.Text = "";
-        }
-
-        private void txtBoxMsg_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            txtBoxMsg.ScrollToEnd();
         }
     }
 }

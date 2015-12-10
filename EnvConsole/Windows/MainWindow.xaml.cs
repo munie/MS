@@ -50,7 +50,7 @@ namespace EnvConsole.Windows
 
             DataContext = new { ServerTable = center.DataUI.ServerTable, ClientTable = center.DataUI.ClientTable,
                 ModuleTable = center.DataUI.ModuleTable, DataUI = center.DataUI };
-            center.DataUI.msgBox = txtMsg;
+            center.DataUI.MsgBox = txtMsg;
             //this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
             this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));

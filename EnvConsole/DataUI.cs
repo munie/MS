@@ -23,7 +23,7 @@ namespace EnvConsole
         public event PropertyChangedEventHandler PropertyChanged;
 
         // socket parse log
-        public System.Windows.Controls.TextBox msgBox;
+        public System.Windows.Controls.TextBox MsgBox { get; set; }
         private StringBuilder log;
         public string Log
         {
@@ -123,7 +123,7 @@ namespace EnvConsole
             ModuleTable = new ObservableCollection<ModuleUnit>();
             RwlockModuleTable = new ReaderWriterLock();
 
-            log = new StringBuilder();
+            //log = new StringBuilder();
             currentAcceptCount = 0;
             historyAcceptOpenCount = 0;
             historyAcceptCloseCount = 0;
@@ -209,11 +209,11 @@ namespace EnvConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 //Log = log;
-                if (msgBox.Text.Length >= 20 * 1024)
-                    msgBox.Clear();
+                if (MsgBox.Text.Length >= 20 * 1024)
+                    MsgBox.Clear();
 
-                msgBox.AppendText(log);
-                msgBox.ScrollToEnd();
+                MsgBox.AppendText(log);
+                MsgBox.ScrollToEnd();
             }));
         }
 

@@ -28,19 +28,7 @@ namespace SockMaster {
         public ObservableCollection<SockUnit> SockTable { get; set; }
 
         // socket parse log
-        private StringBuilder log;
-        public string Log
-        {
-            get { return log.ToString(); }
-            set
-            {
-                if (log.Length >= 20 * 1024 || value == "")
-                    log.Clear();
-                log.Append(value);
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Log"));
-            }
-        }
+        public System.Windows.Controls.TextBox MsgBox { get; set; }
 
         // currentAcceptCount
         private int currentAcceptCount;
@@ -84,7 +72,6 @@ namespace SockMaster {
         public DataUI()
         {
             SockTable = new ObservableCollection<SockUnit>();
-            log = new StringBuilder();
             currentAcceptCount = 0;
             historyAcceptOpenCount = 0;
             historyAcceptCloseCount = 0;
@@ -170,7 +157,11 @@ namespace SockMaster {
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                Log = log;
+                if (MsgBox.Text.Length >= 20 * 1024)
+                    MsgBox.Clear();
+
+                MsgBox.AppendText(log);
+                MsgBox.ScrollToEnd();
             }));
         }
     }
