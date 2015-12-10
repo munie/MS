@@ -124,7 +124,7 @@ namespace EnvConsole
                     Ccid = "",
                     Name = "",
                     TimeConn = DateTime.Now,
-                    IsAdmin = checkServerTargetCenter(sess.lep.Port),
+                    IsAdmin = false,
                 };
                 /// ** update DataUI
                 DataUI.ClientAdd(sess.lep, sess.rep);
@@ -203,31 +203,6 @@ namespace EnvConsole
                         sessctl.SendSession(result, response.data);
                 }));
             }
-
-            //bool IsHandled = false;
-            //DataUI.RwlockModuleTable.AcquireReaderLock(-1);
-            //foreach (var item in DataUI.ModuleTable) {
-            //    // 水库代码太恶心，没办法的办法
-            //    if (item.Module.ModuleID != "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
-            //        try {
-            //            item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
-            //        } catch (Exception) { }
-            //        IsHandled = true;
-            //        break;
-            //    }
-            //}
-            //// 水库代码太恶心，没办法的办法
-            //if (IsHandled == false) {
-            //    foreach (var item in DataUI.ModuleTable) {
-            //        if (item.Module.ModuleID == "HT=" && pack.Content.Contains(item.Module.ModuleID)) {
-            //            try {
-            //                item.Module.Invoke(SMsgProc.FULL_NAME, SMsgProc.HANDLE_MSG, new object[] { pack.EP, pack.Content });
-            //            } catch (Exception) { }
-            //            break;
-            //        }
-            //    }
-            //}
-            //DataUI.RwlockModuleTable.ReleaseReaderLock();
         }
 
         protected override void default_service(SockRequest request, SockResponse response)
@@ -240,13 +215,6 @@ namespace EnvConsole
             DataUI.PackRecved();
 
             cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
-
-            foreach (var item in sessctl.GetSessionTable()) {
-                if (item.type != SockType.accept) continue;
-                SessData sd = item.sdata as SessData;
-                if (sd.IsAdmin)
-                    sessctl.SendSession(item, request.data);
-            }
         }
 
         private bool checkServerTargetCenter(int port)
