@@ -21,6 +21,7 @@ namespace EnvConsole
             }
 
             base.handle(request, response);
+            //response.data = EncryptSym.AESEncrypt(response.data);
         }
     }
 }

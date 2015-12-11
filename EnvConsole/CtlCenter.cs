@@ -303,6 +303,13 @@ namespace EnvConsole
                 response.data = Coding.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
             else
                 response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+
+            /// ** update DataUI
+            if (result != null) {
+                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
+                log += Coding.GetString(Coding.GetBytes(dc["data"])) + "\n\n";
+                DataUI.Logger(log);
+            }
         }
 
         private void client_send_by_ccid_service(SockRequest request, SockResponse response)
@@ -336,6 +343,13 @@ namespace EnvConsole
                 response.data = Coding.GetBytes("Success: sendto " + dc["ccid"] + "\r\n");
             else
                 response.data = Coding.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
+
+            /// ** update DataUI
+            if (result != null) {
+                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
+                log += Coding.GetString(Coding.GetBytes(dc["data"])) + "\n\n";
+                DataUI.Logger(log);
+            }
         }
 
         private void client_update_service(SockRequest request, SockResponse response)

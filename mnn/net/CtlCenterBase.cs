@@ -15,9 +15,9 @@ namespace mnn.net {
         {
             // init sesscer
             sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessParseDelegate(sess_parse);
-            sessctl.sess_create += new SessCtl.SessCreateDelegate(sess_create);
-            sessctl.sess_delete += new SessCtl.SessDeleteDelegate(sess_delete);
+            sessctl.sess_parse += new SessCtl.SessDelegate(sess_parse);
+            sessctl.sess_create += new SessCtl.SessDelegate(sess_create);
+            sessctl.sess_delete += new SessCtl.SessDelegate(sess_delete);
 
             // init dispatcher
             dispatcher = new DispatcherBase();

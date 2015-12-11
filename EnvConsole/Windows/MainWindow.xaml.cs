@@ -228,8 +228,12 @@ namespace EnvConsole.Windows
                 if (input.ShowDialog() == false)
                     return;
 
-                foreach (ClientUnit item in lstViewClient.SelectedItems)
+                foreach (ClientUnit item in lstViewClient.SelectedItems) {
                     center.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
+                    string log = DateTime.Now + " (" + "localhost" + " => " + item.RemoteEP.ToString() + ")\n";
+                    log += input.textBox1.Text + "\n\n";
+                    txtMsg.Text += log;
+                }
             }
         }
 

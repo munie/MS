@@ -136,12 +136,10 @@ namespace mnn.net {
         private int stall_time;
         private Thread thread;
 
-        public delegate void SessCreateDelegate(object sender, SockSess sess);
-        public delegate void SessDeleteDelegate(object sender, SockSess sess);
-        public delegate void SessParseDelegate(object sender, SockSess sess);
-        public SessCreateDelegate sess_create;
-        public SessDeleteDelegate sess_delete;
-        public SessParseDelegate sess_parse;
+        public delegate void SessDelegate(object sender, SockSess sess);
+        public SessDelegate sess_create;
+        public SessDelegate sess_delete;
+        public SessDelegate sess_parse;
 
         private List<Delegate> dispatcher_delegate_table;
 
@@ -256,8 +254,9 @@ namespace mnn.net {
 
             try {
                 if (sess.type == SockType.listen) {
-                    foreach (var child in FindAcceptSession(sess))
+                    foreach (var child in FindAcceptSession(sess)) {
                         child.sock.Send(data);
+                    }
                 } else {
                     sess.sock.Send(data);
                 }
