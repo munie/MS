@@ -227,7 +227,7 @@ namespace EnvConsole
 
         private void client_list_service(SockRequest request, SockResponse response)
         {
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            //if (!checkServerTargetCenter(request.lep.Port)) return;
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {

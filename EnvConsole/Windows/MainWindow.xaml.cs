@@ -233,6 +233,7 @@ namespace EnvConsole.Windows
                     string log = DateTime.Now + " (" + "localhost" + " => " + item.RemoteEP.ToString() + ")\n";
                     log += input.textBox1.Text + "\n\n";
                     txtMsg.Text += log;
+                    txtMsg.ScrollToEnd();
                 }
             }
         }
