@@ -213,6 +213,19 @@ namespace EnvConsole
             cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
         }
 
+        protected override void sock_send_service(SockRequest request, SockResponse response)
+        {
+            base.sock_send_service(request, response);
+
+            /// ** update DataUI
+            if (response.data != null) {
+                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + "*.*.*.*" + ")\n";
+                log += "Request: " + Coding.GetString(request.data) + "\n";
+                log += "Respond: " + Coding.GetString(response.data) + "\n\n";
+                DataUI.Logger(log);
+            }
+        }
+
         private bool checkServerTargetCenter(int port)
         {
             /// ** dangerous !!! access DataUI
