@@ -68,6 +68,7 @@ namespace SockMaster
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
                     cmd.Cmd = item.Attributes["content"].Value;
+                    cmd.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), item.Attributes["header"].Value);
                     cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
                     cmdTable.Add(cmd);
                 }
@@ -308,17 +309,14 @@ namespace SockMaster
 
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
-                byte[] data = null;
-                if (item.Encrypt) {
-                    data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                    data = EncryptSym.AESEncrypt(data.Skip(4).ToArray());
-                    string tmp = Convert.ToBase64String(data);
-                    data = Encoding.UTF8.GetBytes(tmp);
-                    data = new byte[] { 0x01, 0x0C, (byte)(0x04 + data.Length & 0xff),
-                        (byte)(data.Length >> 8 & 0xff) }.Concat(data).ToArray();
-                } else
-                    data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+                // init data which is sended out to remote ep
+                byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+                if (item.Encrypt)
+                    data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
+                if (item.Header != SockRequestType.plain)
+                    SockConvert.InsertSockHeader(item.Header, ref data);
 
+                // add internal header just for translating in SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
                 byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend"
                     + "?type=" + sock.Type.ToString()
@@ -345,6 +343,8 @@ namespace SockMaster
                 input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
+                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestType));
+                input.comboBoxHeader.SelectedIndex = 1;
                 input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
@@ -355,6 +355,7 @@ namespace SockMaster
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.Cmd = input.textBoxCmd.Text;
+                    item.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), input.comboBoxHeader.SelectedItem.ToString());
                     item.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                     break;
                 }
@@ -366,6 +367,8 @@ namespace SockMaster
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
                 input.Title = "Add";
+                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestType));
+                input.comboBoxHeader.SelectedIndex = 1;
                 input.textBoxID.Focus();
 
                 if (input.ShowDialog() == false) return;
@@ -374,6 +377,7 @@ namespace SockMaster
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
+                cmd.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), input.comboBoxHeader.SelectedItem.ToString()); 
                 cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                 cmdTable.Add(cmd);
             }
@@ -411,6 +415,7 @@ namespace SockMaster
                 XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
+                cmd.SetAttribute("header", item.Header.ToString());
                 cmd.SetAttribute("encrypt", item.Encrypt.ToString());
                 cmd.SetAttribute("content", item.Cmd);
                 config.AppendChild(cmd);

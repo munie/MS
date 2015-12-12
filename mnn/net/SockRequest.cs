@@ -8,6 +8,7 @@ namespace mnn.net {
     public enum SockRequestType {
         sock = 0x0C00,
         url = 0x0C01,
+        plain = 0x0CFF,
         unknown = 0x0CFF,
     }
 
@@ -21,7 +22,10 @@ namespace mnn.net {
 
         public bool CheckType(byte[] raw)
         {
-            if (!Enum.IsDefined(typeof(SockRequestType), raw[0] + (raw[1] << 8)))
+            int tmp = (raw[0] + (raw[1] << 8));
+            if (!Enum.IsDefined(typeof(SockRequestType), tmp))
+                return false;
+            else if ((SockRequestType)tmp == SockRequestType.unknown)
                 return false;
             else
                 return true;

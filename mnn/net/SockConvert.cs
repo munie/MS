@@ -131,7 +131,7 @@ namespace mnn.net {
 
         public static void InsertSockHeader(SockRequestType type, ref byte[] buffer)
         {
-            if (buffer == null) return;
+            if (buffer == null && type == SockRequestType.plain) return;
 
             short tmp = (short)type;
             buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),

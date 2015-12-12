@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
+using mnn.net;
 
 namespace SockMaster {
     public class CmdUnit : INotifyPropertyChanged {
@@ -11,6 +12,7 @@ namespace SockMaster {
         private string id;
         private string name;
         private string cmd;
+        private SockRequestType header;
         private bool encrypt;
 
         public string ID
@@ -41,6 +43,16 @@ namespace SockMaster {
                 cmd = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
+            }
+        }
+        public SockRequestType Header
+        {
+            get { return header; }
+            set
+            {
+                header = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("Header"));
             }
         }
         public bool Encrypt

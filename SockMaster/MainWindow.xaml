@@ -55,8 +55,10 @@
                 <GridView>
                     <GridViewColumn Header="ID" Width="45"
                                     DisplayMemberBinding="{Binding ID}" />
-                    <GridViewColumn Header="Name" Width="60"
+                    <GridViewColumn Header="Name" Width="75"
                                     DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="Header" Width="50"
+                                    DisplayMemberBinding="{Binding Header}" />
                     <GridViewColumn Header="Encrypt" Width="50"
                                     DisplayMemberBinding="{Binding Encrypt}" />
                     <GridViewColumn Header="Cmd" Width="360"
