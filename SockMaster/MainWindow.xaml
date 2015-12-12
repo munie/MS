@@ -1,7 +1,7 @@
 ﻿<Window x:Class="SockMaster.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SockMaster" Height="540" Width="960" WindowStartupLocation="CenterScreen">
+        Title="SockMaster" Height="600" Width="1066" WindowStartupLocation="CenterScreen">
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="258*" />
@@ -9,8 +9,8 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
-            <RowDefinition Height="161*" />
-            <RowDefinition Height="306*" />
+            <RowDefinition Height="330*" />
+            <RowDefinition Height="197*" />
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
