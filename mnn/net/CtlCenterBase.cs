@@ -35,7 +35,7 @@ namespace mnn.net {
             // check request
             if (!request.CheckType(data)) {
                 sess.RfifoSkip(sess.rdata_size);
-                request.type = SockRequestType.unknown;
+                request.type = SockRequestType.none;
                 request.length = -1;
                 request.data = data;
             } else if (request.CheckLength(data))

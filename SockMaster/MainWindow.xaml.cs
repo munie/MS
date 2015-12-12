@@ -313,7 +313,7 @@ namespace SockMaster
                 byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.Header != SockRequestType.plain)
+                if (item.Header != SockRequestType.none)
                     SockConvert.InsertSockHeader(item.Header, ref data);
 
                 // add internal header just for translating in SockMaster
@@ -344,7 +344,13 @@ namespace SockMaster
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
                 input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestType));
-                input.comboBoxHeader.SelectedIndex = 1;
+                string[] tmp = input.comboBoxHeader.ItemsSource as string[];
+                for (int i = 0; i < tmp.Length; i++) {
+                    if (tmp[i] == (lstViewCmd.SelectedItems[0] as CmdUnit).Header.ToString()) {
+                        input.comboBoxHeader.SelectedIndex = i;
+                        break;
+                    }
+                }
                 input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;

@@ -8,7 +8,7 @@ using System.IO;
 namespace mnn.net {
     public class EncryptSym {
         private static readonly string KEY128 = @"$MU#ERu{*90Q3,CR";
-        private static readonly string KEY256 = @"$MU#ERu{*90Q3,CR.'P:q@#l)1XE,w$T";
+        //private static readonly string KEY256 = @"$MU#ERu{*90Q3,CR.'P:q@#l)1XE,w$T";
         private static readonly byte[] IV = { 0x00, 0x0C, 0x10, 0x00, 0xAB, 0x88, 0x06, 0x25,
             0xBC, 0x92, 0x10, 0x01, 0xCD, 0x88, 0x11, 0x05 };
 

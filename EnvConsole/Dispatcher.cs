@@ -10,7 +10,7 @@ namespace EnvConsole
     {
         public override void handle(SockRequest request, SockResponse response)
         {
-            if (request.type != SockRequestType.unknown) {
+            if (request.type != SockRequestType.none) {
                 try {
                     request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
                     request.data = EncryptSym.AESDecrypt(request.data);

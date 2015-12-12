@@ -47,7 +47,7 @@ namespace mnn.net {
         public virtual void handle(SockRequest request, SockResponse response)
         {
             try {
-                if (request.type == SockRequestType.unknown && default_service != null) {
+                if (request.type == SockRequestType.none && default_service != null) {
                     default_service.func(request, response);
                     return;
                 }
