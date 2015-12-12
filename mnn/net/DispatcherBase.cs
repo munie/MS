@@ -47,8 +47,9 @@ namespace mnn.net {
         public virtual void handle(SockRequest request, SockResponse response)
         {
             try {
-                if (request.type == SockRequestType.none && default_service != null) {
-                    default_service.func(request, response);
+                if (request.type == SockRequestType.none) {
+                    if (default_service != null)
+                        default_service.func(request, response);
                     return;
                 }
                 foreach (var item in service_table) {
