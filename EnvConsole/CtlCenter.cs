@@ -26,7 +26,7 @@ namespace EnvConsole
         public CtlCenter()
         {
             // init log4net
-            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.exe.config");
+            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
             log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
 
             // init fields
