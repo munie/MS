@@ -19,23 +19,21 @@ namespace mnn.net {
         /// <returns>密文</returns>
         public static string DESEncrypt(string plainStr)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] plainArray = Encoding.UTF8.GetBytes(plainStr);
-                string retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
+            byte[] plainArray = Encoding.UTF8.GetBytes(plainStr);
 
+            try {
                 using (DESCryptoServiceProvider des = new DESCryptoServiceProvider()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, des.CreateEncryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(plainArray, 0, plainArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = Convert.ToBase64String(mStream.ToArray());
+                            return Convert.ToBase64String(mStream.ToArray());
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return plainStr;
             }
         }
 
@@ -46,23 +44,21 @@ namespace mnn.net {
         /// <returns>明文</returns>
         public static string DESDecrypt(string encryptStr)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] encryptArray = Convert.FromBase64String(encryptStr);
-                string retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
+            byte[] encryptArray = Convert.FromBase64String(encryptStr);
 
+            try {
                 using (DESCryptoServiceProvider des = new DESCryptoServiceProvider()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, des.CreateDecryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(encryptArray, 0, encryptArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = Encoding.UTF8.GetString(mStream.ToArray());
+                            return Encoding.UTF8.GetString(mStream.ToArray());
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return encryptStr;
             }
         }
 
@@ -73,23 +69,21 @@ namespace mnn.net {
         /// <returns>密文</returns>
         public static string AESEncrypt(string plainStr)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] plainArray = Encoding.UTF8.GetBytes(plainStr);
-                string retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
+            byte[] plainArray = Encoding.UTF8.GetBytes(plainStr);
 
+            try {
                 using (Rijndael aes = Rijndael.Create()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, aes.CreateEncryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(plainArray, 0, plainArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = Convert.ToBase64String(mStream.ToArray());
+                            return Convert.ToBase64String(mStream.ToArray());
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return plainStr;
             }
         }
 
@@ -100,22 +94,20 @@ namespace mnn.net {
         /// <returns>密文</returns>
         public static byte[] AESEncrypt(byte[] plainArray)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
 
+            try {
                 using (Rijndael aes = Rijndael.Create()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, aes.CreateEncryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(plainArray, 0, plainArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = mStream.ToArray();
+                            return mStream.ToArray();
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return plainArray;
             }
         }
 
@@ -126,23 +118,21 @@ namespace mnn.net {
         /// <returns>明文</returns>
         public static string AESDecrypt(string encryptStr)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] encryptArray = Convert.FromBase64String(encryptStr);
-                string retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
+            byte[] encryptArray = Convert.FromBase64String(encryptStr);
 
+            try {
                 using (Rijndael aes = Rijndael.Create()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, aes.CreateDecryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(encryptArray, 0, encryptArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = Encoding.UTF8.GetString(mStream.ToArray());
+                            return Encoding.UTF8.GetString(mStream.ToArray());
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return encryptStr;
             }
         }
 
@@ -153,22 +143,20 @@ namespace mnn.net {
         /// <returns>明文</returns>
         public static byte[] AESDecrypt(byte[] encryptArray)
         {
-            try {
-                byte[] key = Encoding.UTF8.GetBytes(KEY128);
-                byte[] retval = null;
+            byte[] key = Encoding.UTF8.GetBytes(KEY128);
 
+            try {
                 using (Rijndael aes = Rijndael.Create()) {
                     using (MemoryStream mStream = new MemoryStream()) {
                         using (CryptoStream cStream = new CryptoStream(mStream, aes.CreateDecryptor(key, IV), CryptoStreamMode.Write)) {
                             cStream.Write(encryptArray, 0, encryptArray.Length);
                             cStream.FlushFinalBlock();
-                            retval = mStream.ToArray();
+                            return mStream.ToArray();
                         }
                     }
                 }
-                return retval;
             } catch {
-                return null;
+                return encryptArray;
             }
         }
     }

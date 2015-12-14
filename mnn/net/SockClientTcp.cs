@@ -108,7 +108,6 @@ namespace mnn.net {
         public void SendEncryptUrl(string url, SockClientTcpSendCallback method)
         {
             url = EncryptSym.AESEncrypt(url);
-            if (url == null) return;
             byte[] buffer = Encoding.UTF8.GetBytes(url);
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 
