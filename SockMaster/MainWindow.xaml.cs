@@ -93,7 +93,7 @@ namespace SockMaster
             // Format Main Form's Name
             Assembly asm = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
-            this.Title = string.Format("{0} {1}.{2}.{3} - Powered By {5}",
+            this.Title = string.Format("{0} {1}.{2}.{3} - Powered By {4}",
                 fvi.ProductName,
                 fvi.ProductMajorPart,
                 fvi.ProductMinorPart,

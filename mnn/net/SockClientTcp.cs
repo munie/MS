@@ -60,11 +60,17 @@ namespace mnn.net {
 
         public void Send(byte[] buffer, SockClientTcpSendCallback method)
         {
-            if (!IsSocketConnected(sock)) {
-                if (sock != null) sock.Close();
-                sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                sock.Connect(toep);
+            try {
+                if (!IsSocketConnected(sock)) {
+                    if (sock != null) sock.Close();
+                    sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    sock.Connect(toep);
+                }
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
+                log.Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
             }
+
 
             ThreadPool.QueueUserWorkItem((s) =>
             {
@@ -80,18 +86,29 @@ namespace mnn.net {
                         if (nread > 0)
                             retval = Encoding.UTF8.GetString(tmp.Take(nread).ToArray());
                     }
-                } catch (Exception) { } finally { mutex.ReleaseMutex(); }
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
+                    log.Error("Exception in critical section.", ex);
+                    return;
+                }
+                finally {
+                    mutex.ReleaseMutex();
+                }
 
                 try {
                     if (method != null)
                         method.Method.Invoke(method.Target, new object[] { retval });
-                } catch (Exception) { }
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
+                    log.Error("Exception of invoking anonymous method.", ex);
+                }
             });
         }
 
         public void SendEncryptUrl(string url, SockClientTcpSendCallback method)
         {
             url = EncryptSym.AESEncrypt(url);
+            if (url == null) return;
             byte[] buffer = Encoding.UTF8.GetBytes(url);
             SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
 

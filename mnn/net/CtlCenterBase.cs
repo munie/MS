@@ -41,7 +41,8 @@ namespace mnn.net {
             } else if (request.CheckLength(data))
                 sess.RfifoSkip(request.ParseRawData(data));
             else
-                return;
+                sessctl.DelSession(sess);
+                //return;
 
             // dispatch
             dispatcher.handle(request, response);

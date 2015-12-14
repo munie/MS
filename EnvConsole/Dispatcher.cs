@@ -14,7 +14,9 @@ namespace EnvConsole
                 try {
                     request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
                     request.data = EncryptSym.AESDecrypt(request.data);
-                } catch (Exception) {
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                    log.Error("Exception of decrypting request data", ex);
                     request.data = null;
                 }
                 if (request.data == null) return;

@@ -219,7 +219,9 @@ namespace mnn.net {
 
             SockSess retval = SockSess.Listen(ep);
             if (retval == null) {
-                Console.Write("[Error]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+                log.Warn(String.Format("Listened to {0} failed.(alreay in listening)", ep.ToString()));
+                //Console.Write("[Warn]: Listened to {0} failed.(alreay in listening)\n", ep.ToString());
                 return null;
             }
 
@@ -233,7 +235,9 @@ namespace mnn.net {
 
             SockSess retval = SockSess.Connect(ep);
             if (retval == null) {
-                Console.Write("[Error]: Connected to {0} failed.\n", ep.ToString());
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+                log.Warn(String.Format("Connected to {0} failed.", ep.ToString()));
+                //Console.Write("[Warn]: Connected to {0} failed.\n", ep.ToString());
                 return null;
             }
 
@@ -260,7 +264,11 @@ namespace mnn.net {
                 } else {
                     sess.sock.Send(data);
                 }
-            } catch (Exception) { }
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+                log.Warn(String.Format("Send data to {0} failed.",
+                    sess.type == SockType.listen ? sess.lep.ToString() : sess.rep.ToString()), ex);
+            }
         }
 
         public SockSess FindSession(SockType type, IPEndPoint lep, IPEndPoint rep)
@@ -316,12 +324,16 @@ namespace mnn.net {
             if (sess_create != null)
                 sess_create(this, sess);
 
+            log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
             if (sess.type == SockType.listen)
-                Console.Write("[Info]: Session #L listened at {0}.\n", sess.lep.ToString());
+                log.Info(String.Format("Session #L listened at {0}.", sess.lep.ToString()));
+                //Console.Write("[Info]: Session #A accepted to {0}.\n", sess.lep.ToString());
             else if (sess.type == SockType.accept)
-                Console.Write("[Info]: Session #A accepted to {0}.\n", sess.rep.ToString());
-            else if (sess.type == SockType.connect)
-                Console.Write("[Info]: Session #C connected to {0}.\n", sess.rep.ToString());
+                log.Info(String.Format("Session #A accepted to {0}.", sess.lep.ToString()));
+                //Console.Write("[Info]: Session #A accepted to {0}.\n", sess.rep.ToString());
+            else// if (sess.type == SockType.connect)
+                log.Info(String.Format("Session #C connected to {0}.", sess.lep.ToString()));
+                //Console.Write("[Info]: Session #C connected to {0}.\n", sess.rep.ToString());
         }
 
         private void DeleteSession(SockSess sess)
@@ -329,10 +341,13 @@ namespace mnn.net {
             if (sess_delete != null)
                 sess_delete(this, sess);
 
+            log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
             if (sess.type == SockType.listen)
-                Console.Write("[Info]: Session #* deleted from {0}.\n", sess.lep.ToString());
+                log.Info(String.Format("Session #* deleted from {0}.", sess.lep.ToString()));
+                //Console.Write("[Info]: Session #* deleted from {0}.\n", sess.lep.ToString());
             else {
-                Console.Write("[Info]: Session #* deleted from {0}.\n", sess.rep.ToString());
+                log.Info(String.Format("Session #* deleted from {0}.", sess.rep.ToString()));
+                //Console.Write("[Info]: Session #* deleted from {0}.\n", sess.rep.ToString());
                 sess.sock.Shutdown(SocketShutdown.Both);
             }
 

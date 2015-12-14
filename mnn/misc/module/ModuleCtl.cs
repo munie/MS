@@ -33,7 +33,9 @@ namespace mnn.misc.module {
                             call.retval = item.Invoke(call.iface, call.method, ref call.args);
                             if (FuncModuleCallReturn != null)
                                 FuncModuleCallReturn(call);
-                        } catch (Exception) {
+                        } catch (Exception ex) {
+                            log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
+                            log.Error("Exception of invoding assembly method.", ex);
                         } finally {
                             item.ModuleCallTable.Remove(call);
                             module_call_count--;
@@ -49,7 +51,9 @@ namespace mnn.misc.module {
 
             try {
                 module.Load(filePath);
-            } catch (Exception) {
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
+                log.Error(String.Format("Exception of loading assembly {0}.", filePath), ex);
                 return null;
             }
 
@@ -62,7 +66,9 @@ namespace mnn.misc.module {
                 object[] tmp = new object[] {};
                 module.Invoke(typeof(IModule).FullName, SModule.INIT, ref tmp);
                 module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, SModule.GET_MODULE_ID, ref tmp);
-            } catch (Exception) {
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
+                log.Error("Exception of invoking module init method.", ex);
                 module.UnLoad();
                 return null;
             }
@@ -76,7 +82,10 @@ namespace mnn.misc.module {
             try {
                 object[] tmp = new object[] { };
                 module.Invoke(typeof(IModule).FullName, SModule.FINAL, ref tmp);
-            } catch (Exception) { }
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
+                log.Error("Exception of invoking module final method.", ex);
+            }
             // 卸载模块
             module.UnLoad();
             module_table.Remove(module);

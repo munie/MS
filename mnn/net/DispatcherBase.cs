@@ -60,7 +60,10 @@ namespace mnn.net {
                 }
                 if (default_service != null)
                     default_service.func(request, response);
-            } catch (Exception) { }
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(DispatcherBase));
+                log.Error("Exception of invoking service.", ex);
+            }
         }
 
         public void Register(string name, Service.ServiceDelegate func, byte[] key)

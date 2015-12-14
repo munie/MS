@@ -25,6 +25,10 @@ namespace EnvConsole
 
         public CtlCenter()
         {
+            // init log4net
+            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.exe.config");
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
+
             // init fields
             Coding = Encoding.UTF8;
             DataUI = new DataUI();
@@ -88,7 +92,8 @@ namespace EnvConsole
                     DataUI.ServerTable.Add(server);
                 }
             } catch (Exception ex) {
-                mnn.util.Logger.WriteException(ex);
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                log.Error("Exception of reading configure file.", ex);
                 System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
             }
 
@@ -159,7 +164,10 @@ namespace EnvConsole
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
                         item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
-                    } catch (Exception) { }
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                        log.Error("Exception of invoding module handler.", ex);
+                    }
                     goto _out;
                 }
             }
@@ -174,7 +182,9 @@ namespace EnvConsole
                 if (string.IsNullOrEmpty(content))
                     goto _out;
                 request.data = Encoding.UTF8.GetBytes(content);
-            } catch (Exception) {
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                log.Error("Exception of invoding module handler.", ex);
                 goto _out;
             }
 
@@ -183,7 +193,10 @@ namespace EnvConsole
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
                         item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
-                    } catch (Exception) { }
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                        log.Error("Exception of invoding module handler.", ex);
+                    }
                     goto _out;
                 }
             }
