@@ -27,7 +27,7 @@ namespace EnvConsole
         {
             // start node
             Process process = new Process();
-            process.StartInfo.FileName = "node1";
+            process.StartInfo.FileName = "node";
             process.StartInfo.Arguments = "js\\main.js";
             //process.StartInfo.CreateNoWindow = true;
             //process.StartInfo.UseShellExecute = false;
