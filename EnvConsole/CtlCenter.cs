@@ -25,6 +25,20 @@ namespace EnvConsole
 
         public CtlCenter()
         {
+            // start node
+            Process process = new Process();
+            process.StartInfo.FileName = "node1";
+            process.StartInfo.Arguments = "js\\main.js";
+            //process.StartInfo.CreateNoWindow = true;
+            //process.StartInfo.UseShellExecute = false;
+            try {
+                process.Start();
+            } catch (Exception) {
+                System.Windows.MessageBox.Show("Start nodejs failed.");
+                Thread.CurrentThread.Abort();
+            }
+            System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) => { process.Kill(); });
+
             // init log4net
             var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
             log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
@@ -253,7 +267,7 @@ namespace EnvConsole
 
         private void client_list_service(SockRequest request, SockResponse response)
         {
-            //if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!checkServerTargetCenter(request.lep.Port)) return;
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
@@ -261,10 +275,10 @@ namespace EnvConsole
                 SessData sd = item.sdata as SessData;
                 if (String.IsNullOrEmpty(sd.Ccid)) continue;
                 sb.Append("{"
-                    + "\"dev\":\"" + item.lep.Port + "\""
-                    + "\"ip\":\"" + item.rep.ToString() + "\""
-                    + "\"time\":\"" + sd.TimeConn + "\""
-                    + "\"ccid\":\"" + sd.Ccid + "\""
+                    + "\"dev\":\"" + item.lep.Port + "\","
+                    + "\"ip\":\"" + item.rep.ToString() + "\","
+                    + "\"time\":\"" + sd.TimeConn + "\","
+                    + "\"ccid\":\"" + sd.Ccid + "\","
                     + "\"name\":\"" + sd.Name + "\""
                     + "}");
             }

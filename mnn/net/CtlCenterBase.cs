@@ -40,9 +40,10 @@ namespace mnn.net {
                 request.data = data;
             } else if (request.CheckLength(data))
                 sess.RfifoSkip(request.ParseRawData(data));
-            else
+            else {
                 sessctl.DelSession(sess);
-                //return;
+                return;
+            }
 
             // dispatch
             dispatcher.handle(request, response);
