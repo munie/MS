@@ -46,9 +46,9 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                log.Error("Exception of sending msg to client.", ex);
+            } catch (Exception) {
+                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
+                //log.Error("Exception of sending msg to client.", ex);
             }
         }
 
@@ -58,9 +58,9 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                log.Error("Exception of sending msg to client.", ex);
+            } catch (Exception) {
+                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
+                //log.Error("Exception of sending msg to client.", ex);
             }
         }
 
@@ -70,9 +70,9 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                log.Error("Exception of sending msg to client.", ex);
+            } catch (Exception) {
+                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
+                //log.Error("Exception of sending msg to client.", ex);
             }
         }
 
@@ -82,9 +82,9 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                log.Error("Exception of sending msg to client.", ex);
+            } catch (Exception) {
+                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
+                //log.Error("Exception of sending msg to client.", ex);
             }
         }
     }

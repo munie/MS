@@ -429,11 +429,15 @@ namespace EnvConsole
 
         public void ModuleLoad(string filePath)
         {
-            ModuleNode module = modctl.Add(filePath);
-            if (module == null) {
-                System.Windows.MessageBox.Show(filePath + ": load failed.");
+            ModuleNode module = null;
+
+            try {
+                module = modctl.Add(filePath);
+            } catch (Exception ex) {
+                System.Windows.MessageBox.Show(filePath + ": load failed.\r\n" + ex.ToString());
                 return;
             }
+
             // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
             if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
                 modctl.Del(module);
