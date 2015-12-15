@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace mnn.net {
+namespace mnn.net.ctlcenter {
     public class Service {
         public delegate void ServiceDelegate(SockRequest request, SockResponse response);
 

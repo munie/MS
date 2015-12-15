@@ -56,10 +56,10 @@
     <Compile Include="misc\module\ModuleCtl.cs" />
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="net\CtlCenterBase.cs" />
-    <Compile Include="net\SockClientTcp.cs" />
+    <Compile Include="net\ctlcenter\CtlCenterBase.cs" />
+    <Compile Include="net\ctlcenter\SockClientTcp.cs" />
     <Compile Include="net\SockRequest.cs" />
-    <Compile Include="net\DispatcherBase.cs" />
+    <Compile Include="net\ctlcenter\DispatcherBase.cs" />
     <Compile Include="net\SockResponse.cs" />
     <Compile Include="util\AtCmd.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenItem.cs" />
@@ -87,6 +87,7 @@
     <Compile Include="util\RegUtil.cs" />
     <Compile Include="util\SmtpSender.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

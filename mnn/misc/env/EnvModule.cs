@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 using mnn.misc.module;
 using mnn.net;
+using mnn.net.ctlcenter;
 
 namespace mnn.misc.env {
     public abstract  class EnvModule : IModule {

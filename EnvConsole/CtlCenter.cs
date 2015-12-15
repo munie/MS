@@ -9,7 +9,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Net;
 using mnn.net;
-using mnn.net.deprecated;
+using mnn.net.ctlcenter;
 using mnn.util;
 using mnn.misc.module;
 using mnn.misc.env;

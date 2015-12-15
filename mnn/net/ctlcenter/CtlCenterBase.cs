@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.net {
+namespace mnn.net.ctlcenter {
     public class CtlCenterBase {
         // session control
         protected SessCtl sessctl;

@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using System.Net;
 using mnn.net;
+using mnn.net.ctlcenter;
 
 namespace SockMaster {
     class CtlCenter : CtlCenterBase {
