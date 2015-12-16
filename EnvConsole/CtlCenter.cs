@@ -193,7 +193,7 @@ namespace EnvConsole
             try {
                 object[] tmp = new object[] { content };
                 content = (string)node.Invoke(typeof(IEnvTranslate).FullName, SMsgTrans.TRANSLATE, ref tmp);
-                if (string.IsNullOrEmpty(content))
+                if (string.IsNullOrEmpty(content) || content == tmp[0])
                     goto _out;
                 request.data = Encoding.UTF8.GetBytes(content);
             } catch (Exception ex) {
