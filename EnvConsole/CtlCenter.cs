@@ -295,10 +295,10 @@ namespace EnvConsole
             if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Encoding.UTF8.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -325,10 +325,18 @@ namespace EnvConsole
             if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
-            string msg = Coding.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Coding.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+
+            // retrieve param_data
+            int index_data = param_list.IndexOf("&data=");
+            if (index_data == -1) return;
+            string param_data = param_list.Substring(index_data + 6);
+            param_list = param_list.Substring(0, index_data);
+
+            // retrieve param to dictionary
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -336,7 +344,7 @@ namespace EnvConsole
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
+                sessctl.SendSession(result, Coding.GetBytes(param_data));
 
             // write response
             if (result != null)
@@ -347,7 +355,7 @@ namespace EnvConsole
             /// ** update DataUI
             if (result != null) {
                 string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
-                log += Coding.GetString(Coding.GetBytes(dc["data"])) + "\n\n";
+                log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
                 DataUI.Logger(log);
             }
         }
@@ -358,10 +366,18 @@ namespace EnvConsole
             if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
-            string msg = Coding.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Coding.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+
+            // retrieve param_data
+            int index_data = param_list.IndexOf("&data=");
+            if (index_data == -1) return;
+            string param_data = param_list.Substring(index_data + 6);
+            param_list = param_list.Substring(0, index_data);
+
+            // retrieve param to dictionary
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session
             SockSess result = null;
@@ -376,7 +392,7 @@ namespace EnvConsole
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Coding.GetBytes(dc["data"]));
+                sessctl.SendSession(result, Coding.GetBytes(param_data));
 
             // write response
             if (result != null)
@@ -387,7 +403,7 @@ namespace EnvConsole
             /// ** update DataUI
             if (result != null) {
                 string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
-                log += Coding.GetString(Coding.GetBytes(dc["data"])) + "\n\n";
+                log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
                 DataUI.Logger(log);
             }
         }
@@ -398,10 +414,10 @@ namespace EnvConsole
             if (!checkServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
-            string msg = Coding.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Coding.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // update sess data
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));

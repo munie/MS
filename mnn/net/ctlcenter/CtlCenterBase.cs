@@ -66,10 +66,10 @@ namespace mnn.net.ctlcenter {
         protected virtual void sock_open_service(SockRequest request, SockResponse response)
         {
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Encoding.UTF8.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -91,10 +91,10 @@ namespace mnn.net.ctlcenter {
         protected virtual void sock_close_service(SockRequest request, SockResponse response)
         {
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            string url = Encoding.UTF8.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -120,9 +120,9 @@ namespace mnn.net.ctlcenter {
         protected virtual void sock_send_service(SockRequest request, SockResponse response)
         {
             // retrieve param_list of url
-            string param_list = Encoding.UTF8.GetString(request.data);
-            if (!param_list.Contains('?')) return;
-            param_list = param_list.Substring(param_list.IndexOf('?') + 1);
+            string url = Encoding.UTF8.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
 
             // retrieve param_data
             int index_data = param_list.IndexOf("&data=");
