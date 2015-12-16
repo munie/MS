@@ -42,6 +42,9 @@ namespace mnn.misc.env {
         /// </summary>
         public static readonly string FLOW_TOTAL = "flow_total";
 
+        /// <summary>
+        /// response
+        /// </summary>
         public static readonly string OK = "*OK#";
     }
 }
