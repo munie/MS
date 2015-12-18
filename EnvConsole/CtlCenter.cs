@@ -37,7 +37,12 @@ namespace EnvConsole
                 System.Windows.MessageBox.Show("Start nodejs failed.");
                 Thread.CurrentThread.Abort();
             }
-            System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) => { process.Kill(); });
+            System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) =>
+            {
+                try {
+                    process.Kill();
+                } catch (Exception) { }
+            });
 
             // init log4net
             var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
@@ -166,43 +171,26 @@ namespace EnvConsole
         }
         private void PackParse(object[] args)
         {
-            SockRequest request = args[0] as SockRequest;
-            string content = Coding.GetString(request.data);
+            // Lock
             DataUI.PackParsed();
-
-            // 加锁
             DataUI.RwlockModuleTable.AcquireReaderLock(-1);
 
-            // 调用模块处理消息
-            foreach (var item in DataUI.ModuleTable) {
-                if (content.Contains(item.Module.ModuleID)) {
-                    try {
-                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
-                        log.Error("Exception of invoding module handler.", ex);
-                    }
+            // DoFilter
+            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvFilter).FullName }) select s;
+            if (subset.Count() != 0) {
+                ModuleNode node = subset.First().Module as ModuleNode;
+                try {
+                    bool result = (bool)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DoFilter, ref args);
+                    if (result == false) goto _out;
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                    log.Error("Exception of invoding module handler.", ex);
                     goto _out;
                 }
             }
 
-            // 如果没有得到处理，尝试翻译模块处理
-            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvFilter).FullName }) select s;
-            if (subset.Count() == 0) goto _out;
-            ModuleNode node = subset.First().Module as ModuleNode;
-            try {
-                object[] tmp = new object[] { content };
-                content = (string)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DoFilter, ref tmp);
-                if (string.IsNullOrEmpty(content) || content == tmp[0])
-                    goto _out;
-                request.data = Encoding.UTF8.GetBytes(content);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
-                log.Error("Exception of invoding module handler.", ex);
-                goto _out;
-            }
-
-            // 再次调用模块处理消息
+            // DoHandler
+            string content = Coding.GetString((args[0] as SockRequest).data);
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
@@ -216,9 +204,10 @@ namespace EnvConsole
             }
 
         _out:
-            // 解锁
-            DataUI.RwlockModuleTable.ReleaseReaderLock();
+            // Unlock
+            SockRequest request = args[0] as SockRequest;
             SockResponse response = args[1] as SockResponse;
+            DataUI.RwlockModuleTable.ReleaseReaderLock();
             if (response.data != null && response.data.Length > 0) {
                 sessctl.BeginInvoke(new Action(() => {
                     SockSess result = sessctl.FindSession(SockType.accept, request.lep, request.rep);
