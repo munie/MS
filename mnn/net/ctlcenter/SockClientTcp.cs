@@ -26,10 +26,10 @@ namespace mnn.net.ctlcenter {
         public void Dispose()
         {
             disposing = true;
-            if (sock != null) sock.Dispose();
             mutex.WaitOne();
             mutex.ReleaseMutex();
             mutex.Dispose();
+            if (sock != null) sock.Dispose();
         }
 
         private static bool IsSocketConnected(Socket client)
