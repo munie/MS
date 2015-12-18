@@ -35,7 +35,7 @@ namespace mnn.misc.env {
 
         public virtual void Init() { }
 
-        public virtual void Final() { }
+        public virtual void Final() { tcp.Dispose(); }
 
         public abstract string GetModuleID();
 

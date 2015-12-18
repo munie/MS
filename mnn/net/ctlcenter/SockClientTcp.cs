@@ -9,16 +9,27 @@ using System.Threading;
 namespace mnn.net.ctlcenter {
     public delegate void SockClientTcpSendCallback(string s);
 
-    public class SockClientTcp {
+    public class SockClientTcp : IDisposable {
         private Socket sock;
         private IPEndPoint toep;
         private Mutex mutex;
+        private bool disposing;
 
         public SockClientTcp(IPEndPoint toep)
         {
             sock = null;
             this.toep = toep;
             mutex = new Mutex(false);
+            disposing = false;
+        }
+
+        public void Dispose()
+        {
+            disposing = true;
+            if (sock != null) sock.Dispose();
+            mutex.WaitOne();
+            mutex.ReleaseMutex();
+            mutex.Dispose();
         }
 
         private static bool IsSocketConnected(Socket client)
@@ -71,12 +82,12 @@ namespace mnn.net.ctlcenter {
                 log.Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
             }
 
-
             ThreadPool.QueueUserWorkItem((s) =>
             {
+                if (disposing) return;
                 string retval = "";
-                mutex.WaitOne();
                 try {
+                    mutex.WaitOne();
                     byte[] tmp = new byte[1024];
                     if (sock.Poll(0, SelectMode.SelectRead))
                         sock.Receive(tmp);
