@@ -6,10 +6,10 @@ using mnn.net;
 
 namespace mnn.misc.env {
     public class SEnvHandler {
-        public static readonly string HANDLE_MSG = "HandleMsg";
+        public static readonly string DO_HANDLER = "DoHandler";
     }
 
     public interface IEnvHandler {
-        void HandleMsg(SockRequest request, SockResponse response);
+        void DoHandler(SockRequest request, SockResponse response);
     }
 }

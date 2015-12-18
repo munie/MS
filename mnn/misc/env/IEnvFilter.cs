@@ -6,7 +6,7 @@ using mnn.net;
 
 namespace mnn.misc.env {
     public class SEnvFilter {
-        public static readonly string DoFilter = "DoFilter";
+        public static readonly string DO_FILTER = "DoFilter";
     }
 
     public interface IEnvFilter {

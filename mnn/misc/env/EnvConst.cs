@@ -13,7 +13,7 @@ namespace mnn.misc.env {
         /// <summary>
         /// module path
         /// </summary>
-        public static readonly string Module_PATH = BASE_DIR + "Modules";
+        public static readonly string Module_PATH = BASE_DIR + "modules";
 
         /// <summary>
         /// configuration file path

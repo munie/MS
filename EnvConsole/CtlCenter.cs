@@ -180,7 +180,7 @@ namespace EnvConsole
             if (subset.Count() != 0) {
                 ModuleNode node = subset.First().Module as ModuleNode;
                 try {
-                    bool result = (bool)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DoFilter, ref args);
+                    bool result = (bool)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
                     if (result == false) goto _out;
                 } catch (Exception ex) {
                     log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
@@ -194,7 +194,7 @@ namespace EnvConsole
             foreach (var item in DataUI.ModuleTable) {
                 if (content.Contains(item.Module.ModuleID)) {
                     try {
-                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.HANDLE_MSG, ref args);
+                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
                     } catch (Exception ex) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
                         log.Error("Exception of invoding module handler.", ex);

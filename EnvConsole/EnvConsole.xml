@@ -12,7 +12,7 @@
     </root>
 
     <appender name="LogFileAppender" type="log4net.Appender.RollingFileAppender">
-      <param name="File" value="Log\"/>
+      <param name="File" value="logs\"/>
       <param name="AppendToFile" value="true" />
       <param name= "MaxSizeRollBackups" value="90"/>
       <param name= "StaticLogFileName" value="false"/>

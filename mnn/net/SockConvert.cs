@@ -143,7 +143,7 @@ namespace mnn.net {
         {
             Dictionary<string, string> dc = new Dictionary<string, string>();
 
-            string[] values = query.Split('&');
+            string[] values = query.Replace("\r\n", "").Split('&');
             foreach (var item in values) {
                 int index = item.IndexOf('=');
                 if (index == -1) continue;
