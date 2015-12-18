@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mnn", "mnn\mnn.csproj", "{4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvConsole", "EnvConsole\EnvConsole.csproj", "{C39F4B50-C1D3-4A3D-AD6E-29A18FA64FE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleTranslate", "ModuleTranslate\ModuleTranslate.csproj", "{9B2232F9-9D1D-41FA-BB93-025FCE2EA925}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleFilterAll", "ModuleFilterAll\ModuleFilterAll.csproj", "{9B2232F9-9D1D-41FA-BB93-025FCE2EA925}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleFlow", "ModuleFlow\ModuleFlow.csproj", "{E22BA253-2800-4B98-B76F-649B6791A30E}"
 EndProject

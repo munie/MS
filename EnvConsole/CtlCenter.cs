@@ -187,12 +187,12 @@ namespace EnvConsole
             }
 
             // 如果没有得到处理，尝试翻译模块处理
-            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvTranslate).FullName }) select s;
+            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvFilter).FullName }) select s;
             if (subset.Count() == 0) goto _out;
             ModuleNode node = subset.First().Module as ModuleNode;
             try {
                 object[] tmp = new object[] { content };
-                content = (string)node.Invoke(typeof(IEnvTranslate).FullName, SMsgTrans.TRANSLATE, ref tmp);
+                content = (string)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DoFilter, ref tmp);
                 if (string.IsNullOrEmpty(content) || content == tmp[0])
                     goto _out;
                 request.data = Encoding.UTF8.GetBytes(content);
