@@ -82,38 +82,45 @@ namespace mnn.net.ctlcenter {
                 log.Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
             }
 
-            ThreadPool.QueueUserWorkItem((s) =>
-            {
-                if (disposing) return;
-                string retval = "";
-                try {
-                    mutex.WaitOne();
-                    byte[] tmp = new byte[1024];
-                    if (sock.Poll(0, SelectMode.SelectRead))
-                        sock.Receive(tmp);
-                    sock.Send(buffer);
-                    if (method != null && sock.Poll(3000, SelectMode.SelectRead)) {
-                        int nread = sock.Receive(tmp);
-                        if (nread > 0)
-                            retval = Encoding.UTF8.GetString(tmp.Take(nread).ToArray());
+            if (method == null)
+                sock.Send(buffer);
+            else {
+                ThreadPool.QueueUserWorkItem((s) =>
+                {
+                    if (disposing) return;
+                    string retval = "";
+                    try {
+                        mutex.WaitOne();
+                        byte[] tmp = new byte[1024];
+                        if (sock.Poll(0, SelectMode.SelectRead)) {
+                            Thread.Sleep(200);
+                            sock.Receive(tmp);
+                        }
+                        sock.Send(buffer);
+                        if (sock.Poll(3000, SelectMode.SelectRead)) {
+                            Thread.Sleep(200);
+                            int nread = sock.Receive(tmp);
+                            if (nread > 0)
+                                retval = Encoding.UTF8.GetString(tmp.Take(nread).ToArray());
+                        }
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
+                        log.Error("Exception in critical section.", ex);
+                        return;
+                    } finally {
+                        mutex.ReleaseMutex();
                     }
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
-                    log.Error("Exception in critical section.", ex);
-                    return;
-                }
-                finally {
-                    mutex.ReleaseMutex();
-                }
 
-                try {
-                    if (method != null)
-                        method.Method.Invoke(method.Target, new object[] { retval });
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
-                    log.Error("Exception of invoking anonymous method.", ex);
-                }
-            });
+                    try {
+                        string[] str = retval.Replace("\r\n", "\n")
+                            .Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                        method.Method.Invoke(method.Target, new object[] { str.Last() });
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
+                        log.Error("Exception of invoking anonymous method.", ex);
+                    }
+                });
+            }
         }
 
         public void SendEncryptUrl(string url, SockClientTcpSendCallback method)
