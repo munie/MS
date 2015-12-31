@@ -5,7 +5,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 
 namespace mnn.net {
-    public class SockConvert {
+    public static class SockConvert {
 
         #region C/C++ struct convert
 
@@ -81,6 +81,7 @@ namespace mnn.net {
         /// 0x3020050040 string 0x16 => new byte[] { 30, 20, 05, 00, 40, 73, 74, 72, 69, 6e, 67, 16 }
         /// </summary>
         /// <param name="cmd"></param>
+        /// <param name = "separator"></param>
         /// <returns></returns>
         public static byte[] ParseCmdstrToBytes(string cmd, char separator = ' ')
         {

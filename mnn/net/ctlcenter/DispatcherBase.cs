@@ -69,7 +69,7 @@ namespace mnn.net.ctlcenter {
         public void Register(string name, Service.ServiceDelegate func, byte[] key)
         {
             var subset = from s in service_table where s.name.Equals(name) select s;
-            if (subset.Count() != 0) return;
+            if (subset.Any()) return;
 
             // insert new service to table sorted by length of keyname decended
             Service tmp = null;

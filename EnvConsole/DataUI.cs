@@ -180,7 +180,8 @@ namespace EnvConsole
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 var subset = from s in ClientTable where s.RemoteEP.Equals(rep) select s;
-                if (subset.Count() == 0) return;
+                if (!subset.Any())
+                    return;
 
                 ClientTable.Remove(subset.First());
                 CurrentAcceptCount--;
@@ -199,7 +200,7 @@ namespace EnvConsole
                              where s.RemoteEP.Equals(rep)
                              select s;
 
-                if (subset.Count() != 0)
+                if (subset.Any())
                     propertyInfo.SetValue(subset.First(), value, null);
             }));
         }

@@ -177,7 +177,7 @@ namespace EnvConsole
 
             // DoFilter
             var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvFilter).FullName }) select s;
-            if (subset.Count() != 0) {
+            if (subset.Any()) {
                 ModuleNode node = subset.First().Module as ModuleNode;
                 try {
                     bool result = (bool)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
@@ -248,7 +248,7 @@ namespace EnvConsole
             var subset = from s in DataUI.ServerTable
                          where s.Target == ServerTarget.center && s.Port == port
                          select s;
-            if (subset.Count() == 0)
+            if (!subset.Any())
                 return false;
             else
                 return true;
@@ -468,7 +468,7 @@ namespace EnvConsole
             DataUI.RwlockModuleTable.AcquireWriterLock(-1);
 
             var subset = from s in DataUI.ModuleTable where s.FileName.Equals(fileName) select s;
-            if (subset.Count() != 0) {
+            if (subset.Any()) {
                 // 移出 table
                 modctl.Del(subset.First().Module);
                 DataUI.ModuleTable.Remove(subset.First());
@@ -529,7 +529,6 @@ namespace EnvConsole
             server.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
             // limbda 不会锁住DataUI.ServerTable
             server.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-            {
                 sessctl.BeginInvoke(new Action(() =>
                 {
                     // define variables
@@ -540,8 +539,9 @@ namespace EnvConsole
                     result = sessctl.FindSession(SockType.listen, ep, null);
                     if (result != null)
                         sessctl.SendSession(result, Coding.GetBytes(server.TimerCommand));
-                }));
-            });
+                }))
+            );
+
             server.Timer.Start();
             server.TimerState = ServerUnit.TimerStateStarted;
         }

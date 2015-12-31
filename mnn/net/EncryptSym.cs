@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.IO;
 
 namespace mnn.net {
-    public class EncryptSym {
+    public static class EncryptSym {
         private static readonly string KEY128 = @"$MU#ERu{*90Q3,CR";
         //private static readonly string KEY256 = @"$MU#ERu{*90Q3,CR.'P:q@#l)1XE,w$T";
         private static readonly byte[] IV = { 0x00, 0x0C, 0x10, 0x00, 0xAB, 0x88, 0x06, 0x25,
@@ -90,7 +90,7 @@ namespace mnn.net {
         /// <summary>
         /// AES加密
         /// </summary>
-        /// <param name="plainStr">明文字符串</param>
+        /// <param name="plainArray">明文字符串</param>
         /// <returns>密文</returns>
         public static byte[] AESEncrypt(byte[] plainArray)
         {
@@ -139,7 +139,7 @@ namespace mnn.net {
         /// <summary>
         /// AES解密
         /// </summary>
-        /// <param name="encryptStr">密文字符串</param>
+        /// <param name="encryptArray">密文字符串</param>
         /// <returns>明文</returns>
         public static byte[] AESDecrypt(byte[] encryptArray)
         {
