@@ -12,7 +12,7 @@ namespace SockMaster {
         private string id;
         private string name;
         private string cmd;
-        private SockRequestType header;
+        private SockRequestHeader header;
         private bool encrypt;
 
         public string ID
@@ -45,7 +45,7 @@ namespace SockMaster {
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
             }
         }
-        public SockRequestType Header
+        public SockRequestHeader Header
         {
             get { return header; }
             set

@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 
 namespace mnn.net {
-    public enum SockRequestType {
+    public enum SockRequestHeader {
         binary = 0x0C00,// default
         plain = 0x0C01, // text/plain
         url = 0x0C02,   // text/url
@@ -16,16 +16,16 @@ namespace mnn.net {
     public class SockRequest {
         public IPEndPoint lep { get; set; }
         public IPEndPoint rep { get; set; }
-        public SockRequestType type { get; set; }
+        public SockRequestHeader type { get; set; }
         public int length { get; set; }
         public byte[] data { get; set; }
 
-        public bool CheckType(byte[] raw)
+        public bool CheckHeader(byte[] raw)
         {
             int tmp = (raw[0] + (raw[1] << 8));
-            if (!Enum.IsDefined(typeof(SockRequestType), tmp))
+            if (!Enum.IsDefined(typeof(SockRequestHeader), tmp))
                 return false;
-            else if ((SockRequestType)tmp == SockRequestType.none)
+            else if ((SockRequestHeader)tmp == SockRequestHeader.none)
                 return false;
             else
                 return true;
@@ -44,7 +44,7 @@ namespace mnn.net {
             int identity = raw[0] + (raw[1] << 8);
             int total_len = raw[2] + (raw[3] << 8);
 
-            this.type = (SockRequestType)identity;
+            this.type = (SockRequestHeader)identity;
             this.length = total_len;
             this.data = raw.Take(total_len).Skip(4).ToArray();
             return total_len;

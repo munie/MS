@@ -130,9 +130,9 @@ namespace mnn.net {
 
         #endregion SockMaster's command parse and message display convert
 
-        public static void InsertSockHeader(SockRequestType type, ref byte[] buffer)
+        public static void InsertSockHeader(SockRequestHeader type, ref byte[] buffer)
         {
-            if (buffer == null && type == SockRequestType.none) return;
+            if (buffer == null && type == SockRequestHeader.none) return;
 
             short tmp = (short)type;
             buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),

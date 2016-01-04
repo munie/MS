@@ -69,7 +69,7 @@ namespace SockMaster
                     cmd.ID = item.Attributes["id"].Value;
                     cmd.Name = item.Attributes["name"].Value;
                     cmd.Cmd = item.Attributes["content"].Value;
-                    cmd.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), item.Attributes["header"].Value);
+                    cmd.Header = (SockRequestHeader)Enum.Parse(typeof(SockRequestHeader), item.Attributes["header"].Value);
                     cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
                     cmdTable.Add(cmd);
                 }
@@ -138,7 +138,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
+            SockConvert.InsertSockHeader(SockRequestHeader.url, ref buffer);
 
             try {
                 tcp.Send(buffer, null);
@@ -160,7 +160,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
+            SockConvert.InsertSockHeader(SockRequestHeader.url, ref buffer);
 
             try {
                 tcp.Send(buffer, null);
@@ -313,7 +313,7 @@ namespace SockMaster
                 byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.Header != SockRequestType.none)
+                if (item.Header != SockRequestHeader.none)
                     SockConvert.InsertSockHeader(item.Header, ref data);
 
                 // add internal header just for translating in SockMaster
@@ -324,7 +324,7 @@ namespace SockMaster
                     + "&port=" + ep.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                SockConvert.InsertSockHeader(SockRequestType.url, ref buffer);
+                SockConvert.InsertSockHeader(SockRequestHeader.url, ref buffer);
 
                 try {
                     tcp.Send(buffer, null);
@@ -343,7 +343,7 @@ namespace SockMaster
                 input.textBoxID.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).ID;
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
-                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestType));
+                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestHeader));
                 string[] tmp = input.comboBoxHeader.ItemsSource as string[];
                 for (int i = 0; i < tmp.Length; i++) {
                     if (tmp[i] == (lstViewCmd.SelectedItems[0] as CmdUnit).Header.ToString()) {
@@ -361,7 +361,7 @@ namespace SockMaster
                     item.ID = input.textBoxID.Text;
                     item.Name = input.textBoxName.Text;
                     item.Cmd = input.textBoxCmd.Text;
-                    item.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), input.comboBoxHeader.SelectedItem.ToString());
+                    item.Header = (SockRequestHeader)Enum.Parse(typeof(SockRequestHeader), input.comboBoxHeader.SelectedItem.ToString());
                     item.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                     break;
                 }
@@ -373,7 +373,7 @@ namespace SockMaster
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
                 input.Title = "Add";
-                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestType));
+                input.comboBoxHeader.ItemsSource = Enum.GetNames(typeof(SockRequestHeader));
                 input.comboBoxHeader.SelectedIndex = 1;
                 input.textBoxID.Focus();
 
@@ -383,7 +383,7 @@ namespace SockMaster
                 cmd.ID = input.textBoxID.Text;
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
-                cmd.Header = (SockRequestType)Enum.Parse(typeof(SockRequestType), input.comboBoxHeader.SelectedItem.ToString()); 
+                cmd.Header = (SockRequestHeader)Enum.Parse(typeof(SockRequestHeader), input.comboBoxHeader.SelectedItem.ToString()); 
                 cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
                 cmdTable.Add(cmd);
             }

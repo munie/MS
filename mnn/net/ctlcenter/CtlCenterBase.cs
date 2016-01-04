@@ -33,9 +33,9 @@ namespace mnn.net.ctlcenter {
             byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
 
             // check request
-            if (!request.CheckType(data)) {
+            if (!request.CheckHeader(data)) {
                 sess.RfifoSkip(sess.rdata_size);
-                request.type = SockRequestType.none;
+                request.type = SockRequestHeader.none;
                 request.length = -1;
                 request.data = data;
             } else if (request.CheckLength(data))
