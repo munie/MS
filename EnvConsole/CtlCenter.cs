@@ -56,12 +56,12 @@ namespace EnvConsole
             // dispatcher register
             dispatcher = new Dispatcher();
             dispatcher.RegisterDefaultService("default_service", default_service);
-            dispatcher.Register("sock_send_service", sock_send_service, Coding.GetBytes("/center/socksend"));
-            dispatcher.Register("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
-            dispatcher.Register("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
-            dispatcher.Register("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
-            dispatcher.Register("client_send_by_ccid_service", client_send_by_ccid_service, Coding.GetBytes("/center/clientsendbyccid"));
-            dispatcher.Register("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
+            dispatcher.RegisterService("sock_send_service", sock_send_service, Coding.GetBytes("/center/socksend"));
+            dispatcher.RegisterService("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
+            dispatcher.RegisterService("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
+            dispatcher.RegisterService("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
+            dispatcher.RegisterService("client_send_by_ccid_service", client_send_by_ccid_service, Coding.GetBytes("/center/clientsendbyccid"));
+            dispatcher.RegisterService("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(EnvConst.Module_PATH)) {
@@ -71,9 +71,6 @@ namespace EnvConsole
                         ModuleLoad(item);
                 }
             }
-
-            // cmtctl ...
-            InitPackParse();
         }
 
         public void Config()
@@ -159,79 +156,9 @@ namespace EnvConsole
 
         // Center Service =========================================================================
 
-        private static readonly string PACK_PARSE = "PackParse";
-        private AtCmdCtl cmdctl;
-        private void InitPackParse()
+        protected override void sock_send_service(SockRequest request, ref SockResponse response)
         {
-            cmdctl = new AtCmdCtl();
-            cmdctl.Register(PACK_PARSE, PackParse);
-            Thread thread = new Thread(() => { while (true) cmdctl.Perform(1000); });
-            thread.IsBackground = true;
-            thread.Start();
-        }
-        private void PackParse(object[] args)
-        {
-            // Lock
-            DataUI.PackParsed();
-            DataUI.RwlockModuleTable.AcquireReaderLock(-1);
-
-            // DoFilter
-            var subset = from s in DataUI.ModuleTable where s.Module.CheckInterface(new string[] { typeof(IEnvFilter).FullName }) select s;
-            if (subset.Any()) {
-                ModuleNode node = subset.First().Module as ModuleNode;
-                try {
-                    bool result = (bool)node.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
-                    if (result == false) goto _out;
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
-                    log.Error("Exception of invoding module handler.", ex);
-                    goto _out;
-                }
-            }
-
-            // DoHandler
-            string content = Coding.GetString((args[0] as SockRequest).data);
-            foreach (var item in DataUI.ModuleTable) {
-                if (content.Contains(item.Module.ModuleID)) {
-                    try {
-                        item.Module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
-                        log.Error("Exception of invoding module handler.", ex);
-                    }
-                    goto _out;
-                }
-            }
-
-        _out:
-            // Unlock
-            SockRequest request = args[0] as SockRequest;
-            SockResponse response = args[1] as SockResponse;
-            DataUI.RwlockModuleTable.ReleaseReaderLock();
-            if (response.data != null && response.data.Length > 0) {
-                sessctl.BeginInvoke(new Action(() => {
-                    SockSess result = sessctl.FindSession(SockType.accept, request.lep, request.rep);
-                    if (result != null)
-                        sessctl.SendSession(result, response.data);
-                }));
-            }
-        }
-
-        protected override void default_service(SockRequest request, SockResponse response)
-        {
-            string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
-            log += Coding.GetString(request.data) + "\n\n";
-
-            /// ** update DataUI
-            DataUI.Logger(log);
-            DataUI.PackRecved();
-
-            cmdctl.AppendCommand(PACK_PARSE, new object[] { request, response });
-        }
-
-        protected override void sock_send_service(SockRequest request, SockResponse response)
-        {
-            base.sock_send_service(request, response);
+            base.sock_send_service(request, ref response);
 
             /// ** update DataUI
             if (response.data != null) {
@@ -254,7 +181,7 @@ namespace EnvConsole
                 return true;
         }
 
-        private void client_list_service(SockRequest request, SockResponse response)
+        private void client_list_service(SockRequest request, ref SockResponse response)
         {
             if (!checkServerTargetCenter(request.lep.Port)) return;
 
@@ -278,7 +205,7 @@ namespace EnvConsole
             response.data = Coding.GetBytes(sb.ToString());
         }
 
-        private void client_close_service(SockRequest request, SockResponse response)
+        private void client_close_service(SockRequest request, ref SockResponse response)
         {
             // check target center
             if (!checkServerTargetCenter(request.lep.Port)) return;
@@ -308,7 +235,7 @@ namespace EnvConsole
                 DataUI.ClientDel(ep);
         }
 
-        private void client_send_service(SockRequest request, SockResponse response)
+        private void client_send_service(SockRequest request, ref SockResponse response)
         {
             // check target center
             if (!checkServerTargetCenter(request.lep.Port)) return;
@@ -349,7 +276,7 @@ namespace EnvConsole
             }
         }
 
-        private void client_send_by_ccid_service(SockRequest request, SockResponse response)
+        private void client_send_by_ccid_service(SockRequest request, ref SockResponse response)
         {
             // check target center
             if (!checkServerTargetCenter(request.lep.Port)) return;
@@ -397,7 +324,7 @@ namespace EnvConsole
             }
         }
 
-        private void client_update_service(SockRequest request, SockResponse response)
+        private void client_update_service(SockRequest request, ref SockResponse response)
         {
             // check target center
             if (!checkServerTargetCenter(request.lep.Port)) return;
@@ -443,13 +370,6 @@ namespace EnvConsole
                 return;
             }
 
-            // 如果是消息处理模块，必须实现消息处理接口，否则加载失败
-            if (module.ModuleID.IndexOf("HT=") != -1 && !module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
-                modctl.Del(module);
-                System.Windows.MessageBox.Show(filePath + ": load failed.");
-                return;
-            }
-
             // 加载模块已经成功
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit unit = new ModuleUnit();
@@ -461,6 +381,32 @@ namespace EnvConsole
             DataUI.RwlockModuleTable.AcquireWriterLock(-1);
             DataUI.ModuleTable.Add(unit);
             DataUI.RwlockModuleTable.ReleaseWriterLock();
+
+            // 注册处理方法
+            if (module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
+                dispatcher.RegisterService(module.ModuleID,
+                    (SockRequest request, ref SockResponse response) =>
+                    {
+                        object[] args = new object[] { request, response };
+                        module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
+                        response.data = (args[1] as SockResponse).data;
+
+                        /// ** update DataUI
+                        string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+                        log += Coding.GetString(request.data) + "\n\n";
+                        DataUI.Logger(log);
+                    },
+                    Coding.GetBytes(module.ModuleID));
+            } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
+                dispatcher.RegisterFilter(module.ModuleID,
+                    (ref SockRequest request, SockResponse response) =>
+                    {
+                        object[] args = new object[] { request, response };
+                        bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
+                        request.data = (args[0] as SockRequest).data;
+                        return retval;
+                    });
+            }
         }
 
         public void ModuleUnload(string fileName)
@@ -469,8 +415,15 @@ namespace EnvConsole
 
             var subset = from s in DataUI.ModuleTable where s.FileName.Equals(fileName) select s;
             if (subset.Any()) {
+                ModuleNode node = subset.First().Module;
+                // 注销处理方法
+                if (node.CheckInterface(new string[] { typeof(IEnvHandler).FullName }))
+                    dispatcher.DeregisterService(node.ModuleID);
+                else if (node.CheckInterface(new string[] { typeof(IEnvFilter).FullName }))
+                    dispatcher.DeregisterFilter(node.ModuleID);
+
                 // 移出 table
-                modctl.Del(subset.First().Module);
+                modctl.Del(node);
                 DataUI.ModuleTable.Remove(subset.First());
             }
 

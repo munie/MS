@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 
 namespace mnn.net.ctlcenter {
-    public class Service {
-        public delegate void ServiceDelegate(SockRequest request, SockResponse response);
+    public delegate void ServiceDelegate(SockRequest request, ref SockResponse response);
+    public delegate bool FilterDelegate(ref SockRequest request, SockResponse response);
 
+    public class Service<T> {
         public string name;
         public byte[] keyname;
-        public ServiceDelegate func;
+        public T func;
 
-        public Service(string name, byte[] key, ServiceDelegate func)
+        public Service(string name, byte[] key, T func)
         {
             this.name = name;
             this.keyname = key;
@@ -20,13 +21,15 @@ namespace mnn.net.ctlcenter {
     }
 
     public class DispatcherBase {
-        protected List<Service> service_table;
-        protected Service default_service;
+        protected Service<ServiceDelegate> default_service;
+        protected List<Service<ServiceDelegate>> service_table;
+        protected List<Service<FilterDelegate>> filter_table;
 
         public DispatcherBase()
         {
-            service_table = new List<Service>();
             default_service = null;
+            service_table = new List<Service<ServiceDelegate>>();
+            filter_table = new List<Service<FilterDelegate>>();
         }
 
         // Methods =============================================================================
@@ -44,56 +47,78 @@ namespace mnn.net.ctlcenter {
             return true;
         }
 
-        public virtual void handle(SockRequest request, SockResponse response)
+        public virtual void handle(SockRequest request, ref SockResponse response)
         {
             try {
-                if (request.type == SockRequestType.none) {
-                    if (default_service != null)
-                        default_service.func(request, response);
-                    return;
+                // filter return when retval is false
+                foreach (var item in filter_table) {
+                    if (!item.func(ref request, response))
+                        return;
                 }
+
+                // service return when find target service and handled request
                 foreach (var item in service_table) {
                     if (byteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
-                        item.func(request, response);
+                        item.func(request, ref response);
                         return;
                     }
                 }
+
+                // do default service
                 if (default_service != null)
-                    default_service.func(request, response);
+                    default_service.func(request, ref response);
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(DispatcherBase));
                 log.Error("Exception of invoking service.", ex);
             }
         }
 
-        public void Register(string name, Service.ServiceDelegate func, byte[] key)
+        public void RegisterDefaultService(string name, ServiceDelegate func)
+        {
+            default_service = new Service<ServiceDelegate>(name, new byte[] { 0 }, func);
+        }
+
+        public void RegisterService(string name, ServiceDelegate func, byte[] key)
         {
             var subset = from s in service_table where s.name.Equals(name) select s;
             if (subset.Any()) return;
 
             // insert new service to table sorted by length of keyname decended
-            Service tmp = null;
+            Service<ServiceDelegate> tmp = null;
             for (int i = 0; i < service_table.Count; i++) {
                 if (service_table[i].keyname.Length < key.Length) {
-                    tmp = new Service(name, key, func);
+                    tmp = new Service<ServiceDelegate>(name, key, func);
                     service_table.Insert(i, tmp);
                     break;
                 }
             }
             if (tmp == null)
-                service_table.Add(new Service(name, key, func));
+                service_table.Add(new Service<ServiceDelegate>(name, key, func));
         }
 
-        public void RegisterDefaultService(string name, Service.ServiceDelegate func)
-        {
-            default_service = new Service(name, new byte[] {0}, func);
-        }
-
-        public void Deregister(string name)
+        public void DeregisterService(string name)
         {
             foreach (var item in service_table) {
                 if (item.name.Equals(name)) {
                     service_table.Remove(item);
+                    break;
+                }
+            }
+        }
+
+        public void RegisterFilter(string name, FilterDelegate func)
+        {
+            var subset = from s in filter_table where s.name.Equals(name) select s;
+            if (subset.Any()) return;
+
+            filter_table.Add(new Service<FilterDelegate>(name, new byte[] { 0 }, func));
+        }
+
+        public void DeregisterFilter(string name)
+        {
+            foreach (var item in filter_table) {
+                if (item.name.Equals(name)) {
+                    filter_table.Remove(item);
                     break;
                 }
             }

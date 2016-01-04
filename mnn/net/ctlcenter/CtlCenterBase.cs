@@ -46,7 +46,7 @@ namespace mnn.net.ctlcenter {
             }
 
             // dispatch
-            dispatcher.handle(request, response);
+            dispatcher.handle(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sessctl.SendSession(sess, response.data);
         }
@@ -57,13 +57,13 @@ namespace mnn.net.ctlcenter {
 
         // Center Service =========================================================================
 
-        protected virtual void default_service(SockRequest request, SockResponse response)
+        protected virtual void default_service(SockRequest request, ref SockResponse response)
         {
             // write response
             response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
-        protected virtual void sock_open_service(SockRequest request, SockResponse response)
+        protected virtual void sock_open_service(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -88,7 +88,7 @@ namespace mnn.net.ctlcenter {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void sock_close_service(SockRequest request, SockResponse response)
+        protected virtual void sock_close_service(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -117,7 +117,7 @@ namespace mnn.net.ctlcenter {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void sock_send_service(SockRequest request, SockResponse response)
+        protected virtual void sock_send_service(SockRequest request, ref SockResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);

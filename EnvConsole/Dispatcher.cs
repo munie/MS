@@ -9,8 +9,9 @@ namespace EnvConsole
 {
     class Dispatcher : DispatcherBase
     {
-        public override void handle(SockRequest request, SockResponse response)
+        public override void handle(SockRequest request, ref SockResponse response)
         {
+            // try to decrypt request
             if (request.type != SockRequestType.none) {
                 try {
                     request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
@@ -23,7 +24,8 @@ namespace EnvConsole
                 if (request.data == null) return;
             }
 
-            base.handle(request, response);
+            // call base handle
+            base.handle(request, ref response);
             //response.data = EncryptSym.AESEncrypt(response.data);
         }
     }
