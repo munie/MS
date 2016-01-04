@@ -70,8 +70,8 @@ namespace SockMaster
                     cmd.Name = item.Attributes["name"].Value;
                     cmd.Cmd = item.Attributes["content"].Value;
                     cmd.HasHeader = bool.Parse(item.Attributes["has-header"].Value);
-                    cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), item.Attributes["content-mode"].Value);
                     cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
+                    cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), item.Attributes["content-mode"].Value);
                     cmdTable.Add(cmd);
                 }
             } catch (Exception) {
@@ -345,6 +345,7 @@ namespace SockMaster
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
                 input.checkBoxHasHeader.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).HasHeader;
+                input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
                 input.comboBoxContentMode.ItemsSource = Enum.GetNames(typeof(SockRequestContentMode));
                 string[] tmp = input.comboBoxContentMode.ItemsSource as string[];
                 for (int i = 0; i < tmp.Length; i++) {
@@ -353,7 +354,6 @@ namespace SockMaster
                         break;
                     }
                 }
-                input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
                 input.textBoxCmd.Focus();
                 input.textBoxCmd.SelectionStart = input.textBoxCmd.Text.Length;
 
@@ -364,8 +364,8 @@ namespace SockMaster
                     item.Name = input.textBoxName.Text;
                     item.Cmd = input.textBoxCmd.Text;
                     item.HasHeader = input.checkBoxHasHeader.IsChecked == true ? true : false;
-                    item.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString());
                     item.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
+                    item.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString());
                     break;
                 }
             }
@@ -387,8 +387,8 @@ namespace SockMaster
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
                 cmd.HasHeader = input.checkBoxHasHeader.IsChecked == true ? true : false;
-                cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString()); 
                 cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
+                cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString()); 
                 cmdTable.Add(cmd);
             }
         }
@@ -426,8 +426,8 @@ namespace SockMaster
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
                 cmd.SetAttribute("has-header", item.HasHeader.ToString());
-                cmd.SetAttribute("content-mode", item.ContentMode.ToString());
                 cmd.SetAttribute("encrypt", item.Encrypt.ToString());
+                cmd.SetAttribute("content-mode", item.ContentMode.ToString());
                 cmd.SetAttribute("content", item.Cmd);
                 config.AppendChild(cmd);
             }

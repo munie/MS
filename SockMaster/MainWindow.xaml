@@ -59,10 +59,10 @@
                                     DisplayMemberBinding="{Binding Name}" />
                     <GridViewColumn Header="HasHeader" Width="75"
                                     DisplayMemberBinding="{Binding HasHeader}" />
-                    <GridViewColumn Header="ContentMode" Width="90"
-                                    DisplayMemberBinding="{Binding ContentMode}" />
                     <GridViewColumn Header="Encrypt" Width="60"
                                     DisplayMemberBinding="{Binding Encrypt}" />
+                    <GridViewColumn Header="Mode" Width="45"
+                                    DisplayMemberBinding="{Binding ContentMode}" />
                     <GridViewColumn Header="Cmd" Width="360"
                                     DisplayMemberBinding="{Binding Cmd}" />
                 </GridView>

@@ -17,22 +17,22 @@
     <cmditem id="94" name="信息终端" encrypt="false" content="0x9400#0x1800#00000000000000000000" />
     <cmditem id="94-1" name="信息终端" encrypt="false" content="0x9400#0x1800#89860113836037156496" />
     -->
-    <cmditem id="4230" name="发流量数据" has-header="false" content-mode="text" encrypt="false" content="|HT=Z8|CCID=89860113836037156496|csq=24|voltage=0852|water_amount=01030A000000EC3EA4AECA0001BD69|GPS_N=2904.059|GPS_E=12133.733" />
-    <cmditem id="4630" name="发气象数据" has-header="false" content-mode="text" encrypt="false" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|DEPTH=0575|GPS_N=2826.904|GPS_E=12154.028" />
-    <cmditem id="4830" name="发地下数据" has-header="false" content-mode="text" encrypt="false" content="|HT=D8|CCID=898600C6111596013370|csq=22|voltage=0762|DEPTH=0021|GPS_N=2839.158|GPS_E=12126.774" />
-    <cmditem id="4030" name="发水库数据" has-header="false" content-mode="text" encrypt="false" content="|HT=8|CCID=89860020101480005460|W_S=0463|W_D=1276|W_A=325.1|W_X=0|W_Y=0|W_Z=0|CS=03F301230573FF5F00000000001B0000001700000019000090AD000200000010FFD902C003980000000000000000000000000000000001DF5649|GPS_N=2851.386|GPS_E=12118.717" />
-    <cmditem id="4130" name="发水库数据" has-header="false" content-mode="text" encrypt="false" content="|HT=8|CCID=89860113836037156801|csq=25|voltage=0821|water_A=02031A00004080C56942467E3541D0E1484365CC0842CAA666000000006262|water_B=03031A0000445BF7220000000041DC6666448D1BD73CA3D70A0000000065DD|water_C=04031A0000411B33333E79F58D0000000041E07AE1C2C7EE22C2AF38A1FD8E|water_D=05031041D62B04000000000000000040BB91149E82|GPS_N=2836.481|GPS_E=12103.827|FSFX=01030600759B113FB3E3 |W_A=229.6|W_X=381|W_Y=447|W_Z=-244|AD1=0290|AD2=0305|AD3=0320|AD4=0311|AD5=0302|KEY=00|TIME=080915055222" />
-    <cmditem id="4230" name="发一体流量" has-header="false" content-mode="text" encrypt="false" content="ADDRESS:1 NAME:00000055 FTOTAL:00000000.0M3 RTOTAL:00001024.0M3 FLOW:+000.00M3/h SPEED:00.000m/s TUB:00296% ALARM:55110 CSQ:23 TIME:2015-11-04 12:54:32" />
-    <cmditem id="0001" name="clientlist" has-header="true" content-mode="url" encrypt="true" content="/center/clientlist" />
-    <cmditem id="0002" name="clientsend" has-header="true" content-mode="url" encrypt="true" content="/center/clientsend?type=accept&amp;ip=127.0.0.1&amp;port=55100&amp;data=Hello!" />
-    <cmditem id="0003" name="取流量电压" has-header="false" content-mode="text" encrypt="False" content="|HT=Z3|CCID=89860113836037156496|mlstr=!A3?|r=y" />
-    <cmditem id="0004" name="发流量电压" has-header="false" content-mode="text" encrypt="False" content="|HT=Z6|CCID=89860113836037156496|voltage=0799" />
-    <cmditem id="0005" name="取流量数据" has-header="false" content-mode="text" encrypt="False" content="|HT=Z3|CCID=89860113836037156496|mlstr=!A1?|r=y" />
-    <cmditem id="0006" name="发流量数据" has-header="false" content-mode="text" encrypt="False" content="|HT=Z8|CCID=89860113836037156496|csq=18|voltage=0799|water_amount=01030A00A5E6BC3F5D1E6A00011F7E|GPS_N=2816.051|GPS_E=12122.131|TIME=270915145818" />
-    <cmditem id="0007" name="取水库命令" has-header="false" content-mode="text" encrypt="False" content="|HT=3|CCID=89860113836037156801|mlstr=!C1|r=y" />
-    <cmditem id="0008" name="发水库状态" has-header="false" content-mode="text" encrypt="False" content="|HT=2|CCID=89860113836037156801=OK0060" />
-    <cmditem id="0010" name="flow_cmd" has-header="false" content-mode="text" encrypt="False" content="/flow/command?ccid=89860113836037156496&amp;mlstr=!A1?&amp;reply=y" />
-    <cmditem id="0011" name="flow_record" has-header="false" content-mode="text" encrypt="False" content="/flow/record?ccid=89860113836037156496&amp;csq=&amp;voltage=&amp;gpsn=&amp;gpse=&amp;time=&amp;flow_total=01030A000000EC3EA4AECA0001BD69" />
-    <cmditem id="0012" name="flow_state" has-header="false" content-mode="text" encrypt="False" content="/flow/state?ccid=89860113836037156496&amp;csq=24&amp;votage=0889" />
+    <cmditem id="4230" name="发流量数据" has-header="false" encrypt="false" content-mode="text" content="|HT=Z8|CCID=89860113836037156496|csq=24|voltage=0852|water_amount=01030A000000EC3EA4AECA0001BD69|GPS_N=2904.059|GPS_E=12133.733" />
+    <cmditem id="4630" name="发气象数据" has-header="false" encrypt="false" content-mode="text" content="|HT=Q8|CCID=89860112653600933735|csq=13|voltage=0861|W_S=0462|W_D=1032|S_D=0424|PRE=+1005.23|TEMP=3149|RH=09061A2275FF0907080196FF|RAIN=0203020008FD82|DEPTH=0575|GPS_N=2826.904|GPS_E=12154.028" />
+    <cmditem id="4830" name="发地下数据" has-header="false" encrypt="false" content-mode="text" content="|HT=D8|CCID=898600C6111596013370|csq=22|voltage=0762|DEPTH=0021|GPS_N=2839.158|GPS_E=12126.774" />
+    <cmditem id="4030" name="发水库数据" has-header="false" encrypt="false" content-mode="text" content="|HT=8|CCID=89860020101480005460|W_S=0463|W_D=1276|W_A=325.1|W_X=0|W_Y=0|W_Z=0|CS=03F301230573FF5F00000000001B0000001700000019000090AD000200000010FFD902C003980000000000000000000000000000000001DF5649|GPS_N=2851.386|GPS_E=12118.717" />
+    <cmditem id="4130" name="发水库数据" has-header="false" encrypt="false" content-mode="text" content="|HT=8|CCID=89860113836037156801|csq=25|voltage=0821|water_A=02031A00004080C56942467E3541D0E1484365CC0842CAA666000000006262|water_B=03031A0000445BF7220000000041DC6666448D1BD73CA3D70A0000000065DD|water_C=04031A0000411B33333E79F58D0000000041E07AE1C2C7EE22C2AF38A1FD8E|water_D=05031041D62B04000000000000000040BB91149E82|GPS_N=2836.481|GPS_E=12103.827|FSFX=01030600759B113FB3E3 |W_A=229.6|W_X=381|W_Y=447|W_Z=-244|AD1=0290|AD2=0305|AD3=0320|AD4=0311|AD5=0302|KEY=00|TIME=080915055222" />
+    <cmditem id="4230" name="发一体流量" has-header="false" encrypt="false" content-mode="text" content="ADDRESS:1 NAME:00000055 FTOTAL:00000000.0M3 RTOTAL:00001024.0M3 FLOW:+000.00M3/h SPEED:00.000m/s TUB:00296% ALARM:55110 CSQ:23 TIME:2015-11-04 12:54:32" />
+    <cmditem id="0001" name="clientlist" has-header="true" encrypt="true" content-mode="url" content="/center/clientlist" />
+    <cmditem id="0002" name="clientsend" has-header="true" encrypt="true" content-mode="url" content="/center/clientsend?type=accept&amp;ip=127.0.0.1&amp;port=55100&amp;data=Hello!" />
+    <cmditem id="0003" name="取流量电压" has-header="false" encrypt="false" content-mode="text" content="|HT=Z3|CCID=89860113836037156496|mlstr=!A3?|r=y" />
+    <cmditem id="0004" name="发流量电压" has-header="false" encrypt="false" content-mode="text" content="|HT=Z6|CCID=89860113836037156496|voltage=0799" />
+    <cmditem id="0005" name="取流量数据" has-header="false" encrypt="false" content-mode="text" content="|HT=Z3|CCID=89860113836037156496|mlstr=!A1?|r=y" />
+    <cmditem id="0006" name="发流量数据" has-header="false" encrypt="false" content-mode="text" content="|HT=Z8|CCID=89860113836037156496|csq=18|voltage=0799|water_amount=01030A00A5E6BC3F5D1E6A00011F7E|GPS_N=2816.051|GPS_E=12122.131|TIME=270915145818" />
+    <cmditem id="0007" name="取水库命令" has-header="false" encrypt="false" content-mode="text" content="|HT=3|CCID=89860113836037156801|mlstr=!C1|r=y" />
+    <cmditem id="0008" name="发水库状态" has-header="false" encrypt="false" content-mode="text" content="|HT=2|CCID=89860113836037156801=OK0060" />
+    <cmditem id="0010" name="flow_cmd" has-header="false" encrypt="false" content-mode="text"  content="/flow/command?ccid=89860113836037156496&amp;mlstr=!A1?&amp;reply=y" />
+    <cmditem id="0011" name="flow_record" has-header="false" encrypt="false" content-mode="text" content="/flow/record?ccid=89860113836037156496&amp;csq=&amp;voltage=&amp;gpsn=&amp;gpse=&amp;time=&amp;flow_total=01030A000000EC3EA4AECA0001BD69" />
+    <cmditem id="0012" name="flow_state" has-header="false" encrypt="false" content-mode="text" content="/flow/state?ccid=89860113836037156496&amp;csq=24&amp;votage=0889" />
   </commands>
 </configuration>
