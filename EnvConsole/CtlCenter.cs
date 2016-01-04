@@ -403,7 +403,7 @@ namespace EnvConsole
                     {
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
-                        request.data = (args[0] as SockRequest).data;
+                        request.SetData((args[0] as SockRequest).data);
                         return retval;
                     });
             }

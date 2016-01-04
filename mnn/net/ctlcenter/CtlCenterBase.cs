@@ -34,6 +34,7 @@ namespace mnn.net.ctlcenter {
 
             // rfifo skip
             sess.RfifoSkip(request.length);
+            if (request.encrypt) request.Decrypt();
 
             // dispatch
             dispatcher.handle(request, ref response);

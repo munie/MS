@@ -45,17 +45,7 @@ namespace EnvConsole
 
         public override void handle(SockRequest request, ref SockResponse response)
         {
-            if (request.has_header) {
-                try {
-                    request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
-                    request.data = EncryptSym.AESDecrypt(request.data);
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
-                    log.Error("Exception of decrypting request data", ex);
-                    request.data = null;
-                }
-                if (request.data == null) return;
-            } else {
+            if (!request.has_header) {
                 lock (pack_queue) {
                     pack_queue.Enqueue(new object[] { request, response });
                     return;

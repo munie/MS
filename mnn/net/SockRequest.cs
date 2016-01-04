@@ -17,9 +17,10 @@ namespace mnn.net {
         public IPEndPoint lep { get; private set; }
         public IPEndPoint rep { get; private set; }
         public bool has_header { get; private set; }
+        public bool encrypt { get; private set; }
         public /*short*/ SockRequestContentMode content_mode { get; private set; }
         public short length { get; private set; }
-        public byte[] data { get; set; }
+        public byte[] data { get; private set; }
 
         public SockRequest() { }
         public SockRequest(IPEndPoint lep, IPEndPoint rep, byte[] raw)
@@ -27,6 +28,7 @@ namespace mnn.net {
             this.lep = lep;
             this.rep = rep;
             this.has_header = CheckHeader(raw);
+            this.encrypt = (raw[1] & 0x80) == 0x80 ? true : false;
 
             if (has_header) {
                 this.content_mode = (SockRequestContentMode)(raw[0] + (raw[1] << 8));
@@ -39,9 +41,28 @@ namespace mnn.net {
             }
         }
 
+        public void Decrypt()
+        {
+            if (!this.encrypt) return;
+
+            try {
+                byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(this.data));
+                result = EncryptSym.AESDecrypt(result);
+                if (result != null) SetData(result);
+            } catch (Exception) { }
+        }
+
+        public void SetData(byte[] data)
+        {
+            if (data == null) return;
+
+            this.length = (short)data.Length;
+            this.data = data;
+        }
+
         private bool CheckHeader(byte[] raw)
         {
-            int tmp = (raw[0] + (raw[1] << 8));
+            int tmp = (raw[0] + (raw[1] << 8)) & 0x7fff;
             if (!Enum.IsDefined(typeof(SockRequestContentMode), tmp))
                 return false;
             else if (raw.Length < raw[2] + (raw[3] << 8))

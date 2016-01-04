@@ -139,7 +139,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer);
+            SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer, true);
 
             try {
                 tcp.Send(buffer, null);
@@ -161,7 +161,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer);
+            SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer, true);
 
             try {
                 tcp.Send(buffer, null);
@@ -315,7 +315,7 @@ namespace SockMaster
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
                 if (item.HasHeader)
-                    SockConvert.InsertSockHeader(item.ContentMode, ref data);
+                    SockConvert.InsertSockHeader(item.ContentMode, ref data, true);
 
                 // add internal header just for translating in SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
@@ -325,7 +325,7 @@ namespace SockMaster
                     + "&port=" + ep.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer);
+                SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer, true);
 
                 try {
                     tcp.Send(buffer, null);
