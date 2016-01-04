@@ -313,7 +313,7 @@ namespace SockMaster
                 byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.Header != SockRequestHeader.none)
+                if (!Enum.IsDefined(typeof(SockRequestHeader), item.Header))
                     SockConvert.InsertSockHeader(item.Header, ref data);
 
                 // add internal header just for translating in SockMaster

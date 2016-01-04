@@ -132,7 +132,8 @@ namespace mnn.net {
 
         public static void InsertSockHeader(SockRequestHeader type, ref byte[] buffer)
         {
-            if (buffer == null && type == SockRequestHeader.none) return;
+            if (buffer == null || !Enum.IsDefined(typeof(SockRequestHeader), type))
+                return;
 
             short tmp = (short)type;
             buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),

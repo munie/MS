@@ -54,7 +54,7 @@ namespace EnvConsole
             modctl = new ModuleCtl();
 
             // dispatcher register
-            dispatcher = new Dispatcher();
+            dispatcher = new Dispatcher(sessctl);
             dispatcher.RegisterDefaultService("default_service", default_service);
             dispatcher.RegisterService("sock_send_service", sock_send_service, Coding.GetBytes("/center/socksend"));
             dispatcher.RegisterService("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));

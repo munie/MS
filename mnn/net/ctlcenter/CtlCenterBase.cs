@@ -33,16 +33,13 @@ namespace mnn.net.ctlcenter {
             byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
 
             // check request
-            if (!request.CheckHeader(data)) {
-                sess.RfifoSkip(sess.rdata_size);
-                request.type = SockRequestHeader.none;
-                request.length = -1;
-                request.data = data;
-            } else if (request.CheckLength(data))
+            if (request.CheckHeader(data))
                 sess.RfifoSkip(request.ParseRawData(data));
             else {
-                sessctl.DelSession(sess);
-                return;
+                sess.RfifoSkip(sess.rdata_size);
+                request.type = -1;
+                request.length = -1;
+                request.data = data;
             }
 
             // dispatch
