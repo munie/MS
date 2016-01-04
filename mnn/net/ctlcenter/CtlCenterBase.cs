@@ -28,19 +28,12 @@ namespace mnn.net.ctlcenter {
         protected virtual void sess_parse(object sender, SockSess sess)
         {
             // init request & response
-            SockRequest request = new SockRequest() { lep = sess.lep, rep = sess.rep };
-            SockResponse response = new SockResponse() { data = null };
             byte[] data = sess.rdata.Take(sess.rdata_size).ToArray();
+            SockRequest request = new SockRequest(sess.lep, sess.rep, data);
+            SockResponse response = new SockResponse();
 
-            // check request
-            if (request.CheckHeader(data))
-                sess.RfifoSkip(request.ParseRawData(data));
-            else {
-                sess.RfifoSkip(sess.rdata_size);
-                request.type = SockRequestContentMode.binary;
-                request.length = -1;
-                request.data = data;
-            }
+            // rfifo skip
+            sess.RfifoSkip(request.length);
 
             // dispatch
             dispatcher.handle(request, ref response);

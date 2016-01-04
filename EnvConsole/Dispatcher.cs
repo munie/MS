@@ -45,8 +45,7 @@ namespace EnvConsole
 
         public override void handle(SockRequest request, ref SockResponse response)
         {
-            // try to decrypt request
-            if (request.length != -1) {
+            if (request.has_header) {
                 try {
                     request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
                     request.data = EncryptSym.AESDecrypt(request.data);
@@ -63,7 +62,6 @@ namespace EnvConsole
                 }
             }
 
-            // call base handle
             base.handle(request, ref response);
             //response.data = EncryptSym.AESEncrypt(response.data);
         }

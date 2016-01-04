@@ -14,13 +14,32 @@ namespace mnn.net {
 
     [Serializable]
     public class SockRequest {
-        public IPEndPoint lep { get; set; }
-        public IPEndPoint rep { get; set; }
-        public /*short*/ SockRequestContentMode type { get; set; }
-        public short length { get; set; }
+        public IPEndPoint lep { get; private set; }
+        public IPEndPoint rep { get; private set; }
+        public bool has_header { get; private set; }
+        public /*short*/ SockRequestContentMode content_mode { get; private set; }
+        public short length { get; private set; }
         public byte[] data { get; set; }
 
-        public bool CheckHeader(byte[] raw)
+        public SockRequest() { }
+        public SockRequest(IPEndPoint lep, IPEndPoint rep, byte[] raw)
+        {
+            this.lep = lep;
+            this.rep = rep;
+            this.has_header = CheckHeader(raw);
+
+            if (has_header) {
+                this.content_mode = (SockRequestContentMode)(raw[0] + (raw[1] << 8));
+                this.length = (short)(raw[2] + (raw[3] << 8));
+                this.data = raw.Take(this.length).Skip(4).ToArray();
+            } else {
+                this.content_mode = SockRequestContentMode.binary;
+                this.length = (short)raw.Length;
+                this.data = raw;
+            }
+        }
+
+        private bool CheckHeader(byte[] raw)
         {
             int tmp = (raw[0] + (raw[1] << 8));
             if (!Enum.IsDefined(typeof(SockRequestContentMode), tmp))
@@ -29,17 +48,6 @@ namespace mnn.net {
                 return false;
             else
                 return true;
-        }
-
-        public int ParseRawData(byte[] raw)
-        {
-            short identity = (short)(raw[0] + (raw[1] << 8));
-            short total_len = (short)(raw[2] + (raw[3] << 8));
-
-            this.type = (SockRequestContentMode)identity;
-            this.length = total_len;
-            this.data = raw.Take(total_len).Skip(4).ToArray();
-            return total_len;
         }
     }
 }
