@@ -37,7 +37,7 @@ namespace mnn.net.ctlcenter {
                 sess.RfifoSkip(request.ParseRawData(data));
             else {
                 sess.RfifoSkip(sess.rdata_size);
-                request.type = -1;
+                request.type = SockRequestContentMode.binary;
                 request.length = -1;
                 request.data = data;
             }

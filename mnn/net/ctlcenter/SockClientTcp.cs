@@ -127,7 +127,7 @@ namespace mnn.net.ctlcenter {
         {
             url = EncryptSym.AESEncrypt(url);
             byte[] buffer = Encoding.UTF8.GetBytes(url);
-            SockConvert.InsertSockHeader(SockRequestHeader.url, ref buffer);
+            SockConvert.InsertSockHeader(SockRequestContentMode.url, ref buffer);
 
             this.Send(buffer, method);
         }

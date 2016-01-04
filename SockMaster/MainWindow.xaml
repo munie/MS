@@ -57,9 +57,11 @@
                                     DisplayMemberBinding="{Binding ID}" />
                     <GridViewColumn Header="Name" Width="75"
                                     DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="Header" Width="50"
-                                    DisplayMemberBinding="{Binding Header}" />
-                    <GridViewColumn Header="Encrypt" Width="50"
+                    <GridViewColumn Header="HasHeader" Width="75"
+                                    DisplayMemberBinding="{Binding HasHeader}" />
+                    <GridViewColumn Header="ContentMode" Width="90"
+                                    DisplayMemberBinding="{Binding ContentMode}" />
+                    <GridViewColumn Header="Encrypt" Width="60"
                                     DisplayMemberBinding="{Binding Encrypt}" />
                     <GridViewColumn Header="Cmd" Width="360"
                                     DisplayMemberBinding="{Binding Cmd}" />

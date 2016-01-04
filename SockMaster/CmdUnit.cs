@@ -12,7 +12,8 @@ namespace SockMaster {
         private string id;
         private string name;
         private string cmd;
-        private SockRequestHeader header;
+        private bool has_header;
+        private SockRequestContentMode content_mode;
         private bool encrypt;
 
         public string ID
@@ -45,14 +46,24 @@ namespace SockMaster {
                     PropertyChanged(this, new PropertyChangedEventArgs("CMD"));
             }
         }
-        public SockRequestHeader Header
+        public bool HasHeader
         {
-            get { return header; }
+            get { return has_header; }
             set
             {
-                header = value;
+                has_header = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Header"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("HasHeader"));
+            }
+        }
+        public SockRequestContentMode ContentMode
+        {
+            get { return content_mode; }
+            set
+            {
+                content_mode = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ContentMode"));
             }
         }
         public bool Encrypt

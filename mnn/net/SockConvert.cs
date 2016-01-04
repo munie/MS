@@ -130,12 +130,12 @@ namespace mnn.net {
 
         #endregion SockMaster's command parse and message display convert
 
-        public static void InsertSockHeader(SockRequestHeader type, ref byte[] buffer)
+        public static void InsertSockHeader(SockRequestContentMode mode, ref byte[] buffer)
         {
-            if (buffer == null || !Enum.IsDefined(typeof(SockRequestHeader), type))
+            if (buffer == null || !Enum.IsDefined(typeof(SockRequestContentMode), mode))
                 return;
 
-            short tmp = (short)type;
+            short tmp = (short)mode;
             buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
                 (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
                 .Concat(buffer).ToArray();

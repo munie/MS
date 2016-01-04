@@ -46,7 +46,7 @@ namespace EnvConsole
         public override void handle(SockRequest request, ref SockResponse response)
         {
             // try to decrypt request
-            if (!Enum.IsDefined(typeof(SockRequestHeader), request.type)) {
+            if (request.length != -1) {
                 try {
                     request.data = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
                     request.data = EncryptSym.AESDecrypt(request.data);
@@ -56,8 +56,10 @@ namespace EnvConsole
                     request.data = null;
                 }
                 if (request.data == null) return;
+            } else {
                 lock (pack_queue) {
                     pack_queue.Enqueue(new object[] { request, response });
+                    return;
                 }
             }
 
