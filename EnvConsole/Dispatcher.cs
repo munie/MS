@@ -21,23 +21,31 @@ namespace EnvConsole
             Thread thread = new Thread(() =>
             {
                 while (true) {
-                    if (!pack_queue.Any()) {
-                        Thread.Sleep(1000);
-                        continue;
-                    }
+                    try {
+                        object[] pack = null;
+                        lock (pack_queue) {
+                            if (pack_queue.Count != 0) // Any() is not thread safe
+                                pack = pack_queue.Dequeue();
+                        }
+                        if (pack == null) {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
 
-                    SockRequest request = pack_queue.Peek()[0] as SockRequest;
-                    SockResponse response = pack_queue.Peek()[1] as SockResponse;
-                    base.handle(request, ref response);
-                    if (response.data != null && response.data.Length != 0) {
-                        sessctl.BeginInvoke(new Action(() => {
-                            SockSess result = sessctl.FindSession(SockType.accept, null, request.rep);
-                            if (result != null)
-                                sessctl.SendSession(result, response.data);
-                        }));
-                    }
-                    lock (pack_queue) {
-                        pack_queue.Dequeue();
+                        SockRequest request = pack[0] as SockRequest;
+                        SockResponse response = pack[1] as SockResponse;
+                        base.handle(request, ref response);
+                        if (response.data != null && response.data.Length != 0) {
+                            sessctl.BeginInvoke(new Action(() =>
+                            {
+                                SockSess result = sessctl.FindSession(SockType.accept, null, request.rep);
+                                if (result != null)
+                                    sessctl.SendSession(result, response.data);
+                            }));
+                        }
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                        log.Error("Exception of handling request to modules.", ex);
                     }
                 }
             });

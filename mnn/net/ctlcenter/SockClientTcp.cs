@@ -76,15 +76,18 @@ namespace mnn.net.ctlcenter {
                     if (sock != null) sock.Close();
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     sock.Connect(toep);
+                    sock.SendTimeout = 1000; // important
                 }
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
                 log.Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
             }
 
-            if (method == null)
-                sock.Send(buffer);
-            else {
+            if (method == null) {
+                try {
+                    sock.Send(buffer);
+                } catch (Exception) { }
+            } else {
                 ThreadPool.QueueUserWorkItem((s) =>
                 {
                     if (disposing) return;
