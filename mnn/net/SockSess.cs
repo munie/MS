@@ -79,20 +79,24 @@ namespace mnn.net {
                 sess.tick = DateTime.Now;
             } catch (Exception) {
                 sess.eof = true;
-                return;
             }
         }
 
         public static void Send(SockSess sess)
         {
-            sess.sock.Send(sess.wdata.Take(sess.wdata_size).ToArray());
-            sess.wdata_size = 0;
+            try {
+                sess.sock.Send(sess.wdata.Take(sess.wdata_size).ToArray());
+                sess.wdata_size = 0;
+            } catch (Exception) {
+                sess.eof = true;
+            }
         }
 
         public static SockSess Accept(SockSess sess)
         {
             try {
                 Socket sock = sess.sock.Accept();
+                sock.SendTimeout = 1000;
                 return new SockSess(SockType.accept, sock);
             } catch (Exception) {
                 return null;
@@ -261,13 +265,13 @@ namespace mnn.net {
                     foreach (var child in FindAcceptSession(sess)) {
                         child.sock.Send(data);
                     }
-                } else {
+                } else
                     sess.sock.Send(data);
-                }
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
                 log.Warn(String.Format("Send data to {0} failed.",
                     sess.type == SockType.listen ? sess.lep.ToString() : sess.rep.ToString()), ex);
+                sess.eof = true;
             }
         }
 
