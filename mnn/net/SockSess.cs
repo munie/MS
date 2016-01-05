@@ -260,18 +260,24 @@ namespace mnn.net {
         {
             ThreadCheck(false);
 
-            try {
-                if (sess.type == SockType.listen) {
-                    foreach (var child in FindAcceptSession(sess)) {
+            if (sess.type == SockType.listen) {
+                foreach (var child in FindAcceptSession(sess)) {
+                    try {
                         child.sock.Send(data);
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+                        log.Warn(String.Format("Send data to {0} failed.", child.rep.ToString()), ex);
+                        child.eof = true;
                     }
-                } else
+                }
+            } else {
+                try {
                     sess.sock.Send(data);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
-                log.Warn(String.Format("Send data to {0} failed.",
-                    sess.type == SockType.listen ? sess.lep.ToString() : sess.rep.ToString()), ex);
-                sess.eof = true;
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+                    log.Warn(String.Format("Send data to {0} failed.", sess.rep.ToString()), ex);
+                    sess.eof = true;
+                }
             }
         }
 
