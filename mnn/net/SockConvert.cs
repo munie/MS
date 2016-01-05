@@ -130,19 +130,6 @@ namespace mnn.net {
 
         #endregion SockMaster's command parse and message display convert
 
-        public static void InsertSockHeader(SockRequestContentMode mode, ref byte[] buffer, bool encrypt)
-        {
-            if (buffer == null || !Enum.IsDefined(typeof(SockRequestContentMode), mode))
-                return;
-
-            short tmp = (short)mode;
-            if (encrypt) tmp = (short)(tmp & 0xffff);
-
-            buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
-                (byte)(0x04 + buffer.Length & 0xff), (byte)(0x04 + buffer.Length >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
-        }
-
         public static IDictionary<string, string> ParseUrlQueryParam(string query)
         {
             Dictionary<string, string> dc = new Dictionary<string, string>();

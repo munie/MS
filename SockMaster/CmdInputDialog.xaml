@@ -10,8 +10,7 @@
         <TextBox Height="23" Name="textBoxName" Width="145" Canvas.Left="338" Canvas.Top="33" />
         <TextBox Height="188" Name="textBoxCmd" Width="496" Canvas.Left="85" Canvas.Top="73" TextWrapping="Wrap" />
         <ComboBox Name="comboBoxContentMode"  Canvas.Left="85" Canvas.Top="277" Height="23" Width="120" />
-        <CheckBox Name="checkBoxEncrypt" Canvas.Left="249" Canvas.Top="284" Content="Encrypt" />
-        <CheckBox Name="checkBoxHasHeader" Canvas.Left="338" Canvas.Top="284" Content="HasHeader"/>
+        <CheckBox Name="checkBoxEncrypt" Canvas.Left="521" Canvas.Top="36" Content="Encrypt" />
         <Button Content="确认" Grid.Row="1" Height="23" Margin="157,27,0,0" Name="button1" Width="75" Canvas.Left="251" Canvas.Top="307" Click="button1_Click" />
         <Button Content="取消" Grid.Row="1" Height="23" HorizontalAlignment="Right" Margin="0,27,25,0" Name="button2" VerticalAlignment="Top" Width="75" Canvas.Left="522" Canvas.Top="307" Click="button2_Click" />
         <Separator Canvas.Left="12" Canvas.Top="312" Height="1" Name="separator1" Width="605" />

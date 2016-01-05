@@ -28,7 +28,6 @@ namespace EnvConsole
 
                     SockRequest request = pack_queue.Peek()[0] as SockRequest;
                     SockResponse response = pack_queue.Peek()[1] as SockResponse;
-                    pack_queue.Dequeue();
                     base.handle(request, ref response);
                     if (response.data != null && response.data.Length != 0) {
                         sessctl.BeginInvoke(new Action(() => {
@@ -36,6 +35,9 @@ namespace EnvConsole
                             if (result != null)
                                 sessctl.SendSession(result, response.data);
                         }));
+                    }
+                    lock (pack_queue) {
+                        pack_queue.Dequeue();
                     }
                 }
             });
@@ -45,11 +47,24 @@ namespace EnvConsole
 
         public override void handle(SockRequest request, ref SockResponse response)
         {
-            if (!request.has_header) {
+            if (request.content_mode == SockRequestContentMode.none) {
                 lock (pack_queue) {
-                    pack_queue.Enqueue(new object[] { request, response });
-                    return;
+                    if (pack_queue.Count > 2048) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                        log.Fatal("pack_queue's count is larger than 2048!");
+                        pack_queue.Clear();
+                        return;
+                    } else {
+                        pack_queue.Enqueue(new object[] { request, response });
+                        return;
+                    }
                 }
+            } else {
+                try {
+                    byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
+                    result = EncryptSym.AESDecrypt(result);
+                    if (result != null) request.SetData(result);
+                } catch (Exception) { }
             }
 
             base.handle(request, ref response);
