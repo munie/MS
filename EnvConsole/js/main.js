@@ -7,8 +7,8 @@ var net = require("net");
 var EncryptSym = require("./EncryptSym");
 
 var tmp = EncryptSym.encode("/center/clientlist");
-var clientlist = String.fromCharCode(2) + String.fromCharCode(12 + 128)
-	+ String.fromCharCode(tmp.length+4) + String.fromCharCode(0) + tmp;
+var clientlist = String.fromCharCode(0x24) + String.fromCharCode(0x23)
+	+ "00" + (tmp.length+6).toString() + tmp;
 
 http.createServer(function(request, response) {
 	var pathname = url.parse(request.url).pathname;
