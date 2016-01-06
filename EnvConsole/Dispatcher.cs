@@ -45,7 +45,7 @@ namespace EnvConsole
                         }
                     } catch (Exception ex) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
-                        log.Error("Exception of handling request to modules.", ex);
+                        log.Warn("Exception of handling request to modules.", ex);
                     }
                 }
             });

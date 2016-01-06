@@ -44,7 +44,15 @@ namespace EnvConsole.Windows
         {
             center = new CtlCenter();
             center.Config();
-            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
+            Thread thread = new Thread(() =>
+            {
+                try {
+                    while (true) center.Perform(1000);
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                    log.Error("Exception thrown out by socksess thread.", ex);
+                }
+            });
             thread.IsBackground = true;
             thread.Start();
 

@@ -35,7 +35,7 @@ namespace mnn.misc.module {
                                 FuncModuleCallReturn(call);
                         } catch (Exception ex) {
                             log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
-                            log.Error("Exception of invoding assembly method.", ex);
+                            log.Error("Exception of invoking assembly method.", ex);
                         } finally {
                             item.ModuleCallTable.Remove(call);
                             module_call_count--;

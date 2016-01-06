@@ -69,7 +69,7 @@ namespace mnn.net.ctlcenter {
                     default_service.func(request, ref response);
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(DispatcherBase));
-                log.Error("Exception of invoking service.", ex);
+                log.Warn("Exception of invoking service.", ex);
             }
         }
 
