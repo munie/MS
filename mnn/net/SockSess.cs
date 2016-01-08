@@ -17,11 +17,11 @@ namespace mnn.net {
 
     public class SockSess {
         public Socket sock { get; private set; }
-        public SockType type;
-        public IPEndPoint lep;
-        public IPEndPoint rep;
-        public bool eof;
-        public DateTime tick;
+        public SockType type { get; private set; }
+        public IPEndPoint lep { get; private set; }
+        public IPEndPoint rep { get; private set; }
+        public bool eof { get; /*private*/ set; }
+        public DateTime tick { get; private set; }
 
         private byte[] rdata;
         private int rdata_max = 8192;
@@ -48,16 +48,6 @@ namespace mnn.net {
             this.sdata = null;
         }
 
-        public byte[] RfifoTake()
-        {
-            return rdata.Take(rdata_size).ToArray();
-        }
-
-        public byte[] RfifoTake(int offset, int len)
-        {
-            return rdata.Skip(offset).Take(len).ToArray();
-        }
-
         public int RfifoRest()
         {
             return rdata_size - rdata_pos;
@@ -80,18 +70,49 @@ namespace mnn.net {
             rdata_pos = 0;
         }
 
+        public byte[] RfifoTake()
+        {
+            return rdata.Take(rdata_size).ToArray();
+        }
+
+        public byte[] RfifoTake(int offset, int len)
+        {
+            return rdata.Skip(offset).Take(len).ToArray();
+        }
+
+        public int WfifoRest()
+        {
+            return wdata_max - wdata_size;
+        }
+
+        public void WfifoSet(byte[] data)
+        {
+            if (data.Length > WfifoRest()) return;
+
+            Array.Copy(data, 0, wdata, wdata_size, data.Length);
+            wdata_size += data.Length;
+        }
+
         public void Recv()
         {
             try {
+                // flush if rdata's size is larger than rdata's max
                 if (rdata_size > rdata_max >> 1)
                     RfifoFlush();
 
+                // skip all if rdata's size is equal rdata's max
+                if (rdata_size == rdata_max)
+                    RfifoSkip(rdata_size);
+
+                // recv to rdata
                 int result = sock.Receive(rdata, rdata_size, rdata_max - rdata_size, SocketFlags.None);
                 rdata_size += result;
 
+                // set eof if received shutdown protocol
                 if (result == 0)
                     eof = true;
 
+                // update tick
                 tick = DateTime.Now;
             } catch (Exception) {
                 eof = true;
@@ -103,12 +124,14 @@ namespace mnn.net {
             if (wdata_size == 0) return;
 
             try {
-                sock.Send(wdata.Take(wdata_size).ToArray());
+                sock.Send(wdata, wdata_size, SocketFlags.None);
                 wdata_size = 0;
             } catch (Exception) {
                 eof = true;
             }
         }
+
+        // Class Static ========================================================================
 
         public static SockSess Accept(SockSess sess)
         {
@@ -278,24 +301,30 @@ namespace mnn.net {
             ThreadCheck(false);
 
             if (sess.type == SockType.listen) {
-                foreach (var child in FindAcceptSession(sess)) {
-                    try {
-                        child.sock.Send(data);
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
-                        log.Warn(String.Format("Send data to {0} failed.", child.rep.ToString()), ex);
-                        child.eof = true;
-                    }
-                }
-            } else {
-                try {
-                    sess.sock.Send(data);
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
-                    log.Warn(String.Format("Send data to {0} failed.", sess.rep.ToString()), ex);
-                    sess.eof = true;
-                }
-            }
+                foreach (var child in FindAcceptSession(sess))
+                    child.WfifoSet(data);
+            } else
+                sess.WfifoSet(data);
+
+            //if (sess.type == SockType.listen) {
+            //    foreach (var child in FindAcceptSession(sess)) {
+            //        try {
+            //            child.sock.Send(data);
+            //        } catch (Exception ex) {
+            //            log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+            //            log.Warn(String.Format("Send data to {0} failed.", child.rep.ToString()), ex);
+            //            child.eof = true;
+            //        }
+            //    }
+            //} else {
+            //    try {
+            //        sess.sock.Send(data);
+            //    } catch (Exception ex) {
+            //        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SessCtl));
+            //        log.Warn(String.Format("Send data to {0} failed.", sess.rep.ToString()), ex);
+            //        sess.eof = true;
+            //    }
+            //}
         }
 
         public SockSess FindSession(SockType type, IPEndPoint lep, IPEndPoint rep)
