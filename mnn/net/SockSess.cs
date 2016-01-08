@@ -11,8 +11,8 @@ using System.Threading;
 namespace mnn.net {
     public enum SockType {
         listen = 0,
-        accept = 2,
-        connect = 1,
+        accept = 1,
+        connect = 2,
     }
 
     public class SockSess {
@@ -23,19 +23,14 @@ namespace mnn.net {
         public bool eof;
         public DateTime tick;
 
-        public byte[] rdata { get; private set; }
-        public int rdata_max = 8192;
-        public int rdata_size { get; private set; }
-        public int rdata_pos { get; private set; }
-        public byte[] wdata { get; private set; }
-        public int wdata_max = 8192;
-        public int wdata_size { get; private set; }
+        private byte[] rdata;
+        private int rdata_max = 8192;
+        private int rdata_size;
+        private int rdata_pos;
+        private byte[] wdata;
+        private int wdata_max = 8192;
+        private int wdata_size;
         public object sdata;
-
-        public delegate void RecvDelegate(SockSess sess);
-        public delegate void SendDelegate(SockSess sess);
-        public RecvDelegate func_recv;
-        public SendDelegate func_send;
 
         // Methods ============================================================================
 
@@ -51,44 +46,67 @@ namespace mnn.net {
             rdata = new byte[rdata_max];
             wdata = new byte[wdata_max];
             this.sdata = null;
-
-            func_recv = Recv;
-            func_send = Send;
         }
 
-        public void RfifoSkip(int size)
+        public byte[] RfifoTake()
         {
-            if (size > rdata_size)
-                size = rdata_size;
-
-            rdata_size -= size;
-            for (int i = 0; i < rdata_size; i++)
-                rdata[i] = rdata[i + size];
+            return rdata.Take(rdata_size).ToArray();
         }
 
-        public static void Recv(SockSess sess)
+        public byte[] RfifoTake(int offset, int len)
+        {
+            return rdata.Skip(offset).Take(len).ToArray();
+        }
+
+        public int RfifoRest()
+        {
+            return rdata_size - rdata_pos;
+        }
+
+        public void RfifoSkip(int len)
+        {
+            if (len > RfifoRest())
+                rdata_pos = rdata_size;
+            else
+                rdata_pos += len;
+        }
+
+        public void RfifoFlush()
+        {
+            for (int i = 0; i < RfifoRest(); i++)
+                rdata[i] = rdata[i + rdata_pos];
+
+            rdata_size -= rdata_pos;
+            rdata_pos = 0;
+        }
+
+        public void Recv()
         {
             try {
-                int result = sess.sock.Receive(sess.rdata, sess.rdata_size,
-                    sess.rdata_max - sess.rdata_size, SocketFlags.None);
-                sess.rdata_size += result;
+                if (rdata_size > rdata_max >> 1)
+                    RfifoFlush();
+
+                int result = sock.Receive(rdata, rdata_size, rdata_max - rdata_size, SocketFlags.None);
+                rdata_size += result;
 
                 if (result == 0)
-                    sess.eof = true;
+                    eof = true;
 
-                sess.tick = DateTime.Now;
+                tick = DateTime.Now;
             } catch (Exception) {
-                sess.eof = true;
+                eof = true;
             }
         }
 
-        public static void Send(SockSess sess)
+        public void Send()
         {
+            if (wdata_size == 0) return;
+
             try {
-                sess.sock.Send(sess.wdata.Take(sess.wdata_size).ToArray());
-                sess.wdata_size = 0;
+                sock.Send(wdata.Take(wdata_size).ToArray());
+                wdata_size = 0;
             } catch (Exception) {
-                sess.eof = true;
+                eof = true;
             }
         }
 
@@ -190,7 +208,7 @@ namespace mnn.net {
                             if (retval == null) continue;
                             AddSession(retval);
                         } else
-                            item.func_recv(item);
+                            item.Recv();
                         break;
                     }
                 }
@@ -201,11 +219,10 @@ namespace mnn.net {
                 if (item.type == SockType.accept && DateTime.Now.Subtract(item.tick).TotalSeconds > stall_time)
                     item.eof = true;
 
-                if (item.rdata_size != 0 && sess_parse != null)
+                if (item.RfifoRest() != 0 && sess_parse != null)
                     sess_parse(this, item);
 
-                if (item.wdata_size != 0)
-                    item.func_send(item);
+                item.Send();
 
                 if (item.eof == true) {
                     if (item.type == SockType.listen) {
