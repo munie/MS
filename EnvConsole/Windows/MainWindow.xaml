@@ -59,10 +59,10 @@
         <ListView x:Name="lstViewModule" Margin="405,5,5,5" Grid.Row="1" ItemsSource="{Binding ModuleTable}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="模块名" Width="100"
+                    <GridViewColumn Header="模块名" Width="120"
                                     DisplayMemberBinding="{Binding FileName}" />
-                    <GridViewColumn Header="说明" Width="135"
-                                    DisplayMemberBinding="{Binding FileComment}" />
+                    <GridViewColumn Header="版本号" Width="60"
+                                    DisplayMemberBinding="{Binding FileVersion}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>

@@ -35,7 +35,7 @@ namespace EnvConsole
                 process.Start();
             } catch (Exception) {
                 System.Windows.MessageBox.Show("Start nodejs failed.");
-                Thread.CurrentThread.Abort();
+                //Thread.CurrentThread.Abort();
             }
             System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) =>
             {
@@ -301,8 +301,8 @@ namespace EnvConsole
                 if (item.type != SockType.accept) continue;
                 SessData sd = item.sdata as SessData;
                 if (sd.Ccid == dc["ccid"]) {
-                    result = item;
-                    break;
+                    result = item; // take last one as result, so comment "break" at next line
+                    //break;
                 }
             }
 
@@ -374,6 +374,7 @@ namespace EnvConsole
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
             ModuleUnit unit = new ModuleUnit();
             unit.FileName = module.AssemblyName;
+            unit.FileVersion = fvi.FileVersion;
             unit.FileComment = fvi.Comments;
             unit.Module = module;
 

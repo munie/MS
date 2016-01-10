@@ -11,6 +11,7 @@ namespace EnvConsole.Unit
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string fileName;
+        private string fileVersion;
         private string fileComment;
         public string FileName
         {
@@ -20,6 +21,16 @@ namespace EnvConsole.Unit
                 fileName = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("FileName"));
+            }
+        }
+        public string FileVersion
+        {
+            get { return fileVersion; }
+            set
+            {
+                fileVersion = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("FileVersion"));
             }
         }
         public string FileComment
