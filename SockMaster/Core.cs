@@ -5,11 +5,11 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using System.Net;
+using mnn.design;
 using mnn.net;
-using mnn.net.ctlcenter;
 
 namespace SockMaster {
-    class CtlCenter : CtlCenterBase {
+    class Core : CoreBase {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
@@ -22,7 +22,7 @@ namespace SockMaster {
             /// ** init DataUI
             DataUI = new DataUI();
 
-            // open ctlcenter port
+            // open core port
             SockSess result = null;
             do {
                 DataUI.Port = 5964 + new Random().Next() % 1024;

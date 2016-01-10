@@ -36,18 +36,18 @@ namespace EnvConsole.Windows
             InitailizeStatusBar();
         }
 
-        private CtlCenter center;
+        private Core core;
 
         // Methods ============================================================================
 
         private void Initailize()
         {
-            center = new CtlCenter();
-            center.Config();
+            core = new Core();
+            core.Config();
             Thread thread = new Thread(() =>
             {
                 try {
-                    while (true) center.Perform(1000);
+                    while (true) core.Perform(1000);
                 } catch (Exception ex) {
                     log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
                     log.Error("Exception thrown out by socksess thread.", ex);
@@ -56,9 +56,9 @@ namespace EnvConsole.Windows
             thread.IsBackground = true;
             thread.Start();
 
-            DataContext = new { ServerTable = center.DataUI.ServerTable, ClientTable = center.DataUI.ClientTable,
-                ModuleTable = center.DataUI.ModuleTable, DataUI = center.DataUI };
-            center.DataUI.MsgBox = txtMsg;
+            DataContext = new { ServerTable = core.DataUI.ServerTable, ClientTable = core.DataUI.ClientTable,
+                ModuleTable = core.DataUI.ModuleTable, DataUI = core.DataUI };
+            core.DataUI.MsgBox = txtMsg;
             //this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
             this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
@@ -110,7 +110,7 @@ namespace EnvConsole.Windows
             openFileDialog.FileName = "";
 
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                center.ModuleLoad(openFileDialog.FileName);
+                core.ModuleLoad(openFileDialog.FileName);
         }
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
@@ -123,7 +123,7 @@ namespace EnvConsole.Windows
 
             // 卸载操作
             foreach (var item in handles)
-                center.ModuleUnload(item.FileName);
+                core.ModuleUnload(item.FileName);
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
@@ -132,7 +132,7 @@ namespace EnvConsole.Windows
                 if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
 
-                center.ServerStart(item.IpAddress, item.Port, item.Protocol);
+                core.ServerStart(item.IpAddress, item.Port, item.Protocol);
             }
         }
 
@@ -143,7 +143,7 @@ namespace EnvConsole.Windows
                     continue;
 
                 if (item.CanStop == true)
-                    center.ServerStop(item.IpAddress, item.Port, item.Protocol);
+                    core.ServerStop(item.IpAddress, item.Port, item.Protocol);
             }
         }
 
@@ -178,7 +178,7 @@ namespace EnvConsole.Windows
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                center.ServerTimerStart(item);
+                core.ServerTimerStart(item);
             }
         }
 
@@ -189,7 +189,7 @@ namespace EnvConsole.Windows
                     item.TimerState == ServerUnit.TimerStateDisable)
                     continue;
 
-                center.ServerTimerStop(item);
+                core.ServerTimerStop(item);
             }
         }
 
@@ -234,7 +234,7 @@ namespace EnvConsole.Windows
                     return;
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                    center.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
+                    core.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
                     string log = DateTime.Now + " (" + "localhost" + " => " + item.RemoteEP.ToString() + ")\n";
                     log += input.textBox1.Text + "\n\n";
                     txtMsg.Text += log;
@@ -246,7 +246,7 @@ namespace EnvConsole.Windows
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
             foreach (ClientUnit item in lstViewClient.SelectedItems)
-                center.ClientClose(item.RemoteEP.Address.ToString(), item.RemoteEP.Port);
+                core.ClientClose(item.RemoteEP.Address.ToString(), item.RemoteEP.Port);
         }
 
         private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)

@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Xml;
 using System.Net.Sockets;
 using mnn.net;
-using mnn.net.ctlcenter;
 
 namespace SockMaster
 {
@@ -45,11 +44,11 @@ namespace SockMaster
 
         private void Initailize()
         {
-            // init ctlcenter
-            CtlCenter center = new CtlCenter();
-            center.Init();
-            center.Config();
-            Thread thread = new Thread(() => { while (true) center.Perform(1000); });
+            // init core
+            Core core = new Core();
+            core.Init();
+            core.Config();
+            Thread thread = new Thread(() => { while (true) core.Perform(1000); });
             thread.IsBackground = true;
             thread.Start();
 
@@ -78,12 +77,12 @@ namespace SockMaster
             }
 
             // init tcp
-            tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), center.DataUI.Port));
-            this.txtPromote.Text += " At " + center.DataUI.Port;
+            tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), core.DataUI.Port));
+            this.txtPromote.Text += " At " + core.DataUI.Port;
 
             // init context
-            DataContext = new { SockTable = center.DataUI.SockTable, CmdTable = cmdTable, DataUI = center.DataUI };
-            center.DataUI.MsgBox = this.txtBoxMsg;
+            DataContext = new { SockTable = core.DataUI.SockTable, CmdTable = cmdTable, DataUI = core.DataUI };
+            core.DataUI.MsgBox = this.txtBoxMsg;
             this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
             this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
@@ -256,8 +255,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(CtlCenter.CONF_PATH)) {
-                doc.Load(CtlCenter.CONF_PATH);
+            if (File.Exists(Core.CONF_PATH)) {
+                doc.Load(Core.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/sockets");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -280,7 +279,7 @@ namespace SockMaster
                 config.AppendChild(sockitem);
             }
 
-            doc.Save(CtlCenter.CONF_PATH);
+            doc.Save(Core.CONF_PATH);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -405,8 +404,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(CtlCenter.CONF_PATH)) {
-                doc.Load(CtlCenter.CONF_PATH);
+            if (File.Exists(Core.CONF_PATH)) {
+                doc.Load(Core.CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/commands");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -427,7 +426,7 @@ namespace SockMaster
                 config.AppendChild(cmd);
             }
 
-            doc.Save(CtlCenter.CONF_PATH);
+            doc.Save(Core.CONF_PATH);
         }
 
         //private void MenuItem_CmdOpen_Click(object sender, RoutedEventArgs e)

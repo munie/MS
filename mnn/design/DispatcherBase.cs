@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using mnn.net;
 
-namespace mnn.net.ctlcenter {
+namespace mnn.design {
     public delegate void ServiceDelegate(SockRequest request, ref SockResponse response);
     public delegate bool FilterDelegate(ref SockRequest request, SockResponse response);
 

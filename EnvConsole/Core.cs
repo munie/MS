@@ -8,8 +8,8 @@ using System.Diagnostics;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Net;
+using mnn.design;
 using mnn.net;
-using mnn.net.ctlcenter;
 using mnn.util;
 using mnn.misc.module;
 using mnn.misc.env;
@@ -17,13 +17,13 @@ using EnvConsole.Unit;
 
 namespace EnvConsole
 {
-    class CtlCenter : CtlCenterBase
+    class Core : CoreBase
     {
         public Encoding Coding { get; set; }
         public DataUI DataUI { get; set; }
         private ModuleCtl modctl;
 
-        public CtlCenter()
+        public Core()
         {
             // start node
             Process process = new Process();
@@ -84,7 +84,7 @@ namespace EnvConsole
                 XmlDocument xdoc = new XmlDocument();
                 xdoc.Load(EnvConst.CONF_PATH);
 
-                // coding Config
+                // Encoding Config
                 XmlNode node = xdoc.SelectSingleNode(EnvConst.CONF_ENCODING);
                 Coding = Encoding.GetEncoding(node.InnerText);
 
@@ -108,7 +108,7 @@ namespace EnvConsole
                     DataUI.ServerTable.Add(server);
                 }
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(CtlCenter));
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
                 log.Error("Exception of reading configure file.", ex);
                 System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
             }

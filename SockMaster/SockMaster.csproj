@@ -60,7 +60,7 @@
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="CmdUnit.cs" />
-    <Compile Include="CtlCenter.cs" />
+    <Compile Include="Core.cs" />
     <Compile Include="DataUI.cs" />
     <Compile Include="SockInputDialog.xaml.cs">
       <DependentUpon>SockInputDialog.xaml</DependentUpon>

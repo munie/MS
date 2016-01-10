@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using mnn.net;
 
-namespace mnn.net.ctlcenter {
-    public class CtlCenterBase {
+namespace mnn.design {
+    public class CoreBase {
         // session control
         protected SessCtl sessctl;
         // other request control
         protected DispatcherBase dispatcher;
 
-        public CtlCenterBase()
+        public CoreBase()
         {
-            // init sesscer
+            // init sessctl
             sessctl = new SessCtl();
             sessctl.sess_parse += new SessCtl.SessDelegate(sess_parse);
             sessctl.sess_create += new SessCtl.SessDelegate(sess_create);
