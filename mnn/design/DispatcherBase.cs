@@ -35,7 +35,7 @@ namespace mnn.design {
 
         // Methods =============================================================================
 
-        private bool byteArrayCmp(byte[] first, byte[] second)
+        private bool ByteArrayCmp(byte[] first, byte[] second)
         {
             if (first.Length != second.Length)
                 return false;
@@ -48,7 +48,7 @@ namespace mnn.design {
             return true;
         }
 
-        public virtual void handle(SockRequest request, ref SockResponse response)
+        public virtual void Handle(SockRequest request, ref SockResponse response)
         {
             try {
                 // filter return when retval is false
@@ -59,7 +59,7 @@ namespace mnn.design {
 
                 // service return when find target service and handled request
                 foreach (var item in service_table) {
-                    if (byteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
+                    if (ByteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
                         item.func(request, ref response);
                         return;
                     }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace mnn.net {
+namespace mnn.net.deprecated {
     public class SockPack {
         public enum PackName : ushort {
             alive = 0x000C,

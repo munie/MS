@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="design\AtCmd.cs" />
+    <Compile Include="design\TimeOut.cs" />
     <Compile Include="misc\env\AtCommand.cs" />
     <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
@@ -61,7 +63,6 @@
     <Compile Include="net\SockRequest.cs" />
     <Compile Include="design\DispatcherBase.cs" />
     <Compile Include="net\SockResponse.cs" />
-    <Compile Include="util\AtCmd.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenItem.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenManager.cs" />
     <Compile Include="net\deprecated\AsyncSocketSender.cs" />
@@ -74,7 +75,7 @@
     <Compile Include="net\deprecated\UdpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="net\SockConvert.cs" />
-    <Compile Include="net\SockPack.cs" />
+    <Compile Include="net\deprecated\SockPack.cs" />
     <Compile Include="net\SockSess.cs" />
     <Compile Include="util\ConvertUtil.cs" />
     <Compile Include="util\CrcUtil.cs" />

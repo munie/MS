@@ -186,7 +186,7 @@ namespace mnn.net {
         public SessDelegate sess_delete;
         public SessDelegate sess_parse;
 
-        private List<Delegate> dispatcher_delegate_table;
+        private Dictionary<Delegate, object[]> dispatcher_delegate_table;
 
         public SessCtl()
         {
@@ -196,7 +196,7 @@ namespace mnn.net {
             sess_create = null;
             sess_delete = null;
             sess_parse = null;
-            dispatcher_delegate_table = new List<Delegate>();
+            dispatcher_delegate_table = new Dictionary<Delegate, object[]>();
         }
 
         // Methods ============================================================================
@@ -208,7 +208,7 @@ namespace mnn.net {
             if (dispatcher_delegate_table.Count != 0) {
                 lock (dispatcher_delegate_table) {
                     foreach (var item in dispatcher_delegate_table)
-                        item.Method.Invoke(item.Target, null);
+                        item.Key.Method.Invoke(item.Key.Target, item.Value);
                     dispatcher_delegate_table.Clear();
                 }
             }
@@ -364,10 +364,10 @@ namespace mnn.net {
             return new List<SockSess>(sess_table);
         }
 
-        public void BeginInvoke(Delegate method)
+        public void BeginInvoke(Delegate method, params object[] args)
         {
             lock (dispatcher_delegate_table) {
-                dispatcher_delegate_table.Add(method);
+                dispatcher_delegate_table.Add(method, args);
             }
         }
 

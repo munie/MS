@@ -55,13 +55,13 @@ namespace EnvConsole
 
             // dispatcher register
             dispatcher = new Dispatcher(sessctl);
-            dispatcher.RegisterDefaultService("default_service", default_service);
-            dispatcher.RegisterService("sock_send_service", sock_send_service, Coding.GetBytes("/center/socksend"));
-            dispatcher.RegisterService("client_list_service", client_list_service, Coding.GetBytes("/center/clientlist"));
-            dispatcher.RegisterService("client_close_service", client_close_service, Coding.GetBytes("/center/clientclose"));
-            dispatcher.RegisterService("client_send_service", client_send_service, Coding.GetBytes("/center/clientsend"));
-            dispatcher.RegisterService("client_send_by_ccid_service", client_send_by_ccid_service, Coding.GetBytes("/center/clientsendbyccid"));
-            dispatcher.RegisterService("client_update_service", client_update_service, Coding.GetBytes("/center/clientupdate"));
+            dispatcher.RegisterDefaultService("DefaultService", DefaultService);
+            dispatcher.RegisterService("SockSendService", SockSendService, Coding.GetBytes("/center/socksend"));
+            dispatcher.RegisterService("ClientListService", ClientListService, Coding.GetBytes("/center/clientlist"));
+            dispatcher.RegisterService("ClientCloseService", ClientCloseService, Coding.GetBytes("/center/clientclose"));
+            dispatcher.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
+            dispatcher.RegisterService("ClientSendByCcidService", ClientSendByCcidService, Coding.GetBytes("/center/clientsendbyccid"));
+            dispatcher.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(EnvConst.Module_PATH)) {
@@ -126,14 +126,9 @@ namespace EnvConsole
             }
         }
 
-        public void Perform(int next)
-        {
-            sessctl.Perform(next);
-        }
-
         // Session Event ==========================================================================
 
-        protected override void sess_create(object sender, SockSess sess)
+        protected override void SessCreate(object sender, SockSess sess)
         {
             if (sess.type == SockType.accept) {
                 sess.sdata = new SessData() {
@@ -147,7 +142,7 @@ namespace EnvConsole
             }
         }
 
-        protected override void sess_delete(object sender, SockSess sess)
+        protected override void SessDelete(object sender, SockSess sess)
         {
             /// ** update DataUI
             if (sess.type == SockType.accept)
@@ -156,9 +151,9 @@ namespace EnvConsole
 
         // Center Service =========================================================================
 
-        protected override void sock_send_service(SockRequest request, ref SockResponse response)
+        protected override void SockSendService(SockRequest request, ref SockResponse response)
         {
-            base.sock_send_service(request, ref response);
+            base.SockSendService(request, ref response);
 
             /// ** update DataUI
             if (response.data != null) {
@@ -169,7 +164,7 @@ namespace EnvConsole
             }
         }
 
-        private bool checkServerTargetCenter(int port)
+        private bool CheckServerTargetCenter(int port)
         {
             /// ** dangerous !!! access DataUI
             var subset = from s in DataUI.ServerTable
@@ -181,9 +176,9 @@ namespace EnvConsole
                 return true;
         }
 
-        private void client_list_service(SockRequest request, ref SockResponse response)
+        private void ClientListService(SockRequest request, ref SockResponse response)
         {
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter(request.lep.Port)) return;
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
@@ -205,10 +200,10 @@ namespace EnvConsole
             response.data = Coding.GetBytes(sb.ToString());
         }
 
-        private void client_close_service(SockRequest request, ref SockResponse response)
+        private void ClientCloseService(SockRequest request, ref SockResponse response)
         {
             // check target center
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -235,10 +230,10 @@ namespace EnvConsole
                 DataUI.ClientDel(ep);
         }
 
-        private void client_send_service(SockRequest request, ref SockResponse response)
+        private void ClientSendService(SockRequest request, ref SockResponse response)
         {
             // check target center
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -276,10 +271,10 @@ namespace EnvConsole
             }
         }
 
-        private void client_send_by_ccid_service(SockRequest request, ref SockResponse response)
+        private void ClientSendByCcidService(SockRequest request, ref SockResponse response)
         {
             // check target center
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -324,10 +319,10 @@ namespace EnvConsole
             }
         }
 
-        private void client_update_service(SockRequest request, ref SockResponse response)
+        private void ClientUpdateService(SockRequest request, ref SockResponse response)
         {
             // check target center
-            if (!checkServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter(request.lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);

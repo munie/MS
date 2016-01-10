@@ -30,10 +30,10 @@ namespace SockMaster {
             } while (result == null);
 
             // dispatcher register
-            dispatcher.RegisterDefaultService("default_service", default_service);
-            dispatcher.RegisterService("sock_open_service", sock_open_service, Encoding.UTF8.GetBytes("/center/sockopen"));
-            dispatcher.RegisterService("sock_close_service", sock_close_service, Encoding.UTF8.GetBytes("/center/sockclose"));
-            dispatcher.RegisterService("sock_send_service", sock_send_service, Encoding.UTF8.GetBytes("/center/socksend"));
+            dispatcher.RegisterDefaultService("DefaultService", DefaultService);
+            dispatcher.RegisterService("SockOpenService", SockOpenService, Encoding.UTF8.GetBytes("/center/sockopen"));
+            dispatcher.RegisterService("SockCloseService", SockCloseService, Encoding.UTF8.GetBytes("/center/sockclose"));
+            dispatcher.RegisterService("SockSendService", SockSendService, Encoding.UTF8.GetBytes("/center/socksend"));
         }
 
         public void Config()
@@ -78,20 +78,15 @@ namespace SockMaster {
             }
         }
 
-        public void Perform(int next)
-        {
-            sessctl.Perform(next);
-        }
-
         // Session Event ==========================================================================
 
-        protected override void sess_create(object sender, SockSess sess)
+        protected override void SessCreate(object sender, SockSess sess)
         {
             /// ** update DataUI
             DataUI.SockAdd(sess.type, sess.lep, sess.rep);
         }
 
-        protected override void sess_delete(object sender, SockSess sess)
+        protected override void SessDelete(object sender, SockSess sess)
         {
             /// ** update DataUI
             DataUI.SockDel(sess.type, sess.lep, sess.rep);
@@ -99,7 +94,7 @@ namespace SockMaster {
 
         // Center Service =========================================================================
 
-        protected override void default_service(SockRequest request, ref SockResponse response)
+        protected override void DefaultService(SockRequest request, ref SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
@@ -108,7 +103,7 @@ namespace SockMaster {
             DataUI.Logger(log);
         }
 
-        protected override void sock_open_service(SockRequest request, ref SockResponse response)
+        protected override void SockOpenService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -133,7 +128,7 @@ namespace SockMaster {
                 DataUI.SockClose(dc["id"]);
         }
 
-        protected override void sock_close_service(SockRequest request, ref SockResponse response)
+        protected override void SockCloseService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);

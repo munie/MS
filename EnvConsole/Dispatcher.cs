@@ -34,7 +34,7 @@ namespace EnvConsole
 
                         SockRequest request = pack[0] as SockRequest;
                         SockResponse response = pack[1] as SockResponse;
-                        base.handle(request, ref response);
+                        base.Handle(request, ref response);
                         if (response.data != null && response.data.Length != 0) {
                             sessctl.BeginInvoke(new Action(() =>
                             {
@@ -53,7 +53,7 @@ namespace EnvConsole
             thread.Start();
         }
 
-        public override void handle(SockRequest request, ref SockResponse response)
+        public override void Handle(SockRequest request, ref SockResponse response)
         {
             if (request.content_mode == SockRequestContentMode.none) {
                 lock (pack_queue) {
@@ -75,7 +75,7 @@ namespace EnvConsole
                 } catch (Exception) { }
             }
 
-            base.handle(request, ref response);
+            base.Handle(request, ref response);
             //response.data = EncryptSym.AESEncrypt(response.data);
         }
     }

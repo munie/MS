@@ -7,6 +7,8 @@ using mnn.net;
 
 namespace mnn.design {
     public class CoreBase {
+        // timeout
+        protected TimeOutCtl timectl;
         // session control
         protected SessCtl sessctl;
         // other request control
@@ -14,19 +16,28 @@ namespace mnn.design {
 
         public CoreBase()
         {
+            // init timectl
+            timectl = new TimeOutCtl();
+
             // init sessctl
             sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessDelegate(sess_parse);
-            sessctl.sess_create += new SessCtl.SessDelegate(sess_create);
-            sessctl.sess_delete += new SessCtl.SessDelegate(sess_delete);
+            sessctl.sess_parse += new SessCtl.SessDelegate(SessParse);
+            sessctl.sess_create += new SessCtl.SessDelegate(SessCreate);
+            sessctl.sess_delete += new SessCtl.SessDelegate(SessDelete);
 
             // init dispatcher
             dispatcher = new DispatcherBase();
         }
 
+        public virtual void Perform()
+        {
+            timectl.Perform();
+            sessctl.Perform(1000);
+        }
+
         // Session Event ==================================================================================
 
-        protected virtual void sess_parse(object sender, SockSess sess)
+        protected virtual void SessParse(object sender, SockSess sess)
         {
             // init request & response
             SockRequest request = new SockRequest(sess.lep, sess.rep, sess.RfifoTake());
@@ -36,24 +47,24 @@ namespace mnn.design {
             sess.RfifoSkip(request.length);
 
             // dispatch
-            dispatcher.handle(request, ref response);
+            dispatcher.Handle(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sessctl.SendSession(sess, response.data);
         }
 
-        protected virtual void sess_create(object sender, SockSess sess) { }
+        protected virtual void SessCreate(object sender, SockSess sess) { }
 
-        protected virtual void sess_delete(object sender, SockSess sess) { }
+        protected virtual void SessDelete(object sender, SockSess sess) { }
 
         // Center Service =========================================================================
 
-        protected virtual void default_service(SockRequest request, ref SockResponse response)
+        protected virtual void DefaultService(SockRequest request, ref SockResponse response)
         {
             // write response
             response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
-        protected virtual void sock_open_service(SockRequest request, ref SockResponse response)
+        protected virtual void SockOpenService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -78,7 +89,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void sock_close_service(SockRequest request, ref SockResponse response)
+        protected virtual void SockCloseService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -107,7 +118,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void sock_send_service(SockRequest request, ref SockResponse response)
+        protected virtual void SockSendService(SockRequest request, ref SockResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);
