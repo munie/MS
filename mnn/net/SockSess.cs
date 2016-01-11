@@ -72,12 +72,12 @@ namespace mnn.net {
 
         public byte[] RfifoTake()
         {
-            return rdata.Take(rdata_size).ToArray();
-        }
+            byte[] retval = new byte[RfifoRest()];
 
-        public byte[] RfifoTake(int offset, int len)
-        {
-            return rdata.Skip(offset).Take(len).ToArray();
+            for (int i = 0; i < RfifoRest(); i++)
+                retval[i] = rdata[rdata_pos + i];
+
+            return retval;
         }
 
         public int WfifoRest()
