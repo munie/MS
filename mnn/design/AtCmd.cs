@@ -38,7 +38,7 @@ namespace mnn.design {
 
         // Methods =============================================================================
 
-        public void Perform()
+        public void Exec()
         {
             ThreadCheck(true);
 

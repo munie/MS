@@ -201,7 +201,7 @@ namespace mnn.net {
 
         // Methods ============================================================================
 
-        public void Perform(int next)
+        public void Exec(int next)
         {
             ThreadCheck(true);
 

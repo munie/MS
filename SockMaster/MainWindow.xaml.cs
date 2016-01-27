@@ -48,7 +48,7 @@ namespace SockMaster
             Core core = new Core();
             core.Init();
             core.Config();
-            Thread thread = new Thread(() => { while (true) core.Perform(); });
+            Thread thread = new Thread(() => { while (true) core.Exec(); });
             thread.IsBackground = true;
             thread.Start();
 

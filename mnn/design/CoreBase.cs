@@ -29,10 +29,10 @@ namespace mnn.design {
             dispatcher = new DispatcherBase();
         }
 
-        public virtual void Perform()
+        public virtual void Exec()
         {
-            timectl.Perform();
-            sessctl.Perform(1000);
+            timectl.Exec();
+            sessctl.Exec(1000);
         }
 
         // Session Event ==================================================================================

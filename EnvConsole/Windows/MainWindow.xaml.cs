@@ -47,7 +47,7 @@ namespace EnvConsole.Windows
             Thread thread = new Thread(() =>
             {
                 try {
-                    while (true) core.Perform();
+                    while (true) core.Exec();
                 } catch (Exception ex) {
                     log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
                     log.Error("Exception thrown out by socksess thread.", ex);

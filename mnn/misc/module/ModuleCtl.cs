@@ -19,7 +19,7 @@ namespace mnn.misc.module {
 
         // Methods ==========================================================
 
-        public void Perform(int next)
+        public void Exec(int next)
         {
             if (module_call_count == 0) {
                 System.Threading.Thread.Sleep(next);
