@@ -42,20 +42,29 @@ namespace mnn.net {
 
         private void CheckContentMode(byte[] raw)
         {
-            int tmp = raw[0] + (raw[1] << 8);
+            if (raw.Length < 2)
+                this.content_mode = SockRequestContentMode.none;
+            else {
+                int tmp = raw[0] + (raw[1] << 8);
 
-            if (!Enum.IsDefined(typeof(SockRequestContentMode), tmp))
-                tmp = (int)SockRequestContentMode.none;
+                if (!Enum.IsDefined(typeof(SockRequestContentMode), tmp))
+                    tmp = (int)SockRequestContentMode.none;
 
-            this.content_mode = (SockRequestContentMode)tmp;
+                this.content_mode = (SockRequestContentMode)tmp;
+            }
         }
 
         private void CheckLengthAndData(byte[] raw)
         {
             switch (content_mode) {
                 case SockRequestContentMode.binary:
-                    this.length = System.Math.Min(raw[2] + (raw[3] << 8), raw.Length);
-                    this.data = raw.Take(this.length).Skip(CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES).ToArray();
+                    if (raw.Length < 4) {
+                        this.length = 0;
+                        this.data = new byte[0];
+                    } else {
+                        this.length = System.Math.Min(raw[2] + (raw[3] << 8), raw.Length);
+                        this.data = raw.Take(this.length).Skip(CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES).ToArray();
+                    }
                     break;
 
                 case SockRequestContentMode.text:

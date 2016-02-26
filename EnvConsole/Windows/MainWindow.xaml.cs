@@ -46,11 +46,13 @@ namespace EnvConsole.Windows
             core.Config();
             Thread thread = new Thread(() =>
             {
-                try {
-                    while (true) core.Exec();
-                } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
-                    log.Error("Exception thrown out by socksess thread.", ex);
+                while (true) {
+                    try {
+                        core.Exec();
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                        log.Error("Exception thrown out by socksess thread.", ex);
+                    }
                 }
             });
             thread.IsBackground = true;
