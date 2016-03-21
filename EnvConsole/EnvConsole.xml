@@ -71,4 +71,8 @@
            id ="Timer_SK4" name="Timer_SK4"></timer>-->
   </timers>
 
+  <terminalVersions>
+    <version name="flow" no="0.1.0" filepath="hex/flow-0.1.0.hex"></version>
+  </terminalVersions>
+
 </configuration>

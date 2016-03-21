@@ -87,7 +87,11 @@ namespace mnn.net {
 
         public void WfifoSet(byte[] data)
         {
-            if (data.Length > WfifoRest()) return;
+            if (data.Length > WfifoRest()) {
+                byte[] tmp = new byte[((data.Length + wdata_size) / 8192 + 1) * 8192];
+                Array.Copy(wdata, 0, tmp, 0, wdata_size);
+                wdata = tmp;
+            }
 
             Array.Copy(data, 0, wdata, wdata_size, data.Length);
             wdata_size += data.Length;
