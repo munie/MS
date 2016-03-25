@@ -23,7 +23,7 @@ namespace mnn.misc.env {
         public static readonly string CONF_ENCODING = "/configuration/encoding";
         public static readonly string CONF_SERVER = "/configuration/servers/server";
         public static readonly string CONF_TIMER = "/configuration/timers/timer";
-        public static readonly string CONF_TERMINAL_VERSION = "/configuration/terminalVersions/version";
+        public static readonly string CONF_TERMINAL_VERSION = "/configuration/terminalVersions/flow";
 
         /// <summary>
         /// common msg keys

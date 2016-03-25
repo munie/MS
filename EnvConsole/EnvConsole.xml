@@ -75,7 +75,7 @@
   </timers>
 
   <terminalVersions>
-    <version name="flow" no="0.1.1" filepath="hex/flow-0.1.1.hex"></version>
+    <flow version="0.1.1" filepath="hex/flow-0.1.1.hex"></flow>
   </terminalVersions>
 
 </configuration>
