@@ -32,6 +32,12 @@ namespace mnn.net {
         private int wdata_size;
         public object sdata;
 
+        // added for controling sending speed, 5K/s
+        private bool send_control = false;
+        private int send_max = 1000;        // 1K
+        private int send_interval = 200;    // 0.2ms
+        private DateTime send_last = DateTime.Now;
+
         // Methods ============================================================================
 
         public SockSess(SockType type, Socket sock)
@@ -128,8 +134,22 @@ namespace mnn.net {
             if (wdata_size == 0) return;
 
             try {
-                sock.Send(wdata, wdata_size, SocketFlags.None);
-                wdata_size = 0;
+                if (!send_control) {
+                    sock.Send(wdata, wdata_size, SocketFlags.None);
+                    wdata_size = 0;
+                } else {
+                    if (DateTime.Now.Subtract(send_last).TotalMilliseconds < send_interval)
+                        return;
+
+                    int n = wdata_size < send_max ? wdata_size : send_max;
+
+                    sock.Send(wdata, n, SocketFlags.None);
+                    wdata_size -= n;
+
+                    for (int i = 0; i < wdata_size; i++)
+                        wdata[i] = wdata[i + n];
+                    send_last = DateTime.Now;
+                }
             } catch (Exception) {
                 eof = true;
             }

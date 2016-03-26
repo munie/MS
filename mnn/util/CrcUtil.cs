@@ -5,8 +5,48 @@ using System.Text;
 
 namespace mnn.util
 {
-    public class CrcUtil
-    {
+    public class CrcUtil {
+        #region Myu CRC16
+        //public static byte[] MyuCrc16(byte[] target, ushort poly)
+        //{
+        //    int tmp = 0;
+        //    int _poly = poly << 8;
+
+        //    target = target.Concat(new byte[] { 0, 0 }).ToArray();
+        //    foreach (var item in target) {
+        //        tmp += item;
+        //        for (int i = 0; i < 8; i++) {
+        //            tmp <<= 1;
+        //            if ((tmp & 0x1000000) == 0)
+        //                continue;
+        //            tmp ^= _poly;
+        //        }
+        //    }
+        //    tmp >>= 8;
+
+        //    return new byte[] { (byte)((tmp & 0xff00) >> 8), (byte)(tmp & 0xff) };
+        //}
+
+        public static byte[] MyuCrc16(byte[] target)
+        {
+            int crc = 0xffff;
+            ushort poly = 0xa001;
+            int cbit = 0;
+
+            foreach (var item in target) {
+                crc ^= item;
+                for (int i = 0; i < 8; i++) {
+                    cbit = crc & 0x1;
+                    crc >>= 1;
+                    if (cbit == 1)
+                        crc ^= poly;
+                }
+            }
+
+            return new byte[] { (byte)(crc & 0xff), (byte)((crc & 0xff00) >> 8) };
+        }
+        #endregion
+
         #region CRC16校验
         /// <summary>
         /// CRC16校验算法,低字节在前，高字节在后
@@ -50,7 +90,7 @@ namespace mnn.util
             }
             byte[] temdata = new byte[data.Length + 2];
             int xda, xdapoly;
-            byte i, j, xdabit;
+            int i, j, xdabit;
             xda = 0xFFFF;
             xdapoly = 0xA001;
             for (i = 0; i < data.Length; i++)
