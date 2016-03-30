@@ -32,11 +32,8 @@ namespace mnn.net {
         private int wdata_size;
         public object sdata;
 
-        // added for controling sending speed, 5K/s
-        private bool send_control = false;
-        private int send_max = 1000;        // 1K
-        private int send_interval = 200;    // 0.2ms
-        private DateTime send_last = DateTime.Now;
+        // added for controling sending speed, 60K a time
+        private int send_max = 60000;
 
         // Methods ============================================================================
 
@@ -134,22 +131,13 @@ namespace mnn.net {
             if (wdata_size == 0) return;
 
             try {
-                if (!send_control) {
-                    sock.Send(wdata, wdata_size, SocketFlags.None);
-                    wdata_size = 0;
-                } else {
-                    if (DateTime.Now.Subtract(send_last).TotalMilliseconds < send_interval)
-                        return;
+                int n = wdata_size < send_max ? wdata_size : send_max;
 
-                    int n = wdata_size < send_max ? wdata_size : send_max;
+                sock.Send(wdata, n, SocketFlags.None);
+                wdata_size -= n;
 
-                    sock.Send(wdata, n, SocketFlags.None);
-                    wdata_size -= n;
-
-                    for (int i = 0; i < wdata_size; i++)
-                        wdata[i] = wdata[i + n];
-                    send_last = DateTime.Now;
-                }
+                for (int i = 0; i < wdata_size; i++)
+                    wdata[i] = wdata[i + n];
             } catch (Exception) {
                 eof = true;
             }
@@ -246,6 +234,7 @@ namespace mnn.net {
             // ** read
             var subset = from s in sess_table select s.sock;
             ArrayList list = new ArrayList(subset.ToArray());
+            ArrayList list2 = new ArrayList(subset.ToArray());
             Socket.Select(list, null, null, next);
             foreach (var i in list) {
                 foreach (var item in sess_table) {
@@ -269,7 +258,7 @@ namespace mnn.net {
                 if (item.RfifoRest() != 0 && sess_parse != null)
                     sess_parse(this, item);
 
-                item.Send();
+                //item.Send();
 
                 if (item.eof == true) {
                     if (item.type == SockType.listen) {
@@ -277,6 +266,16 @@ namespace mnn.net {
                             i.eof = true;
                     }
                     DeleteSession(item);
+                }
+            }
+
+            // ** write
+            Socket.Select(null, list2, null, next);
+            foreach (var i in list2) {
+                foreach (var item in sess_table) {
+                    if (item.sock == i) {
+                        item.Send();
+                    }
                 }
             }
         }
