@@ -3,6 +3,7 @@
 bin/
 obj/
 *.suo
+packages/
 
 .svn/
 Deprecated/SocketTransfer/
