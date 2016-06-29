@@ -39,7 +39,7 @@ namespace UnitTestMnn {
 
         void RecvEvent(object sender)
         {
-            SockSessBase sess = sender as SockSessBase;
+            SockSessNew sess = sender as SockSessNew;
             string msg = Encoding.UTF8.GetString(sess.rfifo.Take());
             Console.Write(msg);
         }

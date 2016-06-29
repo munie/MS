@@ -46,7 +46,6 @@ namespace SockMaster
         {
             // init core
             Core core = new Core();
-            core.Config();
 
             // init cmdtable
             cmdTable = new ObservableCollection<CmdUnit>();

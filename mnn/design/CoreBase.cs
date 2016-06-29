@@ -150,7 +150,7 @@ namespace mnn.design {
 
             // write response
             if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Success: send to " + ep.ToString() + "\r\n");
             else
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }

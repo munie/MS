@@ -9,34 +9,24 @@ using mnn.design;
 using mnn.net;
 
 namespace SockMaster {
-    class Core {
+    class Core : CoreBaseNew {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
 
-        private List<SockSessBase> sess_group;
-        private DispatcherBase dispatcher;
         // hook for ui to display socket information
         public DataUI DataUI { get; set; }
 
         public Core()
         {
-            sess_group = new List<SockSessBase>();
-            dispatcher = new DispatcherBase();
             DataUI = new DataUI();
 
-            // open core port
-            do {
-                DataUI.Port = 5964 + new Random().Next() % 8192;
-            }
-            while (!SockSessServer.VerifyEndPointsValid(new IPEndPoint(IPAddress.Parse("0.0.0.0"), DataUI.Port)));
-            MakeListen(new IPEndPoint(IPAddress.Parse("0.0.0.0"), DataUI.Port));
+            Config();
 
-            // dispatcher register
-            dispatcher.RegisterDefaultService("DefaultService", DefaultService);
-            dispatcher.RegisterService("SockOpenService", SockOpenService, Encoding.UTF8.GetBytes("/center/sockopen"));
-            dispatcher.RegisterService("SockCloseService", SockCloseService, Encoding.UTF8.GetBytes("/center/sockclose"));
-            dispatcher.RegisterService("SockSendService", SockSendService, Encoding.UTF8.GetBytes("/center/socksend"));
+            // open core port
+            IPEndPoint ep = SockSessServer.FindFreeEndPoint(IPAddress.Parse("0.0.0.0"), 5964);
+            MakeListen(ep);
+            DataUI.Port = ep.Port;
         }
 
         public void Config()
@@ -74,31 +64,9 @@ namespace SockMaster {
             }
         }
 
-        private SockSessServer MakeListen(IPEndPoint ep)
-        {
-            SockSessServer server = new SockSessServer();
-            server.Listen(ep);
-            server.close_event += new SockSessDelegate(CloseEvent);
-            server.accept_event += new SockSessServer.SockSessServerDelegate(AcceptEvent);
+        // SockSess Event
 
-            sess_group.Add(server);
-            return server;
-        }
-
-        private SockSessClient MakeConnect(IPEndPoint ep)
-        {
-            SockSessClient client = new SockSessClient();
-            client.Connect(ep);
-            client.close_event += new SockSessDelegate(CloseEvent);
-            client.recv_event += new SockSessDelegate(RecvEvent);
-
-            sess_group.Add(client);
-            return client;
-        }
-
-        // Session Event
-
-        private void AcceptEvent(object sender, SockSessAccept sess)
+        protected override void AcceptEvent(object sender, SockSessAccept sess)
         {
             sess.close_event += new SockSessDelegate(AcceptCloseEvent);
             sess.recv_event += new SockSessDelegate(RecvEvent);
@@ -124,9 +92,9 @@ namespace SockMaster {
             DataUI.DelSockUnit(unit);
         }
 
-        private void CloseEvent(object sender)
+        protected override void CloseEvent(object sender)
         {
-            SockSessBase sess = sender as SockSessBase;
+            SockSessNew sess = sender as SockSessNew;
             sess_group.Remove(sess);
 
             SockUnit unit = null;
@@ -137,9 +105,9 @@ namespace SockMaster {
             DataUI.CloseSockUnit(unit);
         }
 
-        private void RecvEvent(object sender)
+        protected override void RecvEvent(object sender)
         {
-            SockSessBase sess = sender as SockSessBase;
+            SockSessNew sess = sender as SockSessNew;
             SockRequest request = new SockRequest(sess.lep, sess.rep, sess.rfifo.Take());
             SockResponse response = new SockResponse();
 
@@ -150,7 +118,7 @@ namespace SockMaster {
 
         // Center Service
 
-        protected void DefaultService(SockRequest request, ref SockResponse response)
+        protected override void DefaultService(SockRequest request, ref SockResponse response)
         {
             string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
@@ -159,7 +127,7 @@ namespace SockMaster {
             DataUI.Logger(log);
         }
 
-        protected void SockOpenService(SockRequest request, ref SockResponse response)
+        protected override void SockOpenService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -176,7 +144,7 @@ namespace SockMaster {
             SockOpen(sockType, ep, unit);
         }
 
-        protected void SockCloseService(SockRequest request, ref SockResponse response)
+        protected override void SockCloseService(SockRequest request, ref SockResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -186,13 +154,13 @@ namespace SockMaster {
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessBase sess = FindSockSessFromSessGroup(sockType, ep);
+            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
             if (sess != null)
                 sess.Close();
         }
 
-        protected void SockSendService(SockRequest request, ref SockResponse response)
+        protected override void SockSendService(SockRequest request, ref SockResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);
@@ -210,7 +178,7 @@ namespace SockMaster {
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessBase sess = FindSockSessFromSessGroup(sockType, ep);
+            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
             if (sess != null) {
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(param_data));
@@ -222,7 +190,7 @@ namespace SockMaster {
         private void SockOpen(SockType sockType, IPEndPoint ep, SockUnit unit)
         {
             try {
-                SockSessBase sess = null;
+                SockSessNew sess = null;
                 if (sockType == SockType.listen)
                     sess = MakeListen(ep);
                 else
@@ -231,27 +199,6 @@ namespace SockMaster {
             } catch (Exception) {
                 DataUI.CloseSockUnit(unit);
             }
-        }
-
-        private SockSessBase FindSockSessFromSessGroup(SockType sockType, IPEndPoint ep)
-        {
-            IEnumerable<SockSessBase> subset = null;
-            switch (sockType) {
-                case SockType.listen:
-                case SockType.connect:
-                    subset = from s in sess_group where s.lep.Equals(ep) select s;
-                    break;
-                case SockType.accept:
-                    subset = from s in sess_group where s.rep != null && s.rep.Equals(ep) select s;
-                    break;
-                default:
-                    break;
-            }
-
-            if (subset != null && subset.Count() != 0)
-                return subset.First();
-            else
-                return null;
         }
     }
 }
