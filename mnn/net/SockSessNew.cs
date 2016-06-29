@@ -5,12 +5,15 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 
 namespace mnn.net {
     public delegate void SockSessDelegate(object sender);
     public delegate void SockSessServerDelegate(object sender, SockSessAccept sess);
 
     public class SockSessNew : IExecable {
+        private const int BASE_STALL = 60 * 12;
+
         protected Socket sock;
         protected bool eof;
         private DateTime tick;
@@ -41,12 +44,12 @@ namespace mnn.net {
         {
         }
 
-        public SockSessNew(Socket sock)
+        public SockSessNew(Socket sock, int stall = BASE_STALL)
         {
             this.sock = sock;
-            eof = false;
-            tick = DateTime.Now;
-            stall = 12 * 60;
+            this.eof = false;
+            this.tick = DateTime.Now;
+            this.stall = stall;
 
             rfifo = new Fifo<byte>();
             wfifo = new Fifo<byte>();
@@ -175,6 +178,10 @@ namespace mnn.net {
                     accept_event(this, accept_sess);
             }
 
+            // send
+            if (wfifo.Size() != 0)
+                wfifo.Take();
+
             // close
             if (eof) {
                 if (close_event != null)
@@ -217,9 +224,28 @@ namespace mnn.net {
     }
 
     public class SockSessClient : SockSessNew {
+        private byte[] KeepAliveTime
+        {
+            get
+            {
+                uint dummy = 0;
+                byte[] inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
+                BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
+                BitConverter.GetBytes((uint)5000).CopyTo(inOptionValues, Marshal.SizeOf(dummy));
+                BitConverter.GetBytes((uint)5000).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);
+                return inOptionValues;
+            }
+        }
+
+        public SockSessClient()
+            : base(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), int.MaxValue)
+        {
+        }
+
         public void Connect(IPEndPoint ep)
         {
             sock.Connect(ep);
+            sock.IOControl(IOControlCode.KeepAliveValues, KeepAliveTime, null);
         }
     }
 }

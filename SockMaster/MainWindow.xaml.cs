@@ -40,7 +40,7 @@ namespace SockMaster
         private static readonly string CONF_NAME = "SockMaster.xml";
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
         private ObservableCollection<CmdUnit> cmdTable;
-        private SockClientTcp tcp;
+        private SockSessClient client;
 
         private void Initailize()
         {
@@ -72,7 +72,9 @@ namespace SockMaster
             }
 
             // init tcp
-            tcp = new SockClientTcp(new IPEndPoint(IPAddress.Parse("127.0.0.1"), core.DataUI.Port));
+            client = new SockSessClient();
+            client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), core.DataUI.Port));
+            client.recv_event += new SockSessDelegate((s) => { (s as SockSessClient).rfifo.Take(); });
             this.txtPromote.Text += " At " + core.DataUI.Port;
 
             // init context
@@ -134,11 +136,7 @@ namespace SockMaster
                 + "&id=" + sock.ID);
             SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
 
-            try {
-                tcp.Send(buffer, null);
-            } catch (Exception) {
-                sock.State = SockState.Closed;
-            }
+            client.wfifo.Append(buffer);
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -156,11 +154,7 @@ namespace SockMaster
                 + "&id=" + sock.ID);
             SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
 
-            try {
-                tcp.Send(buffer, null);
-            } catch (Exception) {
-                sock.State = SockState.Opened;
-            }
+            client.wfifo.Append(buffer);
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -321,9 +315,7 @@ namespace SockMaster
                 buffer = buffer.Concat(data).ToArray();
                 SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
 
-                try {
-                    tcp.Send(buffer, null);
-                } catch (Exception) { }
+                client.wfifo.Append(buffer);
                 break;
             }
         }
