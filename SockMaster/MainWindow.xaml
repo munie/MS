@@ -68,6 +68,7 @@
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="send" Click="MenuItem_CmdSend_Click"/>
+                    <MenuItem Header="get" Click="MenuItem_CmdGet_Click"/>
                     <Separator></Separator>
                     <MenuItem Header="edit" Click="MenuItem_CmdEdit_Click"/>
                     <MenuItem Header="add" Click="MenuItem_CmdAdd_Click"/>

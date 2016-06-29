@@ -40,6 +40,11 @@ namespace mnn {
 
         private static void RealStart()
         {
+            if (exec_group.Count == 0) {
+                Thread.Sleep(1000);
+                return;
+            }
+
             lock (exec_group) {
                 foreach (var item in exec_group.ToArray()) {
                     item.ExecOnce(0);

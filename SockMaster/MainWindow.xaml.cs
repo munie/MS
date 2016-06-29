@@ -203,7 +203,8 @@ namespace SockMaster
                     sock.Lep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
                 } else {
                     sock.Type = SockType.connect;
-                    sock.Rep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                    var host = Dns.GetHostEntry(str[0]);
+                    sock.Rep = new IPEndPoint(host.AddressList[0], int.Parse(str[1]));
                 }
 
                 sock.Autorun = (bool)input.checkBoxAutorun.IsChecked;
@@ -328,6 +329,30 @@ namespace SockMaster
                 try {
                     tcp.Send(buffer, null);
                 } catch (Exception) { }
+                break;
+            }
+        }
+
+        private void MenuItem_CmdGet_Click(object sender, RoutedEventArgs e)
+        {
+            SockUnit sock = treeSock.SelectedItem as SockUnit;
+            //if (sock == null || sock.State != SockState.Opened) return;
+
+            // 发送所有选中的命令，目前只支持发送第一条命令...
+            foreach (CmdUnit item in lstViewCmd.SelectedItems) {
+                try {
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(item.Cmd);
+                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+                    using (StreamReader reader = new StreamReader(response.GetResponseStream())) {
+                        String buffer = "";
+                        while ((buffer = reader.ReadLine()) != null)
+                            txtBoxMsg.AppendText(buffer);
+                    }
+                } catch (Exception excption) {
+                    txtBoxMsg.AppendText(excption.Message + "\n");
+                }
+
                 break;
             }
         }
