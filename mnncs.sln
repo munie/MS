@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockAttack", "SockAttack\SockAttack.csproj", "{2C1C92B9-6401-49DB-A162-E185A6F5D16B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleDXS", "ModuleDXS\ModuleDXS.csproj", "{B29B0D6C-54D2-44DB-9159-AEC77DF3ACD9}"
@@ -24,6 +26,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleFilterAll", "ModuleFilterAll\ModuleFilterAll.csproj", "{9B2232F9-9D1D-41FA-BB93-025FCE2EA925}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleFlow", "ModuleFlow\ModuleFlow.csproj", "{E22BA253-2800-4B98-B76F-649B6791A30E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestMnn", "UnitTestMnn\UnitTestMnn.csproj", "{3AEFF13A-F870-493E-8B7E-73231863677B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -155,6 +159,16 @@ Global
 		{E22BA253-2800-4B98-B76F-649B6791A30E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{E22BA253-2800-4B98-B76F-649B6791A30E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{E22BA253-2800-4B98-B76F-649B6791A30E}.Release|x86.ActiveCfg = Release|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{3AEFF13A-F870-493E-8B7E-73231863677B}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

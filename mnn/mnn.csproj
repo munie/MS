@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="design\AtCmd.cs" />
     <Compile Include="design\TimeOut.cs" />
+    <Compile Include="ExecPoll.cs" />
     <Compile Include="misc\env\AtCommand.cs" />
     <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
     <Compile Include="design\CoreBase.cs" />
+    <Compile Include="Fifo.cs" />
     <Compile Include="net\SockClientTcp.cs" />
     <Compile Include="net\SockRequest.cs" />
     <Compile Include="design\DispatcherBase.cs" />
