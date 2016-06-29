@@ -125,6 +125,31 @@ namespace SockMaster {
             }));
         }
 
+        public void OpenSockUnit(SockUnit unit, IPEndPoint lep, IPEndPoint rep)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                unit.Lep = lep;
+                unit.Rep = rep;
+                unit.State = SockState.Opened;
+            }));
+        }
+
+        public void CloseSockUnit(SockUnit unit)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                unit.State = SockState.Closed;
+            }));
+        }
+
+        public SockUnit FindSockUnit(string id)
+        {
+            foreach (var item in SockUnitGroup) {
+                if (item.ID.Equals(id))
+                    return item;
+            }
+            return null;
+        }
+
         public SockUnit FindSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
              IEnumerable<SockUnit> subset = null;
@@ -134,7 +159,7 @@ namespace SockMaster {
                 subset = from s in SockUnitGroup where s.Type == type && s.Lep != null && s.Lep.Equals(lep) select s;
             else if (type == SockType.accept) {
                 foreach (var item in SockUnitGroup) {
-                    subset = from s in item.Childs where s.Lep.Equals(lep) select s;
+                    subset = from s in item.Childs where s.Rep.Equals(rep) select s;
                     if (subset.Count() != 0)
                         break;
                 }
@@ -146,82 +171,6 @@ namespace SockMaster {
                 return subset.First();
             else
                 return null;
-        }
-
-        public void SockAdd(SockType type, IPEndPoint lep, IPEndPoint rep)
-        {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (type == SockType.accept) {
-                    var subset = from s in SockUnitGroup
-                                 where s.Type == SockType.listen && s.Lep.Port == lep.Port
-                                 select s;
-                    foreach (var item in subset) {
-                        item.Childs.Add(new SockUnit()
-                        {
-                            ID = "at" + rep.ToString(),
-                            Name = "accept",
-                            Type = type,
-                            Lep = lep,
-                            Rep = rep,
-                            State = SockState.Opened,
-                        });
-                        break;
-                    }
-                }
-                CurrentAcceptCount++;
-                HistoryAcceptOpenCount++;
-            }));
-        }
-
-        public void SockDel(SockType type, IPEndPoint lep, IPEndPoint rep)
-        {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (type == SockType.accept) {
-                    foreach (var item in SockUnitGroup) {
-                        if (item.Childs.Count == 0) continue;
-
-                        foreach (var child in item.Childs) {
-                            if (child.Rep.Equals(rep)) {
-                                item.Childs.Remove(child);
-                                return;
-                            }
-                        }
-                    }
-                } else if (type == SockType.connect) {
-                    foreach (var item in SockUnitGroup) {
-                        if (item.Lep != null && item.Lep.Equals(lep)) {
-                            item.State = SockState.Closed;
-                            break;
-                        }
-                    }
-                }
-                CurrentAcceptCount--;
-                HistoryAcceptCloseCount++;
-            }));
-        }
-
-        public void SockOpen(string id, IPEndPoint lep, IPEndPoint rep)
-        {
-            foreach (var item in SockUnitGroup) {
-                if (item.ID.Equals(id)) {
-                    item.Lep = lep;
-                    item.Rep = rep;
-                    item.State = SockState.Opened;
-                    break;
-                }
-            }
-        }
-
-        public void SockClose(string id)
-        {
-            foreach (var item in SockUnitGroup) {
-                if (item.ID.Equals(id)) {
-                    item.State = SockState.Closed;
-                    break;
-                }
-            }
         }
 
         public void Logger(string log)

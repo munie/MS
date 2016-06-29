@@ -216,8 +216,8 @@ namespace mnn.net {
 
     public enum SockType {
         listen = 0,
-        accept = 1,
-        connect = 2,
+        connect = 1,
+        accept = 2,
     }
 
     public class SockSess {

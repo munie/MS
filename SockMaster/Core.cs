@@ -16,7 +16,7 @@ namespace SockMaster {
 
         private List<SockSessBase> sess_group;
         private DispatcherBase dispatcher;
-        // hook for ui to display socket infomation
+        // hook for ui to display socket information
         public DataUI DataUI { get; set; }
 
         public Core()
@@ -52,30 +52,22 @@ namespace SockMaster {
 
                 /// ** config DataUI
                 foreach (XmlNode item in doc.SelectNodes("/configuration/sockets/sockitem")) {
-                    SockUnit sockUnit = new SockUnit();
-                    sockUnit.ID = item.Attributes["id"].Value;
-                    sockUnit.Name = item.Attributes["name"].Value;
-                    sockUnit.Type = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
                     string[] str = item.Attributes["ep"].Value.Split(':');
                     IPEndPoint ep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
-                    sockUnit.Lep = sockUnit.Type == SockType.listen ? ep : null;
-                    sockUnit.Rep = sockUnit.Type == SockType.connect ? ep : null;
-                    sockUnit.Autorun = bool.Parse(item.Attributes["autorun"].Value);
-                    sockUnit.UpdateTitle();
+                    SockType sockType = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
+                    SockUnit sockUnit = new SockUnit() {
+                        ID = item.Attributes["id"].Value,
+                        Name = item.Attributes["name"].Value,
+                        Type = sockType,
+                        Lep = sockType == SockType.listen ? ep : null,
+                        Rep = sockType == SockType.connect ? ep : null,
+                        State = SockState.Closed,
+                        Autorun = bool.Parse(item.Attributes["autorun"].Value),
+                    };
                     DataUI.AddSockUnit(sockUnit);
-                    //DataUI.SockUnitGroup.Add(sock);
 
-                    if (sockUnit.Autorun) {
-                        try {
-                            if (sockUnit.Type == SockType.listen)
-                                MakeListen(sockUnit.Lep);
-                            else
-                                MakeConnect(sockUnit.Rep);
-                            sockUnit.State = SockState.Opened;
-                        } catch (Exception) {
-                            sockUnit.State = SockState.Closed;
-                        }
-                    }
+                    if (sockUnit.Autorun)
+                        SockOpen(sockType, ep, sockUnit);
                 }
             } catch (Exception) {
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
@@ -110,31 +102,39 @@ namespace SockMaster {
         {
             sess.close_event += new SockSessDelegate(AcceptCloseEvent);
             sess.recv_event += new SockSessDelegate(RecvEvent);
-            DataUI.SockAdd(SockType.accept, sess.lep, sess.rep);
-
             sess_group.Add(sess);
+
+            SockUnit sockUnit = new SockUnit() {
+                ID = "at" + sess.rep.ToString(),
+                Name = "accept",
+                Type = SockType.accept,
+                Lep = sess.lep,
+                Rep = sess.rep,
+                State = SockState.Opened,
+            };
+            DataUI.AddSockUnit(sockUnit);
         }
 
         private void AcceptCloseEvent(object sender)
         {
             SockSessAccept sess = sender as SockSessAccept;
+            sess_group.Remove(sess);
+
             SockUnit unit = DataUI.FindSockUnit(SockType.accept, sess.lep, sess.rep);
             DataUI.DelSockUnit(unit);
-            //DataUI.SockDel(SockType.accept, sess.lep, sess.rep);
-
-            sess_group.Remove(sess);
         }
 
         private void CloseEvent(object sender)
         {
             SockSessBase sess = sender as SockSessBase;
+            sess_group.Remove(sess);
+
             SockUnit unit = null;
             if (sess.rep == null)
                 unit = DataUI.FindSockUnit(SockType.listen, sess.lep, sess.rep);
             else
                 unit = DataUI.FindSockUnit(SockType.connect, sess.lep, sess.rep);
-            unit.State = SockState.Closed;
-            sess_group.Remove(sess);
+            DataUI.CloseSockUnit(unit);
         }
 
         private void RecvEvent(object sender)
@@ -167,19 +167,13 @@ namespace SockMaster {
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
+            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessBase sess = null;
-            try {
-                if (dc["type"] == SockType.listen.ToString())
-                    sess = MakeListen(ep);
-                else if (dc["type"] == SockType.connect.ToString())
-                    sess = MakeConnect(ep);
-                else
-                    return;
-                DataUI.SockOpen(dc["id"], sess.lep, sess.rep);
-            } catch (Exception) {
-                DataUI.SockClose(dc["id"]);
-            }
+            SockUnit unit = DataUI.FindSockUnit(dc["id"]);
+            if (unit == null)
+                return;
+
+            SockOpen(sockType, ep, unit);
         }
 
         protected void SockCloseService(SockRequest request, ref SockResponse response)
@@ -190,13 +184,12 @@ namespace SockMaster {
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
 
+            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessBase sess = FindSockSessFromSessGroup(dc["type"], ep);
+            SockSessBase sess = FindSockSessFromSessGroup(sockType, ep);
 
-            if (sess != null) {
+            if (sess != null)
                 sess.Close();
-                DataUI.SockClose(dc["id"]);
-            }
         }
 
         protected void SockSendService(SockRequest request, ref SockResponse response)
@@ -215,9 +208,10 @@ namespace SockMaster {
             // retrieve param to dictionary
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
-            // find session
+            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessBase sess = FindSockSessFromSessGroup(dc["type"], ep);
+            SockSessBase sess = FindSockSessFromSessGroup(sockType, ep);
+
             if (sess != null) {
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(param_data));
                 response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
@@ -225,17 +219,34 @@ namespace SockMaster {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        private SockSessBase FindSockSessFromSessGroup(string type, IPEndPoint ep)
+        private void SockOpen(SockType sockType, IPEndPoint ep, SockUnit unit)
+        {
+            try {
+                SockSessBase sess = null;
+                if (sockType == SockType.listen)
+                    sess = MakeListen(ep);
+                else
+                    sess = MakeConnect(ep);
+                DataUI.OpenSockUnit(unit, sess.lep, sess.rep);
+            } catch (Exception) {
+                DataUI.CloseSockUnit(unit);
+            }
+        }
+
+        private SockSessBase FindSockSessFromSessGroup(SockType sockType, IPEndPoint ep)
         {
             IEnumerable<SockSessBase> subset = null;
-            if (type == SockType.listen.ToString())
-                subset = from s in sess_group where s.lep.Equals(ep) select s;
-            else if (type == SockType.connect.ToString())
-                subset = from s in sess_group where s.lep.Equals(ep) select s;
-            else if (type == SockType.accept.ToString())
-                subset = from s in sess_group where s.rep != null && s.rep.Equals(ep) select s;
-            else
-                return null;
+            switch (sockType) {
+                case SockType.listen:
+                case SockType.connect:
+                    subset = from s in sess_group where s.lep.Equals(ep) select s;
+                    break;
+                case SockType.accept:
+                    subset = from s in sess_group where s.rep != null && s.rep.Equals(ep) select s;
+                    break;
+                default:
+                    break;
+            }
 
             if (subset != null && subset.Count() != 0)
                 return subset.First();
