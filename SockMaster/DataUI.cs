@@ -25,7 +25,7 @@ namespace SockMaster {
         }
 
         // socket information
-        public ObservableCollection<SockUnit> SockTable { get; set; }
+        public ObservableCollection<SockUnit> SockUnitGroup { get; set; }
 
         // socket parse log
         public System.Windows.Controls.TextBox MsgBox { get; set; }
@@ -71,10 +71,81 @@ namespace SockMaster {
 
         public DataUI()
         {
-            SockTable = new ObservableCollection<SockUnit>();
+            SockUnitGroup = new ObservableCollection<SockUnit>();
             currentAcceptCount = 0;
             historyAcceptOpenCount = 0;
             historyAcceptCloseCount = 0;
+        }
+
+        public void AddSockUnit(SockUnit unit)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                switch (unit.Type) {
+                    case SockType.listen:
+                    case SockType.connect:
+                        SockUnitGroup.Add(unit);
+                        break;
+
+                    case SockType.accept:
+                        var subset = from s in SockUnitGroup
+                                     where s.Type == SockType.listen && s.Lep.Port == unit.Lep.Port
+                                     select s;
+                        if (subset.Count() != 0) {
+                            subset.First().Childs.Add(unit);
+                            CurrentAcceptCount++;
+                            HistoryAcceptOpenCount++;
+                        }
+                        break;
+                }
+            }));
+        }
+
+        public void DelSockUnit(SockUnit unit)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                switch (unit.Type) {
+                    case SockType.listen:
+                    case SockType.connect:
+                        SockUnitGroup.Remove(unit);
+                        break;
+
+                    case SockType.accept:
+                        var subset = from s in SockUnitGroup
+                                     where s.Type == SockType.listen && s.Lep.Port == unit.Lep.Port
+                                     select s;
+                        if (subset.Count() != 0) {
+                            subset.First().Childs.Remove(unit);
+                            CurrentAcceptCount--;
+                            HistoryAcceptCloseCount++;
+                        }
+                        break;
+                }
+            }));
+        }
+
+        public SockUnit FindSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
+        {
+             IEnumerable<SockUnit> subset = null;
+            if (type == SockType.listen)
+                subset = from s in SockUnitGroup where s.Type == type && s.Lep.Equals(lep) select s;
+            else if (type == SockType.connect)
+                subset = from s in SockUnitGroup where s.Type == type && s.Lep != null && s.Lep.Equals(lep) select s;
+            else if (type == SockType.accept) {
+                foreach (var item in SockUnitGroup) {
+                    subset = from s in item.Childs where s.Lep.Equals(lep) select s;
+                    if (subset.Count() != 0)
+                        break;
+                }
+            }
+            else
+                return null;
+
+            if (subset != null && subset.Count() != 0)
+                return subset.First();
+            else
+                return null;
         }
 
         public void SockAdd(SockType type, IPEndPoint lep, IPEndPoint rep)
@@ -82,7 +153,7 @@ namespace SockMaster {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (type == SockType.accept) {
-                    var subset = from s in SockTable
+                    var subset = from s in SockUnitGroup
                                  where s.Type == SockType.listen && s.Lep.Port == lep.Port
                                  select s;
                     foreach (var item in subset) {
@@ -108,7 +179,7 @@ namespace SockMaster {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (type == SockType.accept) {
-                    foreach (var item in SockTable) {
+                    foreach (var item in SockUnitGroup) {
                         if (item.Childs.Count == 0) continue;
 
                         foreach (var child in item.Childs) {
@@ -119,7 +190,7 @@ namespace SockMaster {
                         }
                     }
                 } else if (type == SockType.connect) {
-                    foreach (var item in SockTable) {
+                    foreach (var item in SockUnitGroup) {
                         if (item.Lep != null && item.Lep.Equals(lep)) {
                             item.State = SockState.Closed;
                             break;
@@ -133,7 +204,7 @@ namespace SockMaster {
 
         public void SockOpen(string id, IPEndPoint lep, IPEndPoint rep)
         {
-            foreach (var item in SockTable) {
+            foreach (var item in SockUnitGroup) {
                 if (item.ID.Equals(id)) {
                     item.Lep = lep;
                     item.Rep = rep;
@@ -145,7 +216,7 @@ namespace SockMaster {
 
         public void SockClose(string id)
         {
-            foreach (var item in SockTable) {
+            foreach (var item in SockUnitGroup) {
                 if (item.ID.Equals(id)) {
                     item.State = SockState.Closed;
                     break;

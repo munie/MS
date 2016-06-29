@@ -46,11 +46,7 @@ namespace SockMaster
         {
             // init core
             Core core = new Core();
-            core.Init();
             core.Config();
-            Thread thread = new Thread(() => { while (true) core.Exec(); });
-            thread.IsBackground = true;
-            thread.Start();
 
             // init cmdtable
             cmdTable = new ObservableCollection<CmdUnit>();
@@ -81,7 +77,7 @@ namespace SockMaster
             this.txtPromote.Text += " At " + core.DataUI.Port;
 
             // init context
-            DataContext = new { SockTable = core.DataUI.SockTable, CmdTable = cmdTable, DataUI = core.DataUI };
+            DataContext = new { SockTable = core.DataUI.SockUnitGroup, CmdTable = cmdTable, DataUI = core.DataUI };
             core.DataUI.MsgBox = this.txtBoxMsg;
             this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));

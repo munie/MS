@@ -17,6 +17,17 @@ namespace mnn.net {
         private DateTime tick;
         private int stall;
 
+        public IPEndPoint lep { get { return (IPEndPoint)sock.LocalEndPoint; } }
+        public IPEndPoint rep {
+            get {
+                try {
+                    return (IPEndPoint)sock.RemoteEndPoint;
+                } catch {
+                    return null;
+                }
+            }
+        }
+
         public Fifo<byte> rfifo { get; private set; }
         public Fifo<byte> wfifo { get; private set; }
         public object sdata { get; set; }
@@ -45,10 +56,13 @@ namespace mnn.net {
             ExecPoll.Add(this);
         }
 
-        private void Close()
+        private void RealClose()
         {
             if (close_event != null)
                 close_event(this);
+            try {
+                sock.Shutdown(SocketShutdown.Both);
+            } catch (Exception) { }
             sock.Close();
             ExecPoll.Remove(this);
         }
@@ -111,13 +125,17 @@ namespace mnn.net {
 
             // close
             if (!IsAlive() || eof)
-                this.Close();
+                this.RealClose();
+        }
+
+        public void Close()
+        {
+            eof = true;
         }
     }
 
     public class SockSessServer : SockSessBase {
         public List<SockSessAccept> childs { get; private set; }
-        public IPEndPoint lep { get; private set; }
 
         public delegate void SockSessServerDelegate(object sender, SockSessAccept sess);
         public SockSessServerDelegate accept_event { get; set; }
@@ -125,7 +143,6 @@ namespace mnn.net {
         public SockSessServer()
         {
             childs = new List<SockSessAccept>();
-            lep = null;
             accept_event = null;
             ExecPoll.Remove(this);
         }
@@ -135,7 +152,6 @@ namespace mnn.net {
             if (!VerifyEndPointsValid(ep))
                 throw new Exception("Specified ep is in using by another application...");
 
-            lep = ep;
             sock.Bind(ep);
             sock.Listen(100);
             ExecPoll.Add(this);
@@ -145,9 +161,17 @@ namespace mnn.net {
         {
             // accept
             if (sock.Poll(next, SelectMode.SelectRead)) {
+                // get socket
                 Socket accept_sock = sock.Accept();
                 accept_sock.SendTimeout = 1000;
+                // init accept_sess
                 SockSessAccept accept_sess = new SockSessAccept(accept_sock, this);
+                accept_sess.close_event += new SockSessDelegate((s) => {
+                    if (s as SockSessAccept != null)
+                        childs.Remove(s as SockSessAccept);
+                });
+                childs.Add(accept_sess);
+                // raise accept event
                 if (accept_event != null)
                     accept_event(this, accept_sess);
             }
@@ -156,11 +180,12 @@ namespace mnn.net {
             if (eof) {
                 if (close_event != null)
                     close_event(this);
+                sock.Close();
                 ExecPoll.Remove(this);
             }
         }
 
-        private bool VerifyEndPointsValid(IPEndPoint ep)
+        public static bool VerifyEndPointsValid(IPEndPoint ep)
         {
             IPEndPoint[] globalEPs = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             foreach (IPEndPoint globalEP in globalEPs) {
@@ -173,27 +198,18 @@ namespace mnn.net {
 
     public class SockSessAccept : SockSessBase {
         public SockSessServer parent { get; private set; }
-        public IPEndPoint lep { get; private set; }
-        public IPEndPoint rep { get; private set; }
 
         public SockSessAccept(Socket sock, SockSessServer parent)
             : base(sock)
         {
             this.parent = parent;
-            lep = (IPEndPoint)sock.LocalEndPoint;
-            rep = (IPEndPoint)sock.RemoteEndPoint;
         }
     }
 
     public class SockSessClient : SockSessBase {
-        public IPEndPoint lep { get; private set; }
-        public IPEndPoint rep { get; private set; }
-
         public void Connect(IPEndPoint ep)
         {
             sock.Connect(ep);
-            lep = (IPEndPoint)sock.LocalEndPoint;
-            rep = (IPEndPoint)sock.RemoteEndPoint;
         }
     }
 
