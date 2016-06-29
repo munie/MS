@@ -68,7 +68,7 @@ namespace SockMaster {
 
         protected override void AcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.close_event += new SockSessDelegate(AcceptCloseEvent);
+            sess.close_event += new SockSessDelegate(CloseEvent);
             sess.recv_event += new SockSessDelegate(RecvEvent);
             sess_group.Add(sess);
 
@@ -83,26 +83,23 @@ namespace SockMaster {
             DataUI.AddSockUnit(sockUnit);
         }
 
-        private void AcceptCloseEvent(object sender)
-        {
-            SockSessAccept sess = sender as SockSessAccept;
-            sess_group.Remove(sess);
-
-            SockUnit unit = DataUI.FindSockUnit(SockType.accept, sess.lep, sess.rep);
-            DataUI.DelSockUnit(unit);
-        }
-
         protected override void CloseEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
             sess_group.Remove(sess);
 
-            SockUnit unit = null;
-            if (sess.rep == null)
-                unit = DataUI.FindSockUnit(SockType.listen, sess.lep, sess.rep);
-            else
-                unit = DataUI.FindSockUnit(SockType.connect, sess.lep, sess.rep);
-            DataUI.CloseSockUnit(unit);
+            if (sender is SockSessServer) {
+                SockUnit unit = DataUI.FindSockUnit(SockType.listen, sess.lep, sess.rep);
+                DataUI.CloseSockUnit(unit);
+
+            } else if (sender is SockSessClient) {
+                SockUnit unit = DataUI.FindSockUnit(SockType.connect, sess.lep, sess.rep);
+                DataUI.CloseSockUnit(unit);
+
+            } else/* if (sender is SockSessAccept)*/ {
+                SockUnit unit = DataUI.FindSockUnit(SockType.accept, sess.lep, sess.rep);
+                DataUI.DelSockUnit(unit);
+            }
         }
 
         protected override void RecvEvent(object sender)
@@ -142,49 +139,6 @@ namespace SockMaster {
                 return;
 
             SockOpen(sockType, ep, unit);
-        }
-
-        protected override void SockCloseService(SockRequest request, ref SockResponse response)
-        {
-            // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
-
-            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
-
-            if (sess != null)
-                sess.Close();
-        }
-
-        protected override void SockSendService(SockRequest request, ref SockResponse response)
-        {
-            // retrieve param_list of url
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
-
-            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
-
-            if (sess != null) {
-                sess.wfifo.Append(Encoding.UTF8.GetBytes(param_data));
-                response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
-            } else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         private void SockOpen(SockType sockType, IPEndPoint ep, SockUnit unit)
