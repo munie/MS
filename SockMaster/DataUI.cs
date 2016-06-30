@@ -101,11 +101,14 @@ namespace SockMaster {
             }));
         }
 
-        public void DelSockUnit(SockUnit unit)
+        public void DelSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                switch (unit.Type) {
+                SockUnit unit = FindSockUnit(type, lep, rep);
+                if (unit == null) return;
+
+                switch (type) {
                     case SockType.listen:
                     case SockType.connect:
                         SockUnitGroup.Remove(unit);
@@ -125,23 +128,36 @@ namespace SockMaster {
             }));
         }
 
-        public void OpenSockUnit(SockUnit unit, IPEndPoint lep, IPEndPoint rep)
+        public void OpenSockUnit(string id, IPEndPoint lep, IPEndPoint rep)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                SockUnit unit = FindSockUnit(id);
+                if (unit == null) return;
                 unit.Lep = lep;
                 unit.Rep = rep;
                 unit.State = SockState.Opened;
             }));
         }
 
-        public void CloseSockUnit(SockUnit unit)
+        public void CloseSockUnit(string id)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                SockUnit unit = FindSockUnit(id);
+                if (unit == null) return;
                 unit.State = SockState.Closed;
             }));
         }
 
-        public SockUnit FindSockUnit(string id)
+        public void CloseSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                SockUnit unit = FindSockUnit(type, lep, rep);
+                if (unit != null)
+                    unit.State = SockState.Closed;
+            }));
+        }
+
+        private SockUnit FindSockUnit(string id)
         {
             foreach (var item in SockUnitGroup) {
                 if (item.ID.Equals(id))
@@ -150,7 +166,7 @@ namespace SockMaster {
             return null;
         }
 
-        public SockUnit FindSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
+        private SockUnit FindSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
              IEnumerable<SockUnit> subset = null;
             if (type == SockType.listen)

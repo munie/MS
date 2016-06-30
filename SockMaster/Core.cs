@@ -57,7 +57,7 @@ namespace SockMaster {
                     DataUI.AddSockUnit(sockUnit);
 
                     if (sockUnit.Autorun)
-                        SockOpen(sockType, ep, sockUnit);
+                        SockOpen(sockUnit.ID, sockType, ep);
                 }
             } catch (Exception) {
                 System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
@@ -88,18 +88,12 @@ namespace SockMaster {
             SockSessNew sess = sender as SockSessNew;
             sess_group.Remove(sess);
 
-            if (sender is SockSessServer) {
-                SockUnit unit = DataUI.FindSockUnit(SockType.listen, sess.lep, sess.rep);
-                DataUI.CloseSockUnit(unit);
-
-            } else if (sender is SockSessClient) {
-                SockUnit unit = DataUI.FindSockUnit(SockType.connect, sess.lep, sess.rep);
-                DataUI.CloseSockUnit(unit);
-
-            } else/* if (sender is SockSessAccept)*/ {
-                SockUnit unit = DataUI.FindSockUnit(SockType.accept, sess.lep, sess.rep);
-                DataUI.DelSockUnit(unit);
-            }
+            if (sender is SockSessServer)
+                DataUI.CloseSockUnit(SockType.listen, sess.lep, sess.rep);
+            else if (sender is SockSessClient)
+                DataUI.CloseSockUnit(SockType.connect, sess.lep, sess.rep);
+            else/* if (sender is SockSessAccept)*/
+                DataUI.DelSockUnit(SockType.accept, sess.lep, sess.rep);
         }
 
         protected override void RecvEvent(object sender)
@@ -134,14 +128,11 @@ namespace SockMaster {
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockUnit unit = DataUI.FindSockUnit(dc["id"]);
-            if (unit == null)
-                return;
 
-            SockOpen(sockType, ep, unit);
+            SockOpen(dc["id"], sockType, ep);
         }
 
-        private void SockOpen(SockType sockType, IPEndPoint ep, SockUnit unit)
+        private void SockOpen(string id, SockType sockType, IPEndPoint ep)
         {
             try {
                 SockSessNew sess = null;
@@ -149,9 +140,9 @@ namespace SockMaster {
                     sess = MakeListen(ep);
                 else
                     sess = MakeConnect(ep);
-                DataUI.OpenSockUnit(unit, sess.lep, sess.rep);
+                DataUI.OpenSockUnit(id, sess.lep, sess.rep);
             } catch (Exception) {
-                DataUI.CloseSockUnit(unit);
+                DataUI.CloseSockUnit(id);
             }
         }
     }
