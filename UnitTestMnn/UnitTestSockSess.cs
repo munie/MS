@@ -14,7 +14,7 @@ namespace UnitTestMnn {
         {
             SockSessServer server = new SockSessServer();
             server.Listen(new IPEndPoint(0, 5964));
-            server.accept_event += new SockSessServer.SockSessServerDelegate(AcceptEvent);
+            server.accept_event += new SockSessServerDelegate(AcceptEvent);
         }
 
         [TestMethod]
