@@ -83,6 +83,15 @@ namespace mnn.misc.module {
             }
         }
 
+        public ModuleNode FindModule(string filePath)
+        {
+            var subset = from s in module_table where s.AssemblyName.Equals(filePath) select s;
+            if (subset.Any())
+                return subset.First();
+            else
+                return null;
+        }
+
         public void AppendModuleCall(ModuleNode module, ModuleCall call)
         {
             lock (module_table) {

@@ -5,15 +5,18 @@ using System.Text;
 using System.Net;
 using mnn.net;
 using mnn.misc.service;
+using mnn.misc.module;
 
 namespace mnn.design {
     public class CoreBase {
         // timeout
         protected TimeOutCtl timectl;
         // session control
-        protected SessCtl sessctl;
-        // other request control
-        protected ServiceCore servctl;
+        public SessCtl sessctl;
+        // service control
+        public ServiceCore servctl;
+        // module control
+        protected ModuleCtl modctl;
 
         public CoreBase()
         {
@@ -26,10 +29,13 @@ namespace mnn.design {
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
 
-            // init dispatcher
+            // init servctl
             servctl = new ServiceCore();
             servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
             servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+
+            // init modctl
+            modctl = new ModuleCtl();
         }
 
         public virtual void Exec()

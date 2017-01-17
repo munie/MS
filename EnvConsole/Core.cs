@@ -19,12 +19,10 @@ using EnvConsole.Unit;
 namespace EnvConsole {
     class Core : CoreBase {
         public Encoding Coding { get; set; }
-        public DataUI DataUI { get; set; }
-        private ModuleCtl modctl;
 
         public Core()
         {
-            // start node
+            // start nodejs
             Process process = new Process();
             process.StartInfo.FileName = "node";
             process.StartInfo.Arguments = "js\\main.js";
@@ -32,8 +30,9 @@ namespace EnvConsole {
             //process.StartInfo.UseShellExecute = false;
             try {
                 process.Start();
-            } catch (Exception) {
-                System.Windows.MessageBox.Show("Start nodejs failed.");
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
+                log.Error("Start nodejs failed.", ex);
                 //Thread.CurrentThread.Abort();
             }
             System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) =>
@@ -43,14 +42,8 @@ namespace EnvConsole {
                 } catch (Exception) { }
             });
 
-            // init log4net
-            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
-            log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
-
             // init fields
             Coding = Encoding.UTF8;
-            DataUI = new DataUI();
-            modctl = new ModuleCtl();
 
             // servctl register
             servctl.RegisterDefaultService("DefaultService", DefaultService);
@@ -60,71 +53,9 @@ namespace EnvConsole {
             servctl.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
             servctl.RegisterService("ClientSendByCcidService", ClientSendByCcidService, Coding.GetBytes("/center/clientsendbyccid"));
             servctl.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
-
-            // load all modules from directory "DataHandles"
-            if (Directory.Exists(EnvConst.Module_PATH)) {
-                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
-                    string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
-                        ModuleLoad(item);
-                }
-            }
         }
 
-        public void Config()
-        {
-            if (File.Exists(EnvConst.CONF_PATH) == false) {
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": can't find it.");
-                Thread.CurrentThread.Abort();
-            }
-
-            try {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(EnvConst.CONF_PATH);
-
-                // Encoding Config
-                XmlNode node = xdoc.SelectSingleNode(EnvConst.CONF_ENCODING);
-                Coding = Encoding.GetEncoding(node.InnerText);
-
-                // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
-                    ServerUnit server = new ServerUnit();
-                    server.ID = item.Attributes["id"].Value;
-                    server.Name = item.Attributes["name"].Value;
-                    server.Target = (ServerTarget)Enum.Parse(typeof(ServerTarget), item.Attributes["target"].Value);
-                    server.Protocol = item.Attributes["protocol"].Value;
-                    server.IpAddress = item.Attributes["ipaddress"].Value;
-                    server.Port = int.Parse(item.Attributes["port"].Value);
-                    server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
-                    server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
-                    server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == ServerTarget.center
-                        ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
-                    server.TimerInterval = 0;
-                    server.TimerCommand = "";
-                    server.Timer = null;
-                    DataUI.ServerTable.Add(server);
-                }
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
-                log.Error("Exception of reading configure file.", ex);
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
-            }
-
-            // autorun
-            foreach (var item in DataUI.ServerTable) {
-                if (item.AutoRun) {
-                    if (item.Protocol == "tcp") {
-                        SockSess result = sessctl.MakeListen(new IPEndPoint(IPAddress.Parse(item.IpAddress), item.Port));
-                        if (result != null)
-                            item.ListenState = ServerUnit.ListenStateStarted;
-                    } else if (item.Protocol == "udp") {
-                    }
-                }
-            }
-        }
-
-        // Session Event ==========================================================================
+        // Session Event ==================================================================================
 
         protected override void OnSessCreate(object sender, SockSess sess)
         {
@@ -135,16 +66,7 @@ namespace EnvConsole {
                     TimeConn = DateTime.Now,
                     IsAdmin = false,
                 };
-                /// ** update DataUI
-                DataUI.ClientAdd(sess.lep, sess.rep);
             }
-        }
-
-        protected override void OnSessDelete(object sender, SockSess sess)
-        {
-            /// ** update DataUI
-            if (sess.type == SockType.accept)
-                DataUI.ClientDel(sess.rep);
         }
 
         // Center Service =========================================================================
@@ -153,25 +75,28 @@ namespace EnvConsole {
         {
             base.SockSendService(request, ref response);
 
-            /// ** update DataUI
             if (response.data != null) {
-                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
-                log += "Request: " + Coding.GetString(request.data) + "\n";
-                log += "Respond: " + Coding.GetString(response.data) + "\n\n";
-                DataUI.Logger(log);
+                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
+                logmsg += "Request: " + Coding.GetString(request.data) + "\n";
+                logmsg += "Respond: " + Coding.GetString(response.data) + "\n\n";
+
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                logger.Info(logmsg);
             }
         }
 
         private bool CheckServerTargetCenter(int port)
         {
-            /// ** dangerous !!! access DataUI
-            var subset = from s in DataUI.ServerTable
-                         where s.Target == ServerTarget.center && s.Port == port
-                         select s;
-            if (!subset.Any())
-                return false;
-            else
-                return true;
+            ///// ** dangerous !!! access DataUI
+            //var subset = from s in DataUI.ServerTable
+            //             where s.Target == ServerTarget.center && s.Port == port
+            //             select s;
+            //if (!subset.Any())
+            //    return false;
+            //else
+            //    return true;
+
+            return true;
         }
 
         private void ClientListService(ServiceRequest request, ref ServiceResponse response)
@@ -222,10 +147,6 @@ namespace EnvConsole {
                 response.data = Coding.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
             else
                 response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
-
-            /// ** update DataUI
-            if (result != null)
-                DataUI.ClientDel(ep);
         }
 
         private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
@@ -261,12 +182,14 @@ namespace EnvConsole {
             else
                 response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
 
-            /// ** update DataUI
+            // log
             if (result != null) {
-                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
-                log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
-                DataUI.Logger(log);
+                logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
+
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                logger.Info(logmsg);
             }
         }
 
@@ -310,12 +233,14 @@ namespace EnvConsole {
             else
                 response.data = Coding.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
 
-            /// ** update DataUI
+            // log
             if (result != null) {
-                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
-                log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
-                DataUI.Logger(log);
+                logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
+
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                logger.Info(logmsg);
             }
         }
 
@@ -344,17 +269,11 @@ namespace EnvConsole {
                 response.data = Coding.GetBytes("Success: update " + ep.ToString() + "\r\n");
             else
                 response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
-
-            /// ** update DataUI
-            if (result != null) {
-                DataUI.ClientUpdate(ep, "ID", dc["ccid"]);
-                DataUI.ClientUpdate(ep, "Name", dc["name"]);
-            }
         }
 
         // Methods ============================================================================
 
-        public void ModuleLoad(string filePath)
+        public bool ModuleLoad(string filePath)
         {
             ModuleNode module = null;
 
@@ -362,21 +281,8 @@ namespace EnvConsole {
                 module = modctl.Add(filePath);
             } catch (Exception ex) {
                 System.Windows.MessageBox.Show(filePath + ": load failed.\r\n" + ex.ToString());
-                return;
+                return false;
             }
-
-            // 加载模块已经成功
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(filePath);
-            ModuleUnit unit = new ModuleUnit();
-            unit.FileName = module.AssemblyName;
-            unit.FileVersion = fvi.FileVersion;
-            unit.FileComment = fvi.Comments;
-            unit.Module = module;
-
-            // 加入 table
-            DataUI.RwlockModuleTable.AcquireWriterLock(-1);
-            DataUI.ModuleTable.Add(unit);
-            DataUI.RwlockModuleTable.ReleaseWriterLock();
 
             // 注册处理方法
             if (module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
@@ -387,11 +293,12 @@ namespace EnvConsole {
                         module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
                         response.data = (args[1] as ServiceResponse).data;
 
-                        /// ** update DataUI
-                        string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                        // log
+                        string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
                             + " => " + (request.sdata as SockSess).lep.ToString() + ")\n";
-                        log += Coding.GetString(request.data) + "\n\n";
-                        DataUI.Logger(log);
+                        logmsg += Coding.GetString(request.data) + "\n\n";
+                        log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                        logger.Info(logmsg);
                     },
                     Coding.GetBytes(module.ModuleID));
             } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
@@ -404,27 +311,25 @@ namespace EnvConsole {
                         return retval;
                     });
             }
+
+            return true;
         }
 
-        public void ModuleUnload(string fileName)
+        public bool ModuleUnload(string fileName)
         {
-            DataUI.RwlockModuleTable.AcquireWriterLock(-1);
+            ModuleNode node = modctl.FindModule(fileName);
+            if (node == null) return false;
 
-            var subset = from s in DataUI.ModuleTable where s.FileName.Equals(fileName) select s;
-            if (subset.Any()) {
-                ModuleNode node = subset.First().Module;
-                // 注销处理方法
-                if (node.CheckInterface(new string[] { typeof(IEnvHandler).FullName }))
-                    servctl.DeregisterService(node.ModuleID);
-                else if (node.CheckInterface(new string[] { typeof(IEnvFilter).FullName }))
-                    servctl.DeregisterFilter(node.ModuleID);
+            // 注销处理方法
+            if (node.CheckInterface(new string[] { typeof(IEnvHandler).FullName }))
+                servctl.DeregisterService(node.ModuleID);
+            else if (node.CheckInterface(new string[] { typeof(IEnvFilter).FullName }))
+                servctl.DeregisterFilter(node.ModuleID);
 
-                // 移出 table
-                modctl.Del(node);
-                DataUI.ModuleTable.Remove(subset.First());
-            }
+            // 移出 table
+            modctl.Del(node);
 
-            DataUI.RwlockModuleTable.ReleaseWriterLock();
+            return true;
         }
 
         public void ServerStart(string ip, int port, string protocol = "tcp")
@@ -443,12 +348,6 @@ namespace EnvConsole {
                     result = sessctl.MakeListen(ep);
                 else
                     return;
-
-                /// ** update DataUI
-                if (result != null)
-                    DataUI.ServerStart(ip, port);
-                else
-                    DataUI.ServerStop(ip, port);
             }));
         }
 
@@ -467,10 +366,6 @@ namespace EnvConsole {
                 result = sessctl.FindSession(SockType.listen, ep, null);
                 if (result != null)
                     sessctl.DelSession(result);
-
-                /// ** update DataUI
-                if (result != null)
-                    DataUI.ServerStop(ip, port);
             }));
         }
 

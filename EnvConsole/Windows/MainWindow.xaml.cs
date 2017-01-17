@@ -18,7 +18,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
 using System.Threading;
+using System.Xml;
 using EnvConsole.Unit;
+using mnn.net;
+using mnn.misc.env;
+using mnn.misc.service;
 
 namespace EnvConsole.Windows
 {
@@ -27,48 +31,22 @@ namespace EnvConsole.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        private DataUI dataui;
+        private Core core;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            Initailize();
             InitailizeWindowName();
             InitailizeStatusBar();
+
+            InitLog4net();
+            InitCore();
+            InitDataUI();
         }
 
-        private Core core;
-
-        // Methods ============================================================================
-
-        private void Initailize()
-        {
-            core = new Core();
-            core.Config();
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    try {
-                        core.Exec();
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
-                        log.Error("Exception thrown out by socksess thread.", ex);
-                    }
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
-
-            DataContext = new { ServerTable = core.DataUI.ServerTable, ClientTable = core.DataUI.ClientTable,
-                ModuleTable = core.DataUI.ModuleTable, DataUI = core.DataUI };
-            core.DataUI.MsgBox = txtMsg;
-            //this.txtMsg.SetBinding(TextBox.TextProperty, new Binding("DataUI.Log"));
-            this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
-            this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
-            this.historyClientCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
-            this.currentPackCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentPackCount"));
-            this.historyPackFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackFetchedCount"));
-            this.historyPackParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackParsedCount"));
-        }
+        // Initailize ============================================================================
 
         private void InitailizeWindowName()
         {
@@ -102,6 +80,167 @@ namespace EnvConsole.Windows
             timer.Start();
         }
 
+        private void InitLog4net()
+        {
+            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
+
+            var textBoxAppender = new TextBoxAppender();
+            textBoxAppender.MsgBox = txtMsg;
+            textBoxAppender.Threshold = log4net.Core.Level.All;
+            log4net.Config.BasicConfigurator.Configure(textBoxAppender);
+        }
+
+        private void InitCore()
+        {
+            core = new Core();
+            Thread thread = new Thread(() =>
+            {
+                while (true) {
+                    try {
+                        core.Exec();
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
+                        log.Error("Exception thrown out by socksess thread.", ex);
+                    }
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
+
+            // register events of sessctl
+            core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
+            core.sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
+
+            core.servctl.RegisterService("MainWindow.ClientUpdateService",
+                ClientUpdateService, core.Coding.GetBytes("/center/clientupdate"));
+
+            // load all modules from directory "DataHandles"
+            if (Directory.Exists(EnvConst.Module_PATH)) {
+                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
+                    string str = item.Substring(item.LastIndexOf("\\") + 1);
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
+                        if (core.ModuleLoad(item)) {
+                            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item);
+                            ModuleUnit unit = new ModuleUnit();
+                            unit.FileName = System.IO.Path.GetFileName(item);
+                            unit.FileVersion = fvi.FileVersion;
+                            unit.FileComment = fvi.Comments;
+                            dataui.ModuleTable.Add(unit);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void InitDataUI()
+        {
+            // init dataui
+            dataui = new DataUI();
+
+            // data bingding with dataui
+            DataContext = new {
+                ServerTable = dataui.ServerTable,
+                ClientTable = dataui.ClientTable,
+                ModuleTable = dataui.ModuleTable,
+                DataUI = dataui
+            };
+            this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
+            this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
+            this.historyClientCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
+            this.currentPackCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentPackCount"));
+            this.historyPackFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackFetchedCount"));
+            this.historyPackParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackParsedCount"));
+
+            ConfigDataUI();
+        }
+
+        private void ConfigDataUI()
+        {
+            if (File.Exists(EnvConst.CONF_PATH) == false) {
+                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": can't find it.");
+                Thread.CurrentThread.Abort();
+            }
+
+            try {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(EnvConst.CONF_PATH);
+
+                // Server Config
+                foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
+                    ServerUnit server = new ServerUnit();
+                    server.ID = item.Attributes["id"].Value;
+                    server.Name = item.Attributes["name"].Value;
+                    server.Target = (ServerTarget)Enum.Parse(typeof(ServerTarget), item.Attributes["target"].Value);
+                    server.Protocol = item.Attributes["protocol"].Value;
+                    server.IpAddress = item.Attributes["ipaddress"].Value;
+                    server.Port = int.Parse(item.Attributes["port"].Value);
+                    server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
+                    server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
+                    server.ListenState = ServerUnit.ListenStateStoped;
+                    server.TimerState = server.Target == ServerTarget.center
+                        ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
+                    server.TimerInterval = 0;
+                    server.TimerCommand = "";
+                    server.Timer = null;
+                    dataui.ServerTable.Add(server);
+                }
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
+                log.Error("Exception of reading configure file.", ex);
+                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
+            }
+
+            // autorun
+            foreach (var item in dataui.ServerTable) {
+                if (!item.AutoRun) continue;
+
+                if (item.Protocol == "tcp") {
+                    core.ServerStart(item.IpAddress, item.Port);
+                } else if (item.Protocol == "udp") {
+                }
+            }
+        }
+
+        // Session Event ==================================================================================
+
+        private void OnSessCreate(object sender, SockSess sess)
+        {
+            /// ** update DataUI
+            if (sess.type == SockType.accept)
+                dataui.ClientAdd(sess.lep, sess.rep);
+
+            if (sess.type == SockType.listen)
+                dataui.ServerStart(sess.lep.Address.ToString(), sess.lep.Port);
+        }
+
+        private void OnSessDelete(object sender, SockSess sess)
+        {
+            /// ** update DataUI
+            if (sess.type == SockType.accept)
+                dataui.ClientDel(sess.rep);
+
+            if (sess.type == SockType.listen)
+                dataui.ServerStop(sess.lep.Address.ToString(), sess.lep.Port);
+        }
+
+        private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // get param string & parse to dictionary
+            string url = core.Coding.GetString(request.data);
+            if (!url.Contains('?')) return;
+            string param_list = url.Substring(url.IndexOf('?') + 1);
+            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+
+            /// ** update DataUI
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            SockSess result = core.sessctl.FindSession(SockType.accept, null, ep);
+            if (result != null) {
+                dataui.ClientUpdate(ep, "ID", dc["ccid"]);
+                dataui.ClientUpdate(ep, "Name", dc["name"]);
+            }
+        }
+
         // Events for itself ==================================================================
 
         private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
@@ -111,8 +250,16 @@ namespace EnvConsole.Windows
             openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             openFileDialog.FileName = "";
 
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                core.ModuleLoad(openFileDialog.FileName);
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                if (core.ModuleLoad(openFileDialog.FileName)) {
+                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(openFileDialog.FileName);
+                    ModuleUnit unit = new ModuleUnit();
+                    unit.FileName = System.IO.Path.GetFileName(openFileDialog.FileName);
+                    unit.FileVersion = fvi.FileVersion;
+                    unit.FileComment = fvi.Comments;
+                    dataui.ModuleTable.Add(unit);
+                }
+            }
         }
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
@@ -124,8 +271,10 @@ namespace EnvConsole.Windows
                 handles.Add(item);
 
             // 卸载操作
-            foreach (var item in handles)
-                core.ModuleUnload(item.FileName);
+            foreach (var item in handles) {
+                if (core.ModuleUnload(item.FileName))
+                    dataui.ModuleTable.Remove(item);
+            }
         }
 
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)

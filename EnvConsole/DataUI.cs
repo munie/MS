@@ -22,22 +22,6 @@ namespace EnvConsole
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        // socket parse log
-        public System.Windows.Controls.TextBox MsgBox { get; set; }
-        //private StringBuilder log;
-        //public string Log
-        //{
-        //    get { return log.ToString(); }
-        //    set
-        //    {
-        //        if (log.Length >= 20 * 1024 || value == "")
-        //            log.Clear();
-        //        log.Append(value);
-        //        if (PropertyChanged != null)
-        //            PropertyChanged(this, new PropertyChangedEventArgs("Log"));
-        //    }
-        //}
-
         // currentAcceptCount
         private int currentAcceptCount;
         public int CurrentAcceptCount
@@ -202,19 +186,6 @@ namespace EnvConsole
 
                 if (subset.Any())
                     propertyInfo.SetValue(subset.First(), value, null);
-            }));
-        }
-
-        public void Logger(string log)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                //Log = log;
-                if (MsgBox.Text.Length >= 20 * 1024)
-                    MsgBox.Clear();
-
-                MsgBox.AppendText(log);
-                MsgBox.ScrollToEnd();
             }));
         }
 
