@@ -7,6 +7,7 @@ using System.Xml;
 using System.Net;
 using mnn.design;
 using mnn.net;
+using mnn.misc.service;
 
 namespace SockMaster {
     class Core : CoreBaseNew {
@@ -99,26 +100,27 @@ namespace SockMaster {
         protected override void RecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            SockRequest request = new SockRequest(sess.lep, sess.rep, sess.rfifo.Take());
-            SockResponse response = new SockResponse();
+            ServiceRequest request = new ServiceRequest(sess.rfifo.Take(), sess);
+            ServiceResponse response = new ServiceResponse();
 
-            dispatcher.Handle(request, ref response);
+            dispatcher.DoService(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sess.wfifo.Append(response.data);
         }
 
         // Center Service
 
-        protected override void DefaultService(SockRequest request, ref SockResponse response)
+        protected override void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+            string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                + " => " + (request.sdata as SockSess).lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
 
             /// ** update DataUI
             DataUI.Logger(log);
         }
 
-        protected override void SockOpenService(SockRequest request, ref SockResponse response)
+        protected override void SockOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);

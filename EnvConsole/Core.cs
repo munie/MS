@@ -13,12 +13,11 @@ using mnn.net;
 using mnn.util;
 using mnn.misc.module;
 using mnn.misc.env;
+using mnn.misc.service;
 using EnvConsole.Unit;
 
-namespace EnvConsole
-{
-    class Core : CoreBase
-    {
+namespace EnvConsole {
+    class Core : CoreBase {
         public Encoding Coding { get; set; }
         public DataUI DataUI { get; set; }
         private ModuleCtl modctl;
@@ -151,13 +150,13 @@ namespace EnvConsole
 
         // Center Service =========================================================================
 
-        protected override void SockSendService(SockRequest request, ref SockResponse response)
+        protected override void SockSendService(ServiceRequest request, ref ServiceResponse response)
         {
             base.SockSendService(request, ref response);
 
             /// ** update DataUI
             if (response.data != null) {
-                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + "*.*.*.*" + ")\n";
+                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
                 log += "Request: " + Coding.GetString(request.data) + "\n";
                 log += "Respond: " + Coding.GetString(response.data) + "\n\n";
                 DataUI.Logger(log);
@@ -176,9 +175,9 @@ namespace EnvConsole
                 return true;
         }
 
-        private void ClientListService(SockRequest request, ref SockResponse response)
+        private void ClientListService(ServiceRequest request, ref ServiceResponse response)
         {
-            if (!CheckServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
@@ -200,10 +199,10 @@ namespace EnvConsole
             response.data = Coding.GetBytes(sb.ToString());
         }
 
-        private void ClientCloseService(SockRequest request, ref SockResponse response)
+        private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // check target center
-            if (!CheckServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -230,10 +229,10 @@ namespace EnvConsole
                 DataUI.ClientDel(ep);
         }
 
-        private void ClientSendService(SockRequest request, ref SockResponse response)
+        private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // check target center
-            if (!CheckServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -265,16 +264,17 @@ namespace EnvConsole
 
             /// ** update DataUI
             if (result != null) {
-                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
+                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                    + " => " + result.rep.ToString() + ")\n";
                 log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
                 DataUI.Logger(log);
             }
         }
 
-        private void ClientSendByCcidService(SockRequest request, ref SockResponse response)
+        private void ClientSendByCcidService(ServiceRequest request, ref ServiceResponse response)
         {
             // check target center
-            if (!CheckServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -313,16 +313,17 @@ namespace EnvConsole
 
             /// ** update DataUI
             if (result != null) {
-                string log = DateTime.Now + " (" + request.rep.ToString() + " => " + result.rep.ToString() + ")\n";
+                string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                    + " => " + result.rep.ToString() + ")\n";
                 log += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
                 DataUI.Logger(log);
             }
         }
 
-        private void ClientUpdateService(SockRequest request, ref SockResponse response)
+        private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {
             // check target center
-            if (!CheckServerTargetCenter(request.lep.Port)) return;
+            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -381,25 +382,26 @@ namespace EnvConsole
             // 注册处理方法
             if (module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
                 dispatcher.RegisterService(module.ModuleID,
-                    (SockRequest request, ref SockResponse response) =>
+                    (ServiceRequest request, ref ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
                         module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
-                        response.data = (args[1] as SockResponse).data;
+                        response.data = (args[1] as ServiceResponse).data;
 
                         /// ** update DataUI
-                        string log = DateTime.Now + " (" + request.rep.ToString() + " => " + request.lep.ToString() + ")\n";
+                        string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                            + " => " + (request.sdata as SockSess).lep.ToString() + ")\n";
                         log += Coding.GetString(request.data) + "\n\n";
                         DataUI.Logger(log);
                     },
                     Coding.GetBytes(module.ModuleID));
             } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
                 dispatcher.RegisterFilter(module.ModuleID,
-                    (ref SockRequest request, SockResponse response) =>
+                    (ref ServiceRequest request, ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
-                        request.SetData((args[0] as SockRequest).data);
+                        request.SetData((args[0] as ServiceRequest).data);
                         return retval;
                     });
             }

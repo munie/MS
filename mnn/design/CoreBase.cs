@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using mnn.net;
+using mnn.misc.service;
 
 namespace mnn.design {
     public class CoreBase {
@@ -12,7 +13,7 @@ namespace mnn.design {
         // session control
         protected SessCtl sessctl;
         // other request control
-        protected DispatcherBase dispatcher;
+        protected ServiceCoreBase dispatcher;
 
         public CoreBase()
         {
@@ -26,7 +27,7 @@ namespace mnn.design {
             sessctl.sess_delete += new SessCtl.SessDelegate(SessDelete);
 
             // init dispatcher
-            dispatcher = new DispatcherBase();
+            dispatcher = new ServiceCoreBase();
         }
 
         public virtual void Exec()
@@ -40,14 +41,14 @@ namespace mnn.design {
         protected virtual void SessParse(object sender, SockSess sess)
         {
             // init request & response
-            SockRequest request = new SockRequest(sess.lep, sess.rep, sess.RfifoTake());
-            SockResponse response = new SockResponse();
+            ServiceRequest request = new ServiceRequest(sess.RfifoTake(), sess);
+            ServiceResponse response = new ServiceResponse();
 
             // rfifo skip
             sess.RfifoSkip(request.length);
 
             // dispatch
-            dispatcher.Handle(request, ref response);
+            dispatcher.DoService(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sessctl.SendSession(sess, response.data);
         }
@@ -58,13 +59,13 @@ namespace mnn.design {
 
         // Center Service =========================================================================
 
-        protected virtual void DefaultService(SockRequest request, ref SockResponse response)
+        protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
             // write response
             response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
-        protected virtual void SockOpenService(SockRequest request, ref SockResponse response)
+        protected virtual void SockOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -89,7 +90,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void SockCloseService(SockRequest request, ref SockResponse response)
+        protected virtual void SockCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -118,7 +119,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void SockSendService(SockRequest request, ref SockResponse response)
+        protected virtual void SockSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);

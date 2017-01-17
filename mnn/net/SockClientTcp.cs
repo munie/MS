@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using mnn.misc.service;
 
 namespace mnn.net {
     public delegate void SockClientTcpSendCallback(string s);
@@ -130,7 +131,7 @@ namespace mnn.net {
         {
             url = EncryptSym.AESEncrypt(url);
             byte[] buffer = Encoding.UTF8.GetBytes(url);
-            SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
+            ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
 
             this.Send(buffer, method);
         }

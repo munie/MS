@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.net {
-    public enum SockRequestContentMode {
+namespace mnn.misc.service {
+    public enum ServiceRequestContentMode {
         none = 0x2421,  // $! => none/unknown
         binary = 0x2422,// $" => default
         text = 0x2323,  // ## => text/plain
@@ -13,23 +13,21 @@ namespace mnn.net {
     }
 
     [Serializable]
-    public class SockRequest {
+    public class ServiceRequest {
         private static readonly int CONTENT_MODE_BYTES = 2;
         private static readonly int BINARY_LENGTH_BYTES = 2;
         private static readonly int TEXT_LENGTH_BYTES = 4;
 
-        public IPEndPoint lep { get; private set; }
-        public IPEndPoint rep { get; private set; }
-        public /*short*/ SockRequestContentMode content_mode { get; private set; }
+        public /*short*/ ServiceRequestContentMode content_mode { get; private set; }
         public /*short*/ int length { get; private set; }
         public byte[] data { get; private set; }
+        public object sdata { get; private set; }
 
-        public SockRequest(IPEndPoint _lep, IPEndPoint _rep, byte[] raw)
+        public ServiceRequest(byte[] raw, object sdata)
         {
-            lep = _lep;
-            rep = _rep;
             CheckContentMode(raw);
             CheckLengthAndData(raw);
+            this.sdata = sdata;
         }
 
         public void SetData(byte[] content)
@@ -43,21 +41,21 @@ namespace mnn.net {
         private void CheckContentMode(byte[] raw)
         {
             if (raw.Length < 2)
-                this.content_mode = SockRequestContentMode.none;
+                this.content_mode = ServiceRequestContentMode.none;
             else {
                 int tmp = raw[0] + (raw[1] << 8);
 
-                if (!Enum.IsDefined(typeof(SockRequestContentMode), tmp))
-                    tmp = (int)SockRequestContentMode.none;
+                if (!Enum.IsDefined(typeof(ServiceRequestContentMode), tmp))
+                    tmp = (int)ServiceRequestContentMode.none;
 
-                this.content_mode = (SockRequestContentMode)tmp;
+                this.content_mode = (ServiceRequestContentMode)tmp;
             }
         }
 
         private void CheckLengthAndData(byte[] raw)
         {
             switch (content_mode) {
-                case SockRequestContentMode.binary:
+                case ServiceRequestContentMode.binary:
                     if (raw.Length < 4) {
                         this.length = 0;
                         this.data = new byte[0];
@@ -67,14 +65,14 @@ namespace mnn.net {
                     }
                     break;
 
-                case SockRequestContentMode.text:
-                case SockRequestContentMode.url:
+                case ServiceRequestContentMode.text:
+                case ServiceRequestContentMode.url:
                     byte[] tmp = raw.Skip(CONTENT_MODE_BYTES).Take(TEXT_LENGTH_BYTES).ToArray();
                     this.length = int.Parse(Encoding.ASCII.GetString(tmp)); // ascii is better
                     this.data = raw.Take(this.length).Skip(CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES).ToArray();
                     break;
 
-                case SockRequestContentMode.none:
+                case ServiceRequestContentMode.none:
                 default:
                     this.length = raw.Length;
                     this.data = raw;
@@ -82,24 +80,24 @@ namespace mnn.net {
             }
         }
 
-        public static void InsertHeader(SockRequestContentMode mode, ref byte[] buffer)
+        public static void InsertHeader(ServiceRequestContentMode mode, ref byte[] buffer)
         {
-            if (buffer == null || !Enum.IsDefined(typeof(SockRequestContentMode), mode))
+            if (buffer == null || !Enum.IsDefined(typeof(ServiceRequestContentMode), mode))
                 return;
 
             int tmp = (int)mode;
             int len = 0;
 
             switch (mode) {
-                case SockRequestContentMode.binary:
+                case ServiceRequestContentMode.binary:
                     len = CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES + buffer.Length;
                     buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
                         (byte)(len & 0xff), (byte)(len >> 8 & 0xff) }
                         .Concat(buffer).ToArray();
                     break;
 
-                case SockRequestContentMode.text:
-                case SockRequestContentMode.url:
+                case ServiceRequestContentMode.text:
+                case ServiceRequestContentMode.url:
                     len = CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES + buffer.Length;
                     len += 10000;
                     byte[] len_byte = Encoding.ASCII.GetBytes(len.ToString());
@@ -109,7 +107,7 @@ namespace mnn.net {
                         .Concat(buffer).ToArray();
                     break;
 
-                case SockRequestContentMode.none:
+                case ServiceRequestContentMode.none:
                 default:
                     break;
             }

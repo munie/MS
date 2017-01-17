@@ -64,9 +64,9 @@
     <Compile Include="design\CoreBase.cs" />
     <Compile Include="Fifo.cs" />
     <Compile Include="net\SockClientTcp.cs" />
-    <Compile Include="net\SockRequest.cs" />
-    <Compile Include="design\DispatcherBase.cs" />
-    <Compile Include="net\SockResponse.cs" />
+    <Compile Include="misc\service\ServiceRequest.cs" />
+    <Compile Include="misc\service\ServiceCoreBase.cs" />
+    <Compile Include="misc\service\ServiceResponse.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenItem.cs" />
     <Compile Include="net\deprecated\AsyncSocketListenManager.cs" />
     <Compile Include="net\deprecated\AsyncSocketSender.cs" />

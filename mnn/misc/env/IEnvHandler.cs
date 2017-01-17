@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using mnn.net;
+using mnn.misc.service;
 
 namespace mnn.misc.env {
     public class SEnvHandler {
@@ -10,6 +10,6 @@ namespace mnn.misc.env {
     }
 
     public interface IEnvHandler {
-        void DoHandler(SockRequest request, SockResponse response);
+        void DoHandler(ServiceRequest request, ServiceResponse response);
     }
 }

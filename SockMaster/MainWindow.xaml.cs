@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Xml;
 using System.Net.Sockets;
 using mnn.net;
+using mnn.misc.service;
 
 namespace SockMaster
 {
@@ -64,7 +65,7 @@ namespace SockMaster
                     cmd.Name = item.Attributes["name"].Value;
                     cmd.Cmd = item.Attributes["content"].Value;
                     cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
-                    cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), item.Attributes["content-mode"].Value);
+                    cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), item.Attributes["content-mode"].Value);
                     cmdTable.Add(cmd);
                 }
             } catch (Exception) {
@@ -134,7 +135,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
+            ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
 
             client.wfifo.Append(buffer);
         }
@@ -152,7 +153,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
+            ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
 
             client.wfifo.Append(buffer);
         }
@@ -302,8 +303,8 @@ namespace SockMaster
                 byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.ContentMode != SockRequestContentMode.none)
-                    SockRequest.InsertHeader(item.ContentMode, ref data);
+                if (item.ContentMode != ServiceRequestContentMode.none)
+                    ServiceRequest.InsertHeader(item.ContentMode, ref data);
 
                 // add internal header just for translating in SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
@@ -313,7 +314,7 @@ namespace SockMaster
                     + "&port=" + ep.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                SockRequest.InsertHeader(SockRequestContentMode.url, ref buffer);
+                ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
 
                 client.wfifo.Append(buffer);
                 break;
@@ -355,7 +356,7 @@ namespace SockMaster
                 input.textBoxName.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Name;
                 input.textBoxCmd.Text = (lstViewCmd.SelectedItems[0] as CmdUnit).Cmd;
                 input.checkBoxEncrypt.IsChecked = (lstViewCmd.SelectedItems[0] as CmdUnit).Encrypt;
-                input.comboBoxContentMode.ItemsSource = Enum.GetNames(typeof(SockRequestContentMode));
+                input.comboBoxContentMode.ItemsSource = Enum.GetNames(typeof(ServiceRequestContentMode));
                 string[] tmp = input.comboBoxContentMode.ItemsSource as string[];
                 for (int i = 0; i < tmp.Length; i++) {
                     if (tmp[i] == (lstViewCmd.SelectedItems[0] as CmdUnit).ContentMode.ToString()) {
@@ -373,7 +374,7 @@ namespace SockMaster
                     item.Name = input.textBoxName.Text;
                     item.Cmd = input.textBoxCmd.Text;
                     item.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
-                    item.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString());
+                    item.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString());
                     break;
                 }
             }
@@ -384,7 +385,7 @@ namespace SockMaster
             using (CmdInputDialog input = new CmdInputDialog()) {
                 input.Owner = this;
                 input.Title = "Add";
-                input.comboBoxContentMode.ItemsSource = Enum.GetNames(typeof(SockRequestContentMode));
+                input.comboBoxContentMode.ItemsSource = Enum.GetNames(typeof(ServiceRequestContentMode));
                 input.comboBoxContentMode.SelectedIndex = 1;
                 input.textBoxID.Focus();
 
@@ -395,7 +396,7 @@ namespace SockMaster
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
-                cmd.ContentMode = (SockRequestContentMode)Enum.Parse(typeof(SockRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString()); 
+                cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString()); 
                 cmdTable.Add(cmd);
             }
         }

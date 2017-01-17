@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using mnn.net;
 
-namespace mnn.design {
-    public delegate void ServiceDelegate(SockRequest request, ref SockResponse response);
-    public delegate bool FilterDelegate(ref SockRequest request, SockResponse response);
+namespace mnn.misc.service {
+    public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
+    public delegate bool FilterDelegate(ref ServiceRequest request, ServiceResponse response);
 
     public class Service<T> {
         public string name;
@@ -21,12 +21,12 @@ namespace mnn.design {
         }
     }
 
-    public class DispatcherBase {
+    public class ServiceCoreBase {
         protected Service<ServiceDelegate> default_service;
         protected List<Service<ServiceDelegate>> service_table;
         protected List<Service<FilterDelegate>> filter_table;
 
-        public DispatcherBase()
+        public ServiceCoreBase()
         {
             default_service = null;
             service_table = new List<Service<ServiceDelegate>>();
@@ -48,7 +48,7 @@ namespace mnn.design {
             return true;
         }
 
-        public virtual void Handle(SockRequest request, ref SockResponse response)
+        public virtual void DoService(ServiceRequest request, ref ServiceResponse response)
         {
             try {
                 // filter return when retval is false
@@ -69,7 +69,7 @@ namespace mnn.design {
                 if (default_service != null)
                     default_service.func(request, ref response);
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(DispatcherBase));
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCoreBase));
                 log.Warn("Exception of invoking service.", ex);
             }
         }

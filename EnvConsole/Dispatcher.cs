@@ -5,11 +5,10 @@ using System.Text;
 using System.Threading;
 using mnn.design;
 using mnn.net;
+using mnn.misc.service;
 
-namespace EnvConsole
-{
-    class Dispatcher : DispatcherBase
-    {
+namespace EnvConsole {
+    class Dispatcher : ServiceCoreBase {
         private Queue<object[]> pack_queue;
         private SessCtl sessctl;
 
@@ -32,13 +31,13 @@ namespace EnvConsole
                             continue;
                         }
 
-                        SockRequest request = pack[0] as SockRequest;
-                        SockResponse response = pack[1] as SockResponse;
-                        base.Handle(request, ref response);
+                        ServiceRequest request = pack[0] as ServiceRequest;
+                        ServiceResponse response = pack[1] as ServiceResponse;
+                        base.DoService(request, ref response);
                         if (response.data != null && response.data.Length != 0) {
                             sessctl.BeginInvoke(new Action(() =>
                             {
-                                SockSess result = sessctl.FindSession(SockType.accept, null, request.rep);
+                                SockSess result = sessctl.FindSession(SockType.accept, null, (request.sdata as SockSess).rep);
                                 if (result != null)
                                     sessctl.SendSession(result, response.data);
                             }));
@@ -53,9 +52,9 @@ namespace EnvConsole
             thread.Start();
         }
 
-        public override void Handle(SockRequest request, ref SockResponse response)
+        public override void DoService(ServiceRequest request, ref ServiceResponse response)
         {
-            if (request.content_mode == SockRequestContentMode.none) {
+            if (request.content_mode == ServiceRequestContentMode.none) {
                 lock (pack_queue) {
                     if (pack_queue.Count > 2048) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
@@ -75,7 +74,7 @@ namespace EnvConsole
                 } catch (Exception) { }
             }
 
-            base.Handle(request, ref response);
+            base.DoService(request, ref response);
             //response.data = EncryptSym.AESEncrypt(response.data);
         }
     }

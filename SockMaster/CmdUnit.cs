@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using mnn.net;
+using mnn.misc.service;
 
 namespace SockMaster {
     public class CmdUnit : INotifyPropertyChanged {
@@ -13,7 +14,7 @@ namespace SockMaster {
         private string name;
         private string cmd;
         private bool encrypt;
-        private SockRequestContentMode content_mode;
+        private ServiceRequestContentMode content_mode;
 
         public string ID
         {
@@ -55,7 +56,7 @@ namespace SockMaster {
                     PropertyChanged(this, new PropertyChangedEventArgs("Encrypt"));
             }
         }
-        public SockRequestContentMode ContentMode
+        public ServiceRequestContentMode ContentMode
         {
             get { return content_mode; }
             set
