@@ -42,6 +42,7 @@ namespace mnn.design {
         {
             timectl.Exec();
             sessctl.Exec(1000);
+            servctl.Exec();
         }
 
         // Session Event ==================================================================================
@@ -81,7 +82,7 @@ namespace mnn.design {
             if (response.data != null && response.data.Length != 0) {
                 sessctl.BeginInvoke(new Action(() =>
                 {
-                    SockSess result = sessctl.FindSession(SockType.accept, null, (request.sdata as SockSess).rep);
+                    SockSess result = sessctl.FindSession(SockType.accept, null, (request.user_data as SockSess).rep);
                     if (result != null)
                         sessctl.SendSession(result, response.data);
                 }));

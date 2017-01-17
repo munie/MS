@@ -10,10 +10,9 @@ using System.Xml.Serialization;
 using System.Net;
 using mnn.design;
 using mnn.net;
-using mnn.util;
-using mnn.misc.module;
 using mnn.misc.env;
 using mnn.misc.service;
+using mnn.misc.module;
 using EnvConsole.Unit;
 
 namespace EnvConsole {
@@ -55,11 +54,11 @@ namespace EnvConsole {
             servctl.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
         }
 
-        // Session Event ==================================================================================
+        // Session Event ==========================================================================
 
         protected override void OnSessCreate(object sender, SockSess sess)
         {
-            if (sess.type == SockType.accept) {
+            if (sess.type == SockType.accept && sess.sdata == null) {
                 sess.sdata = new SessData() {
                     Ccid = "",
                     Name = "",
@@ -76,7 +75,7 @@ namespace EnvConsole {
             base.SockSendService(request, ref response);
 
             if (response.data != null) {
-                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
+                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
                 logmsg += "Request: " + Coding.GetString(request.data) + "\n";
                 logmsg += "Respond: " + Coding.GetString(response.data) + "\n\n";
 
@@ -85,23 +84,12 @@ namespace EnvConsole {
             }
         }
 
-        private bool CheckServerTargetCenter(int port)
-        {
-            ///// ** dangerous !!! access DataUI
-            //var subset = from s in DataUI.ServerTable
-            //             where s.Target == ServerTarget.center && s.Port == port
-            //             select s;
-            //if (!subset.Any())
-            //    return false;
-            //else
-            //    return true;
-
-            return true;
-        }
-
         private void ClientListService(ServiceRequest request, ref ServiceResponse response)
         {
-            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
+            // check if admin
+            SockSess sess = request.user_data as SockSess;
+            SessData sdata = sess.sdata as SessData;
+            if (sdata == null || !sdata.IsAdmin) return;
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
@@ -125,8 +113,10 @@ namespace EnvConsole {
 
         private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check target center
-            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
+            // check if admin
+            SockSess sess = request.user_data as SockSess;
+            SessData sdata = sess.sdata as SessData;
+            if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -151,8 +141,10 @@ namespace EnvConsole {
 
         private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check target center
-            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
+            // check if admin
+            SockSess sess = request.user_data as SockSess;
+            SessData sdata = sess.sdata as SessData;
+            if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -184,7 +176,7 @@ namespace EnvConsole {
 
             // log
             if (result != null) {
-                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
                 logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
 
@@ -195,8 +187,10 @@ namespace EnvConsole {
 
         private void ClientSendByCcidService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check target center
-            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
+            // check if admin
+            SockSess sess = request.user_data as SockSess;
+            SessData sdata = sess.sdata as SessData;
+            if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -235,7 +229,7 @@ namespace EnvConsole {
 
             // log
             if (result != null) {
-                string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
                 logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
 
@@ -246,8 +240,10 @@ namespace EnvConsole {
 
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check target center
-            if (!CheckServerTargetCenter((request.sdata as SockSess).lep.Port)) return;
+            // check if admin
+            SockSess sess = request.user_data as SockSess;
+            SessData sdata = sess.sdata as SessData;
+            if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
             string url = Coding.GetString(request.data);
@@ -271,7 +267,7 @@ namespace EnvConsole {
                 response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        // Methods ============================================================================
+        // Interface ==============================================================================
 
         public bool ModuleLoad(string filePath)
         {
@@ -294,8 +290,8 @@ namespace EnvConsole {
                         response.data = (args[1] as ServiceResponse).data;
 
                         // log
-                        string logmsg = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
-                            + " => " + (request.sdata as SockSess).lep.ToString() + ")\n";
+                        string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
+                            + " => " + (request.user_data as SockSess).lep.ToString() + ")\n";
                         logmsg += Coding.GetString(request.data) + "\n\n";
                         log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                         logger.Info(logmsg);

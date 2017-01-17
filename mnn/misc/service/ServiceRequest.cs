@@ -21,13 +21,13 @@ namespace mnn.misc.service {
         public /*short*/ ServiceRequestContentMode content_mode { get; private set; }
         public /*short*/ int length { get; private set; }
         public byte[] data { get; private set; }
-        public object sdata { get; private set; }
+        public object user_data { get; private set; }
 
-        public ServiceRequest(byte[] raw, object sdata)
+        public ServiceRequest(byte[] raw, object udata)
         {
             CheckContentMode(raw);
             CheckLengthAndData(raw);
-            this.sdata = sdata;
+            this.user_data = udata;
         }
 
         public void SetData(byte[] content)

@@ -101,7 +101,7 @@ namespace EnvConsole.Windows
                         core.Exec();
                     } catch (Exception ex) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
-                        log.Error("Exception thrown out by socksess thread.", ex);
+                        log.Error("Exception thrown out by core thread.", ex);
                     }
                 }
             });
@@ -111,7 +111,10 @@ namespace EnvConsole.Windows
             // register events of sessctl
             core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             core.sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
+            core.sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
 
+            // register events of servctl & register a service
+            core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
             core.servctl.RegisterService("MainWindow.ClientUpdateService",
                 ClientUpdateService, core.Coding.GetBytes("/center/clientupdate"));
 
@@ -207,21 +210,58 @@ namespace EnvConsole.Windows
         private void OnSessCreate(object sender, SockSess sess)
         {
             /// ** update DataUI
-            if (sess.type == SockType.accept)
-                dataui.ClientAdd(sess.lep, sess.rep);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (sess.type == SockType.accept)
+                    dataui.ClientAdded(sess.lep, sess.rep);
 
-            if (sess.type == SockType.listen)
-                dataui.ServerStart(sess.lep.Address.ToString(), sess.lep.Port);
+                if (sess.type == SockType.listen)
+                    dataui.ServerStarted(sess.lep.Address.ToString(), sess.lep.Port);
+            }));
+
+            if (sess.type == SockType.listen) {
+                var subset = from s in dataui.ServerTable
+                             where s.Target == ServerTarget.center && s.Port == sess.lep.Port
+                             select s;
+                if (!subset.Any()) {
+                    if (sess.sdata == null)
+                        sess.sdata = new SessData();
+                    (sess.sdata as SessData).IsAdmin = true;
+                }
+            }
         }
 
         private void OnSessDelete(object sender, SockSess sess)
         {
             /// ** update DataUI
-            if (sess.type == SockType.accept)
-                dataui.ClientDel(sess.rep);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (sess.type == SockType.accept)
+                    dataui.ClientDeleted(sess.rep);
 
-            if (sess.type == SockType.listen)
-                dataui.ServerStop(sess.lep.Address.ToString(), sess.lep.Port);
+                if (sess.type == SockType.listen)
+                    dataui.ServerStoped(sess.lep.Address.ToString(), sess.lep.Port);
+            }));
+        }
+
+        private void OnSessParse(object sender, SockSess sess)
+        {
+            /// ** update DataUI
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                dataui.PackRecved();
+            }));
+        }
+
+        // Service Event ==================================================================================
+
+        private void OnServDone(ServiceRequest request, ServiceResponse response)
+        {
+            /// ** update DataUI
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                dataui.PackParsed();
+            }));
         }
 
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
@@ -232,13 +272,17 @@ namespace EnvConsole.Windows
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
 
-            /// ** update DataUI
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = core.sessctl.FindSession(SockType.accept, null, ep);
-            if (result != null) {
-                dataui.ClientUpdate(ep, "ID", dc["ccid"]);
-                dataui.ClientUpdate(ep, "Name", dc["name"]);
-            }
+
+            /// ** update DataUI
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (result != null) {
+                    dataui.ClientUpdated(ep, "ID", dc["ccid"]);
+                    dataui.ClientUpdated(ep, "Name", dc["name"]);
+                }
+            }));
         }
 
         // Events for itself ==================================================================

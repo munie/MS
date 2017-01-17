@@ -112,8 +112,8 @@ namespace SockMaster {
 
         protected override void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            string log = DateTime.Now + " (" + (request.sdata as SockSessNew).rep.ToString()
-                + " => " + (request.sdata as SockSessNew).lep.ToString() + ")\n";
+            string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
+                + " => " + (request.user_data as SockSessNew).lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
 
             /// ** update DataUI

@@ -12,23 +12,29 @@ namespace mnn.misc.service {
     public delegate void ServiceDoneDelegate(ServiceRequest request, ServiceResponse response);
 
     public class Service<T> {
-        public string name;
-        public byte[] keyname;
+        public string id;
+        public byte[] matchkey;
         public T func;
 
-        public Service(string name, byte[] key, T func)
+        public Service(string id, byte[] key, T func)
         {
-            this.name = name;
-            this.keyname = key;
+            this.id = id;
+            this.matchkey = key;
             this.func = func;
         }
     }
 
     public class ServiceCore {
-        protected Service<ServiceDelegate> default_service;
-        protected List<Service<ServiceDelegate>> service_table;
-        protected List<Service<FilterDelegate>> filter_table;
+        // service
+        private Service<ServiceDelegate> default_service;
+        private List<Service<ServiceDelegate>> servtab;
+        private ReaderWriterLockSlim servtab_lock;
 
+        // filter
+        private List<Service<FilterDelegate>> filttab;
+        private ReaderWriterLockSlim filttab_lock;
+
+        // request
         private Queue<ServiceRequest> request_queue;
         public ServiceDoBeforeDelegate serv_before_do;
         public ServiceDoneDelegate serv_done;
@@ -36,79 +42,100 @@ namespace mnn.misc.service {
         public ServiceCore()
         {
             default_service = null;
-            service_table = new List<Service<ServiceDelegate>>();
-            filter_table = new List<Service<FilterDelegate>>();
+            servtab = new List<Service<ServiceDelegate>>();
+            servtab_lock = new ReaderWriterLockSlim();
+
+            filttab = new List<Service<FilterDelegate>>();
+            filttab_lock = new ReaderWriterLockSlim();
 
             request_queue = new Queue<ServiceRequest>();
             serv_before_do = null;
             serv_done = null;
-
-            RunDoService();
         }
 
         // Register =============================================================================
 
-        public void RegisterDefaultService(string name, ServiceDelegate func)
+        public void RegisterDefaultService(string id, ServiceDelegate func)
         {
-            default_service = new Service<ServiceDelegate>(name, new byte[] { 0 }, func);
+            default_service = new Service<ServiceDelegate>(id, new byte[] { 0 }, func);
         }
 
-        public void RegisterService(string name, ServiceDelegate func, byte[] key)
+        public int RegisterService(string id, ServiceDelegate func, byte[] key)
         {
-            var subset = from s in service_table where s.name.Equals(name) select s;
-            if (subset.Any()) return;
+            int retval = 0;
+
+            servtab_lock.EnterWriteLock();
+            var subset = from s in servtab where s.id.Equals(id) select s;
+            if (subset.Any())
+                retval = 1;
 
             // insert new service to table sorted by length of keyname decended
             Service<ServiceDelegate> tmp = null;
-            for (int i = 0; i < service_table.Count; i++) {
-                if (service_table[i].keyname.Length < key.Length) {
-                    tmp = new Service<ServiceDelegate>(name, key, func);
-                    service_table.Insert(i, tmp);
+            for (int i = 0; i < servtab.Count; i++) {
+                if (servtab[i].matchkey.Length < key.Length) {
+                    tmp = new Service<ServiceDelegate>(id, key, func);
+                    servtab.Insert(i, tmp);
                     break;
                 }
             }
             if (tmp == null)
-                service_table.Add(new Service<ServiceDelegate>(name, key, func));
+                servtab.Add(new Service<ServiceDelegate>(id, key, func));
+            servtab_lock.ExitWriteLock();
+
+            return retval;
         }
 
-        public void DeregisterService(string name)
+        public void DeregisterService(string id)
         {
-            foreach (var item in service_table) {
-                if (item.name.Equals(name)) {
-                    service_table.Remove(item);
+            servtab_lock.EnterWriteLock();
+            foreach (var item in servtab) {
+                if (item.id.Equals(id)) {
+                    servtab.Remove(item);
                     break;
                 }
             }
+            servtab_lock.ExitWriteLock();
         }
 
-        public void RegisterFilter(string name, FilterDelegate func)
+        public int RegisterFilter(string id, FilterDelegate func)
         {
-            var subset = from s in filter_table where s.name.Equals(name) select s;
-            if (subset.Any()) return;
+            int retval = 0;
 
-            filter_table.Add(new Service<FilterDelegate>(name, new byte[] { 0 }, func));
+            filttab_lock.EnterWriteLock();
+            var subset = from s in filttab where s.id.Equals(id) select s;
+            if (subset.Any())
+                retval = 1;
+
+            filttab.Add(new Service<FilterDelegate>(id, new byte[] { 0 }, func));
+            filttab_lock.ExitWriteLock();
+
+            return retval;
         }
 
-        public void DeregisterFilter(string name)
+        public void DeregisterFilter(string id)
         {
-            foreach (var item in filter_table) {
-                if (item.name.Equals(name)) {
-                    filter_table.Remove(item);
+            filttab_lock.EnterWriteLock();
+            foreach (var item in filttab) {
+                if (item.id.Equals(id)) {
+                    filttab.Remove(item);
                     break;
                 }
             }
+            filttab_lock.ExitWriteLock();
         }
 
         // Request ==============================================================================
 
         public void AddRequest(ServiceRequest request)
         {
-            if (request_queue.Count > 2048) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                log.Fatal("pack_queue's count is larger than 2048!");
-                request_queue.Clear();
-            } else {
-                request_queue.Enqueue(request);
+            lock (request) {
+                if (request_queue.Count > 2048) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                    log.Fatal("pack_queue's count is larger than 2048!");
+                    request_queue.Clear();
+                } else {
+                    request_queue.Enqueue(request);
+                }
             }
         }
 
@@ -130,18 +157,22 @@ namespace mnn.misc.service {
         {
             try {
                 // filter return when retval is false
-                foreach (var item in filter_table) {
+                filttab_lock.EnterWriteLock();
+                foreach (var item in filttab) {
                     if (!item.func(ref request, response))
                         return;
                 }
+                filttab_lock.ExitWriteLock();
 
                 // service return when find target service and handled request
-                foreach (var item in service_table) {
-                    if (ByteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
+                servtab_lock.EnterWriteLock();
+                foreach (var item in servtab) {
+                    if (ByteArrayCmp(item.matchkey, request.data.Take(item.matchkey.Length).ToArray())) {
                         item.func(request, ref response);
                         return;
                     }
                 }
+                servtab_lock.ExitWriteLock();
 
                 // do default service
                 if (default_service != null)
@@ -152,36 +183,27 @@ namespace mnn.misc.service {
             }
         }
 
-        private void RunDoService()
+        public void Exec()
         {
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    try {
-                        ServiceRequest request = null;
-                        lock (request_queue) {
-                            if (request_queue.Count != 0) // Any() is not thread safe
-                                request = request_queue.Dequeue();
-                        }
-                        if (request == null) {
-                            Thread.Sleep(1000);
-                            continue;
-                        }
-
-                        ServiceResponse response = new ServiceResponse();
-                        if (serv_before_do != null)
-                            serv_before_do(ref request);
-                        DoService(request, ref response);
-                        if (serv_done != null)
-                            serv_done(request, response);
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                        log.Warn("Exception of handling request to modules.", ex);
-                    }
+            try {
+                ServiceRequest request = null;
+                lock (request_queue) {
+                    if (request_queue.Count != 0) // Any() is not thread safe
+                        request = request_queue.Dequeue();
                 }
-            });
-            thread.IsBackground = true;
-            thread.Start();
+                if (request == null)
+                    return;
+
+                ServiceResponse response = new ServiceResponse();
+                if (serv_before_do != null)
+                    serv_before_do(ref request);
+                DoService(request, ref response);
+                if (serv_done != null)
+                    serv_done(request, response);
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                log.Warn("Exception of handling request to modules.", ex);
+            }
         }
     }
 }

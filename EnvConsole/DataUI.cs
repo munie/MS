@@ -8,7 +8,6 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Net;
 using System.Reflection;
-using mnn.net;
 using EnvConsole.Unit;
 
 namespace EnvConsole
@@ -116,7 +115,7 @@ namespace EnvConsole
             historyPackParsedCount = 0;
         }
 
-        public void ServerStart(string ip, int port)
+        public void ServerStarted(string ip, int port)
         {
             foreach (var item in ServerTable) {
                 if (item.IpAddress.Equals(ip) && item.Port == port) {
@@ -126,7 +125,7 @@ namespace EnvConsole
             }
         }
 
-        public void ServerStop(string ip, int port)
+        public void ServerStoped(string ip, int port)
         {
             foreach (var item in ServerTable) {
                 if (item.IpAddress.Equals(ip) && item.Port == port) {
@@ -136,57 +135,48 @@ namespace EnvConsole
             }
         }
 
-        public void ClientAdd(IPEndPoint lep, IPEndPoint rep)
+        public void ClientAdded(IPEndPoint lep, IPEndPoint rep)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ClientUnit client = new ClientUnit();
-                client.ID = "";
-                client.Name = "";
-                client.RemoteEP = rep;
-                foreach (var item in ServerTable) {
-                    if (item.Port.Equals(lep.Port)) {
-                        client.ServerID = item.ID;
-                        client.ServerName = item.Name;
-                        break;
-                    }
+            ClientUnit client = new ClientUnit();
+            client.ID = "";
+            client.Name = "";
+            client.RemoteEP = rep;
+            foreach (var item in ServerTable) {
+                if (item.Port.Equals(lep.Port)) {
+                    client.ServerID = item.ID;
+                    client.ServerName = item.Name;
+                    break;
                 }
-                client.ConnectTime = DateTime.Now;
+            }
+            client.ConnectTime = DateTime.Now;
 
-                ClientTable.Add(client);
-                CurrentAcceptCount++;
-                HistoryAcceptOpenCount++;
-            }));
+            ClientTable.Add(client);
+            CurrentAcceptCount++;
+            HistoryAcceptOpenCount++;
         }
 
-        public void ClientDel(IPEndPoint rep)
+        public void ClientDeleted(IPEndPoint rep)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in ClientTable where s.RemoteEP.Equals(rep) select s;
-                if (!subset.Any())
-                    return;
+            var subset = from s in ClientTable where s.RemoteEP.Equals(rep) select s;
+            if (!subset.Any())
+                return;
 
-                ClientTable.Remove(subset.First());
-                CurrentAcceptCount--;
-                HistoryAcceptCloseCount++;
-            }));
+            ClientTable.Remove(subset.First());
+            CurrentAcceptCount--;
+            HistoryAcceptCloseCount++;
         }
 
-        public void ClientUpdate(IPEndPoint rep, string fieldName, object value)
+        public void ClientUpdated(IPEndPoint rep, string fieldName, object value)
         {
             Type t = typeof(ClientUnit);
             PropertyInfo propertyInfo = t.GetProperty(fieldName);
 
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var subset = from s in this.ClientTable
-                             where s.RemoteEP.Equals(rep)
-                             select s;
+            var subset = from s in this.ClientTable
+                            where s.RemoteEP.Equals(rep)
+                            select s;
 
-                if (subset.Any())
-                    propertyInfo.SetValue(subset.First(), value, null);
-            }));
+            if (subset.Any())
+                propertyInfo.SetValue(subset.First(), value, null);
         }
 
         public void PackRecved()
