@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using mnn.net;
 
 namespace mnn.misc.service {
     public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
@@ -44,76 +43,10 @@ namespace mnn.misc.service {
             serv_before_do = null;
             serv_done = null;
 
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    try {
-                        ServiceRequest request = null;
-                        lock (request_queue) {
-                            if (request_queue.Count != 0) // Any() is not thread safe
-                                request = request_queue.Dequeue();
-                        }
-                        if (request == null) {
-                            Thread.Sleep(1000);
-                            continue;
-                        }
-
-                        ServiceResponse response = new ServiceResponse();
-                        if (serv_before_do != null)
-                            serv_before_do(ref request);
-                        DoService(request, ref response);
-                        if (serv_done != null)
-                            serv_done(request, response);
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                        log.Warn("Exception of handling request to modules.", ex);
-                    }
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
+            RunDoService();
         }
 
-        // Methods =============================================================================
-
-        private bool ByteArrayCmp(byte[] first, byte[] second)
-        {
-            if (first.Length != second.Length)
-                return false;
-
-            for (int i = 0; i < first.Length; i++) {
-                if (first[i] != second[i])
-                    return false;
-            }
-
-            return true;
-        }
-
-        public virtual void DoService(ServiceRequest request, ref ServiceResponse response)
-        {
-            try {
-                // filter return when retval is false
-                foreach (var item in filter_table) {
-                    if (!item.func(ref request, response))
-                        return;
-                }
-
-                // service return when find target service and handled request
-                foreach (var item in service_table) {
-                    if (ByteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
-                        item.func(request, ref response);
-                        return;
-                    }
-                }
-
-                // do default service
-                if (default_service != null)
-                    default_service.func(request, ref response);
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                log.Warn("Exception of invoking service.", ex);
-            }
-        }
+        // Register =============================================================================
 
         public void RegisterDefaultService(string name, ServiceDelegate func)
         {
@@ -166,6 +99,8 @@ namespace mnn.misc.service {
             }
         }
 
+        // Request ==============================================================================
+
         public void AddRequest(ServiceRequest request)
         {
             if (request_queue.Count > 2048) {
@@ -175,6 +110,78 @@ namespace mnn.misc.service {
             } else {
                 request_queue.Enqueue(request);
             }
+        }
+
+        private bool ByteArrayCmp(byte[] first, byte[] second)
+        {
+            if (first.Length != second.Length)
+                return false;
+
+            for (int i = 0; i < first.Length; i++) {
+                if (first[i] != second[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        // export for synchronous call
+        public void DoService(ServiceRequest request, ref ServiceResponse response)
+        {
+            try {
+                // filter return when retval is false
+                foreach (var item in filter_table) {
+                    if (!item.func(ref request, response))
+                        return;
+                }
+
+                // service return when find target service and handled request
+                foreach (var item in service_table) {
+                    if (ByteArrayCmp(item.keyname, request.data.Take(item.keyname.Length).ToArray())) {
+                        item.func(request, ref response);
+                        return;
+                    }
+                }
+
+                // do default service
+                if (default_service != null)
+                    default_service.func(request, ref response);
+            } catch (Exception ex) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                log.Warn("Exception of invoking service.", ex);
+            }
+        }
+
+        private void RunDoService()
+        {
+            Thread thread = new Thread(() =>
+            {
+                while (true) {
+                    try {
+                        ServiceRequest request = null;
+                        lock (request_queue) {
+                            if (request_queue.Count != 0) // Any() is not thread safe
+                                request = request_queue.Dequeue();
+                        }
+                        if (request == null) {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+
+                        ServiceResponse response = new ServiceResponse();
+                        if (serv_before_do != null)
+                            serv_before_do(ref request);
+                        DoService(request, ref response);
+                        if (serv_done != null)
+                            serv_done(request, response);
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                        log.Warn("Exception of handling request to modules.", ex);
+                    }
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
     }
 }
