@@ -50,7 +50,7 @@ namespace EnvConsole.Windows
                     try {
                         core.Exec();
                     } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Dispatcher));
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
                         log.Error("Exception thrown out by socksess thread.", ex);
                     }
                 }

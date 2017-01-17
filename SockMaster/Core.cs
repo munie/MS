@@ -67,11 +67,11 @@ namespace SockMaster {
 
         // SockSess Event
 
-        protected override void AcceptEvent(object sender, SockSessAccept sess)
+        protected override void OnAcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.close_event += new SockSessDelegate(CloseEvent);
-            sess.recv_event += new SockSessDelegate(RecvEvent);
-            sess_group.Add(sess);
+            sess.close_event += new SockSessDelegate(OnCloseEvent);
+            sess.recv_event += new SockSessDelegate(OnRecvEvent);
+            sesstab.Add(sess);
 
             SockUnit sockUnit = new SockUnit() {
                 ID = "at" + sess.rep.ToString(),
@@ -84,10 +84,10 @@ namespace SockMaster {
             DataUI.AddSockUnit(sockUnit);
         }
 
-        protected override void CloseEvent(object sender)
+        protected override void OnCloseEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            sess_group.Remove(sess);
+            sesstab.Remove(sess);
 
             if (sender is SockSessServer)
                 DataUI.CloseSockUnit(SockType.listen, sess.lep, sess.rep);
@@ -97,13 +97,13 @@ namespace SockMaster {
                 DataUI.DelSockUnit(SockType.accept, sess.lep, sess.rep);
         }
 
-        protected override void RecvEvent(object sender)
+        protected override void OnRecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
             ServiceRequest request = new ServiceRequest(sess.rfifo.Take(), sess);
             ServiceResponse response = new ServiceResponse();
 
-            dispatcher.DoService(request, ref response);
+            servctl.DoService(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sess.wfifo.Append(response.data);
         }
@@ -112,8 +112,8 @@ namespace SockMaster {
 
         protected override void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            string log = DateTime.Now + " (" + (request.sdata as SockSess).rep.ToString()
-                + " => " + (request.sdata as SockSess).lep.ToString() + ")\n";
+            string log = DateTime.Now + " (" + (request.sdata as SockSessNew).rep.ToString()
+                + " => " + (request.sdata as SockSessNew).lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.data) + "\n\n";
 
             /// ** update DataUI

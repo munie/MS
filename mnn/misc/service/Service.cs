@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using mnn.net;
 
 namespace mnn.misc.service {
     public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
     public delegate bool FilterDelegate(ref ServiceRequest request, ServiceResponse response);
+
+    public delegate void ServiceDoBeforeDelegate(ref ServiceRequest request);
+    public delegate void ServiceDoneDelegate(ServiceRequest request, ServiceResponse response);
 
     public class Service<T> {
         public string name;
@@ -21,16 +25,53 @@ namespace mnn.misc.service {
         }
     }
 
-    public class ServiceCoreBase {
+    public class ServiceCore {
         protected Service<ServiceDelegate> default_service;
         protected List<Service<ServiceDelegate>> service_table;
         protected List<Service<FilterDelegate>> filter_table;
 
-        public ServiceCoreBase()
+        private Queue<ServiceRequest> request_queue;
+        public ServiceDoBeforeDelegate serv_before_do;
+        public ServiceDoneDelegate serv_done;
+
+        public ServiceCore()
         {
             default_service = null;
             service_table = new List<Service<ServiceDelegate>>();
             filter_table = new List<Service<FilterDelegate>>();
+
+            request_queue = new Queue<ServiceRequest>();
+            serv_before_do = null;
+            serv_done = null;
+
+            Thread thread = new Thread(() =>
+            {
+                while (true) {
+                    try {
+                        ServiceRequest request = null;
+                        lock (request_queue) {
+                            if (request_queue.Count != 0) // Any() is not thread safe
+                                request = request_queue.Dequeue();
+                        }
+                        if (request == null) {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+
+                        ServiceResponse response = new ServiceResponse();
+                        if (serv_before_do != null)
+                            serv_before_do(ref request);
+                        DoService(request, ref response);
+                        if (serv_done != null)
+                            serv_done(request, response);
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                        log.Warn("Exception of handling request to modules.", ex);
+                    }
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         // Methods =============================================================================
@@ -69,7 +110,7 @@ namespace mnn.misc.service {
                 if (default_service != null)
                     default_service.func(request, ref response);
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCoreBase));
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
                 log.Warn("Exception of invoking service.", ex);
             }
         }
@@ -122,6 +163,17 @@ namespace mnn.misc.service {
                     filter_table.Remove(item);
                     break;
                 }
+            }
+        }
+
+        public void AddRequest(ServiceRequest request)
+        {
+            if (request_queue.Count > 2048) {
+                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
+                log.Fatal("pack_queue's count is larger than 2048!");
+                request_queue.Clear();
+            } else {
+                request_queue.Enqueue(request);
             }
         }
     }

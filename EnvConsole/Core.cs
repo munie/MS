@@ -52,15 +52,14 @@ namespace EnvConsole {
             DataUI = new DataUI();
             modctl = new ModuleCtl();
 
-            // dispatcher register
-            dispatcher = new Dispatcher(sessctl);
-            dispatcher.RegisterDefaultService("DefaultService", DefaultService);
-            dispatcher.RegisterService("SockSendService", SockSendService, Coding.GetBytes("/center/socksend"));
-            dispatcher.RegisterService("ClientListService", ClientListService, Coding.GetBytes("/center/clientlist"));
-            dispatcher.RegisterService("ClientCloseService", ClientCloseService, Coding.GetBytes("/center/clientclose"));
-            dispatcher.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
-            dispatcher.RegisterService("ClientSendByCcidService", ClientSendByCcidService, Coding.GetBytes("/center/clientsendbyccid"));
-            dispatcher.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
+            // servctl register
+            servctl.RegisterDefaultService("DefaultService", DefaultService);
+            servctl.RegisterService("SockSendService", SockSendService, Coding.GetBytes("/center/socksend"));
+            servctl.RegisterService("ClientListService", ClientListService, Coding.GetBytes("/center/clientlist"));
+            servctl.RegisterService("ClientCloseService", ClientCloseService, Coding.GetBytes("/center/clientclose"));
+            servctl.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
+            servctl.RegisterService("ClientSendByCcidService", ClientSendByCcidService, Coding.GetBytes("/center/clientsendbyccid"));
+            servctl.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(EnvConst.Module_PATH)) {
@@ -127,7 +126,7 @@ namespace EnvConsole {
 
         // Session Event ==========================================================================
 
-        protected override void SessCreate(object sender, SockSess sess)
+        protected override void OnSessCreate(object sender, SockSess sess)
         {
             if (sess.type == SockType.accept) {
                 sess.sdata = new SessData() {
@@ -141,7 +140,7 @@ namespace EnvConsole {
             }
         }
 
-        protected override void SessDelete(object sender, SockSess sess)
+        protected override void OnSessDelete(object sender, SockSess sess)
         {
             /// ** update DataUI
             if (sess.type == SockType.accept)
@@ -381,7 +380,7 @@ namespace EnvConsole {
 
             // 注册处理方法
             if (module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
-                dispatcher.RegisterService(module.ModuleID,
+                servctl.RegisterService(module.ModuleID,
                     (ServiceRequest request, ref ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
@@ -396,7 +395,7 @@ namespace EnvConsole {
                     },
                     Coding.GetBytes(module.ModuleID));
             } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
-                dispatcher.RegisterFilter(module.ModuleID,
+                servctl.RegisterFilter(module.ModuleID,
                     (ref ServiceRequest request, ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
@@ -416,9 +415,9 @@ namespace EnvConsole {
                 ModuleNode node = subset.First().Module;
                 // 注销处理方法
                 if (node.CheckInterface(new string[] { typeof(IEnvHandler).FullName }))
-                    dispatcher.DeregisterService(node.ModuleID);
+                    servctl.DeregisterService(node.ModuleID);
                 else if (node.CheckInterface(new string[] { typeof(IEnvFilter).FullName }))
-                    dispatcher.DeregisterFilter(node.ModuleID);
+                    servctl.DeregisterFilter(node.ModuleID);
 
                 // 移出 table
                 modctl.Del(node);

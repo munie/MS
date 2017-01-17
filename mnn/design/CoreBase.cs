@@ -13,7 +13,7 @@ namespace mnn.design {
         // session control
         protected SessCtl sessctl;
         // other request control
-        protected ServiceCoreBase dispatcher;
+        protected ServiceCore servctl;
 
         public CoreBase()
         {
@@ -22,12 +22,14 @@ namespace mnn.design {
 
             // init sessctl
             sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessDelegate(SessParse);
-            sessctl.sess_create += new SessCtl.SessDelegate(SessCreate);
-            sessctl.sess_delete += new SessCtl.SessDelegate(SessDelete);
+            sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
+            sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
+            sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
 
             // init dispatcher
-            dispatcher = new ServiceCoreBase();
+            servctl = new ServiceCore();
+            servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
+            servctl.serv_done += new ServiceDoneDelegate(OnServDone);
         }
 
         public virtual void Exec()
@@ -38,7 +40,7 @@ namespace mnn.design {
 
         // Session Event ==================================================================================
 
-        protected virtual void SessParse(object sender, SockSess sess)
+        protected virtual void OnSessParse(object sender, SockSess sess)
         {
             // init request & response
             ServiceRequest request = new ServiceRequest(sess.RfifoTake(), sess);
@@ -47,15 +49,38 @@ namespace mnn.design {
             // rfifo skip
             sess.RfifoSkip(request.length);
 
-            // dispatch
-            dispatcher.DoService(request, ref response);
-            if (response.data != null && response.data.Length != 0)
-                sessctl.SendSession(sess, response.data);
+            // add request to service core
+            servctl.AddRequest(request);
         }
 
-        protected virtual void SessCreate(object sender, SockSess sess) { }
+        protected virtual void OnSessCreate(object sender, SockSess sess) { }
 
-        protected virtual void SessDelete(object sender, SockSess sess) { }
+        protected virtual void OnSessDelete(object sender, SockSess sess) { }
+
+        // Service Event ==================================================================================
+
+        protected virtual void OnServBeforeDo(ref ServiceRequest request)
+        {
+            if (request.content_mode != ServiceRequestContentMode.none) {
+                try {
+                    byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
+                    result = EncryptSym.AESDecrypt(result);
+                    if (result != null) request.SetData(result);
+                } catch (Exception) { }
+            }
+        }
+
+        protected virtual void OnServDone(ServiceRequest request, ServiceResponse response)
+        {
+            if (response.data != null && response.data.Length != 0) {
+                sessctl.BeginInvoke(new Action(() =>
+                {
+                    SockSess result = sessctl.FindSession(SockType.accept, null, (request.sdata as SockSess).rep);
+                    if (result != null)
+                        sessctl.SendSession(result, response.data);
+                }));
+            }
+        }
 
         // Center Service =========================================================================
 

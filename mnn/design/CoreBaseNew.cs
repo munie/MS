@@ -8,28 +8,28 @@ using mnn.misc.service;
 
 namespace mnn.design {
     public class CoreBaseNew {
-        protected List<SockSessNew> sess_group;
-        protected ServiceCoreBase dispatcher;
+        protected List<SockSessNew> sesstab;
+        protected ServiceCore servctl;
 
         public CoreBaseNew()
         {
-            sess_group = new List<SockSessNew>();
-            dispatcher = new ServiceCoreBase();
+            sesstab = new List<SockSessNew>();
 
-            dispatcher.RegisterDefaultService("DefaultService", DefaultService);
-            dispatcher.RegisterService("SockOpenService", SockOpenService, Encoding.UTF8.GetBytes("/center/sockopen"));
-            dispatcher.RegisterService("SockCloseService", SockCloseService, Encoding.UTF8.GetBytes("/center/sockclose"));
-            dispatcher.RegisterService("SockSendService", SockSendService, Encoding.UTF8.GetBytes("/center/socksend"));
+            servctl = new ServiceCore();
+            servctl.RegisterDefaultService("DefaultService", DefaultService);
+            servctl.RegisterService("SockOpenService", SockOpenService, Encoding.UTF8.GetBytes("/center/sockopen"));
+            servctl.RegisterService("SockCloseService", SockCloseService, Encoding.UTF8.GetBytes("/center/sockclose"));
+            servctl.RegisterService("SockSendService", SockSendService, Encoding.UTF8.GetBytes("/center/socksend"));
         }
 
         protected SockSessServer MakeListen(IPEndPoint ep)
         {
             SockSessServer server = new SockSessServer();
             server.Listen(ep);
-            server.close_event += new SockSessDelegate(CloseEvent);
-            server.accept_event += new SockSessServerDelegate(AcceptEvent);
+            server.close_event += new SockSessDelegate(OnCloseEvent);
+            server.accept_event += new SockSessServerDelegate(OnAcceptEvent);
 
-            sess_group.Add(server);
+            sesstab.Add(server);
             return server;
         }
 
@@ -37,10 +37,10 @@ namespace mnn.design {
         {
             SockSessClient client = new SockSessClient();
             client.Connect(ep);
-            client.close_event += new SockSessDelegate(CloseEvent);
-            client.recv_event += new SockSessDelegate(RecvEvent);
+            client.close_event += new SockSessDelegate(OnCloseEvent);
+            client.recv_event += new SockSessDelegate(OnRecvEvent);
 
-            sess_group.Add(client);
+            sesstab.Add(client);
             return client;
         }
 
@@ -50,10 +50,10 @@ namespace mnn.design {
             switch (sockType) {
                 case SockType.listen:
                 case SockType.connect:
-                    subset = from s in sess_group where s.lep.Equals(ep) select s;
+                    subset = from s in sesstab where s.lep.Equals(ep) select s;
                     break;
                 case SockType.accept:
-                    subset = from s in sess_group where s.rep != null && s.rep.Equals(ep) select s;
+                    subset = from s in sesstab where s.rep != null && s.rep.Equals(ep) select s;
                     break;
                 default:
                     break;
@@ -67,26 +67,26 @@ namespace mnn.design {
 
         // SockSess Event
 
-        protected virtual void AcceptEvent(object sender, SockSessAccept sess)
+        protected virtual void OnAcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.close_event += new SockSessDelegate(CloseEvent);
-            sess.recv_event += new SockSessDelegate(RecvEvent);
-            sess_group.Add(sess);
+            sess.close_event += new SockSessDelegate(OnCloseEvent);
+            sess.recv_event += new SockSessDelegate(OnRecvEvent);
+            sesstab.Add(sess);
         }
 
-        protected virtual void CloseEvent(object sender)
+        protected virtual void OnCloseEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            sess_group.Remove(sess);
+            sesstab.Remove(sess);
         }
 
-        protected virtual void RecvEvent(object sender)
+        protected virtual void OnRecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
             ServiceRequest request = new ServiceRequest(sess.rfifo.Take(), sess);
             ServiceResponse response = new ServiceResponse();
 
-            dispatcher.DoService(request, ref response);
+            servctl.DoService(request, ref response);
             if (response.data != null && response.data.Length != 0)
                 sess.wfifo.Append(response.data);
         }
