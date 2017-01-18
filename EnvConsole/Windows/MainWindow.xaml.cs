@@ -94,19 +94,7 @@ namespace EnvConsole.Windows
         private void InitCore()
         {
             core = new Core();
-            Thread thread = new Thread(() =>
-            {
-                while (true) {
-                    try {
-                        core.Exec();
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
-                        log.Error("Exception thrown out by core thread.", ex);
-                    }
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
+            core.Run();
 
             // register events of sessctl
             core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);

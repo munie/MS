@@ -45,7 +45,7 @@ namespace EnvConsole {
 
             // servctl register
             servctl.RegisterDefaultService("DefaultService", DefaultService);
-            servctl.RegisterService("SockSendService", SockSendService, Coding.GetBytes("/center/socksend"));
+            servctl.RegisterService("SockSendService", SessSendService, Coding.GetBytes("/center/socksend"));
             servctl.RegisterService("ClientListService", ClientListService, Coding.GetBytes("/center/clientlist"));
             servctl.RegisterService("ClientCloseService", ClientCloseService, Coding.GetBytes("/center/clientclose"));
             servctl.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
@@ -70,9 +70,9 @@ namespace EnvConsole {
 
         // Center Service =========================================================================
 
-        protected override void SockSendService(ServiceRequest request, ref ServiceResponse response)
+        protected override void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            base.SockSendService(request, ref response);
+            base.SessSendService(request, ref response);
 
             if (response.data != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
@@ -119,7 +119,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
+            string url = Coding.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);

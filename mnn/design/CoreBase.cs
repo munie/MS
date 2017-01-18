@@ -9,60 +9,58 @@ using mnn.misc.module;
 
 namespace mnn.design {
     public class CoreBase {
-        // timeout
+        // timeout control
         protected TimeOutCtl timectl;
-        // session control
-        public SessCtl sessctl;
-        // service control
-        public ServiceCore servctl;
         // module control
         protected ModuleCtl modctl;
+        // service control
+        public ServiceCore servctl;
+        // session control
+        public SessCtl sessctl;
 
         public CoreBase()
         {
             // init timectl
             timectl = new TimeOutCtl();
 
-            // init sessctl
-            sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
-            sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
-            sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
+            // init modctl
+            modctl = new ModuleCtl();
 
             // init servctl
             servctl = new ServiceCore();
             servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
             servctl.serv_done += new ServiceDoneDelegate(OnServDone);
 
-            // init modctl
-            modctl = new ModuleCtl();
+            // init sessctl
+            sessctl = new SessCtl();
+            sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
+            sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
+            sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
         }
 
-        public virtual void Exec()
+        public virtual void Run()
         {
-            timectl.Exec();
-            sessctl.Exec(1000);
-            servctl.Exec();
+            System.Threading.Thread thread = new System.Threading.Thread(() =>
+            {
+                RunForever();
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
-        // Session Event ==================================================================================
-
-        protected virtual void OnSessParse(object sender, SockSess sess)
+        public virtual void RunForever()
         {
-            // init request & response
-            ServiceRequest request = new ServiceRequest(sess.RfifoTake(), sess);
-            ServiceResponse response = new ServiceResponse();
-
-            // rfifo skip
-            sess.RfifoSkip(request.length);
-
-            // add request to service core
-            servctl.AddRequest(request);
+            while (true) {
+                try {
+                    timectl.Exec();
+                    sessctl.Exec(1000);
+                    servctl.Exec();
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(CoreBase));
+                    log.Error("Exception thrown out by core thread.", ex);
+                }
+            }
         }
-
-        protected virtual void OnSessCreate(object sender, SockSess sess) { }
-
-        protected virtual void OnSessDelete(object sender, SockSess sess) { }
 
         // Service Event ==================================================================================
 
@@ -89,6 +87,25 @@ namespace mnn.design {
             }
         }
 
+        // Session Event ==================================================================================
+
+        protected virtual void OnSessParse(object sender, SockSess sess)
+        {
+            // init request & response
+            ServiceRequest request = new ServiceRequest(sess.RfifoTake(), sess);
+            ServiceResponse response = new ServiceResponse();
+
+            // rfifo skip
+            sess.RfifoSkip(request.length);
+
+            // add request to service core
+            servctl.AddRequest(request);
+        }
+
+        protected virtual void OnSessCreate(object sender, SockSess sess) { }
+
+        protected virtual void OnSessDelete(object sender, SockSess sess) { }
+
         // Center Service =========================================================================
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
@@ -97,7 +114,7 @@ namespace mnn.design {
             response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
-        protected virtual void SockOpenService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -122,7 +139,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void SockCloseService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string url = Encoding.UTF8.GetString(request.data);
@@ -151,7 +168,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void SockSendService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);
