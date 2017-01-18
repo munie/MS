@@ -6,7 +6,7 @@
 
   <log4net>
     <root>
-      <level value="WARN" />
+      <level value="INFO" />
       <appender-ref ref="LogFileAppender" />
       <appender-ref ref="ConsoleAppender" />
     </root>

@@ -88,6 +88,7 @@ namespace EnvConsole.Windows
             var textBoxAppender = new TextBoxAppender();
             textBoxAppender.MsgBox = txtMsg;
             textBoxAppender.Threshold = log4net.Core.Level.All;
+            textBoxAppender.Layout = new log4net.Layout.PatternLayout("%d [%t] %-5p %c [%x] - %m%n");
             log4net.Config.BasicConfigurator.Configure(textBoxAppender);
         }
 
@@ -253,7 +254,7 @@ namespace EnvConsole.Windows
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.raw_data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
@@ -418,10 +419,11 @@ namespace EnvConsole.Windows
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
                     core.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
-                    string log = DateTime.Now + " (" + "localhost" + " => " + item.RemoteEP.ToString() + ")\n";
-                    log += input.textBox1.Text + "\n\n";
-                    txtMsg.Text += log;
-                    txtMsg.ScrollToEnd();
+                    string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
+                    logmsg += "\t" + input.textBox1.Text;
+
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                    logger.Info(logmsg);
                 }
             }
         }

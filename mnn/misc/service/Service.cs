@@ -163,7 +163,7 @@ namespace mnn.misc.service {
                     servtab_lock.EnterReadLock();
                     if (request.content_mode == ServiceRequestContentMode.json) {
                         IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                            <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+                            <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
                         foreach (var item in servtab) {
                             if (item.id.Equals(dc["id"])) {
@@ -174,7 +174,7 @@ namespace mnn.misc.service {
                     } else {
                         foreach (var item in servtab) {
                             if (ByteArrayCmp(Encoding.UTF8.GetBytes(item.id),
-                                request.data.Take(item.id.Length).ToArray())) {
+                                request.raw_data.Take(item.id.Length).ToArray())) {
                                 item.func(request, ref response);
                                 return;
                             }
@@ -189,7 +189,7 @@ namespace mnn.misc.service {
                     default_service.func(request, ref response);
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                log.Warn("Exception of invoking service.\r\n" + ex.ToString());
+                log.Warn("Exception of invoking service.", ex);
             }
         }
 

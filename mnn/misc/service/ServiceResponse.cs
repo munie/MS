@@ -7,6 +7,13 @@ using System.Net;
 namespace mnn.misc.service {
     [Serializable]
     public class ServiceResponse {
-        public byte[] data { get; set; }
+        public byte[] raw_data { get; set; }
+        public BaseContent content { get; set; }
+    }
+
+    public class BaseContent {
+        public string id { get; set; }
+        public int errcode { get; set; }
+        public string errmsg { get; set; }
     }
 }

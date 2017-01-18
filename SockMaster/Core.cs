@@ -105,8 +105,8 @@ namespace SockMaster {
             ServiceResponse response = new ServiceResponse();
 
             servctl.DoService(request, ref response);
-            if (response.data != null && response.data.Length != 0)
-                sess.wfifo.Append(response.data);
+            if (response.raw_data != null && response.raw_data.Length != 0)
+                sess.wfifo.Append(response.raw_data);
         }
 
         // Center Service
@@ -115,7 +115,7 @@ namespace SockMaster {
         {
             string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
                 + " => " + (request.user_data as SockSessNew).lep.ToString() + ")\n";
-            log += SockConvert.ParseBytesToString(request.data) + "\n\n";
+            log += SockConvert.ParseBytesToString(request.raw_data) + "\n\n";
 
             /// ** update DataUI
             DataUI.Logger(log);
@@ -124,7 +124,7 @@ namespace SockMaster {
         protected override void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
+            string msg = Encoding.UTF8.GetString(request.raw_data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);

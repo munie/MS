@@ -88,21 +88,21 @@ namespace mnn.design {
             ServiceResponse response = new ServiceResponse();
 
             servctl.DoService(request, ref response);
-            if (response.data != null && response.data.Length != 0)
-                sess.wfifo.Append(response.data);
+            if (response.raw_data != null && response.raw_data.Length != 0)
+                sess.wfifo.Append(response.raw_data);
         }
 
         // Center Service
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
+            response.raw_data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
+            string msg = Encoding.UTF8.GetString(request.raw_data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
@@ -116,16 +116,16 @@ namespace mnn.design {
                     sess = MakeListen(ep);
                 else
                     sess = MakeConnect(ep);
-                response.data = Encoding.UTF8.GetBytes("Success: " + dc["type"] + " " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Success: " + dc["type"] + " " + ep.ToString() + "\r\n");
             } catch (Exception) {
-                response.data = Encoding.UTF8.GetBytes("Failure: can't open " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't open " + ep.ToString() + "\r\n");
             }
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.data);
+            string msg = Encoding.UTF8.GetString(request.raw_data);
             if (!msg.Contains('?')) return;
             msg = msg.Substring(msg.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
@@ -136,15 +136,15 @@ namespace mnn.design {
 
             if (sess != null) {
                 sess.Close();
-                response.data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
             } else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // retrieve param_list of url
-            string url = Encoding.UTF8.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.raw_data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
 
@@ -163,9 +163,9 @@ namespace mnn.design {
 
             if (sess != null) {
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(param_data));
-                response.data = Encoding.UTF8.GetBytes("Success: send to " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Success: send to " + ep.ToString() + "\r\n");
             } else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
     }
 }

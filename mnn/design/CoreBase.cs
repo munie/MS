@@ -6,6 +6,7 @@ using System.Net;
 using mnn.net;
 using mnn.misc.service;
 using mnn.misc.module;
+using Newtonsoft.Json;
 
 namespace mnn.design {
     public class CoreBase {
@@ -68,22 +69,22 @@ namespace mnn.design {
         {
             if (request.content_mode != ServiceRequestContentMode.unknown) {
                 try {
-                    byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
+                    byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.raw_data));
                     result = EncryptSym.AESDecrypt(result);
                     if (result != null)
-                        request.data = result;
+                        request.raw_data = result;
                 } catch (Exception) { }
             }
         }
 
         protected virtual void OnServDone(ServiceRequest request, ServiceResponse response)
         {
-            if (response.data != null && response.data.Length != 0) {
+            if (response.raw_data != null && response.raw_data.Length != 0) {
                 sessctl.BeginInvoke(new Action(() =>
                 {
                     SockSess result = sessctl.FindSession(SockType.accept, null, (request.user_data as SockSess).rep);
                     if (result != null)
-                        sessctl.SendSession(result, response.data);
+                        sessctl.SendSession(result, response.raw_data);
                 }));
             }
         }
@@ -112,14 +113,19 @@ namespace mnn.design {
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
             // write response
-            response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
+            response.content = new BaseContent() {
+                id = "unknown",
+                errcode = 10024,
+                errmsg = "unknown request",
+            };
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -132,25 +138,22 @@ namespace mnn.design {
                 result = null;
 
             // write response
-            StringBuilder sb = new StringBuilder();
-            sb.Append("{");
-            sb.Append(String.Format("'id':'{0}'", dc["id"]));
-            if (result == null) {
-                sb.Append(String.Format("'err':'failure'"));
-                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = dc["type"] + " " + ep.ToString();
             } else {
-                sb.Append(String.Format("'err':'success'"));
-                sb.Append(String.Format("'result':'{0} {1}'", dc["type"], ep.ToString()));
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
             }
-            sb.Append("}\r\n");
-            response.data = Encoding.UTF8.GetBytes(sb.ToString());
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -167,25 +170,22 @@ namespace mnn.design {
                 sessctl.DelSession(result);
 
             // write response
-            StringBuilder sb = new StringBuilder();
-            sb.Append("{");
-            sb.Append(String.Format("'id':'{0}'", dc["id"]));
-            if (result == null) {
-                sb.Append(String.Format("'err':'failure'"));
-                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "shutdown " + ep.ToString();
             } else {
-                sb.Append(String.Format("'err':'success'"));
-                sb.Append(String.Format("'result':'shutdowm {0}'", ep.ToString()));
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
             }
-            sb.Append("}\r\n");
-            response.data = Encoding.UTF8.GetBytes(sb.ToString());
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -202,18 +202,15 @@ namespace mnn.design {
                 sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
 
             // write response
-            StringBuilder sb = new StringBuilder();
-            sb.Append("{");
-            sb.Append(String.Format("'id':'{0}'", dc["id"]));
-            if (result == null) {
-                sb.Append(String.Format("'err':'failure'"));
-                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "send to " + ep.ToString();
             } else {
-                sb.Append(String.Format("'err':'success'"));
-                sb.Append(String.Format("'result':'send to {0}'", ep.ToString()));
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
             }
-            sb.Append("}\r\n");
-            response.data = Encoding.UTF8.GetBytes(sb.ToString());
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
     }
 }

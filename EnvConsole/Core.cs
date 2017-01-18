@@ -13,6 +13,7 @@ using mnn.net;
 using mnn.misc.env;
 using mnn.misc.service;
 using mnn.misc.module;
+using Newtonsoft.Json;
 
 namespace EnvConsole {
     class Core : CoreBase {
@@ -71,10 +72,11 @@ namespace EnvConsole {
         {
             base.SessSendService(request, ref response);
 
-            if (response.data != null) {
-                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
-                logmsg += "Request: " + Encoding.UTF8.GetString(request.data) + "\n";
-                logmsg += "Respond: " + Encoding.UTF8.GetString(response.data) + "\n\n";
+            if (response.raw_data != null) {
+                string logmsg = "(" + (request.user_data as SockSess).rep.ToString()
+                    + " => " + "*.*.*.*" + ")" + Environment.NewLine;
+                logmsg += "\tRequest: " + Encoding.UTF8.GetString(request.raw_data) + Environment.NewLine;
+                logmsg += "\tRespond: " + Encoding.UTF8.GetString(response.raw_data);
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -105,7 +107,7 @@ namespace EnvConsole {
             sb.Append(']');
             sb.Replace("}{", "},{");
             sb.Append("\r\n");
-            response.data = Encoding.UTF8.GetBytes(sb.ToString());
+            response.raw_data = Encoding.UTF8.GetBytes(sb.ToString());
         }
 
         private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
@@ -115,11 +117,9 @@ namespace EnvConsole {
             SessData sdata = sess.sdata as SessData;
             if (sdata == null || !sdata.IsAdmin) return;
 
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -130,10 +130,15 @@ namespace EnvConsole {
                 sessctl.DelSession(result);
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "shutdown " + ep.ToString();
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
         private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
@@ -143,19 +148,9 @@ namespace EnvConsole {
             SessData sdata = sess.sdata as SessData;
             if (sdata == null || !sdata.IsAdmin) return;
 
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -163,19 +158,24 @@ namespace EnvConsole {
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "send to " + ep.ToString();
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
 
             // log
             if (result != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                    + " => " + result.rep.ToString() + ")\n";
-                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(param_data)) + "\n\n";
+                    + " => " + result.rep.ToString() + ")" + Environment.NewLine;
+                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -189,19 +189,9 @@ namespace EnvConsole {
             SessData sdata = sess.sdata as SessData;
             if (sdata == null || !sdata.IsAdmin) return;
 
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // find session
             SockSess result = null;
@@ -216,19 +206,24 @@ namespace EnvConsole {
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: sendto " + dc["ccid"] + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "send to " + dc["ccid"];
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + dc["ccid"];
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
 
             // log
             if (result != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                    + " => " + result.rep.ToString() + ")\n";
-                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(param_data)) + "\n\n";
+                    + " => " + result.rep.ToString() + ")" + Environment.NewLine;
+                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -243,7 +238,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.raw_data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
@@ -258,10 +253,15 @@ namespace EnvConsole {
             }
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: update " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            response.content = new BaseContent() { id = dc["id"] };
+            if (result != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = "update " + ep.ToString();
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + ep.ToString();
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
         // Interface ==============================================================================
@@ -273,7 +273,8 @@ namespace EnvConsole {
             try {
                 module = modctl.Add(filePath);
             } catch (Exception ex) {
-                System.Windows.MessageBox.Show(filePath + ": load failed.\r\n" + ex.ToString());
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                logger.Info(filePath + ": load failed.", ex);
                 return false;
             }
 
@@ -284,12 +285,12 @@ namespace EnvConsole {
                     {
                         object[] args = new object[] { request, response };
                         module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
-                        response.data = (args[1] as ServiceResponse).data;
+                        response.raw_data = (args[1] as ServiceResponse).raw_data;
 
                         // log
                         string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                            + " => " + (request.user_data as SockSess).lep.ToString() + ")\n";
-                        logmsg += Encoding.UTF8.GetString(request.data) + "\n\n";
+                            + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
+                        logmsg += Encoding.UTF8.GetString(request.raw_data);
                         log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                         logger.Info(logmsg);
                     });
@@ -299,7 +300,7 @@ namespace EnvConsole {
                     {
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
-                        request.data = (args[0] as ServiceRequest).data;
+                        request.raw_data = (args[0] as ServiceRequest).raw_data;
                         return retval;
                     });
             }

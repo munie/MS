@@ -13,8 +13,11 @@ namespace EnvConsole {
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                StringBuilder sb = new StringBuilder();
+                System.IO.TextWriter writer = new System.IO.StringWriter(sb);
+                Layout.Format(writer, loggingEvent);
                 if (MsgBox != null)
-                    MsgBox.AppendText(loggingEvent.RenderedMessage + Environment.NewLine);
+                    MsgBox.AppendText(sb.ToString());
             }));
         }
     }
