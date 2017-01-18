@@ -66,11 +66,12 @@ namespace mnn.design {
 
         protected virtual void OnServBeforeDo(ref ServiceRequest request)
         {
-            if (request.content_mode != ServiceRequestContentMode.none) {
+            if (request.content_mode != ServiceRequestContentMode.unknown) {
                 try {
                     byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.data));
                     result = EncryptSym.AESDecrypt(result);
-                    if (result != null) request.SetData(result);
+                    if (result != null)
+                        request.data = result;
                 } catch (Exception) { }
             }
         }
@@ -92,11 +93,11 @@ namespace mnn.design {
         protected virtual void OnSessParse(object sender, SockSess sess)
         {
             // init request & response
-            ServiceRequest request = new ServiceRequest(sess.RfifoTake(), sess);
-            ServiceResponse response = new ServiceResponse();
+            ServiceRequest request = ServiceRequest.Parse(sess.RfifoTake());
+            request.user_data = sess;
 
             // rfifo skip
-            sess.RfifoSkip(request.length);
+            sess.RfifoSkip(request.packlen);
 
             // add request to service core
             servctl.AddRequest(request);
@@ -116,14 +117,12 @@ namespace mnn.design {
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
 
             // find session and open
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
                 result = sessctl.MakeListen(ep);
@@ -133,22 +132,28 @@ namespace mnn.design {
                 result = null;
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: " + dc["type"] + " " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            StringBuilder sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append(String.Format("'id':'{0}'", dc["id"]));
+            if (result == null) {
+                sb.Append(String.Format("'err':'failure'"));
+                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            } else {
+                sb.Append(String.Format("'err':'success'"));
+                sb.Append(String.Format("'result':'{0} {1}'", dc["type"], ep.ToString()));
+            }
+            sb.Append("}\r\n");
+            response.data = Encoding.UTF8.GetBytes(sb.ToString());
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
 
             // find session
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
@@ -162,30 +167,28 @@ namespace mnn.design {
                 sessctl.DelSession(result);
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            StringBuilder sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append(String.Format("'id':'{0}'", dc["id"]));
+            if (result == null) {
+                sb.Append(String.Format("'err':'failure'"));
+                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            } else {
+                sb.Append(String.Format("'err':'success'"));
+                sb.Append(String.Format("'result':'shutdowm {0}'", ep.ToString()));
+            }
+            sb.Append("}\r\n");
+            response.data = Encoding.UTF8.GetBytes(sb.ToString());
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            // retrieve param_list of url
-            string url = Encoding.UTF8.GetString(request.data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
 
             // find session
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSess result = null;
             if (dc["type"] == SockType.listen.ToString())
                 result = sessctl.FindSession(SockType.listen, ep, null);
@@ -196,13 +199,21 @@ namespace mnn.design {
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
 
             // write response
-            if (result != null)
-                response.data = Encoding.UTF8.GetBytes("Success: send to " + ep.ToString() + "\r\n");
-            else
-                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+            StringBuilder sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append(String.Format("'id':'{0}'", dc["id"]));
+            if (result == null) {
+                sb.Append(String.Format("'err':'failure'"));
+                sb.Append(String.Format("'result':'cannot find {0}'", ep.ToString()));
+            } else {
+                sb.Append(String.Format("'err':'success'"));
+                sb.Append(String.Format("'result':'send to {0}'", ep.ToString()));
+            }
+            sb.Append("}\r\n");
+            response.data = Encoding.UTF8.GetBytes(sb.ToString());
         }
     }
 }

@@ -100,7 +100,8 @@ namespace SockMaster {
         protected override void OnRecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            ServiceRequest request = new ServiceRequest(sess.rfifo.Take(), sess);
+            ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Take());
+            request.user_data = sess;
             ServiceResponse response = new ServiceResponse();
 
             servctl.DoService(request, ref response);
@@ -120,7 +121,7 @@ namespace SockMaster {
             DataUI.Logger(log);
         }
 
-        protected override void SockOpenService(ServiceRequest request, ref ServiceResponse response)
+        protected override void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);

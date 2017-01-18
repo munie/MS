@@ -16,10 +16,10 @@ namespace mnn.design {
             sesstab = new List<SockSessNew>();
 
             servctl = new ServiceCore();
-            servctl.RegisterDefaultService("DefaultService", DefaultService);
-            servctl.RegisterService("SockOpenService", SockOpenService, Encoding.UTF8.GetBytes("/center/sockopen"));
-            servctl.RegisterService("SockCloseService", SockCloseService, Encoding.UTF8.GetBytes("/center/sockclose"));
-            servctl.RegisterService("SockSendService", SockSendService, Encoding.UTF8.GetBytes("/center/socksend"));
+            servctl.RegisterDefaultService("core.default", DefaultService);
+            servctl.RegisterService("center.sessopen", SessOpenService);
+            servctl.RegisterService("center.sessclose", SessCloseService);
+            servctl.RegisterService("center.sesssend", SessSendService);
         }
 
         protected SockSessServer MakeListen(IPEndPoint ep)
@@ -83,7 +83,8 @@ namespace mnn.design {
         protected virtual void OnRecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            ServiceRequest request = new ServiceRequest(sess.rfifo.Take(), sess);
+            ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Take());
+            request.user_data = sess;
             ServiceResponse response = new ServiceResponse();
 
             servctl.DoService(request, ref response);
@@ -98,7 +99,7 @@ namespace mnn.design {
             response.data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
         }
 
-        protected virtual void SockOpenService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -121,7 +122,7 @@ namespace mnn.design {
             }
         }
 
-        protected virtual void SockCloseService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
             string msg = Encoding.UTF8.GetString(request.data);
@@ -140,7 +141,7 @@ namespace mnn.design {
                 response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
-        protected virtual void SockSendService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             // retrieve param_list of url
             string url = Encoding.UTF8.GetString(request.data);

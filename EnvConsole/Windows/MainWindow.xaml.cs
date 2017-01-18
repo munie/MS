@@ -103,8 +103,7 @@ namespace EnvConsole.Windows
 
             // register events of servctl & register a service
             core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
-            core.servctl.RegisterService("MainWindow.ClientUpdateService",
-                ClientUpdateService, core.Coding.GetBytes("/center/clientupdate"));
+            core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService);
 
             // load all modules from directory "DataHandles"
             if (Directory.Exists(EnvConst.Module_PATH)) {
@@ -254,7 +253,7 @@ namespace EnvConsole.Windows
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {
             // get param string & parse to dictionary
-            string url = core.Coding.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);

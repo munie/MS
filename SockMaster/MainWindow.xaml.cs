@@ -135,7 +135,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
+            UriRequest.InsertHeader(ref buffer);
 
             client.wfifo.Append(buffer);
         }
@@ -153,7 +153,7 @@ namespace SockMaster
                 + "&ip=" + ep.Address.ToString()
                 + "&port=" + ep.Port.ToString()
                 + "&id=" + sock.ID);
-            ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
+            UriRequest.InsertHeader(ref buffer);
 
             client.wfifo.Append(buffer);
         }
@@ -303,8 +303,8 @@ namespace SockMaster
                 byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
                 if (item.Encrypt)
                     data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.ContentMode != ServiceRequestContentMode.none)
-                    ServiceRequest.InsertHeader(item.ContentMode, ref data);
+                if (item.ContentMode != ServiceRequestContentMode.unknown)
+                    UriRequest.InsertHeader(ref data);
 
                 // add internal header just for translating in SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
@@ -314,7 +314,7 @@ namespace SockMaster
                     + "&port=" + ep.Port.ToString()
                     + "&data=");
                 buffer = buffer.Concat(data).ToArray();
-                ServiceRequest.InsertHeader(ServiceRequestContentMode.url, ref buffer);
+                UriRequest.InsertHeader(ref buffer);
 
                 client.wfifo.Append(buffer);
                 break;

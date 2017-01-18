@@ -13,13 +13,11 @@ namespace mnn.misc.service {
 
     public class Service<T> {
         public string id;
-        public byte[] matchkey;
         public T func;
 
-        public Service(string id, byte[] key, T func)
+        public Service(string id, T func)
         {
             this.id = id;
-            this.matchkey = key;
             this.func = func;
         }
     }
@@ -57,32 +55,24 @@ namespace mnn.misc.service {
 
         public void RegisterDefaultService(string id, ServiceDelegate func)
         {
-            default_service = new Service<ServiceDelegate>(id, new byte[] { 0 }, func);
+            default_service = new Service<ServiceDelegate>(id, func);
         }
 
-        public int RegisterService(string id, ServiceDelegate func, byte[] key)
+        public int RegisterService(string id, ServiceDelegate func)
         {
-            int retval = 0;
+            try {
+                servtab_lock.EnterWriteLock();
+                var subset = from s in servtab where s.id.Equals(id) select s;
 
-            servtab_lock.EnterWriteLock();
-            var subset = from s in servtab where s.id.Equals(id) select s;
-            if (subset.Any())
-                retval = 1;
-
-            // insert new service to table sorted by length of keyname decended
-            Service<ServiceDelegate> tmp = null;
-            for (int i = 0; i < servtab.Count; i++) {
-                if (servtab[i].matchkey.Length < key.Length) {
-                    tmp = new Service<ServiceDelegate>(id, key, func);
-                    servtab.Insert(i, tmp);
-                    break;
+                if (subset.Any()) {
+                    return 1;
+                } else {
+                    servtab.Add(new Service<ServiceDelegate>(id, func));
+                    return 0;
                 }
+            } finally {
+                servtab_lock.ExitWriteLock();
             }
-            if (tmp == null)
-                servtab.Add(new Service<ServiceDelegate>(id, key, func));
-            servtab_lock.ExitWriteLock();
-
-            return retval;
         }
 
         public void DeregisterService(string id)
@@ -99,17 +89,18 @@ namespace mnn.misc.service {
 
         public int RegisterFilter(string id, FilterDelegate func)
         {
-            int retval = 0;
-
-            filttab_lock.EnterWriteLock();
-            var subset = from s in filttab where s.id.Equals(id) select s;
-            if (subset.Any())
-                retval = 1;
-
-            filttab.Add(new Service<FilterDelegate>(id, new byte[] { 0 }, func));
-            filttab_lock.ExitWriteLock();
-
-            return retval;
+            try {
+                filttab_lock.EnterWriteLock();
+                var subset = from s in filttab where s.id.Equals(id) select s;
+                if (subset.Any()) {
+                    return 1;
+                } else {
+                    filttab.Add(new Service<FilterDelegate>(id, func));
+                    return 0;
+                }
+            } finally {
+                filttab_lock.ExitWriteLock();
+            }
         }
 
         public void DeregisterFilter(string id)
@@ -139,19 +130,6 @@ namespace mnn.misc.service {
             }
         }
 
-        private bool ByteArrayCmp(byte[] first, byte[] second)
-        {
-            if (first.Length != second.Length)
-                return false;
-
-            for (int i = 0; i < first.Length; i++) {
-                if (first[i] != second[i])
-                    return false;
-            }
-
-            return true;
-        }
-
         // export for synchronous call
         public void DoService(ServiceRequest request, ref ServiceResponse response)
         {
@@ -167,11 +145,14 @@ namespace mnn.misc.service {
                     filttab_lock.ExitReadLock();
                 }
 
+                IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                    <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+
                 // service return when find target service and handled request
                 try {
                     servtab_lock.EnterReadLock();
                     foreach (var item in servtab) {
-                        if (ByteArrayCmp(item.matchkey, request.data.Take(item.matchkey.Length).ToArray())) {
+                        if (item.id.Equals(dc["id"])) {
                             item.func(request, ref response);
                             return;
                         }
@@ -185,7 +166,7 @@ namespace mnn.misc.service {
                     default_service.func(request, ref response);
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(ServiceCore));
-                log.Warn("Exception of invoking service.", ex);
+                log.Warn("Exception of invoking service.\r\n" + ex.ToString());
             }
         }
 

@@ -6,110 +6,172 @@ using System.Net;
 
 namespace mnn.misc.service {
     public enum ServiceRequestContentMode {
-        none = 0x2421,  // $! => none/unknown
-        binary = 0x2422,// $" => default
-        text = 0x2323,  // ## => text/plain
-        url = 0x2324,   // #$ => text/url
+        unknown = 0x2421,   // $! => unknown
+        binary = 0x2422,    // $" => default
+        text = 0x2323,      // ## => text/plain
+        uri = 0x2324,       // #$ => text/url
+        json = 0x277b,      // {' => text/json
     }
 
     [Serializable]
-    public class ServiceRequest {
-        private static readonly int CONTENT_MODE_BYTES = 2;
-        private static readonly int BINARY_LENGTH_BYTES = 2;
-        private static readonly int TEXT_LENGTH_BYTES = 4;
+    public abstract class ServiceRequest {
+        public /*short*/ ServiceRequestContentMode content_mode { get; protected set; }
+        public /*short*/ int packlen { get; protected set; }
+        public byte[] data { get; set; }
+        public object user_data { get; set; }
 
-        public /*short*/ ServiceRequestContentMode content_mode { get; private set; }
-        public /*short*/ int length { get; private set; }
-        public byte[] data { get; private set; }
-        public object user_data { get; private set; }
+        protected abstract void InnerParse(byte[] raw);
 
-        public ServiceRequest(byte[] raw, object udata)
-        {
-            CheckContentMode(raw);
-            CheckLengthAndData(raw);
-            this.user_data = udata;
-        }
+        // Methods ==================================================================
 
-        public void SetData(byte[] content)
-        {
-            if (content == null) return;
-
-            length = content.Length;
-            data = content;
-        }
-
-        private void CheckContentMode(byte[] raw)
+        private static ServiceRequestContentMode CheckContentMode(byte[] raw)
         {
             if (raw.Length < 2)
-                this.content_mode = ServiceRequestContentMode.none;
+                return ServiceRequestContentMode.unknown;
             else {
                 int tmp = raw[0] + (raw[1] << 8);
 
                 if (!Enum.IsDefined(typeof(ServiceRequestContentMode), tmp))
-                    tmp = (int)ServiceRequestContentMode.none;
+                    tmp = (int)ServiceRequestContentMode.unknown;
 
-                this.content_mode = (ServiceRequestContentMode)tmp;
+                return (ServiceRequestContentMode)tmp;
             }
         }
 
-        private void CheckLengthAndData(byte[] raw)
+        public static ServiceRequest Parse(byte[] raw)
         {
-            switch (content_mode) {
-                case ServiceRequestContentMode.binary:
-                    if (raw.Length < 4) {
-                        this.length = 0;
-                        this.data = new byte[0];
-                    } else {
-                        this.length = System.Math.Min(raw[2] + (raw[3] << 8), raw.Length);
-                        this.data = raw.Take(this.length).Skip(CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES).ToArray();
-                    }
-                    break;
-
-                case ServiceRequestContentMode.text:
-                case ServiceRequestContentMode.url:
-                    byte[] tmp = raw.Skip(CONTENT_MODE_BYTES).Take(TEXT_LENGTH_BYTES).ToArray();
-                    this.length = int.Parse(Encoding.ASCII.GetString(tmp)); // ascii is better
-                    this.data = raw.Take(this.length).Skip(CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES).ToArray();
-                    break;
-
-                case ServiceRequestContentMode.none:
-                default:
-                    this.length = raw.Length;
-                    this.data = raw;
-                    break;
-            }
-        }
-
-        public static void InsertHeader(ServiceRequestContentMode mode, ref byte[] buffer)
-        {
-            if (buffer == null || !Enum.IsDefined(typeof(ServiceRequestContentMode), mode))
-                return;
-
-            int tmp = (int)mode;
-            int len = 0;
+            ServiceRequest retval = null;
+            ServiceRequestContentMode mode = CheckContentMode(raw);
 
             switch (mode) {
                 case ServiceRequestContentMode.binary:
-                    len = CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES + buffer.Length;
-                    buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
-                        (byte)(len & 0xff), (byte)(len >> 8 & 0xff) }
-                        .Concat(buffer).ToArray();
+                    retval = new BinaryRequest();
+                    retval.InnerParse(raw);
                     break;
 
                 case ServiceRequestContentMode.text:
-                case ServiceRequestContentMode.url:
-                    len = CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES + buffer.Length;
-                    len += 10000;
-                    byte[] len_byte = Encoding.ASCII.GetBytes(len.ToString());
-                    len_byte = len_byte.Skip(len_byte.Length - 4).ToArray();
-                    buffer = new byte[] { (byte)(tmp & 0xff), (byte)(tmp >> 8 & 0xff),
-                        len_byte[0], len_byte[1], len_byte[2], len_byte[3] }
-                        .Concat(buffer).ToArray();
+                case ServiceRequestContentMode.uri:
+                    retval = new UriRequest();
+                    retval.InnerParse(raw);
                     break;
 
-                case ServiceRequestContentMode.none:
-                default:
+                case ServiceRequestContentMode.json:
+                    retval = new JsonRequest();
+                    retval.InnerParse(raw);
                     break;
+                
+                case ServiceRequestContentMode.unknown:
+                default:
+                    retval = new UnknownRequest();
+                    retval.InnerParse(raw);
+                    break;
+            }
+
+            return retval;
+        }
+    }
+
+    public class UnknownRequest : ServiceRequest {
+        protected override void InnerParse(byte[] raw)
+        {
+            content_mode = ServiceRequestContentMode.unknown;
+            packlen = raw.Length;
+            data = raw;
+            user_data = null;
+        }
+    }
+
+    public class BinaryRequest : ServiceRequest {
+        private static readonly int CONTENT_MODE_BYTES = 2;
+        private static readonly int BINARY_LENGTH_BYTES = 2;
+
+        protected override void InnerParse(byte[] raw)
+        {
+            content_mode = ServiceRequestContentMode.binary;
+            user_data = null;
+
+            if (raw.Length < 4) {
+                this.packlen = 0;
+                this.data = new byte[0];
+            } else {
+                this.packlen = System.Math.Min(raw[2] + (raw[3] << 8), raw.Length);
+                this.data = raw.Take(this.packlen).Skip(CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES).ToArray();
+            }
+        }
+
+        public static void InsertHeader(ref byte[] buffer)
+        {
+            int mode = (int)ServiceRequestContentMode.binary;
+
+            int len = CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES + buffer.Length;
+            buffer = new byte[] { (byte)(mode & 0xff), (byte)(mode >> 8 & 0xff),
+                        (byte)(len & 0xff), (byte)(len >> 8 & 0xff) }
+                .Concat(buffer).ToArray();
+        }
+    }
+
+    public class UriRequest : ServiceRequest {
+        private static readonly int CONTENT_MODE_BYTES = 2;
+        private static readonly int TEXT_LENGTH_BYTES = 4;
+
+        protected override void InnerParse(byte[] raw)
+        {
+            content_mode = ServiceRequestContentMode.uri;
+            user_data = null;
+
+            byte[] tmp = raw.Skip(CONTENT_MODE_BYTES).Take(TEXT_LENGTH_BYTES).ToArray();
+            this.packlen = int.Parse(Encoding.ASCII.GetString(tmp)); // ascii is better
+            this.data = raw.Take(this.packlen).Skip(CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES).ToArray();
+        }
+
+        public static void InsertHeader(ref byte[] buffer)
+        {
+            int mode = (int)ServiceRequestContentMode.binary;
+
+            int len = CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES + buffer.Length;
+            len += 10000;
+            byte[] len_byte = Encoding.ASCII.GetBytes(len.ToString());
+            len_byte = len_byte.Skip(len_byte.Length - 4).ToArray();
+            buffer = new byte[] { (byte)(mode & 0xff), (byte)(mode >> 8 & 0xff),
+                        len_byte[0], len_byte[1], len_byte[2], len_byte[3] }
+                .Concat(buffer).ToArray();
+        }
+    }
+
+    public class JsonRequest : ServiceRequest {
+        private static readonly int PARSE_FAIL_MAX_LEN = 1024;
+
+        protected override void InnerParse(byte[] raw)
+        {
+            content_mode = ServiceRequestContentMode.json;
+            user_data = null;
+
+            __InnerParse(raw);
+        }
+
+        private void __InnerParse(byte[] raw)
+        {
+            if (raw[0] != '{') return;
+
+            for (int i = 1, count = 1; i < raw.Length; i++) {
+                if (raw[i] == '{') {
+                    count++;
+                } else if (raw[i] == '}') {
+                    if (--count == 0) {
+                        packlen = i + 1;
+                        data = raw.Take(i+1).ToArray();
+                        return;
+                    }
+                }
+            }
+
+            // parse failed, truncate if length of raw is greater than PARSE_FAIL_MAX_LEN
+            if (raw.Length > PARSE_FAIL_MAX_LEN) {
+                packlen = raw.Length;
+                data = raw;
+            } else {
+                packlen = 0;
+                data = new byte[0];
             }
         }
     }

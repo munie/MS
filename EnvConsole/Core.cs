@@ -16,8 +16,6 @@ using mnn.misc.module;
 
 namespace EnvConsole {
     class Core : CoreBase {
-        public Encoding Coding { get; set; }
-
         public Core()
         {
             // start nodejs
@@ -40,17 +38,16 @@ namespace EnvConsole {
                 } catch (Exception) { }
             });
 
-            // init fields
-            Coding = Encoding.UTF8;
-
             // servctl register
-            servctl.RegisterDefaultService("DefaultService", DefaultService);
-            servctl.RegisterService("SockSendService", SessSendService, Coding.GetBytes("/center/socksend"));
-            servctl.RegisterService("ClientListService", ClientListService, Coding.GetBytes("/center/clientlist"));
-            servctl.RegisterService("ClientCloseService", ClientCloseService, Coding.GetBytes("/center/clientclose"));
-            servctl.RegisterService("ClientSendService", ClientSendService, Coding.GetBytes("/center/clientsend"));
-            servctl.RegisterService("ClientSendByCcidService", ClientSendByCcidService, Coding.GetBytes("/center/clientsendbyccid"));
-            servctl.RegisterService("ClientUpdateService", ClientUpdateService, Coding.GetBytes("/center/clientupdate"));
+            servctl.RegisterDefaultService("core.default", DefaultService);
+            servctl.RegisterService("core.sessopen", SessOpenService);
+            servctl.RegisterService("core.sessclose", SessCloseService);
+            servctl.RegisterService("core.sesssend", SessSendService);
+            servctl.RegisterService("core.clientlist", ClientListService);
+            servctl.RegisterService("core.clentclose", ClientCloseService);
+            servctl.RegisterService("core.clientsend", ClientSendService);
+            servctl.RegisterService("core.clientsendbyccid", ClientSendByCcidService);
+            servctl.RegisterService("core.clientupdate", ClientUpdateService);
         }
 
         // Session Event ==========================================================================
@@ -76,8 +73,8 @@ namespace EnvConsole {
 
             if (response.data != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString() + " => " + "*.*.*.*" + ")\n";
-                logmsg += "Request: " + Coding.GetString(request.data) + "\n";
-                logmsg += "Respond: " + Coding.GetString(response.data) + "\n\n";
+                logmsg += "Request: " + Encoding.UTF8.GetString(request.data) + "\n";
+                logmsg += "Respond: " + Encoding.UTF8.GetString(response.data) + "\n\n";
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -108,7 +105,7 @@ namespace EnvConsole {
             sb.Append(']');
             sb.Replace("}{", "},{");
             sb.Append("\r\n");
-            response.data = Coding.GetBytes(sb.ToString());
+            response.data = Encoding.UTF8.GetBytes(sb.ToString());
         }
 
         private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
@@ -119,7 +116,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Coding.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
@@ -134,9 +131,9 @@ namespace EnvConsole {
 
             // write response
             if (result != null)
-                response.data = Coding.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
             else
-                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
@@ -147,7 +144,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Coding.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
 
@@ -166,19 +163,19 @@ namespace EnvConsole {
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Coding.GetBytes(param_data));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
 
             // write response
             if (result != null)
-                response.data = Coding.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Success: sendto " + ep.ToString() + "\r\n");
             else
-                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
 
             // log
             if (result != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
-                logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
+                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(param_data)) + "\n\n";
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -193,7 +190,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Coding.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
 
@@ -219,19 +216,19 @@ namespace EnvConsole {
 
             // send message
             if (result != null)
-                sessctl.SendSession(result, Coding.GetBytes(param_data));
+                sessctl.SendSession(result, Encoding.UTF8.GetBytes(param_data));
 
             // write response
             if (result != null)
-                response.data = Coding.GetBytes("Success: sendto " + dc["ccid"] + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Success: sendto " + dc["ccid"] + "\r\n");
             else
-                response.data = Coding.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + dc["ccid"] + "\r\n");
 
             // log
             if (result != null) {
                 string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                     + " => " + result.rep.ToString() + ")\n";
-                logmsg += Coding.GetString(Coding.GetBytes(param_data)) + "\n\n";
+                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(param_data)) + "\n\n";
 
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info(logmsg);
@@ -246,7 +243,7 @@ namespace EnvConsole {
             if (sdata == null || !sdata.IsAdmin) return;
 
             // get param string & parse to dictionary
-            string url = Coding.GetString(request.data);
+            string url = Encoding.UTF8.GetString(request.data);
             if (!url.Contains('?')) return;
             string param_list = url.Substring(url.IndexOf('?') + 1);
             IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
@@ -262,9 +259,9 @@ namespace EnvConsole {
 
             // write response
             if (result != null)
-                response.data = Coding.GetBytes("Success: update " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Success: update " + ep.ToString() + "\r\n");
             else
-                response.data = Coding.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
         }
 
         // Interface ==============================================================================
@@ -292,18 +289,17 @@ namespace EnvConsole {
                         // log
                         string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                             + " => " + (request.user_data as SockSess).lep.ToString() + ")\n";
-                        logmsg += Coding.GetString(request.data) + "\n\n";
+                        logmsg += Encoding.UTF8.GetString(request.data) + "\n\n";
                         log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                         logger.Info(logmsg);
-                    },
-                    Coding.GetBytes(module.ModuleID));
+                    });
             } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
                 servctl.RegisterFilter(module.ModuleID,
                     (ref ServiceRequest request, ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
-                        request.SetData((args[0] as ServiceRequest).data);
+                        request.data = (args[0] as ServiceRequest).data;
                         return retval;
                     });
             }
@@ -381,7 +377,7 @@ namespace EnvConsole {
                     sdata.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
                         sessctl.BeginInvoke(new Action(() =>
                         {
-                            sessctl.SendSession(result, Coding.GetBytes(command));
+                            sessctl.SendSession(result, Encoding.UTF8.GetBytes(command));
                         }))
                     );
                     sdata.Timer.Start();
@@ -419,7 +415,7 @@ namespace EnvConsole {
                 // find and send msg to session
                 result = sessctl.FindSession(SockType.accept, null, ep);
                 if (result != null)
-                    sessctl.SendSession(result, Coding.GetBytes(msg));
+                    sessctl.SendSession(result, Encoding.UTF8.GetBytes(msg));
             }));
         }
 
