@@ -157,22 +157,28 @@ namespace mnn.misc.service {
         {
             try {
                 // filter return when retval is false
-                filttab_lock.EnterWriteLock();
-                foreach (var item in filttab) {
-                    if (!item.func(ref request, response))
-                        return;
+                try {
+                    filttab_lock.EnterReadLock();
+                    foreach (var item in filttab) {
+                        if (!item.func(ref request, response))
+                            return;
+                    }
+                } finally {
+                    filttab_lock.ExitReadLock();
                 }
-                filttab_lock.ExitWriteLock();
 
                 // service return when find target service and handled request
-                servtab_lock.EnterWriteLock();
-                foreach (var item in servtab) {
-                    if (ByteArrayCmp(item.matchkey, request.data.Take(item.matchkey.Length).ToArray())) {
-                        item.func(request, ref response);
-                        return;
+                try {
+                    servtab_lock.EnterReadLock();
+                    foreach (var item in servtab) {
+                        if (ByteArrayCmp(item.matchkey, request.data.Take(item.matchkey.Length).ToArray())) {
+                            item.func(request, ref response);
+                            return;
+                        }
                     }
+                } finally {
+                    servtab_lock.ExitReadLock();
                 }
-                servtab_lock.ExitWriteLock();
 
                 // do default service
                 if (default_service != null)
