@@ -16,8 +16,10 @@ namespace EnvConsole {
                 StringBuilder sb = new StringBuilder();
                 System.IO.TextWriter writer = new System.IO.StringWriter(sb);
                 Layout.Format(writer, loggingEvent);
-                if (MsgBox != null)
+                if (MsgBox != null) {
                     MsgBox.AppendText(sb.ToString());
+                    MsgBox.ScrollToEnd();
+                }
             }));
         }
     }

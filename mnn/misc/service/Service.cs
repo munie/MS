@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace mnn.misc.service {
     public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
-    public delegate bool FilterDelegate(ref ServiceRequest request, ServiceResponse response);
+    public delegate bool FilterDelegate(ref ServiceRequest request);
 
     public delegate void ServiceDoBeforeDelegate(ref ServiceRequest request);
     public delegate void ServiceDoneDelegate(ServiceRequest request, ServiceResponse response);
@@ -151,7 +151,7 @@ namespace mnn.misc.service {
                 try {
                     filttab_lock.EnterReadLock();
                     foreach (var item in filttab) {
-                        if (!item.func(ref request, response))
+                        if (!item.func(ref request))
                             return;
                     }
                 } finally {

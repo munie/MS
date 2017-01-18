@@ -18,7 +18,6 @@ namespace mnn.misc.module {
         private AppDomainProxy proxy;
         private string AssemblyPath;
         public string AssemblyName { get; private set; }
-        public string ModuleID { get; set; }
         public List<ModuleCall> ModuleCallTable { get; set; }
 
         public ModuleNode()
@@ -58,6 +57,21 @@ namespace mnn.misc.module {
         public object Invoke(string interfaceName, string methodName, ref /*params*/ object[] args)
         {
             return proxy.Invoke(interfaceName, methodName, ref args);
+        }
+
+        public object Invoke(string methodName, ref /*params*/ object[] args)
+        {
+            return proxy.Invoke(methodName, ref args);
+        }
+
+        public bool CheckMethod(string methodName, System.Reflection.MethodInfo method)
+        {
+            return proxy.CheckMethod(methodName, method);
+        }
+
+        public string[] GetMethods(System.Reflection.MethodInfo method)
+        {
+            return proxy.GetSameMethods(method);
         }
     }
 }

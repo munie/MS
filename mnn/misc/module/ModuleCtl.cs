@@ -59,7 +59,6 @@ namespace mnn.misc.module {
             try {
                 object[] tmp = new object[] {};
                 module.Invoke(typeof(IModule).FullName, IModuleSymbols.INIT, ref tmp);
-                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, IModuleSymbols.GET_MODULE_ID, ref tmp);
             } catch (Exception) {
                 module.UnLoad();
                 throw;

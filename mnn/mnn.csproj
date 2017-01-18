@@ -55,8 +55,7 @@
     <Compile Include="misc\env\AtCommand.cs" />
     <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
-    <Compile Include="misc\env\IEnvHandler.cs" />
-    <Compile Include="misc\env\IEnvFilter.cs" />
+    <Compile Include="misc\module\IModuleService.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />
     <Compile Include="misc\env\MsgKey.cs" />
     <Compile Include="misc\module\AppDomainProxy.cs" />

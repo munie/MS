@@ -276,14 +276,30 @@ namespace EnvConsole {
                 return false;
             }
 
-            // 注册处理方法
-            if (module.CheckInterface(new string[] { typeof(IEnvHandler).FullName })) {
-                servctl.RegisterService(module.ModuleID,
+            // get services and filters
+            object[] nil_args = new object[0];
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
+
+            // register services
+            foreach (var item in servtab as IDictionary<string, string>) {
+                var __item = item; // I dislike closure here
+                if (!module.CheckMethod(__item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    continue;
+                }
+                servctl.RegisterService(__item.Key,
                     (ServiceRequest request, ref ServiceResponse response) =>
                     {
+                        object swap = request.user_data;
+                        request.user_data = null;
+
                         object[] args = new object[] { request, response };
-                        module.Invoke(typeof(IEnvHandler).FullName, IEnvHandlerSymbols.DO_HANDLER, ref args);
+                        module.Invoke(__item.Value, ref args);
                         response.raw_data = (args[1] as ServiceResponse).raw_data;
+
+                        request.user_data = swap;
 
                         // log
                         string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
@@ -292,13 +308,27 @@ namespace EnvConsole {
                         log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                         logger.Info(logmsg);
                     });
-            } else if (module.CheckInterface(new string[] { typeof(IEnvFilter).FullName })) {
-                servctl.RegisterFilter(module.ModuleID,
-                    (ref ServiceRequest request, ServiceResponse response) =>
+            }
+
+            // register filters
+            foreach (var item in filttab as IDictionary<string, string>) {
+                var __item = item; // I dislike closure here
+                if (!module.CheckMethod(__item.Value, typeof(FilterDelegate).GetMethod("Invoke"))) {
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
+                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    continue;
+                }
+                servctl.RegisterFilter(__item.Key,
+                    (ref ServiceRequest request) =>
                     {
-                        object[] args = new object[] { request, response };
-                        bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, IEnvFilterSymbols.DO_FILTER, ref args);
+                        object swap = request.user_data;
+                        request.user_data = null;
+
+                        object[] args = new object[] { request };
+                        bool retval = (bool)module.Invoke(__item.Value, ref args);
                         request.raw_data = (args[0] as ServiceRequest).raw_data;
+
+                        request.user_data = swap;
                         return retval;
                     });
             }
@@ -308,17 +338,24 @@ namespace EnvConsole {
 
         public bool ModuleUnload(string filename)
         {
-            ModuleNode node = modctl.FindModule(filename);
-            if (node == null) return false;
+            ModuleNode module = modctl.FindModule(filename);
+            if (module == null) return false;
 
-            // 注销处理方法
-            if (node.CheckInterface(new string[] { typeof(IEnvHandler).FullName }))
-                servctl.DeregisterService(node.ModuleID);
-            else if (node.CheckInterface(new string[] { typeof(IEnvFilter).FullName }))
-                servctl.DeregisterFilter(node.ModuleID);
+            // get services and filters
+            object[] nil_args = new object[0];
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
 
-            // 移出 table
-            modctl.Del(node);
+             // deregister service
+            foreach (var item in servtab as IDictionary<string, string>)
+                servctl.DeregisterService(item.Key);
+
+             // deregister filters
+            foreach (var item in filttab as IDictionary<string, string>)
+                servctl.DeregisterFilter(item.Key);
+
+            // remove from table
+            modctl.Del(module);
 
             return true;
         }

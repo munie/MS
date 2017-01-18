@@ -36,8 +36,6 @@ namespace mnn.misc.env {
 
         public virtual void Final() { tcp.Dispose(); }
 
-        public abstract string GetModuleID();
-
         // Private Tools ===========================================================================
 
         protected void SendClientClose(string ip, int port, SockClientTcpSendCallback method = null)

@@ -71,6 +71,7 @@ namespace mnn.misc.service {
         }
     }
 
+    [Serializable]
     public class UnknownRequest : ServiceRequest {
         protected override void InnerParse(byte[] raw)
         {
@@ -81,6 +82,7 @@ namespace mnn.misc.service {
         }
     }
 
+    [Serializable]
     public class BinaryRequest : ServiceRequest {
         private static readonly int CONTENT_MODE_BYTES = 2;
         private static readonly int BINARY_LENGTH_BYTES = 2;
@@ -110,6 +112,7 @@ namespace mnn.misc.service {
         }
     }
 
+    [Serializable]
     public class UriRequest : ServiceRequest {
         private static readonly int CONTENT_MODE_BYTES = 2;
         private static readonly int TEXT_LENGTH_BYTES = 4;
@@ -138,6 +141,7 @@ namespace mnn.misc.service {
         }
     }
 
+    [Serializable]
     public class JsonRequest : ServiceRequest {
         private static readonly int PARSE_FAIL_MAX_LEN = 1024;
 
