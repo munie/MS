@@ -13,7 +13,6 @@ using mnn.net;
 using mnn.misc.env;
 using mnn.misc.service;
 using mnn.misc.module;
-using EnvConsole.Unit;
 
 namespace EnvConsole {
     class Core : CoreBase {
@@ -64,6 +63,7 @@ namespace EnvConsole {
                     Name = "",
                     TimeConn = DateTime.Now,
                     IsAdmin = false,
+                    Timer = null,
                 };
             }
         }
@@ -330,68 +330,82 @@ namespace EnvConsole {
 
         public void ServerStart(string ip, int port, string protocol = "tcp")
         {
-            // only handle tcp
+            // TODO: currently only handle tcp
             if (protocol != "tcp") return;
 
             sessctl.BeginInvoke(new Action(() =>
             {
                 // define variables
                 IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
-                SockSess result = null;
 
                 // make listen
-                if (sessctl.FindSession(SockType.listen, ep, null) == null)
+                SockSess result = sessctl.FindSession(SockType.listen, ep, null);
+                if (result == null)
                     result = sessctl.MakeListen(ep);
-                else
-                    return;
             }));
         }
 
         public void ServerStop(string ip, int port, string protocol = "tcp")
         {
-            // only handle tcp
+            // TODO: currently only handle tcp
             if (protocol != "tcp") return;
 
             sessctl.BeginInvoke(new Action(() =>
             {
                 // define variables
                 IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
-                SockSess result = null;
 
                 // find and delete session
-                result = sessctl.FindSession(SockType.listen, ep, null);
+                SockSess result = sessctl.FindSession(SockType.listen, ep, null);
                 if (result != null)
                     sessctl.DelSession(result);
             }));
         }
 
-        public void ServerTimerStart(ServerUnit server)
+        public void ServerTimerStart(string ip, int port, double interval, string command)
         {
-            server.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
-            // limbda 不会锁住DataUI.ServerTable
-            server.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-                sessctl.BeginInvoke(new Action(() =>
-                {
-                    // define variables
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess result = null;
+            sessctl.BeginInvoke(new Action(() =>
+            {
+                // define variables
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
 
-                    // find and send msg to session
-                    result = sessctl.FindSession(SockType.listen, ep, null);
-                    if (result != null)
-                        sessctl.SendSession(result, Coding.GetBytes(server.TimerCommand));
-                }))
-            );
+                // find and delete session
+                SockSess result = sessctl.FindSession(SockType.listen, ep, null);
+                if (result != null) {
+                    SessData sdata = result.sdata as SessData;
+                    if (sdata == null) return;
 
-            server.Timer.Start();
-            server.TimerState = ServerUnit.TimerStateStarted;
+                    if (sdata.Timer != null)
+                        sdata.Timer.Close();
+                    sdata.Timer = new System.Timers.Timer(interval * 1000);
+                    sdata.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+                        sessctl.BeginInvoke(new Action(() =>
+                        {
+                            sessctl.SendSession(result, Coding.GetBytes(command));
+                        }))
+                    );
+                    sdata.Timer.Start();
+                }
+            }));
         }
 
-        public void ServerTimerStop(ServerUnit server)
+        public void ServerTimerStop(string ip, int port, double interval, string command)
         {
-            server.Timer.Stop();
-            server.Timer.Close();
-            server.TimerState = ServerUnit.TimerStateStoped;
+            sessctl.BeginInvoke(new Action(() =>
+            {
+                // define variables
+                IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
+
+                // find and delete session
+                SockSess result = sessctl.FindSession(SockType.listen, ep, null);
+                if (result != null) {
+                    SessData sdata = result.sdata as SessData;
+                    if (sdata == null || sdata.Timer == null) return;
+
+                    sdata.Timer.Stop();
+                    sdata.Timer.Close();
+                }
+            }));
         }
 
         public void ClientSendMessage(string ip, int port, string msg)

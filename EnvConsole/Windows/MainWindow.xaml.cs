@@ -19,7 +19,7 @@ using System.IO;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Xml;
-using EnvConsole.Unit;
+using EnvConsole.UIData;
 using mnn.net;
 using mnn.misc.env;
 using mnn.misc.service;
@@ -31,7 +31,7 @@ namespace EnvConsole.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DataUI dataui;
+        private UIData.UIData uidata;
         private Core core;
 
         public MainWindow()
@@ -129,7 +129,7 @@ namespace EnvConsole.Windows
                             unit.FileName = System.IO.Path.GetFileName(item);
                             unit.FileVersion = fvi.FileVersion;
                             unit.FileComment = fvi.Comments;
-                            dataui.ModuleTable.Add(unit);
+                            uidata.ModuleTable.Add(unit);
                         }
                     }
                 }
@@ -139,14 +139,14 @@ namespace EnvConsole.Windows
         private void InitDataUI()
         {
             // init dataui
-            dataui = new DataUI();
+            uidata = new UIData.UIData();
 
             // data bingding with dataui
             DataContext = new {
-                ServerTable = dataui.ServerTable,
-                ClientTable = dataui.ClientTable,
-                ModuleTable = dataui.ModuleTable,
-                DataUI = dataui
+                ServerTable = uidata.ServerTable,
+                ClientTable = uidata.ClientTable,
+                ModuleTable = uidata.ModuleTable,
+                DataUI = uidata
             };
             this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
@@ -185,8 +185,7 @@ namespace EnvConsole.Windows
                         ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
                     server.TimerInterval = 0;
                     server.TimerCommand = "";
-                    server.Timer = null;
-                    dataui.ServerTable.Add(server);
+                    uidata.ServerTable.Add(server);
                 }
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
@@ -195,7 +194,7 @@ namespace EnvConsole.Windows
             }
 
             // autorun
-            foreach (var item in dataui.ServerTable) {
+            foreach (var item in uidata.ServerTable) {
                 if (!item.AutoRun) continue;
 
                 if (item.Protocol == "tcp") {
@@ -213,14 +212,14 @@ namespace EnvConsole.Windows
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (sess.type == SockType.accept)
-                    dataui.ClientAdded(sess.lep, sess.rep);
+                    uidata.ClientAdded(sess.lep, sess.rep);
 
                 if (sess.type == SockType.listen)
-                    dataui.ServerStarted(sess.lep.Address.ToString(), sess.lep.Port);
+                    uidata.ServerStarted(sess.lep.Address.ToString(), sess.lep.Port);
             }));
 
             if (sess.type == SockType.listen) {
-                var subset = from s in dataui.ServerTable
+                var subset = from s in uidata.ServerTable
                              where s.Target == ServerTarget.center && s.Port == sess.lep.Port
                              select s;
                 if (!subset.Any()) {
@@ -237,10 +236,10 @@ namespace EnvConsole.Windows
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (sess.type == SockType.accept)
-                    dataui.ClientDeleted(sess.rep);
+                    uidata.ClientDeleted(sess.rep);
 
                 if (sess.type == SockType.listen)
-                    dataui.ServerStoped(sess.lep.Address.ToString(), sess.lep.Port);
+                    uidata.ServerStoped(sess.lep.Address.ToString(), sess.lep.Port);
             }));
         }
 
@@ -249,7 +248,7 @@ namespace EnvConsole.Windows
             /// ** update DataUI
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                dataui.PackRecved();
+                uidata.PackRecved();
             }));
         }
 
@@ -260,7 +259,7 @@ namespace EnvConsole.Windows
             /// ** update DataUI
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                dataui.PackParsed();
+                uidata.PackParsed();
             }));
         }
 
@@ -279,8 +278,8 @@ namespace EnvConsole.Windows
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (result != null) {
-                    dataui.ClientUpdated(ep, "ID", dc["ccid"]);
-                    dataui.ClientUpdated(ep, "Name", dc["name"]);
+                    uidata.ClientUpdated(ep, "ID", dc["ccid"]);
+                    uidata.ClientUpdated(ep, "Name", dc["name"]);
                 }
             }));
         }
@@ -301,7 +300,7 @@ namespace EnvConsole.Windows
                     unit.FileName = System.IO.Path.GetFileName(openFileDialog.FileName);
                     unit.FileVersion = fvi.FileVersion;
                     unit.FileComment = fvi.Comments;
-                    dataui.ModuleTable.Add(unit);
+                    uidata.ModuleTable.Add(unit);
                 }
             }
         }
@@ -317,7 +316,7 @@ namespace EnvConsole.Windows
             // 卸载操作
             foreach (var item in handles) {
                 if (core.ModuleUnload(item.FileName))
-                    dataui.ModuleTable.Remove(item);
+                    uidata.ModuleTable.Remove(item);
             }
         }
 
@@ -373,7 +372,8 @@ namespace EnvConsole.Windows
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                core.ServerTimerStart(item);
+                core.ServerTimerStart(item.IpAddress, item.Port, item.TimerInterval, item.TimerCommand);
+                item.TimerState = ServerUnit.TimerStateStarted;
             }
         }
 
@@ -384,7 +384,8 @@ namespace EnvConsole.Windows
                     item.TimerState == ServerUnit.TimerStateDisable)
                     continue;
 
-                core.ServerTimerStop(item);
+                core.ServerTimerStop(item.IpAddress, item.Port, item.TimerInterval, item.TimerCommand);
+                item.TimerState = ServerUnit.TimerStateStoped;
             }
         }
 

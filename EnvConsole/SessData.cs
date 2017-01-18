@@ -9,5 +9,6 @@ namespace EnvConsole {
         public string Name { get; set; }
         public DateTime TimeConn { get; set; }
         public bool IsAdmin { get; set; }
+        public System.Timers.Timer Timer { get; set; }
     }
 }

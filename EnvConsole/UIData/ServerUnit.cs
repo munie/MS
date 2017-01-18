@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace EnvConsole.Unit
+namespace EnvConsole.UIData
 {
     public enum ServerTarget
     {
@@ -85,7 +85,5 @@ namespace EnvConsole.Unit
                     PropertyChanged(this, new PropertyChangedEventArgs("TimerCommand"));
             }
         }
-
-        public System.Timers.Timer Timer { get; set; }
     }
 }

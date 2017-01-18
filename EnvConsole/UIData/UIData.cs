@@ -8,11 +8,10 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Net;
 using System.Reflection;
-using EnvConsole.Unit;
 
-namespace EnvConsole
+namespace EnvConsole.UIData
 {
-    class DataUI : INotifyPropertyChanged
+    class UIData : INotifyPropertyChanged
     {
         public ObservableCollection<ServerUnit> ServerTable { get; set; }
         public ObservableCollection<ClientUnit> ClientTable { get; set; }
@@ -99,7 +98,7 @@ namespace EnvConsole
             }
         }
 
-        public DataUI()
+        public UIData()
         {
             ServerTable = new ObservableCollection<ServerUnit>();
             ClientTable = new ObservableCollection<ClientUnit>();

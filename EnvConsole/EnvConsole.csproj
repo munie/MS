@@ -68,7 +68,7 @@
     </ApplicationDefinition>
     <Compile Include="SessData.cs" />
     <Compile Include="TextBoxAppender.cs" />
-    <Compile Include="Unit\ClientUnit.cs" />
+    <Compile Include="UIData\ClientUnit.cs" />
     <Page Include="Windows\InputDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -82,9 +82,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Core.cs" />
-    <Compile Include="DataUI.cs" />
-    <Compile Include="Unit\ModuleUnit.cs" />
-    <Compile Include="Unit\ServerUnit.cs" />
+    <Compile Include="UIData\UIData.cs" />
+    <Compile Include="UIData\ModuleUnit.cs" />
+    <Compile Include="UIData\ServerUnit.cs" />
     <Compile Include="Windows\InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>
