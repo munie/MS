@@ -5,7 +5,7 @@ using System.Text;
 using mnn.misc.service;
 
 namespace mnn.misc.env {
-    public class SEnvFilter {
+    public class IEnvFilterSymbols {
         public static readonly string DO_FILTER = "DoFilter";
     }
 

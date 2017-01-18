@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace mnn.misc.module {
-    public class SModule {
+    public class IModuleSymbols {
         public static readonly string INIT = "Init";
         public static readonly string FINAL = "Final";
         public static readonly string GET_MODULE_ID = "GetModuleID";

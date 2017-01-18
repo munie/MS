@@ -58,8 +58,8 @@ namespace mnn.misc.module {
 
             try {
                 object[] tmp = new object[] {};
-                module.Invoke(typeof(IModule).FullName, SModule.INIT, ref tmp);
-                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, SModule.GET_MODULE_ID, ref tmp);
+                module.Invoke(typeof(IModule).FullName, IModuleSymbols.INIT, ref tmp);
+                module.ModuleID = (string)module.Invoke(typeof(IModule).FullName, IModuleSymbols.GET_MODULE_ID, ref tmp);
             } catch (Exception) {
                 module.UnLoad();
                 throw;
@@ -73,7 +73,7 @@ namespace mnn.misc.module {
         {
             try {
                 object[] tmp = new object[] { };
-                module.Invoke(typeof(IModule).FullName, SModule.FINAL, ref tmp);
+                module.Invoke(typeof(IModule).FullName, IModuleSymbols.FINAL, ref tmp);
             } catch (Exception) {
                 //log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
                 //log.Error("Exception of invoking module final method.", ex);

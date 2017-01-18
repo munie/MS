@@ -5,7 +5,7 @@ using System.Text;
 using mnn.misc.service;
 
 namespace mnn.misc.env {
-    public class SEnvHandler {
+    public class IEnvHandlerSymbols {
         public static readonly string DO_HANDLER = "DoHandler";
     }
 

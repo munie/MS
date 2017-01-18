@@ -237,11 +237,9 @@ namespace EnvConsole {
             SessData sdata = sess.sdata as SessData;
             if (sdata == null || !sdata.IsAdmin) return;
 
-            // get param string & parse to dictionary
-            string url = Encoding.UTF8.GetString(request.raw_data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             // update sess data
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -266,15 +264,15 @@ namespace EnvConsole {
 
         // Interface ==============================================================================
 
-        public bool ModuleLoad(string filePath)
+        public bool ModuleLoad(string filepath)
         {
             ModuleNode module = null;
 
             try {
-                module = modctl.Add(filePath);
+                module = modctl.Add(filepath);
             } catch (Exception ex) {
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(filePath + ": load failed.", ex);
+                logger.Info(filepath + ": load failed.", ex);
                 return false;
             }
 
@@ -284,7 +282,7 @@ namespace EnvConsole {
                     (ServiceRequest request, ref ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
-                        module.Invoke(typeof(IEnvHandler).FullName, SEnvHandler.DO_HANDLER, ref args);
+                        module.Invoke(typeof(IEnvHandler).FullName, IEnvHandlerSymbols.DO_HANDLER, ref args);
                         response.raw_data = (args[1] as ServiceResponse).raw_data;
 
                         // log
@@ -299,7 +297,7 @@ namespace EnvConsole {
                     (ref ServiceRequest request, ServiceResponse response) =>
                     {
                         object[] args = new object[] { request, response };
-                        bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, SEnvFilter.DO_FILTER, ref args);
+                        bool retval = (bool)module.Invoke(typeof(IEnvFilter).FullName, IEnvFilterSymbols.DO_FILTER, ref args);
                         request.raw_data = (args[0] as ServiceRequest).raw_data;
                         return retval;
                     });
@@ -308,9 +306,9 @@ namespace EnvConsole {
             return true;
         }
 
-        public bool ModuleUnload(string fileName)
+        public bool ModuleUnload(string filename)
         {
-            ModuleNode node = modctl.FindModule(fileName);
+            ModuleNode node = modctl.FindModule(filename);
             if (node == null) return false;
 
             // 注销处理方法

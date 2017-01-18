@@ -105,23 +105,6 @@ namespace EnvConsole.Windows
             // register events of servctl & register a service
             core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
             core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService);
-
-            // load all modules from directory "DataHandles"
-            if (Directory.Exists(EnvConst.Module_PATH)) {
-                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
-                    string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
-                        if (core.ModuleLoad(item)) {
-                            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item);
-                            ModuleUnit unit = new ModuleUnit();
-                            unit.FileName = System.IO.Path.GetFileName(item);
-                            unit.FileVersion = fvi.FileVersion;
-                            unit.FileComment = fvi.Comments;
-                            uidata.ModuleTable.Add(unit);
-                        }
-                    }
-                }
-            }
         }
 
         private void InitDataUI()
@@ -188,6 +171,23 @@ namespace EnvConsole.Windows
                 if (item.Protocol == "tcp") {
                     core.ServerStart(item.IpAddress, item.Port);
                 } else if (item.Protocol == "udp") {
+                }
+            }
+
+            // load all modules from directory "DataHandles"
+            if (Directory.Exists(EnvConst.Module_PATH)) {
+                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
+                    string str = item.Substring(item.LastIndexOf("\\") + 1);
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
+                        if (core.ModuleLoad(item)) {
+                            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item);
+                            ModuleUnit unit = new ModuleUnit();
+                            unit.FileName = System.IO.Path.GetFileName(item);
+                            unit.FileVersion = fvi.FileVersion;
+                            unit.FileComment = fvi.Comments;
+                            uidata.ModuleTable.Add(unit);
+                        }
+                    }
                 }
             }
         }
