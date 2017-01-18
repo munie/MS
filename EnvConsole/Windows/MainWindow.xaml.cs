@@ -88,7 +88,7 @@ namespace EnvConsole.Windows
             var textBoxAppender = new TextBoxAppender();
             textBoxAppender.MsgBox = txtMsg;
             textBoxAppender.Threshold = log4net.Core.Level.All;
-            textBoxAppender.Layout = new log4net.Layout.PatternLayout("%d [%t] %-5p %c [%x] - %m%n");
+            textBoxAppender.Layout = new log4net.Layout.PatternLayout("%d [%t] %-5p %c - %m%n");
             log4net.Config.BasicConfigurator.Configure(textBoxAppender);
         }
 

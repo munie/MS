@@ -11,17 +11,18 @@
     </Window.Resources>
     <Grid Background="LightBlue">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="640*" />
-            <ColumnDefinition Width="340*" />
+            <ColumnDefinition Width="720*" />
+            <ColumnDefinition Width="240*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="8" />
-            <RowDefinition Height="160" />
-            <RowDefinition Height="327*" />
+            <RowDefinition Height="140" />
+            <RowDefinition Height="180" />
+            <RowDefinition Height="160*" />
             <RowDefinition Height="26" />
         </Grid.RowDefinitions>
 
-        <ListView x:Name="lstViewServer" Margin="5,5,0,5" Grid.Row="1" HorizontalAlignment="Left" Width="397" ItemsSource="{Binding ServerTable}">
+        <ListView x:Name="lstViewServer" Margin="5,5,5,5" Grid.Row="1" ItemsSource="{Binding ServerTable}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -29,17 +30,17 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="名称" Width="80"
+                    <GridViewColumn Header="名称" Width="90"
                                     DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="端口" Width="50"
+                    <GridViewColumn Header="端口" Width="60"
                                     DisplayMemberBinding="{Binding Port}" />
-                    <GridViewColumn Header="监听状态" Width="60"
+                    <GridViewColumn Header="监听状态" Width="75"
                                     DisplayMemberBinding="{Binding ListenState}" />
                     <GridViewColumn Header="定时器状态" Width="75"
                                     DisplayMemberBinding="{Binding TimerState}" />
-                    <GridViewColumn Header="间隔(秒)" Width="60"
+                    <GridViewColumn Header="间隔(秒)" Width="75"
                                     DisplayMemberBinding="{Binding TimerInterval}" />
-                    <GridViewColumn Header="命令" Width="60"
+                    <GridViewColumn Header="命令" Width="160"
                                     DisplayMemberBinding="{Binding TimerCommand}" />
                 </GridView>
             </ListView.View>
@@ -56,7 +57,7 @@
             </ListView.ContextMenu>
         </ListView>
 
-        <ListView x:Name="lstViewModule" Margin="405,5,5,5" Grid.Row="1" ItemsSource="{Binding ModuleTable}">
+        <ListView x:Name="lstViewModule" Margin="5,5,5,5" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3"  ItemsSource="{Binding ModuleTable}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="模块名" Width="120"
@@ -127,10 +128,11 @@
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
-        
-        <GridSplitter Width="2" Grid.Row="1" Grid.RowSpan="2" ></GridSplitter>
 
-        <TextBox Name="txtMsg" Grid.Column="1" Grid.Row="1" Margin="5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" UndoLimit="0" Grid.RowSpan="2">
+        <GridSplitter Height="2" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"></GridSplitter>
+        <GridSplitter Width="2" Grid.Row="1" Grid.RowSpan="3" ></GridSplitter>
+
+        <TextBox Name="txtMsg" Grid.Column="0" Grid.Row="3" Margin="5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" UndoLimit="0" Grid.RowSpan="1">
             <TextBox.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="clear" Click="MenuItem_MsgClear_Click"/>
@@ -138,7 +140,7 @@
             </TextBox.ContextMenu>
         </TextBox>
 
-        <StatusBar Name="statusBar" Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Bottom">
+        <StatusBar Name="statusBar" Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Bottom">
             <StatusBarItem>
                 <TextBlock>Ready</TextBlock>
             </StatusBarItem>
