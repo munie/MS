@@ -130,6 +130,19 @@ namespace mnn.misc.service {
             }
         }
 
+        private bool ByteArrayCmp(byte[] first, byte[] second)
+        {
+            if (first.Length != second.Length)
+                return false;
+
+            for (int i = 0; i < first.Length; i++) {
+                if (first[i] != second[i])
+                    return false;
+            }
+
+            return true;
+        }
+
         // export for synchronous call
         public void DoService(ServiceRequest request, ref ServiceResponse response)
         {
@@ -145,16 +158,26 @@ namespace mnn.misc.service {
                     filttab_lock.ExitReadLock();
                 }
 
-                IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                    <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
-
                 // service return when find target service and handled request
                 try {
                     servtab_lock.EnterReadLock();
-                    foreach (var item in servtab) {
-                        if (item.id.Equals(dc["id"])) {
-                            item.func(request, ref response);
-                            return;
+                    if (request.content_mode == ServiceRequestContentMode.json) {
+                        IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                            <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.data));
+
+                        foreach (var item in servtab) {
+                            if (item.id.Equals(dc["id"])) {
+                                item.func(request, ref response);
+                                return;
+                            }
+                        }
+                    } else {
+                        foreach (var item in servtab) {
+                            if (ByteArrayCmp(Encoding.UTF8.GetBytes(item.id),
+                                request.data.Take(item.id.Length).ToArray())) {
+                                item.func(request, ref response);
+                                return;
+                            }
                         }
                     }
                 } finally {
