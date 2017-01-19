@@ -89,19 +89,20 @@ namespace mnn.design {
 
             // register services
             foreach (var item in servtab as IDictionary<string, string>) {
-                var __item = item; // I dislike closure here
-                if (!module.CheckMethod(__item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
+                if (!module.CheckMethod(item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
                     log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
-                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
                     continue;
                 }
-                servctl.RegisterService(__item.Key,
+
+                var service = item; // I dislike closure here
+                servctl.RegisterService(service.Key,
                     (ServiceRequest request, ref ServiceResponse response) => {
                         object swap = request.user_data;
                         request.user_data = null;
 
                         object[] args = new object[] { request, response };
-                        module.Invoke(__item.Value, ref args);
+                        module.Invoke(service.Value, ref args);
                         response.raw_data = (args[1] as ServiceResponse).raw_data;
 
                         request.user_data = swap;
@@ -117,19 +118,20 @@ namespace mnn.design {
 
             // register filters
             foreach (var item in filttab as IDictionary<string, string>) {
-                var __item = item; // I dislike closure here
-                if (!module.CheckMethod(__item.Value, typeof(FilterDelegate).GetMethod("Invoke"))) {
+                if (!module.CheckMethod(item.Value, typeof(FilterDelegate).GetMethod("Invoke"))) {
                     log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
-                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
                     continue;
                 }
-                servctl.RegisterFilter(__item.Key,
+
+                var filter = item; // I dislike closure here
+                servctl.RegisterFilter(filter.Key,
                     (ref ServiceRequest request) => {
                         object swap = request.user_data;
                         request.user_data = null;
 
                         object[] args = new object[] { request };
-                        bool retval = (bool)module.Invoke(__item.Value, ref args);
+                        bool retval = (bool)module.Invoke(filter.Value, ref args);
                         request.raw_data = (args[0] as ServiceRequest).raw_data;
 
                         request.user_data = swap;

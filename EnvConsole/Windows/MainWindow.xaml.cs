@@ -171,11 +171,18 @@ namespace EnvConsole.Windows
             // autorun
             foreach (var item in uidata.ServerTable) {
                 if (!item.AutoRun) continue;
+                if (item.Protocol != "tcp") continue;
 
-                if (item.Protocol == "tcp") {
-                    core.ServerStart(item.IpAddress, item.Port);
-                } else if (item.Protocol == "udp") {
-                }
+                var server = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // define variables
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
+
+                    // make listen
+                    SockSess result = core.sessctl.FindSession(SockType.listen, ep, null);
+                    if (result == null)
+                        result = core.sessctl.MakeListen(ep);
+                }));
             }
 
             // load all modules from directory "DataHandles"
@@ -362,18 +369,31 @@ namespace EnvConsole.Windows
                 if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
 
-                core.ServerStart(item.IpAddress, item.Port, item.Protocol);
+                var server = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // make listen
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
+                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
+                    if (sess == null)
+                        sess = core.sessctl.MakeListen(ep);
+                }));
             }
         }
 
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnit.ListenStateStoped || item.CanStop == false)
+                if (item.ListenState == ServerUnit.ListenStateStoped || !item.CanStop)
                     continue;
 
-                if (item.CanStop == true)
-                    core.ServerStop(item.IpAddress, item.Port, item.Protocol);
+                var server = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // find and delete session
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
+                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
+                    if (sess != null)
+                        core.sessctl.DelSession(sess);
+                }));
             }
         }
 
@@ -408,8 +428,28 @@ namespace EnvConsole.Windows
                     item.TimerInterval <= 0 || item.TimerCommand == "")
                     continue;
 
-                core.ServerTimerStart(item.IpAddress, item.Port, item.TimerInterval, item.TimerCommand);
                 item.TimerState = ServerUnit.TimerStateStarted;
+
+                var server = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // find and delete session
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
+                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
+                    if (sess != null) {
+                        SessData sdata = sess.sdata as SessData;
+                        if (sdata == null) return;
+
+                        if (sdata.Timer != null)
+                            sdata.Timer.Close();
+                        sdata.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
+                        sdata.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
+                            core.sessctl.BeginInvoke(new Action(() => {
+                                core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(server.TimerCommand));
+                            }))
+                        );
+                        sdata.Timer.Start();
+                    }
+                }));
             }
         }
 
@@ -420,8 +460,21 @@ namespace EnvConsole.Windows
                     item.TimerState == ServerUnit.TimerStateDisable)
                     continue;
 
-                core.ServerTimerStop(item.IpAddress, item.Port, item.TimerInterval, item.TimerCommand);
                 item.TimerState = ServerUnit.TimerStateStoped;
+
+                var server = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // find and delete session
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
+                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
+                    if (sess != null) {
+                        SessData sdata = sess.sdata as SessData;
+                        if (sdata == null || sdata.Timer == null) return;
+
+                        sdata.Timer.Stop();
+                        sdata.Timer.Close();
+                    }
+                }));
             }
         }
 
@@ -466,7 +519,15 @@ namespace EnvConsole.Windows
                     return;
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                    core.ClientSendMessage(item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
+                    var client = item;
+                    var msg = input.textBox1.Text;
+                    core.sessctl.BeginInvoke(new Action(() => {
+                        // find and send msg to session
+                        SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
+                        if (sess != null)
+                            core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(msg));
+                    }));
+
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
 
@@ -478,8 +539,15 @@ namespace EnvConsole.Windows
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ClientUnit item in lstViewClient.SelectedItems)
-                core.ClientClose(item.RemoteEP.Address.ToString(), item.RemoteEP.Port);
+            foreach (ClientUnit item in lstViewClient.SelectedItems) {
+                var client = item;
+                core.sessctl.BeginInvoke(new Action(() => {
+                    // find and delete session
+                    SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
+                    if (sess != null)
+                        core.sessctl.DelSession(sess);
+                }));
+            }
         }
 
         private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)
