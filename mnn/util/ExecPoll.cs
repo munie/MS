@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn {
+namespace mnn.util {
     public interface IExecable {
         void ExecOnce(int next);
     }

@@ -8,11 +8,11 @@ using System.Diagnostics;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Net;
-using mnn.design;
+using mnn.misc.glue;
 using mnn.net;
 using mnn.misc.env;
-using mnn.misc.service;
-using mnn.misc.module;
+using mnn.service;
+using mnn.module;
 using Newtonsoft.Json;
 
 namespace EnvConsole {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.misc.service {
+namespace mnn.service {
     public enum ServiceRequestContentMode {
         unknown = 0x2421,   // $! => unknown
         binary = 0x2422,    // $" => default

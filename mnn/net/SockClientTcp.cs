@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using mnn.misc.service;
+using mnn.service;
 
 namespace mnn.net {
     public delegate void SockClientTcpSendCallback(string s);

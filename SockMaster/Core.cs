@@ -5,9 +5,9 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using System.Net;
-using mnn.design;
+using mnn.misc.glue;
 using mnn.net;
-using mnn.misc.service;
+using mnn.service;
 
 namespace SockMaster {
     class Core : CoreBaseNew {

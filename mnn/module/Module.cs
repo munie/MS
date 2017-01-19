@@ -5,7 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace mnn.misc.module {
+namespace mnn.module {
     public class ModuleCall {
         public string iface;
         public string method;

@@ -19,7 +19,7 @@ namespace EnvServer {
 
         static private void InitCore()
         {
-            Core core = new Core();
+            mnn.misc.glue.CoreBase core = new mnn.misc.glue.CoreBase();
             core.sessctl.MakeListen(new System.Net.IPEndPoint(0, 2000));
             core.RunForever();
         }

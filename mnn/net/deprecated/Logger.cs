@@ -7,15 +7,16 @@ using System.IO;
 namespace mnn.net.deprecated {
     public class Logger {
         public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        public static readonly string LogDirectory = BaseDirectory + @"\Log\";
-        public static readonly string ErrorDirectory = BaseDirectory + @"\ErrLog\";
+        public static readonly string LogDirectory = BaseDirectory + @"\logs\";
+        public static readonly string ErrDirectory = BaseDirectory + @"\errors\";
 
-        public static void Write(string log, string prefix = @"Log")
+        public static void Write(string log, string prefix = "")
         {
             if (!Directory.Exists(LogDirectory))
                 Directory.CreateDirectory(LogDirectory);
 
-            string fileName = LogDirectory + prefix + "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+            if (!String.IsNullOrEmpty(prefix)) prefix += "_";
+            string fileName = LogDirectory + prefix + DateTime.Now.ToString("yyyy-MM-dd") + ".log";
 
             try {
                 using (StreamWriter sw = new StreamWriter(fileName, true)) {
@@ -27,12 +28,13 @@ namespace mnn.net.deprecated {
             } catch (Exception) { }
         }
 
-        public static void WriteException(Exception ex, string prefix = @"ErrLog")
+        public static void WriteException(Exception ex, string prefix = "")
         {
-            if (!Directory.Exists(ErrorDirectory))
-                Directory.CreateDirectory(ErrorDirectory);
+            if (!Directory.Exists(ErrDirectory))
+                Directory.CreateDirectory(ErrDirectory);
 
-            string fileName = ErrorDirectory + prefix + "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+            if (!String.IsNullOrEmpty(prefix)) prefix += "_";
+            string fileName = ErrDirectory + prefix + DateTime.Now.ToString("yyyy-MM-dd") + ".log";
 
             try {
                 using (StreamWriter sw = new StreamWriter(fileName, true)) {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 
-namespace mnn.misc.module {
+namespace mnn.module {
     class AppDomainProxy : MarshalByRefObject {
         private Assembly asm = null;
         private List<object> instance_table = new List<object>();

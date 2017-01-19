@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn.misc.service {
+namespace mnn.service {
     public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
     public delegate bool FilterDelegate(ref ServiceRequest request);
 

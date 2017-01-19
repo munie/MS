@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using mnn.net;
-using mnn.misc.service;
-using mnn.misc.module;
+using mnn.service;
+using mnn.module;
 using Newtonsoft.Json;
 
-namespace mnn.design {
+namespace mnn.misc.glue {
     public class CoreBase {
         // timeout control
         protected TimeOutCtl timectl;

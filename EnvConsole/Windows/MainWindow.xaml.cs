@@ -21,8 +21,8 @@ using System.Xml;
 using EnvConsole.UIData;
 using mnn.net;
 using mnn.misc.env;
-using mnn.misc.service;
-using mnn.misc.module;
+using mnn.service;
+using mnn.module;
 
 namespace EnvConsole.Windows
 {

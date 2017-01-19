@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using mnn.util;
 
 namespace mnn.net {
     public delegate void SockSessDelegate(object sender);

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using mnn.net;
-using mnn.misc.service;
+using mnn.service;
 
-namespace mnn.design {
+namespace mnn.misc.glue {
     public class CoreBaseNew {
         protected List<SockSessNew> sesstab;
         protected ServiceCore servctl;

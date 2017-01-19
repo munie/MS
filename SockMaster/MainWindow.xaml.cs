@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Xml;
 using System.Net.Sockets;
 using mnn.net;
-using mnn.misc.service;
+using mnn.service;
 
 namespace SockMaster
 {

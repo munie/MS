@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using mnn.net;
-using mnn.misc.service;
+using mnn.service;
 
 namespace SockMaster {
     public class CmdUnit : INotifyPropertyChanged {

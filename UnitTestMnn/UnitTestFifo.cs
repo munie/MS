@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using mnn;
+using mnn.util;
 
 namespace UnitTestMnn {
     [TestClass]

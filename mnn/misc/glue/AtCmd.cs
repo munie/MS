@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn.design {
+namespace mnn.misc.glue {
     public delegate void AtCmdDelegate(object[] args);
 
     public class AtCmd {

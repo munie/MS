@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace mnn.misc.module {
+namespace mnn.module {
     public class ModuleCtl {
         private List<Module> modtab;
 

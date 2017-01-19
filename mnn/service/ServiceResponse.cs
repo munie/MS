@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace mnn.misc.service {
+namespace mnn.service {
     [Serializable]
     public class ServiceResponse {
         public byte[] raw_data { get; set; }

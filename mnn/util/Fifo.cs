@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace mnn {
+namespace mnn.util {
     public class Fifo<T> {
         private const int BASE_SIZE = 8192;
 
