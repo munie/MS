@@ -165,7 +165,7 @@ namespace mnn.misc.service {
                         packlen = i + 1;
                         raw_data = raw.Take(i+1).ToArray();
                         // skip \r\n
-                        while (i < raw.Length && (raw[i] == '\r' || raw[i] == '\n'))
+                        while (++i < raw.Length && (raw[i] == '\r' || raw[i] == '\n'))
                             packlen++;
                         return;
                     }

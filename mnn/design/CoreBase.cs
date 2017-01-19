@@ -37,6 +37,7 @@ namespace mnn.design {
             servctl.RegisterService("core.moduledel", ModuleDelService);
             servctl.RegisterService("core.moduleload", ModuleLoadService);
             servctl.RegisterService("core.moduleunload", ModuleUnloadService);
+            servctl.RegisterService("core.sessdetail", SessDetailService);
             servctl.RegisterService("core.sessopen", SessOpenService);
             servctl.RegisterService("core.sessclose", SessCloseService);
             servctl.RegisterService("core.sesssend", SessSendService);
@@ -299,6 +300,28 @@ namespace mnn.design {
                 response.content.errcode = 1;
                 response.content.errmsg = "cannot find " + dc["modname"];
             }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+        }
+
+        protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            List<object> pack = new List<object>();
+            foreach (var item in sessctl.GetSessionTable()) {
+                pack.Add(new {
+                    type = item.type.ToString(),
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                });
+            }
+
+            // write response
+            response.content = new BaseContent() { id = dc["id"] };
+            response.content.errcode = 0;
+            response.content.errmsg = pack;
             response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 

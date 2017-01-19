@@ -14,6 +14,6 @@ namespace mnn.misc.service {
     public class BaseContent {
         public string id { get; set; }
         public int errcode { get; set; }
-        public string errmsg { get; set; }
+        public object errmsg { get; set; }
     }
 }
