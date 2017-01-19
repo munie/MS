@@ -13,31 +13,59 @@ namespace mnn.misc.module {
         public object retval;
     }
 
-    public class ModuleNode {
+    public enum ModuleState {
+        Loaded = 0,
+        Unloaded = 1,
+    }
+
+    public class Module {
         private AppDomain domain;
         private AppDomainProxy proxy;
-        private string AssemblyPath;
+        public string AssemblyPath { get; private set; }
         public string AssemblyName { get; private set; }
-        public List<ModuleCall> ModuleCallTable { get; set; }
+        public ModuleState State { get; private set; }
+        public List<ModuleCall> ModuleCallTable { get; private set; }
 
-        public ModuleNode()
+        public delegate void ModuleUpdatedEvent(Module module);
+        public ModuleUpdatedEvent module_load;
+        public ModuleUpdatedEvent module_unload;
+
+        public Module(string filepath)
         {
+            AssemblyPath = filepath;
+            AssemblyName = Path.GetFileName(filepath);
+            State = ModuleState.Unloaded;
             ModuleCallTable = new List<ModuleCall>();
+            module_load = null;
+            module_unload = null;
         }
 
         // Methods ========================================================================
 
-        public void Load(string filePath)
+        public void Load()
         {
-            AssemblyPath = filePath;
-            AssemblyName = Path.GetFileName(filePath);
-
             domain = AppDomain.CreateDomain(AssemblyName);
             proxy = (AppDomainProxy)domain.CreateInstanceFromAndUnwrap(
                 Assembly.GetExecutingAssembly().CodeBase, typeof(AppDomainProxy).FullName);
 
             try {
-                proxy.LoadAssembly(filePath);
+                // load assembly
+                proxy.LoadAssembly(AssemblyPath);
+
+                // check IModule
+                if (!CheckInterface(new string[] { typeof(IModule).FullName })) {
+                    throw new ApplicationException(String.Format("Can't find {0} in specified assembly {1}",
+                        typeof(IModule).FullName, AssemblyPath));
+                }
+
+                // invoke Init of IModule
+                object[] args = new object[] { };
+                Invoke(typeof(IModule).FullName, IModuleSymbols.INIT, ref args);
+
+                // update state as load successed
+                State = ModuleState.Loaded;
+                if (module_load != null)
+                    module_load(this);
             } catch (Exception) {
                 AppDomain.Unload(domain);
                 throw;
@@ -46,7 +74,17 @@ namespace mnn.misc.module {
 
         public void UnLoad()
         {
-            AppDomain.Unload(domain);
+            try {
+                object[] args = new object[] { };
+                Invoke(typeof(IModule).FullName, IModuleSymbols.FINAL, ref args);
+            } catch (Exception){
+                // do nothing
+            }  finally {
+                AppDomain.Unload(domain);
+                State = ModuleState.Unloaded;
+                if (module_unload != null)
+                    module_unload(this);
+            }
         }
 
         public bool CheckInterface(string[] interfaceNames)

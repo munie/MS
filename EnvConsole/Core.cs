@@ -266,7 +266,7 @@ namespace EnvConsole {
 
         public bool ModuleLoad(string filepath)
         {
-            ModuleNode module = null;
+            Module module = null;
 
             try {
                 module = modctl.Add(filepath);
@@ -338,7 +338,7 @@ namespace EnvConsole {
 
         public bool ModuleUnload(string filename)
         {
-            ModuleNode module = modctl.FindModule(filename);
+            Module module = modctl.GetModule(filename);
             if (module == null) return false;
 
             // get services and filters

@@ -44,6 +44,6 @@ namespace EnvConsole.UIData
             }
         }
 
-        public mnn.misc.module.ModuleNode Module { get; set; }
+        public mnn.misc.module.Module Module { get; set; }
     }
 }
