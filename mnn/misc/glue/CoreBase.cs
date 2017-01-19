@@ -199,16 +199,12 @@ namespace mnn.misc.glue {
         protected virtual void OnSessCreate(object sender, SockSess sess)
         {
             ServiceResponse response = new ServiceResponse();
-            response.id = "core.notice";
-            List<object> pack = new List<object>();
-            foreach (var item in sessctl.GetSessionTable()) {
-                pack.Add(new {
-                    type = item.type.ToString(),
-                    localip = item.lep.ToString(),
-                    remoteip = item.rep == null ? "" : item.rep.ToString(),
-                });
-            }
-            response.data = pack;
+            response.id = "notice.core.sesscreate";
+            response.data = new {
+                type = sess.type.ToString(),
+                localip = sess.lep.ToString(),
+                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+            };
 
             SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
             sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
@@ -217,18 +213,12 @@ namespace mnn.misc.glue {
         protected virtual void OnSessDelete(object sender, SockSess sess)
         {
             ServiceResponse response = new ServiceResponse();
-            response.id = "core.notice";
-            List<object> pack = new List<object>();
-            foreach (var item in sessctl.GetSessionTable()) {
-                if (item.eof) continue;
-
-                pack.Add(new {
-                    type = item.type.ToString(),
-                    localip = item.lep.ToString(),
-                    remoteip = item.rep == null ? "" : item.rep.ToString(),
-                });
-            }
-            response.data = pack;
+            response.id = "notice.core.sessdelete";
+            response.data = new {
+                type = sess.type.ToString(),
+                localip = sess.lep.ToString(),
+                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+            };
 
             SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
             sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));

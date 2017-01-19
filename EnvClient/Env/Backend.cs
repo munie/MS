@@ -30,6 +30,8 @@ namespace EnvClient.Env {
             uidata = new UIData();
         }
 
+        // session events =======================================================
+
         private void OnSessParse(object sender, SockSess sess)
         {
             // init request & response
@@ -43,16 +45,42 @@ namespace EnvClient.Env {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            // response error
-            if (dc["errcode"] != 0) {
+            if (((string)dc["id"]).StartsWith("notice"))
+                ParseNotice(dc["id"], request);
+            else
+                ParseResponse(dc["id"], request);
+        }
+
+        private void OnSessCreate(object sender, SockSess sess) { }
+
+        private void OnSessDelete(object sender, SockSess sess) { }
+
+        // responses =============================================================
+
+        private void ParseResponse(string id, ServiceRequest request)
+        {
+            switch (id) {
+                case "core.sessdetail":
+                    SessDetailResponse(request);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void SessDetailResponse(ServiceRequest request)
+        {
+            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+
+            if ((int)jo["errcode"] != 0) {
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Backend));
-                logger.Info(dc["id"] + ": " + dc["errmsg"]);
+                logger.Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
                 return;
             }
 
-            // response fine
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+
                 uidata.ServerTable.Clear();
                 uidata.ClientTable.Clear();
                 foreach (var item in jo["data"]) {
@@ -75,9 +103,73 @@ namespace EnvClient.Env {
             }));
         }
 
-        private void OnSessCreate(object sender, SockSess sess) { }
+        // notices ===============================================================
 
-        private void OnSessDelete(object sender, SockSess sess) { }
+        private void ParseNotice(string id, ServiceRequest request)
+        {
+            switch (id) {
+                case "notice.core.sesscreate":
+                    SessCreateNotice(request);
+                    break;
+
+                case "notice.core.sessdelete":
+                    SessDeleteNotice(request);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void SessCreateNotice(ServiceRequest request)
+        {
+            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                var tmp = jo["data"];
+                if ((string)tmp["type"] == "listen") {
+                    ServerUnit server = new ServerUnit() {
+                        IpAddress = ((string)tmp["localip"]).Split(':')[0],
+                        Port = Int32.Parse(((string)tmp["localip"]).Split(':')[1]),
+                    };
+                    uidata.ServerTable.Add(server);
+                } else if ((string)tmp["type"] == "accept") {
+                    ClientUnit client = new ClientUnit() {
+                        RemoteEP = new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
+                            Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])),
+                    };
+                    uidata.ClientTable.Add(client);
+                }
+            }));
+        }
+
+        private void SessDeleteNotice(ServiceRequest request)
+        {
+            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                var tmp = jo["data"];
+                if ((string)tmp["type"] == "listen") {
+                    foreach (var item in uidata.ServerTable) {
+                        if (item.IpAddress.Equals(((string)tmp["localip"]).Split(':')[0])
+                            && item.Port == Int32.Parse(((string)tmp["localip"]).Split(':')[1])) {
+                            uidata.ServerTable.Remove(item);
+                            break;
+                        }
+                    }
+                } else if ((string)tmp["type"] == "accept") {
+                    foreach (var item in uidata.ClientTable) {
+                        if (item.RemoteEP.Equals(new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
+                            Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])))) {
+                            uidata.ClientTable.Remove(item);
+                            break;
+                        }
+                    }
+                }
+            }));
+        }
+
+        // methods ==============================================================
 
         public void Run()
         {
