@@ -148,40 +148,36 @@ namespace mnn.misc.service {
         {
             try {
                 // filter return when retval is false
-                try {
-                    filttab_lock.EnterReadLock();
-                    foreach (var item in filttab) {
-                        if (!item.func(ref request))
-                            return;
-                    }
-                } finally {
-                    filttab_lock.ExitReadLock();
+                filttab_lock.EnterReadLock();
+                var tmpfilttab = filttab.ToList();
+                filttab_lock.ExitReadLock();
+                foreach (var item in tmpfilttab) {
+                    if (!item.func(ref request))
+                        return;
                 }
 
                 // service return when find target service and handled request
-                try {
-                    servtab_lock.EnterReadLock();
-                    if (request.content_mode == ServiceRequestContentMode.json) {
-                        IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                            <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                servtab_lock.EnterReadLock();
+                var tmpservtab = servtab.ToList();
+                servtab_lock.ExitReadLock();
+                if (request.content_mode == ServiceRequestContentMode.json) {
+                    IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                        <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-                        foreach (var item in servtab) {
-                            if (item.id.Equals(dc["id"])) {
-                                item.func(request, ref response);
-                                return;
-                            }
-                        }
-                    } else {
-                        foreach (var item in servtab) {
-                            if (ByteArrayCmp(Encoding.UTF8.GetBytes(item.id),
-                                request.raw_data.Take(item.id.Length).ToArray())) {
-                                item.func(request, ref response);
-                                return;
-                            }
+                    foreach (var item in tmpservtab) {
+                        if (item.id.Equals(dc["id"])) {
+                            item.func(request, ref response);
+                            return;
                         }
                     }
-                } finally {
-                    servtab_lock.ExitReadLock();
+                } else {
+                    foreach (var item in tmpservtab) {
+                        if (ByteArrayCmp(Encoding.UTF8.GetBytes(item.id),
+                            request.raw_data.Take(item.id.Length).ToArray())) {
+                            item.func(request, ref response);
+                            return;
+                        }
+                    }
                 }
 
                 // do default service

@@ -15,7 +15,7 @@ namespace mnn.misc.module {
 
     public enum ModuleState {
         Loaded = 0,
-        Unloaded = 1,
+        Unload = 1,
     }
 
     public class Module {
@@ -26,15 +26,15 @@ namespace mnn.misc.module {
         public ModuleState State { get; private set; }
         public List<ModuleCall> ModuleCallTable { get; private set; }
 
-        public delegate void ModuleUpdatedEvent(Module module);
-        public ModuleUpdatedEvent module_load;
-        public ModuleUpdatedEvent module_unload;
+        public delegate void ModuleEvent(Module module);
+        public ModuleEvent module_load;
+        public ModuleEvent module_unload;
 
         public Module(string filepath)
         {
             AssemblyPath = filepath;
             AssemblyName = Path.GetFileName(filepath);
-            State = ModuleState.Unloaded;
+            State = ModuleState.Unload;
             ModuleCallTable = new List<ModuleCall>();
             module_load = null;
             module_unload = null;
@@ -44,6 +44,8 @@ namespace mnn.misc.module {
 
         public void Load()
         {
+            if (State == ModuleState.Loaded) return;
+
             domain = AppDomain.CreateDomain(AssemblyName);
             proxy = (AppDomainProxy)domain.CreateInstanceFromAndUnwrap(
                 Assembly.GetExecutingAssembly().CodeBase, typeof(AppDomainProxy).FullName);
@@ -72,8 +74,16 @@ namespace mnn.misc.module {
             }
         }
 
-        public void UnLoad()
+        public void Unload()
         {
+            if (State == ModuleState.Unload) return;
+
+            // emit event before do unload
+            State = ModuleState.Unload;
+            if (module_unload != null)
+                module_unload(this);
+
+            // do unload
             try {
                 object[] args = new object[] { };
                 Invoke(typeof(IModule).FullName, IModuleSymbols.FINAL, ref args);
@@ -81,9 +91,6 @@ namespace mnn.misc.module {
                 // do nothing
             }  finally {
                 AppDomain.Unload(domain);
-                State = ModuleState.Unloaded;
-                if (module_unload != null)
-                    module_unload(this);
             }
         }
 

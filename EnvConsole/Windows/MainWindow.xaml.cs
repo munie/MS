@@ -13,7 +13,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Net;
-using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -23,6 +22,7 @@ using EnvConsole.UIData;
 using mnn.net;
 using mnn.misc.env;
 using mnn.misc.service;
+using mnn.misc.module;
 
 namespace EnvConsole.Windows
 {
@@ -51,7 +51,7 @@ namespace EnvConsole.Windows
         private void InitailizeWindowName()
         {
             // Format Main Form's Name
-            Assembly asm = Assembly.GetExecutingAssembly();
+            System.Reflection.Assembly asm = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
             this.Title = string.Format("{0} {1} - Powered By {2}",
                 fvi.ProductName,
@@ -96,6 +96,10 @@ namespace EnvConsole.Windows
         {
             core = new Core();
             core.Run();
+
+            // register events of modctl
+            core.modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
+            core.modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
 
             // register events of sessctl
             core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
@@ -178,16 +182,45 @@ namespace EnvConsole.Windows
             if (Directory.Exists(EnvConst.Module_PATH)) {
                 foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
                     string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
-                        if (core.ModuleLoad(item)) {
-                            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(item);
-                            ModuleUnit unit = new ModuleUnit();
-                            unit.FileName = System.IO.Path.GetFileName(item);
-                            unit.FileVersion = fvi.FileVersion;
-                            unit.FileComment = fvi.Comments;
-                            uidata.ModuleTable.Add(unit);
-                        }
-                    }
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
+                        core.modctl.Add(item);
+                }
+            }
+        }
+
+        // Module Event ==================================================================================
+
+        private void OnModuleCtlAdd(object sender, Module module)
+        {
+            module.module_load += new Module.ModuleEvent(OnModuleLoadOrUnload);
+            module.module_unload += new Module.ModuleEvent(OnModuleLoadOrUnload);
+
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(module.AssemblyPath);
+            ModuleUnit unit = new ModuleUnit();
+            unit.FilePath = module.AssemblyPath;
+            unit.FileName = module.AssemblyName;
+            unit.FileVersion = fvi.FileVersion;
+            unit.FileComment = fvi.Comments;
+            unit.ModuleState = module.State.ToString();
+            uidata.ModuleTable.Add(unit);
+        }
+
+        private void OnModuleCtlDelete(object sender, Module module)
+        {
+            foreach (var item in uidata.ModuleTable) {
+                if (item.FileName == module.AssemblyName) {
+                    uidata.ModuleTable.Remove(item);
+                    break;
+                }
+            }
+        }
+
+        private void OnModuleLoadOrUnload(Module module)
+        {
+            foreach (var item in uidata.ModuleTable) {
+                if (item.FileName == module.AssemblyName) {
+                    item.ModuleState = module.State.ToString();
+                    break;
                 }
             }
         }
@@ -274,26 +307,18 @@ namespace EnvConsole.Windows
 
         // Events for itself ==================================================================
 
-        private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_AddModule_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
 
             openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             openFileDialog.FileName = "";
 
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
-                if (core.ModuleLoad(openFileDialog.FileName)) {
-                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(openFileDialog.FileName);
-                    ModuleUnit unit = new ModuleUnit();
-                    unit.FileName = System.IO.Path.GetFileName(openFileDialog.FileName);
-                    unit.FileVersion = fvi.FileVersion;
-                    unit.FileComment = fvi.Comments;
-                    uidata.ModuleTable.Add(unit);
-                }
-            }
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                core.modctl.Add(openFileDialog.FileName);
         }
 
-        private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_DelModule_Click(object sender, RoutedEventArgs e)
         {
             List<ModuleUnit> handles = new List<ModuleUnit>();
 
@@ -303,8 +328,31 @@ namespace EnvConsole.Windows
 
             // 卸载操作
             foreach (var item in handles) {
-                if (core.ModuleUnload(item.FileName))
-                    uidata.ModuleTable.Remove(item);
+                Module module = core.modctl.GetModule(item.FileName);
+                if (module != null)
+                    core.modctl.Del(module);
+            }
+        }
+
+        private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                if (item.ModuleState.Equals(ModuleState.Unload.ToString())) {
+                    Module module = core.modctl.GetModule(item.FileName);
+                    if (module != null)
+                        module.Load();
+                }
+            }
+        }
+
+        private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ModuleUnit item in lstViewModule.SelectedItems) {
+                if (item.ModuleState.Equals(ModuleState.Loaded.ToString())) {
+                    Module module = core.modctl.GetModule(item.FileName);
+                    if (module != null)
+                        module.Unload();
+                }
             }
         }
 

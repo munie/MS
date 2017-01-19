@@ -60,7 +60,7 @@
     <Compile Include="misc\env\MsgKey.cs" />
     <Compile Include="misc\module\AppDomainProxy.cs" />
     <Compile Include="misc\module\IModule.cs" />
-    <Compile Include="misc\module\ModuleNode.cs" />
+    <Compile Include="misc\module\Module.cs" />
     <Compile Include="misc\module\ModuleCtl.cs" />
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />

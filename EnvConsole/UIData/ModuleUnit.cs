@@ -10,9 +10,11 @@ namespace EnvConsole.UIData
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private string filePath;
         private string fileName;
         private string fileVersion;
         private string fileComment;
+        private string moduleState;
         public string FileName
         {
             get { return fileName; }
@@ -21,6 +23,16 @@ namespace EnvConsole.UIData
                 fileName = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("FileName"));
+            }
+        }
+        public string FilePath
+        {
+            get { return filePath; }
+            set
+            {
+                filePath = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("FilePath"));
             }
         }
         public string FileVersion
@@ -43,7 +55,15 @@ namespace EnvConsole.UIData
                     PropertyChanged(this, new PropertyChangedEventArgs("FileComment"));
             }
         }
-
-        public mnn.misc.module.Module Module { get; set; }
+        public string ModuleState
+        {
+            get { return moduleState; }
+            set
+            {
+                moduleState = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ModuleState"));
+            }
+        }
     }
 }

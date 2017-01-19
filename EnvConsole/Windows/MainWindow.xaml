@@ -60,16 +60,20 @@
         <ListView x:Name="lstViewModule" Margin="5,5,5,5" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3"  ItemsSource="{Binding ModuleTable}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="模块名" Width="120"
+                    <GridViewColumn Header="模块名" Width="110"
                                     DisplayMemberBinding="{Binding FileName}" />
                     <GridViewColumn Header="版本号" Width="60"
                                     DisplayMemberBinding="{Binding FileVersion}" />
+                    <GridViewColumn Header="状态" Width="60"
+                                    DisplayMemberBinding="{Binding ModuleState}" />
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
                     <MenuItem Header="加载模块" Click="MenuItem_LoadModule_Click"/>
                     <MenuItem Header="卸载模块" Click="MenuItem_UnloadModule_Click"/>
+                    <MenuItem Header="增加模块" Click="MenuItem_AddModule_Click"/>
+                    <MenuItem Header="删除模块" Click="MenuItem_DelModule_Click"/>
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>

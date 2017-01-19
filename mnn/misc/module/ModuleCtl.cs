@@ -8,9 +8,9 @@ namespace mnn.misc.module {
     public class ModuleCtl {
         private List<Module> modtab;
 
-        public delegate void ModuleUpdatedEvent(object sender, Module module);
-        public ModuleUpdatedEvent module_add;
-        public ModuleUpdatedEvent module_delete;
+        public delegate void ModuleCtlEvent(object sender, Module module);
+        public ModuleCtlEvent module_add;
+        public ModuleCtlEvent module_delete;
 
         public delegate void ModuleCallReturn(ModuleCall call);
         public ModuleCallReturn FuncModuleCallReturn;
@@ -75,7 +75,8 @@ namespace mnn.misc.module {
 
         public void Del(Module module)
         {
-            module.UnLoad();
+            if (module.State == ModuleState.Loaded)
+                module.Unload();
             modtab.Remove(module);
 
             if (module_delete != null)

@@ -13,7 +13,7 @@ namespace mnn.design {
         // timeout control
         protected TimeOutCtl timectl;
         // module control
-        protected ModuleCtl modctl;
+        public ModuleCtl modctl;
         // service control
         public ServiceCore servctl;
         // session control
@@ -26,11 +26,20 @@ namespace mnn.design {
 
             // init modctl
             modctl = new ModuleCtl();
+            modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
 
             // init servctl
             servctl = new ServiceCore();
             servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
             servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            servctl.RegisterDefaultService("core.default", DefaultService);
+            servctl.RegisterService("core.moduleadd", ModuleAddService);
+            servctl.RegisterService("core.moduledel", ModuleDelService);
+            servctl.RegisterService("core.moduleload", ModuleLoadService);
+            servctl.RegisterService("core.moduleunload", ModuleUnloadService);
+            servctl.RegisterService("core.sessopen", SessOpenService);
+            servctl.RegisterService("core.sessclose", SessCloseService);
+            servctl.RegisterService("core.sesssend", SessSendService);
 
             // init sessctl
             sessctl = new SessCtl();
@@ -61,6 +70,88 @@ namespace mnn.design {
                     log.Error("Exception thrown out by core thread.", ex);
                 }
             }
+        }
+
+        // Module Event ==================================================================================
+
+        private void OnModuleCtlAdd(object sender, Module module)
+        {
+            module.module_load += new Module.ModuleEvent(OnModuleLoad);
+            module.module_unload += new Module.ModuleEvent(OnModuleUnload);
+        }
+
+        private void OnModuleLoad(Module module)
+        {
+            // get services and filters
+            object[] nil_args = new object[0];
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
+
+            // register services
+            foreach (var item in servtab as IDictionary<string, string>) {
+                var __item = item; // I dislike closure here
+                if (!module.CheckMethod(__item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
+                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    continue;
+                }
+                servctl.RegisterService(__item.Key,
+                    (ServiceRequest request, ref ServiceResponse response) => {
+                        object swap = request.user_data;
+                        request.user_data = null;
+
+                        object[] args = new object[] { request, response };
+                        module.Invoke(__item.Value, ref args);
+                        response.raw_data = (args[1] as ServiceResponse).raw_data;
+
+                        request.user_data = swap;
+
+                        // log
+                        string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
+                            + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
+                        logmsg += Encoding.UTF8.GetString(request.raw_data);
+                        log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
+                        logger.Info(logmsg);
+                    });
+            }
+
+            // register filters
+            foreach (var item in filttab as IDictionary<string, string>) {
+                var __item = item; // I dislike closure here
+                if (!module.CheckMethod(__item.Value, typeof(FilterDelegate).GetMethod("Invoke"))) {
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
+                    logger.Warn(String.Format("can't found {0} in {1}", __item.Value, module.ToString()));
+                    continue;
+                }
+                servctl.RegisterFilter(__item.Key,
+                    (ref ServiceRequest request) => {
+                        object swap = request.user_data;
+                        request.user_data = null;
+
+                        object[] args = new object[] { request };
+                        bool retval = (bool)module.Invoke(__item.Value, ref args);
+                        request.raw_data = (args[0] as ServiceRequest).raw_data;
+
+                        request.user_data = swap;
+                        return retval;
+                    });
+            }
+        }
+
+        private void OnModuleUnload(Module module)
+        {
+            // get services and filters
+            object[] nil_args = new object[0];
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
+
+            // deregister service
+            foreach (var item in servtab as IDictionary<string, string>)
+                servctl.DeregisterService(item.Key);
+
+            // deregister filters
+            foreach (var item in filttab as IDictionary<string, string>)
+                servctl.DeregisterFilter(item.Key);
         }
 
         // Service Event ==================================================================================
@@ -118,6 +209,94 @@ namespace mnn.design {
                 errcode = 10024,
                 errmsg = "unknown request",
             };
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+        }
+
+        protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            Module module = modctl.Add(dc["filepath"]);
+
+            // write response
+            response.content = new BaseContent() { id = dc["id"] };
+            if (module != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = dc["filepath"] + " added";
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + dc["filepath"];
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+        }
+
+        protected virtual void ModuleDelService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            modctl.Del(dc["modname"]);
+
+            // write response
+            response.content = new BaseContent() { id = dc["id"] };
+            response.content.errcode = 0;
+            response.content.errmsg = dc["modname"] + " deleted";
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+        }
+
+        protected virtual void ModuleLoadService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            Module module = modctl.GetModule(dc["modname"]);
+            bool loadstat = true;
+            try {
+                module.Load();
+                loadstat = true;
+            } catch (Exception) {
+                loadstat = false;
+            }
+
+            // write response
+            response.content = new BaseContent() { id = dc["id"] };
+            if (module != null) {
+                if (loadstat) {
+                    response.content.errcode = 0;
+                    response.content.errmsg = dc["modname"] + " loaded";
+                } else {
+                    response.content.errcode = 2;
+                    response.content.errmsg = "failed to load " + dc["modname"];
+                }
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + dc["modname"];
+            }
+            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+        }
+
+        protected virtual void ModuleUnloadService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            Module module = modctl.GetModule(dc["modname"]);
+            module.Unload();
+
+            // write response
+            response.content = new BaseContent() { id = dc["id"] };
+            if (module != null) {
+                response.content.errcode = 0;
+                response.content.errmsg = dc["modname"] + " loaded";
+            } else {
+                response.content.errcode = 1;
+                response.content.errmsg = "cannot find " + dc["modname"];
+            }
             response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
         }
 
