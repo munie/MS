@@ -97,18 +97,6 @@ namespace SockMaster {
                 DataUI.DelSockUnit(SockType.accept, sess.lep, sess.rep);
         }
 
-        protected override void OnRecvEvent(object sender)
-        {
-            SockSessNew sess = sender as SockSessNew;
-            ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Take());
-            request.user_data = sess;
-            ServiceResponse response = new ServiceResponse();
-
-            servctl.DoService(request, ref response);
-            if (response.raw_data != null && response.raw_data.Length != 0)
-                sess.wfifo.Append(response.raw_data);
-        }
-
         // Center Service
 
         protected override void DefaultService(ServiceRequest request, ref ServiceResponse response)

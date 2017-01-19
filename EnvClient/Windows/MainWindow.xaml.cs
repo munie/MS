@@ -22,10 +22,10 @@ using mnn.net;
 using mnn.misc.env;
 using mnn.service;
 using mnn.module;
-using EnvConsole.Env;
-using EnvConsole.Unit;
+using EnvClient.Env;
+using EnvClient.Unit;
 
-namespace EnvConsole.Windows
+namespace EnvClient.Windows
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -35,10 +35,8 @@ namespace EnvConsole.Windows
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "EnvClient.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        public static readonly string CONF_SERVER = "/configuration/servers/server";
-        public static readonly string CONF_TIMER = "/configuration/timers/timer";
 
-        private UIData uidata;
+        private Backend backend;
 
         public MainWindow()
         {
@@ -48,10 +46,10 @@ namespace EnvConsole.Windows
             InitailizeStatusBar();
 
             InitLog4net();
-            InitDataUI();
+            InitBackend();
         }
 
-        // Initailize ============================================================================
+        // Initailize =========================================================================
 
         private void InitailizeWindowName()
         {
@@ -87,7 +85,7 @@ namespace EnvConsole.Windows
 
         private void InitLog4net()
         {
-            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
+            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvClient.xml");
             log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
 
             var textBoxAppender = new TextBoxAppender();
@@ -97,17 +95,17 @@ namespace EnvConsole.Windows
             log4net.Config.BasicConfigurator.Configure(textBoxAppender);
         }
 
-        private void InitDataUI()
+        private void InitBackend()
         {
             // init dataui
-            uidata = new UIData();
+            backend = new Backend();
 
             // data bingding with dataui
             DataContext = new {
-                ServerTable = uidata.ServerTable,
-                ClientTable = uidata.ClientTable,
-                ModuleTable = uidata.ModuleTable,
-                DataUI = uidata
+                ServerTable = backend.uidata.ServerTable,
+                ClientTable = backend.uidata.ClientTable,
+                ModuleTable = backend.uidata.ModuleTable,
+                DataUI = backend.uidata
             };
             this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
             this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
@@ -116,43 +114,9 @@ namespace EnvConsole.Windows
             this.historyPackFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackFetchedCount"));
             this.historyPackParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackParsedCount"));
 
-            ConfigDataUI();
-        }
-
-        private void ConfigDataUI()
-        {
-            if (File.Exists(CONF_PATH) == false) {
-                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
-                Thread.CurrentThread.Abort();
-            }
-
-            try {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(CONF_PATH);
-
-                // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes(CONF_SERVER)) {
-                    ServerUnit server = new ServerUnit();
-                    server.ID = item.Attributes["id"].Value;
-                    server.Name = item.Attributes["name"].Value;
-                    server.Target = (ServerTarget)Enum.Parse(typeof(ServerTarget), item.Attributes["target"].Value);
-                    server.Protocol = item.Attributes["protocol"].Value;
-                    server.IpAddress = item.Attributes["ipaddress"].Value;
-                    server.Port = int.Parse(item.Attributes["port"].Value);
-                    server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
-                    server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
-                    server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == ServerTarget.center
-                        ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
-                    server.TimerInterval = 0;
-                    server.TimerCommand = "";
-                    uidata.ServerTable.Add(server);
-                }
-            } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
-                log.Error("Exception of reading configure file.", ex);
-                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
-            }
+            // run backend
+            backend.Run();
+            backend.Login();
         }
 
         // Events for itself ==================================================================
@@ -193,7 +157,6 @@ namespace EnvConsole.Windows
         private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
             }
         }
@@ -201,31 +164,7 @@ namespace EnvConsole.Windows
         private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
         {
             foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.ListenState == ServerUnit.ListenStateStoped || !item.CanStop)
                     continue;
-            }
-        }
-
-        private void MenuItem_SetListener_Click(object sender, RoutedEventArgs e)
-        {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "设置监听端口";
-                input.textBlock1.Text = "其他";
-                input.textBlock2.Text = "端口";
-                input.textBlock1.IsEnabled = false;
-                input.textBox1.IsEnabled = false;
-                input.textBox2.Focus();
-
-                if (input.ShowDialog() == false)
-                    return;
-
-                foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                    if (item.ListenState == ServerUnit.ListenStateStarted)
-                        continue;
-
-                    item.Port = int.Parse(input.textBox2.Text);
-                }
             }
         }
 

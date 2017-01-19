@@ -104,7 +104,7 @@ namespace mnn.misc.glue {
 
                         object[] args = new object[] { request, response };
                         module.Invoke(service.Value, ref args);
-                        response.raw_data = (args[1] as ServiceResponse).raw_data;
+                        response = args[1] as ServiceResponse;
 
                         request.user_data = swap;
 
@@ -173,14 +173,12 @@ namespace mnn.misc.glue {
 
         protected virtual void OnServDone(ServiceRequest request, ServiceResponse response)
         {
-            if (response.raw_data != null && response.raw_data.Length != 0) {
-                sessctl.BeginInvoke(new Action(() =>
-                {
-                    SockSess result = sessctl.FindSession(SockType.accept, null, (request.user_data as SockSess).rep);
-                    if (result != null)
-                        sessctl.SendSession(result, response.raw_data);
-                }));
-            }
+            sessctl.BeginInvoke(new Action(() =>
+            {
+                SockSess sess = sessctl.FindSession(SockType.accept, null, (request.user_data as SockSess).rep);
+                if (sess != null)
+                    sessctl.SendSession(sess, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }));
         }
 
         // Session Event ==================================================================================
@@ -198,21 +196,52 @@ namespace mnn.misc.glue {
             servctl.AddRequest(request);
         }
 
-        protected virtual void OnSessCreate(object sender, SockSess sess) { }
+        protected virtual void OnSessCreate(object sender, SockSess sess)
+        {
+            ServiceResponse response = new ServiceResponse();
+            response.id = "core.notice";
+            List<object> pack = new List<object>();
+            foreach (var item in sessctl.GetSessionTable()) {
+                pack.Add(new {
+                    type = item.type.ToString(),
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                });
+            }
+            response.data = pack;
 
-        protected virtual void OnSessDelete(object sender, SockSess sess) { }
+            SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
+            sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+        }
+
+        protected virtual void OnSessDelete(object sender, SockSess sess)
+        {
+            ServiceResponse response = new ServiceResponse();
+            response.id = "core.notice";
+            List<object> pack = new List<object>();
+            foreach (var item in sessctl.GetSessionTable()) {
+                if (item.eof) continue;
+
+                pack.Add(new {
+                    type = item.type.ToString(),
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                });
+            }
+            response.data = pack;
+
+            SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
+            sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+        }
 
         // Center Service =========================================================================
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            // write response
-            response.content = new BaseContent() {
-                id = "unknown",
-                errcode = 10024,
-                errmsg = "unknown request",
-            };
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.id = "unknown";
+            response.errcode = 10024;
+            response.errmsg = "unknown request";
+            response.data = "";
         }
 
         protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
@@ -224,15 +253,15 @@ namespace mnn.misc.glue {
             Module module = modctl.Add(dc["filepath"]);
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
+            response.id = dc["id"];
             if (module != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = dc["filepath"] + " added";
+                response.errcode = 0;
+                response.errmsg = dc["filepath"] + " added";
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + dc["filepath"];
+                response.errcode = 1;
+                response.errmsg = "cannot find " + dc["filepath"];
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
 
         protected virtual void ModuleDelService(ServiceRequest request, ref ServiceResponse response)
@@ -244,10 +273,10 @@ namespace mnn.misc.glue {
             modctl.Del(dc["modname"]);
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            response.content.errcode = 0;
-            response.content.errmsg = dc["modname"] + " deleted";
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.id = dc["id"];
+            response.errcode = 0;
+            response.errmsg = dc["modname"] + " deleted";
+            response.data = "";
         }
 
         protected virtual void ModuleLoadService(ServiceRequest request, ref ServiceResponse response)
@@ -266,20 +295,20 @@ namespace mnn.misc.glue {
             }
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
+            response.id = dc["id"];
             if (module != null) {
                 if (loadstat) {
-                    response.content.errcode = 0;
-                    response.content.errmsg = dc["modname"] + " loaded";
+                    response.errcode = 0;
+                    response.errmsg = dc["modname"] + " loaded";
                 } else {
-                    response.content.errcode = 2;
-                    response.content.errmsg = "failed to load " + dc["modname"];
+                    response.errcode = 2;
+                    response.errmsg = "failed to load " + dc["modname"];
                 }
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + dc["modname"];
+                response.errcode = 1;
+                response.errmsg = "cannot find " + dc["modname"];
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
 
         protected virtual void ModuleUnloadService(ServiceRequest request, ref ServiceResponse response)
@@ -292,15 +321,15 @@ namespace mnn.misc.glue {
             module.Unload();
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
+            response.id = dc["id"];
             if (module != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = dc["modname"] + " loaded";
+                response.errcode = 0;
+                response.errmsg = dc["modname"] + " loaded";
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + dc["modname"];
+                response.errcode = 1;
+                response.errmsg = "cannot find " + dc["modname"];
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
 
         protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
@@ -319,10 +348,10 @@ namespace mnn.misc.glue {
             }
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            response.content.errcode = 0;
-            response.content.errmsg = pack;
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.id = dc["id"];
+            response.errcode = 0;
+            response.errmsg = "";
+            response.data = pack;
         }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
@@ -333,24 +362,24 @@ namespace mnn.misc.glue {
 
             // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
-            SockSess result = null;
+            SockSess sess = null;
             if (dc["type"] == SockType.listen.ToString() && sessctl.FindSession(SockType.listen, ep, null) == null)
-                result = sessctl.MakeListen(ep);
+                sess = sessctl.MakeListen(ep);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.AddConnect(ep);
+                sess = sessctl.AddConnect(ep);
             else
-                result = null;
+                sess = null;
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = dc["type"] + " " + ep.ToString();
+            response.id = dc["id"];
+            if (sess != null) {
+                response.errcode = 0;
+                response.errmsg = dc["type"] + " " + ep.ToString();
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
+                response.errcode = 1;
+                response.errmsg = "cannot find " + ep.ToString();
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
@@ -361,28 +390,28 @@ namespace mnn.misc.glue {
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
-            SockSess result = null;
+            SockSess sess = null;
             if (dc["type"] == SockType.listen.ToString())
-                result = sessctl.FindSession(SockType.listen, ep, null);
+                sess = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, ep, null);
+                sess = sessctl.FindSession(SockType.connect, ep, null);
             else// if (dc["type"] == SockType.accept.ToString())
-                result = sessctl.FindSession(SockType.accept, null, ep);
+                sess = sessctl.FindSession(SockType.accept, null, ep);
 
             // close session
-            if (result != null)
-                sessctl.DelSession(result);
+            if (sess != null)
+                sessctl.DelSession(sess);
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "shutdown " + ep.ToString();
+            response.id = dc["id"];
+            if (sess != null) {
+                response.errcode = 0;
+                response.errmsg = "shutdown " + ep.ToString();
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
+                response.errcode = 1;
+                response.errmsg = "cannot find " + ep.ToString();
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
@@ -393,28 +422,28 @@ namespace mnn.misc.glue {
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
-            SockSess result = null;
+            SockSess sess = null;
             if (dc["type"] == SockType.listen.ToString())
-                result = sessctl.FindSession(SockType.listen, ep, null);
+                sess = sessctl.FindSession(SockType.listen, ep, null);
             else if (dc["type"] == SockType.connect.ToString())
-                result = sessctl.FindSession(SockType.connect, ep, null);
+                sess = sessctl.FindSession(SockType.connect, ep, null);
             else// if (dc["type"] == SockType.accept.ToString())
-                result = sessctl.FindSession(SockType.accept, null, ep);
+                sess = sessctl.FindSession(SockType.accept, null, ep);
 
             // send message
-            if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
+            if (sess != null)
+                sessctl.SendSession(sess, Encoding.UTF8.GetBytes(dc["data"]));
 
             // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "send to " + ep.ToString();
+            response.id = dc["id"];
+            if (sess != null) {
+                response.errcode = 0;
+                response.errmsg = "send to " + ep.ToString();
             } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
+                response.errcode = 1;
+                response.errmsg = "cannot find " + ep.ToString();
             }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            response.data = "";
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 using System.ComponentModel;
 
-namespace EnvConsole.Unit
+namespace EnvClient.Unit
 {
     public class ClientUnit : INotifyPropertyChanged
     {

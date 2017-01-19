@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using mnn.net;
 using mnn.service;
+using Newtonsoft.Json;
 
 namespace mnn.misc.glue {
     public class CoreBaseNew {
@@ -88,84 +89,86 @@ namespace mnn.misc.glue {
             ServiceResponse response = new ServiceResponse();
 
             servctl.DoService(request, ref response);
-            if (response.raw_data != null && response.raw_data.Length != 0)
-                sess.wfifo.Append(response.raw_data);
+            sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
         }
 
         // Center Service
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            response.raw_data = Encoding.UTF8.GetBytes("Failure: unknown request\r\n");
+            response.id = "unknown";
+            response.errcode = 10024;
+            response.errmsg = "unknown request";
+            response.data = "";
         }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
-            // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.raw_data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
 
+            response.id = dc["id"];
             try {
                 SockSessNew sess = null;
                 if (sockType == SockType.listen)
                     sess = MakeListen(ep);
                 else
                     sess = MakeConnect(ep);
-                response.raw_data = Encoding.UTF8.GetBytes("Success: " + dc["type"] + " " + ep.ToString() + "\r\n");
+                response.errcode = 0;
+                response.errmsg = dc["type"] + " " + ep.ToString();
             } catch (Exception) {
-                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't open " + ep.ToString() + "\r\n");
+                response.errcode = 1;
+                response.errmsg = "can't open " + ep.ToString();
             }
+            response.data = "";
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
-            // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.raw_data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
+            response.id = dc["id"];
             if (sess != null) {
                 sess.Close();
-                response.raw_data = Encoding.UTF8.GetBytes("Success: shutdown " + ep.ToString() + "\r\n");
-            } else
-                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                response.errcode = 0;
+                response.errmsg = "shutdown " + ep.ToString();
+            } else {
+                response.errcode = 1;
+                response.errmsg = "can't find " + ep.ToString();
+            }
+            response.data = "";
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            // retrieve param_list of url
-            string url = Encoding.UTF8.GetString(request.raw_data);
-            if (!url.Contains('?')) return;
-            string param_list = url.Substring(url.IndexOf('?') + 1);
-
-            // retrieve param_data
-            int index_data = param_list.IndexOf("&data=");
-            if (index_data == -1) return;
-            string param_data = param_list.Substring(index_data + 6);
-            param_list = param_list.Substring(0, index_data);
-
-            // retrieve param to dictionary
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(param_list);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
+            response.id = dc["id"];
             if (sess != null) {
-                sess.wfifo.Append(Encoding.UTF8.GetBytes(param_data));
-                response.raw_data = Encoding.UTF8.GetBytes("Success: send to " + ep.ToString() + "\r\n");
-            } else
-                response.raw_data = Encoding.UTF8.GetBytes("Failure: can't find " + ep.ToString() + "\r\n");
+                sess.wfifo.Append(Encoding.UTF8.GetBytes(dc["data"]));
+                response.errcode = 0;
+                response.errmsg = "send to " + ep.ToString();
+            } else {
+                response.errcode = 0;
+                response.errmsg = "can't find " + ep.ToString();
+            }
+            response.data = "";
         }
     }
 }

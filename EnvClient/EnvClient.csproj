@@ -67,6 +67,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Env\Backend.cs" />
     <Compile Include="Unit\ClientUnit.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace EnvConsole.Unit
+namespace EnvClient.Unit
 {
     public class ModuleUnit : INotifyPropertyChanged
     {

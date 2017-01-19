@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 
-namespace EnvConsole.Windows
+namespace EnvClient.Windows
 {
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
