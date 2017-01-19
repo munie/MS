@@ -15,7 +15,7 @@ using mnn.service;
 using mnn.module;
 using Newtonsoft.Json;
 
-namespace EnvConsole {
+namespace EnvConsole.Env {
     class Core : CoreBase {
         public Core()
         {

@@ -8,8 +8,9 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Net;
 using System.Reflection;
+using EnvConsole.Unit;
 
-namespace EnvConsole.UIData
+namespace EnvConsole.Env
 {
     class UIData : INotifyPropertyChanged
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace EnvConsole {
+namespace EnvConsole.Env {
     class SessData {
         public string Ccid { get; set; }
         public string Name { get; set; }

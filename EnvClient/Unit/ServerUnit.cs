@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 
-namespace EnvConsole.UIData
+namespace EnvConsole.Unit
 {
     public enum ServerTarget
     {

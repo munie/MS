@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestMnn", "UnitTestMnn\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvServer", "EnvServer\EnvServer.csproj", "{D93AFDE8-392A-4271-81A8-2811EF81E8EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvClient", "EnvClient\EnvClient.csproj", "{82246983-CB58-46AA-9E30-05BEB0E4EBBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -179,6 +181,16 @@ Global
 		{D93AFDE8-392A-4271-81A8-2811EF81E8EB}.Release|Mixed Platforms.Build.0 = Release|x86
 		{D93AFDE8-392A-4271-81A8-2811EF81E8EB}.Release|x86.ActiveCfg = Release|x86
 		{D93AFDE8-392A-4271-81A8-2811EF81E8EB}.Release|x86.Build.0 = Release|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Debug|x86.ActiveCfg = Debug|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Debug|x86.Build.0 = Debug|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Release|Any CPU.ActiveCfg = Release|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Release|Mixed Platforms.Build.0 = Release|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Release|x86.ActiveCfg = Release|x86
+		{82246983-CB58-46AA-9E30-05BEB0E4EBBF}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

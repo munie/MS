@@ -32,8 +32,13 @@ namespace EnvConsole.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
+        public static readonly string CONF_NAME = "EnvClient.xml";
+        public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
+        public static readonly string CONF_SERVER = "/configuration/servers/server";
+        public static readonly string CONF_TIMER = "/configuration/timers/timer";
+
         private UIData uidata;
-        private Core core;
 
         public MainWindow()
         {
@@ -43,7 +48,6 @@ namespace EnvConsole.Windows
             InitailizeStatusBar();
 
             InitLog4net();
-            InitCore();
             InitDataUI();
         }
 
@@ -93,25 +97,6 @@ namespace EnvConsole.Windows
             log4net.Config.BasicConfigurator.Configure(textBoxAppender);
         }
 
-        private void InitCore()
-        {
-            core = new Core();
-            core.Run();
-
-            // register events of modctl
-            core.modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
-            core.modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
-
-            // register events of sessctl
-            core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
-            core.sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
-            core.sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
-
-            // register events of servctl & register a service
-            core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
-            core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService);
-        }
-
         private void InitDataUI()
         {
             // init dataui
@@ -136,17 +121,17 @@ namespace EnvConsole.Windows
 
         private void ConfigDataUI()
         {
-            if (File.Exists(EnvConst.CONF_PATH) == false) {
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": can't find it.");
+            if (File.Exists(CONF_PATH) == false) {
+                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
                 Thread.CurrentThread.Abort();
             }
 
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(EnvConst.CONF_PATH);
+                xdoc.Load(CONF_PATH);
 
                 // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
+                foreach (XmlNode item in xdoc.SelectNodes(CONF_SERVER)) {
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
@@ -166,162 +151,14 @@ namespace EnvConsole.Windows
             } catch (Exception ex) {
                 log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
                 log.Error("Exception of reading configure file.", ex);
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
+                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
             }
-
-            // autorun
-            foreach (var item in uidata.ServerTable) {
-                if (!item.AutoRun) continue;
-                if (item.Protocol != "tcp") continue;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // define variables
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-
-                    // make listen
-                    SockSess result = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (result == null)
-                        result = core.sessctl.MakeListen(ep);
-                }));
-            }
-
-            // load all modules from directory "DataHandles"
-            if (Directory.Exists(EnvConst.Module_PATH)) {
-                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
-                    string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
-                        core.modctl.Add(item);
-                }
-            }
-        }
-
-        // Module Event ==================================================================================
-
-        private void OnModuleCtlAdd(object sender, Module module)
-        {
-            module.module_load += new Module.ModuleEvent(OnModuleLoadOrUnload);
-            module.module_unload += new Module.ModuleEvent(OnModuleLoadOrUnload);
-
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(module.AssemblyPath);
-            ModuleUnit unit = new ModuleUnit();
-            unit.FilePath = module.AssemblyPath;
-            unit.FileName = module.AssemblyName;
-            unit.FileVersion = fvi.FileVersion;
-            unit.FileComment = fvi.Comments;
-            unit.ModuleState = module.State.ToString();
-            uidata.ModuleTable.Add(unit);
-        }
-
-        private void OnModuleCtlDelete(object sender, Module module)
-        {
-            foreach (var item in uidata.ModuleTable) {
-                if (item.FileName == module.AssemblyName) {
-                    uidata.ModuleTable.Remove(item);
-                    break;
-                }
-            }
-        }
-
-        private void OnModuleLoadOrUnload(Module module)
-        {
-            foreach (var item in uidata.ModuleTable) {
-                if (item.FileName == module.AssemblyName) {
-                    item.ModuleState = module.State.ToString();
-                    break;
-                }
-            }
-        }
-
-        // Session Event ==================================================================================
-
-        private void OnSessCreate(object sender, SockSess sess)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (sess.type == SockType.accept)
-                    uidata.ClientAdded(sess.lep, sess.rep);
-
-                if (sess.type == SockType.listen)
-                    uidata.ServerStarted(sess.lep.Address.ToString(), sess.lep.Port);
-            }));
-
-            if (sess.type == SockType.listen) {
-                var subset = from s in uidata.ServerTable
-                             where s.Target == ServerTarget.center && s.Port == sess.lep.Port
-                             select s;
-                if (!subset.Any()) {
-                    if (sess.sdata == null)
-                        sess.sdata = new SessData();
-                    (sess.sdata as SessData).IsAdmin = true;
-                }
-            }
-        }
-
-        private void OnSessDelete(object sender, SockSess sess)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (sess.type == SockType.accept)
-                    uidata.ClientDeleted(sess.rep);
-
-                if (sess.type == SockType.listen)
-                    uidata.ServerStoped(sess.lep.Address.ToString(), sess.lep.Port);
-            }));
-        }
-
-        private void OnSessParse(object sender, SockSess sess)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                uidata.PackRecved();
-            }));
-        }
-
-        // Service Event ==================================================================================
-
-        private void OnServDone(ServiceRequest request, ServiceResponse response)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                uidata.PackParsed();
-            }));
-        }
-
-        private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
-        {
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess result = core.sessctl.FindSession(SockType.accept, null, ep);
-
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (result != null) {
-                    uidata.ClientUpdated(ep, "ID", dc["ccid"]);
-                    uidata.ClientUpdated(ep, "Name", dc["name"]);
-                }
-            }));
         }
 
         // Events for itself ==================================================================
 
         private void MenuItem_AddModule_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
-
-            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
-            openFileDialog.FileName = "";
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                core.modctl.Add(openFileDialog.FileName);
         }
 
         private void MenuItem_DelModule_Click(object sender, RoutedEventArgs e)
@@ -334,9 +171,6 @@ namespace EnvConsole.Windows
 
             // 卸载操作
             foreach (var item in handles) {
-                Module module = core.modctl.GetModule(item.FileName);
-                if (module != null)
-                    core.modctl.Del(module);
             }
         }
 
@@ -344,9 +178,6 @@ namespace EnvConsole.Windows
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
                 if (item.ModuleState.Equals(ModuleState.Unload.ToString())) {
-                    Module module = core.modctl.GetModule(item.FileName);
-                    if (module != null)
-                        module.Load();
                 }
             }
         }
@@ -355,9 +186,6 @@ namespace EnvConsole.Windows
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
                 if (item.ModuleState.Equals(ModuleState.Loaded.ToString())) {
-                    Module module = core.modctl.GetModule(item.FileName);
-                    if (module != null)
-                        module.Unload();
                 }
             }
         }
@@ -367,15 +195,6 @@ namespace EnvConsole.Windows
             foreach (ServerUnit item in lstViewServer.SelectedItems) {
                 if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // make listen
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess == null)
-                        sess = core.sessctl.MakeListen(ep);
-                }));
             }
         }
 
@@ -384,15 +203,6 @@ namespace EnvConsole.Windows
             foreach (ServerUnit item in lstViewServer.SelectedItems) {
                 if (item.ListenState == ServerUnit.ListenStateStoped || !item.CanStop)
                     continue;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null)
-                        core.sessctl.DelSession(sess);
-                }));
             }
         }
 
@@ -428,27 +238,6 @@ namespace EnvConsole.Windows
                     continue;
 
                 item.TimerState = ServerUnit.TimerStateStarted;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null) {
-                        SessData sdata = sess.sdata as SessData;
-                        if (sdata == null) return;
-
-                        if (sdata.Timer != null)
-                            sdata.Timer.Close();
-                        sdata.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
-                        sdata.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-                            core.sessctl.BeginInvoke(new Action(() => {
-                                core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(server.TimerCommand));
-                            }))
-                        );
-                        sdata.Timer.Start();
-                    }
-                }));
             }
         }
 
@@ -460,20 +249,6 @@ namespace EnvConsole.Windows
                     continue;
 
                 item.TimerState = ServerUnit.TimerStateStoped;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null) {
-                        SessData sdata = sess.sdata as SessData;
-                        if (sdata == null || sdata.Timer == null) return;
-
-                        sdata.Timer.Stop();
-                        sdata.Timer.Close();
-                    }
-                }));
             }
         }
 
@@ -518,14 +293,6 @@ namespace EnvConsole.Windows
                     return;
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                    var client = item;
-                    var msg = input.textBox1.Text;
-                    core.sessctl.BeginInvoke(new Action(() => {
-                        // find and send msg to session
-                        SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
-                        if (sess != null)
-                            core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(msg));
-                    }));
 
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
@@ -539,13 +306,6 @@ namespace EnvConsole.Windows
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
             foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                var client = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
-                    if (sess != null)
-                        core.sessctl.DelSession(sess);
-                }));
             }
         }
 

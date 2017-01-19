@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace EnvConsole {
+namespace EnvConsole.Env {
     class TextBoxAppender : log4net.Appender.AppenderSkeleton {
         public TextBox MsgBox { get; set; }
 
