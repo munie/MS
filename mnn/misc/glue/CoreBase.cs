@@ -12,41 +12,46 @@ namespace mnn.misc.glue {
     public class CoreBase {
         // timeout control
         protected TimeOutCtl timectl;
+        // session control
+        public SessCtl sessctl;
         // module control
         public ModuleCtl modctl;
         // service control
+        public ServiceCore filtctl;
         public ServiceCore servctl;
-        // session control
-        public SessCtl sessctl;
 
         public CoreBase()
         {
             // init timectl
             timectl = new TimeOutCtl();
 
-            // init modctl
-            modctl = new ModuleCtl();
-            modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
-
-            // init servctl
-            servctl = new ServiceCore();
-            servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
-            servctl.serv_done += new ServiceDoneDelegate(OnServDone);
-            servctl.RegisterDefaultService("core.default", DefaultService);
-            servctl.RegisterService("core.moduleadd", ModuleAddService);
-            servctl.RegisterService("core.moduledel", ModuleDelService);
-            servctl.RegisterService("core.moduleload", ModuleLoadService);
-            servctl.RegisterService("core.moduleunload", ModuleUnloadService);
-            servctl.RegisterService("core.sessdetail", SessDetailService);
-            servctl.RegisterService("core.sessopen", SessOpenService);
-            servctl.RegisterService("core.sessclose", SessCloseService);
-            servctl.RegisterService("core.sesssend", SessSendService);
-
             // init sessctl
             sessctl = new SessCtl();
             sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
+
+            // init modctl
+            modctl = new ModuleCtl();
+            modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
+
+            // init filtctl
+            filtctl = new ServiceCore();
+            filtctl.RegisterDefaultService("filter.default", DefaultFilter);
+
+            // init servctl
+            servctl = new ServiceCore();
+            servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
+            servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            servctl.RegisterDefaultService("service.default", DefaultService);
+            servctl.RegisterService("service.moduleadd", ModuleAddService);
+            servctl.RegisterService("service.moduledel", ModuleDelService);
+            servctl.RegisterService("service.moduleload", ModuleLoadService);
+            servctl.RegisterService("service.moduleunload", ModuleUnloadService);
+            servctl.RegisterService("service.sessdetail", SessDetailService);
+            servctl.RegisterService("service.sessopen", SessOpenService);
+            servctl.RegisterService("service.sessclose", SessCloseService);
+            servctl.RegisterService("service.sesssend", SessSendService);
         }
 
         public virtual void Run()
@@ -65,6 +70,7 @@ namespace mnn.misc.glue {
                 try {
                     timectl.Exec();
                     sessctl.Exec(1000);
+                    filtctl.Exec();
                     servctl.Exec();
                 } catch (Exception ex) {
                     log4net.ILog log = log4net.LogManager.GetLogger(typeof(CoreBase));
@@ -85,8 +91,35 @@ namespace mnn.misc.glue {
         {
             // get services and filters
             object[] nil_args = new object[0];
-            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
             object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+
+            // register filters
+            foreach (var item in filttab as IDictionary<string, string>) {
+                if (!module.CheckMethod(item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
+                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
+                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
+                    continue;
+                }
+
+                var filter = item; // I dislike closure here
+                filtctl.RegisterService(filter.Key,
+                    (ServiceRequest request, ref ServiceResponse response) => {
+                        // backup user_data as it may not serializable
+                        object swap = request.user_data;
+                        request.user_data = null;
+
+                        object[] args = new object[] { request, response };
+                        bool retval = (bool)module.Invoke(filter.Value, ref args);
+
+                        ServiceRequest newrep = response.data as ServiceRequest;
+                        if (newrep != null) {
+                            // recover user_data
+                            newrep.user_data = swap;
+                            servctl.AddRequest(newrep);
+                        }
+                    });
+            }
 
             // register services
             foreach (var item in servtab as IDictionary<string, string>) {
@@ -99,6 +132,7 @@ namespace mnn.misc.glue {
                 var service = item; // I dislike closure here
                 servctl.RegisterService(service.Key,
                     (ServiceRequest request, ref ServiceResponse response) => {
+                        // backup user_data as it may not serializable
                         object swap = request.user_data;
                         request.user_data = null;
 
@@ -106,37 +140,14 @@ namespace mnn.misc.glue {
                         module.Invoke(service.Value, ref args);
                         response = args[1] as ServiceResponse;
 
+                        // recover user_data
                         request.user_data = swap;
 
-                        // log
                         string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
                             + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
                         logmsg += Encoding.UTF8.GetString(request.raw_data);
                         log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
                         logger.Info(logmsg);
-                    });
-            }
-
-            // register filters
-            foreach (var item in filttab as IDictionary<string, string>) {
-                if (!module.CheckMethod(item.Value, typeof(FilterDelegate).GetMethod("Invoke"))) {
-                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CoreBase));
-                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
-                    continue;
-                }
-
-                var filter = item; // I dislike closure here
-                servctl.RegisterFilter(filter.Key,
-                    (ref ServiceRequest request) => {
-                        object swap = request.user_data;
-                        request.user_data = null;
-
-                        object[] args = new object[] { request };
-                        bool retval = (bool)module.Invoke(filter.Value, ref args);
-                        request.raw_data = (args[0] as ServiceRequest).raw_data;
-
-                        request.user_data = swap;
-                        return retval;
                     });
             }
         }
@@ -145,16 +156,16 @@ namespace mnn.misc.glue {
         {
             // get services and filters
             object[] nil_args = new object[0];
-            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
             object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
+            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+
+            // deregister filter
+            foreach (var item in filttab as IDictionary<string, string>)
+                filtctl.DeregisterService(item.Key);
 
             // deregister service
             foreach (var item in servtab as IDictionary<string, string>)
                 servctl.DeregisterService(item.Key);
-
-            // deregister filters
-            foreach (var item in filttab as IDictionary<string, string>)
-                servctl.DeregisterFilter(item.Key);
         }
 
         // Service Event ==================================================================================
@@ -193,14 +204,19 @@ namespace mnn.misc.glue {
             sess.RfifoSkip(request.packlen);
 
             // add request to service core
-            servctl.AddRequest(request);
+            filtctl.AddRequest(request);
         }
 
         protected virtual void OnSessCreate(object sender, SockSess sess) { }
 
         protected virtual void OnSessDelete(object sender, SockSess sess) { }
 
-        // Center Service =========================================================================
+        // Service =========================================================================
+
+        protected virtual void DefaultFilter(ServiceRequest request, ref ServiceResponse response)
+        {
+            servctl.AddRequest(request);
+        }
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {

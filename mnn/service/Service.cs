@@ -6,16 +6,14 @@ using System.Threading;
 
 namespace mnn.service {
     public delegate void ServiceDelegate(ServiceRequest request, ref ServiceResponse response);
-    public delegate bool FilterDelegate(ref ServiceRequest request);
-
     public delegate void ServiceDoBeforeDelegate(ref ServiceRequest request);
     public delegate void ServiceDoneDelegate(ServiceRequest request, ServiceResponse response);
 
-    public class Service<T> {
+    public class Service {
         public string id;
-        public T func;
+        public ServiceDelegate func;
 
-        public Service(string id, T func)
+        public Service(string id, ServiceDelegate func)
         {
             this.id = id;
             this.func = func;
@@ -24,13 +22,9 @@ namespace mnn.service {
 
     public class ServiceCore {
         // service
-        private Service<ServiceDelegate> default_service;
-        private List<Service<ServiceDelegate>> servtab;
+        private Service default_service;
+        private List<Service> servtab;
         private ReaderWriterLockSlim servtab_lock;
-
-        // filter
-        private List<Service<FilterDelegate>> filttab;
-        private ReaderWriterLockSlim filttab_lock;
 
         // request
         private Queue<ServiceRequest> request_queue;
@@ -40,11 +34,8 @@ namespace mnn.service {
         public ServiceCore()
         {
             default_service = null;
-            servtab = new List<Service<ServiceDelegate>>();
+            servtab = new List<Service>();
             servtab_lock = new ReaderWriterLockSlim();
-
-            filttab = new List<Service<FilterDelegate>>();
-            filttab_lock = new ReaderWriterLockSlim();
 
             request_queue = new Queue<ServiceRequest>();
             serv_before_do = null;
@@ -55,7 +46,7 @@ namespace mnn.service {
 
         public void RegisterDefaultService(string id, ServiceDelegate func)
         {
-            default_service = new Service<ServiceDelegate>(id, func);
+            default_service = new Service(id, func);
         }
 
         public int RegisterService(string id, ServiceDelegate func)
@@ -67,7 +58,7 @@ namespace mnn.service {
                 if (subset.Any()) {
                     return 1;
                 } else {
-                    servtab.Add(new Service<ServiceDelegate>(id, func));
+                    servtab.Add(new Service(id, func));
                     return 0;
                 }
             } finally {
@@ -85,34 +76,6 @@ namespace mnn.service {
                 }
             }
             servtab_lock.ExitWriteLock();
-        }
-
-        public int RegisterFilter(string id, FilterDelegate func)
-        {
-            try {
-                filttab_lock.EnterWriteLock();
-                var subset = from s in filttab where s.id.Equals(id) select s;
-                if (subset.Any()) {
-                    return 1;
-                } else {
-                    filttab.Add(new Service<FilterDelegate>(id, func));
-                    return 0;
-                }
-            } finally {
-                filttab_lock.ExitWriteLock();
-            }
-        }
-
-        public void DeregisterFilter(string id)
-        {
-            filttab_lock.EnterWriteLock();
-            foreach (var item in filttab) {
-                if (item.id.Equals(id)) {
-                    filttab.Remove(item);
-                    break;
-                }
-            }
-            filttab_lock.ExitWriteLock();
         }
 
         // Request ==============================================================================
@@ -147,16 +110,6 @@ namespace mnn.service {
         public void DoService(ServiceRequest request, ref ServiceResponse response)
         {
             try {
-                // filter return when retval is false
-                filttab_lock.EnterReadLock();
-                var tmpfilttab = filttab.ToList();
-                filttab_lock.ExitReadLock();
-                foreach (var item in tmpfilttab) {
-                    if (!item.func(ref request))
-                        return;
-                }
-
-                // service return when find target service and handled request
                 servtab_lock.EnterReadLock();
                 var tmpservtab = servtab.ToList();
                 servtab_lock.ExitReadLock();

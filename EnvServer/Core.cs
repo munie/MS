@@ -13,7 +13,7 @@ namespace EnvServer {
     public class Core : CoreBase {
         public Core()
         {
-            servctl.RegisterService("core.sesslogin", SessLoginService);
+            servctl.RegisterService("service.sesslogin", SessLoginService);
         }
 
         // Session Event ==================================================================================
@@ -21,7 +21,7 @@ namespace EnvServer {
         protected override void OnSessCreate(object sender, SockSess sess)
         {
             ServiceResponse response = new ServiceResponse();
-            response.id = "notice.core.sesscreate";
+            response.id = "notice.sesscreate";
             response.data = new {
                 type = sess.type.ToString(),
                 localip = sess.lep.ToString(),
@@ -39,7 +39,7 @@ namespace EnvServer {
         protected override void OnSessDelete(object sender, SockSess sess)
         {
             ServiceResponse response = new ServiceResponse();
-            response.id = "notice.core.sessdelete";
+            response.id = "notice.sessdelete";
             response.data = new {
                 type = sess.type.ToString(),
                 localip = sess.lep.ToString(),

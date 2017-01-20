@@ -11,6 +11,7 @@ namespace mnn.service {
         text = 0x2323,      // ## => text/plain
         uri = 0x2324,       // #$ => text/url
         json = 0x277b,      // {' => text/json
+        json2 = 0x227b,      // {" => text/json
     }
 
     [Serializable]
@@ -56,6 +57,7 @@ namespace mnn.service {
                     break;
 
                 case ServiceRequestContentMode.json:
+                case ServiceRequestContentMode.json2:
                     retval = new JsonRequest();
                     retval.InnerParse(raw);
                     break;

@@ -12,11 +12,14 @@ using EnvClient.Unit;
 
 namespace EnvClient.Env {
     class Backend {
+        // sessctl
         public SessCtl sessctl;
         private string serverip = "127.0.0.1";
         private int serverport = 2000;
-        private SockSess sess;
-
+        private SockSess envserver;
+        // servctl
+        private ServiceCore servctl;
+        // uidata
         public UIData uidata;
 
         public Backend()
@@ -25,7 +28,12 @@ namespace EnvClient.Env {
             sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
-            sess = sessctl.AddConnect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
+            envserver = sessctl.AddConnect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
+
+            servctl = new ServiceCore();
+            servctl.RegisterService("service.sessdetail", SessDetailResponse);
+            servctl.RegisterService("notice.sesscreate", SessCreateNotice);
+            servctl.RegisterService("notice.sessdelete", SessDeleteNotice);
 
             uidata = new UIData();
         }
@@ -41,35 +49,17 @@ namespace EnvClient.Env {
             // rfifo skip
             sess.RfifoSkip(request.packlen);
 
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            if (((string)dc["id"]).StartsWith("notice"))
-                ParseNotice(dc["id"], request);
-            else
-                ParseResponse(dc["id"], request);
+            // add request to service core
+            servctl.AddRequest(request);
         }
 
         private void OnSessCreate(object sender, SockSess sess) { }
 
         private void OnSessDelete(object sender, SockSess sess) { }
 
-        // responses =============================================================
+        // services =============================================================
 
-        private void ParseResponse(string id, ServiceRequest request)
-        {
-            switch (id) {
-                case "core.sessdetail":
-                    SessDetailResponse(request);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        private void SessDetailResponse(ServiceRequest request)
+        private void SessDetailResponse(ServiceRequest request, ref ServiceResponse response)
         {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
@@ -104,25 +94,7 @@ namespace EnvClient.Env {
             }));
         }
 
-        // notices ===============================================================
-
-        private void ParseNotice(string id, ServiceRequest request)
-        {
-            switch (id) {
-                case "notice.core.sesscreate":
-                    SessCreateNotice(request);
-                    break;
-
-                case "notice.core.sessdelete":
-                    SessDeleteNotice(request);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        private void SessCreateNotice(ServiceRequest request)
+        private void SessCreateNotice(ServiceRequest request, ref ServiceResponse response)
         {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
@@ -145,7 +117,7 @@ namespace EnvClient.Env {
             }));
         }
 
-        private void SessDeleteNotice(ServiceRequest request)
+        private void SessDeleteNotice(ServiceRequest request, ref ServiceResponse response)
         {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
@@ -179,6 +151,7 @@ namespace EnvClient.Env {
                 while (true) {
                     try {
                         sessctl.Exec(1000);
+                        servctl.Exec();
                     } catch (Exception ex) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(Backend));
                         log.Error("Exception thrown out by core thread.", ex);
@@ -192,11 +165,11 @@ namespace EnvClient.Env {
         public void Login()
         {
             sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(sess, Encoding.UTF8.GetBytes("{'id':'core.sesslogin', 'admin':'true'}"));
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sesslogin', 'admin':'true'}"));
             }));
 
             sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(sess, Encoding.UTF8.GetBytes("{'id':'core.sessdetail'}"));
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
             }));
         }
     }
