@@ -166,6 +166,10 @@ namespace mnn.service {
 
                     foreach (var item in tmpservtab) {
                         if (item.id.Equals(dc["id"])) {
+                            response.id = dc["id"];
+                            response.errcode = 0;
+                            response.errmsg = "";
+                            response.data = "";
                             item.func(request, ref response);
                             return;
                         }

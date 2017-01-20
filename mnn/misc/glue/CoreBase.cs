@@ -75,13 +75,13 @@ namespace mnn.misc.glue {
 
         // Module Event ==================================================================================
 
-        private void OnModuleCtlAdd(object sender, Module module)
+        protected virtual void OnModuleCtlAdd(object sender, Module module)
         {
             module.module_load += new Module.ModuleEvent(OnModuleLoad);
             module.module_unload += new Module.ModuleEvent(OnModuleUnload);
         }
 
-        private void OnModuleLoad(Module module)
+        protected virtual void OnModuleLoad(Module module)
         {
             // get services and filters
             object[] nil_args = new object[0];
@@ -141,7 +141,7 @@ namespace mnn.misc.glue {
             }
         }
 
-        private void OnModuleUnload(Module module)
+        protected virtual void OnModuleUnload(Module module)
         {
             // get services and filters
             object[] nil_args = new object[0];
@@ -175,7 +175,7 @@ namespace mnn.misc.glue {
         {
             sessctl.BeginInvoke(new Action(() =>
             {
-                SockSess sess = sessctl.FindSession(SockType.accept, null, (request.user_data as SockSess).rep);
+                SockSess sess = request.user_data as SockSess;
                 if (sess != null)
                     sessctl.SendSession(sess, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
             }));
@@ -196,33 +196,9 @@ namespace mnn.misc.glue {
             servctl.AddRequest(request);
         }
 
-        protected virtual void OnSessCreate(object sender, SockSess sess)
-        {
-            ServiceResponse response = new ServiceResponse();
-            response.id = "notice.core.sesscreate";
-            response.data = new {
-                type = sess.type.ToString(),
-                localip = sess.lep.ToString(),
-                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
-            };
+        protected virtual void OnSessCreate(object sender, SockSess sess) { }
 
-            SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
-            sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-        }
-
-        protected virtual void OnSessDelete(object sender, SockSess sess)
-        {
-            ServiceResponse response = new ServiceResponse();
-            response.id = "notice.core.sessdelete";
-            response.data = new {
-                type = sess.type.ToString(),
-                localip = sess.lep.ToString(),
-                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
-            };
-
-            SockSess server = sessctl.FindSession(SockType.listen, new IPEndPoint(0, 2000), null);
-            sessctl.SendSession(server, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-        }
+        protected virtual void OnSessDelete(object sender, SockSess sess) { }
 
         // Center Service =========================================================================
 
@@ -231,19 +207,15 @@ namespace mnn.misc.glue {
             response.id = "unknown";
             response.errcode = 10024;
             response.errmsg = "unknown request";
-            response.data = "";
         }
 
         protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             Module module = modctl.Add(dc["filepath"]);
 
-            // write response
-            response.id = dc["id"];
             if (module != null) {
                 response.errcode = 0;
                 response.errmsg = dc["filepath"] + " added";
@@ -251,27 +223,21 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + dc["filepath"];
             }
-            response.data = "";
         }
 
         protected virtual void ModuleDelService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             modctl.Del(dc["modname"]);
 
-            // write response
-            response.id = dc["id"];
             response.errcode = 0;
             response.errmsg = dc["modname"] + " deleted";
-            response.data = "";
         }
 
         protected virtual void ModuleLoadService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
@@ -284,8 +250,6 @@ namespace mnn.misc.glue {
                 loadstat = false;
             }
 
-            // write response
-            response.id = dc["id"];
             if (module != null) {
                 if (loadstat) {
                     response.errcode = 0;
@@ -298,20 +262,16 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + dc["modname"];
             }
-            response.data = "";
         }
 
         protected virtual void ModuleUnloadService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             Module module = modctl.GetModule(dc["modname"]);
             module.Unload();
 
-            // write response
-            response.id = dc["id"];
             if (module != null) {
                 response.errcode = 0;
                 response.errmsg = dc["modname"] + " loaded";
@@ -319,15 +279,10 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + dc["modname"];
             }
-            response.data = "";
         }
 
         protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
             List<object> pack = new List<object>();
             foreach (var item in sessctl.GetSessionTable()) {
                 pack.Add(new {
@@ -337,16 +292,11 @@ namespace mnn.misc.glue {
                 });
             }
 
-            // write response
-            response.id = dc["id"];
-            response.errcode = 0;
-            response.errmsg = "";
             response.data = pack;
         }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
@@ -360,8 +310,6 @@ namespace mnn.misc.glue {
             else
                 sess = null;
 
-            // write response
-            response.id = dc["id"];
             if (sess != null) {
                 response.errcode = 0;
                 response.errmsg = dc["type"] + " " + ep.ToString();
@@ -369,12 +317,10 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + ep.ToString();
             }
-            response.data = "";
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
@@ -392,8 +338,6 @@ namespace mnn.misc.glue {
             if (sess != null)
                 sessctl.DelSession(sess);
 
-            // write response
-            response.id = dc["id"];
             if (sess != null) {
                 response.errcode = 0;
                 response.errmsg = "shutdown " + ep.ToString();
@@ -401,12 +345,10 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + ep.ToString();
             }
-            response.data = "";
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
@@ -424,8 +366,6 @@ namespace mnn.misc.glue {
             if (sess != null)
                 sessctl.SendSession(sess, Encoding.UTF8.GetBytes(dc["data"]));
 
-            // write response
-            response.id = dc["id"];
             if (sess != null) {
                 response.errcode = 0;
                 response.errmsg = "send to " + ep.ToString();
@@ -433,7 +373,6 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + ep.ToString();
             }
-            response.data = "";
         }
     }
 }

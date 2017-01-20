@@ -34,39 +34,5 @@
     </appender>
   </log4net>
 
-  <servers>
-    <server target="center" protocol="tcp" ipaddress="127.0.0.1" port="2000" autorun="true" canstop="false" id="ctl" name="命令 服务" />
-    <!-- not modify above here -->
-
-    <!-- add new server below here -->
-    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3000" autorun="false" canstop="true" id="SK" name="水库 服务" />
-    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3002" autorun="false" canstop="true" id="ZLS" name="流量 服务" />
-    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3006" autorun="false" canstop="true" id="QX" name="气象 服务" />
-    <server target="worker" protocol="tcp" ipaddress="0.0.0.0" port="3008" autorun="false" canstop="true" id="DXS" name="地下水 服务" />
-  </servers>
-
-  <timers>
-    <timer name="zls_broadcast" type="default" interval="1740" command="!A0#" ipaddr="0.0.0.0:3002"></timer>
-    <timer name="sk_broadcast1" type="default" interval="3600,45,45,15" command="!Y1,!A3?,!A1?,!Y0" ipaddr="0.0.0.0:3000"></timer>
-    <timer name="sk_broadcast2" type="default" interval="86410,65" command="!Q1,!P1" ipaddr="0.0.0.0:3000"></timer>
-    <timer name="sk_old" type="to_ccid" interval="86422" command="!X1" ccid="89860112453600104241,89860020101480005460"></timer>
-    <timer name="sk_new" type="to_ccid" interval="86400" command="!Z1" ccid="89860113836037156801,89860096111456058587"></timer>
-    
-    <!--<timer type="Timer_SK" interval="86400" command="!Z1"
-           ccid="89860113836037156801,89860096111456058587"
-           id ="Timer_SK1" name="Timer_SK1"></timer>
-    
-    <timer type="Timer_SK" interval="86422" command="!X1"
-           ccid="89860112453600104241,89860020101480005460"
-           id ="Timer_SK2" name="Timer_SK2"></timer>
-    
-    <timer type="Timer_SK" interval="3600,65,65" command="!Y1,!A3?,!A1?"
-           ccid="89860114836037330892,89860113836037156801,89860112453600104241,89860020101480005460"
-           id ="Timer_SK3" name="Timer_SK3"></timer>
-
-    <timer type="Timer_SK" interval="86410,65" command="!Q1,!P1"
-           ccid="89860113836037156801,89860112453600104241,89860020101480005460,89860114836037330892,89860096111456058587"
-           id ="Timer_SK4" name="Timer_SK4"></timer>-->
-  </timers>
-
+  <server protocol="tcp" ipaddress="127.0.0.1" port="2000" />
 </configuration>

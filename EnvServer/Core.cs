@@ -2,244 +2,91 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.IO;
-using System.Diagnostics;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Net;
-using mnn.design;
 using mnn.net;
-using mnn.misc.env;
-using mnn.misc.service;
-using mnn.misc.module;
+using mnn.service;
+using mnn.module;
+using mnn.misc.glue;
 using Newtonsoft.Json;
 
 namespace EnvServer {
-    class Core : CoreBase {
+    public class Core : CoreBase {
         public Core()
         {
-            // servctl register
-            servctl.RegisterDefaultService("core.default", DefaultService);
-            servctl.RegisterService("core.sessopen", SessOpenService);
-            servctl.RegisterService("core.sessclose", SessCloseService);
-            servctl.RegisterService("core.sesssend", SessSendService);
-            servctl.RegisterService("core.clientlist", ClientListService);
-            servctl.RegisterService("core.clentclose", ClientCloseService);
-            servctl.RegisterService("core.clientsend", ClientSendService);
-            servctl.RegisterService("core.clientsendbyccid", ClientSendByCcidService);
-            servctl.RegisterService("core.clientupdate", ClientUpdateService);
+            servctl.RegisterService("core.sesslogin", SessLoginService);
         }
 
-        // Session Event ==========================================================================
+        // Session Event ==================================================================================
 
         protected override void OnSessCreate(object sender, SockSess sess)
         {
-            if (sess.type == SockType.accept && sess.sdata == null) {
-                sess.sdata = new SessData() {
-                    Ccid = "",
-                    Name = "",
-                    TimeConn = DateTime.Now,
-                    IsAdmin = false,
-                    Timer = null,
-                };
-            }
-        }
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.core.sesscreate";
+            response.data = new {
+                type = sess.type.ToString(),
+                localip = sess.lep.ToString(),
+                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+                conntime = DateTime.Now.ToString(),
+            };
 
-        // Center Service =========================================================================
-
-        protected override void SessSendService(ServiceRequest request, ref ServiceResponse response)
-        {
-            base.SessSendService(request, ref response);
-
-            if (response.raw_data != null) {
-                string logmsg = "(" + (request.user_data as SockSess).rep.ToString()
-                    + " => " + "*.*.*.*" + ")" + Environment.NewLine;
-                logmsg += "\tRequest: " + Encoding.UTF8.GetString(request.raw_data) + Environment.NewLine;
-                logmsg += "\tRespond: " + Encoding.UTF8.GetString(response.raw_data);
-
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(logmsg);
-            }
-        }
-
-        private void ClientListService(ServiceRequest request, ref ServiceResponse response)
-        {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
-
-            StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
-                if (item.type != SockType.accept) continue;
                 SessData sd = item.sdata as SessData;
-                if (String.IsNullOrEmpty(sd.Ccid)) continue;
-                sb.Append("{"
-                    + "\"dev\":\"" + item.lep.Port + "\","
-                    + "\"ip\":\"" + item.rep.ToString() + "\","
-                    + "\"time\":\"" + sd.TimeConn + "\","
-                    + "\"ccid\":\"" + sd.Ccid + "\","
-                    + "\"name\":\"" + sd.Name + "\""
-                    + "}");
-            }
-            sb.Insert(0, '[');
-            sb.Append(']');
-            sb.Replace("}{", "},{");
-            sb.Append("\r\n");
-            response.raw_data = Encoding.UTF8.GetBytes(sb.ToString());
-        }
-
-        private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
-        {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
-
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            // find session
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
-
-            // close session
-            if (result != null)
-                sessctl.DelSession(result);
-
-            // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "shutdown " + ep.ToString();
-            } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
-            }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
-        }
-
-        private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
-        {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
-
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            // find session
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
-
-            // send message
-            if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
-
-            // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "send to " + ep.ToString();
-            } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
-            }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
-
-            // log
-            if (result != null) {
-                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                    + " => " + result.rep.ToString() + ")" + Environment.NewLine;
-                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
-
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(logmsg);
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
             }
         }
 
-        private void ClientSendByCcidService(ServiceRequest request, ref ServiceResponse response)
+        protected override void OnSessDelete(object sender, SockSess sess)
         {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.core.sessdelete";
+            response.data = new {
+                type = sess.type.ToString(),
+                localip = sess.lep.ToString(),
+                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+            };
 
-            // parse to dictionary
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            // find session
-            SockSess result = null;
             foreach (var item in sessctl.GetSessionTable()) {
-                if (item.type != SockType.accept) continue;
                 SessData sd = item.sdata as SessData;
-                if (sd.Ccid == dc["ccid"]) {
-                    result = item; // take last one as result, so comment "break" at next line
-                    //break;
-                }
-            }
-
-            // send message
-            if (result != null)
-                sessctl.SendSession(result, Encoding.UTF8.GetBytes(dc["data"]));
-
-            // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "send to " + dc["ccid"];
-            } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + dc["ccid"];
-            }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
-
-            // log
-            if (result != null) {
-                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                    + " => " + result.rep.ToString() + ")" + Environment.NewLine;
-                logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
-
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(logmsg);
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
             }
         }
 
-        private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
-        {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+        // Service ==========================================================================
 
-            // parse to dictionary
+        protected override void SessDetailService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // make pack of session detail
+            List<object> pack = new List<object>();
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                pack.Add(new {
+                    type = item.type.ToString(),
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                    conntime = sd != null ? sd.ConnTime.ToString() : DateTime.MinValue.ToString(),
+                });
+            }
+
+            response.data = pack;
+        }
+
+        private void SessLoginService(ServiceRequest request, ref ServiceResponse response)
+        {
+            SockSess sess = request.user_data as SockSess;
+            if (sess == null)
+                return;
+
+            if (sess.sdata == null)
+                sess.sdata = new SessData();
+            SessData sd = sess.sdata as SessData;
+
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            // update sess data
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
-            SockSess result = sessctl.FindSession(SockType.accept, null, ep);
-            if (result != null) {
-                SessData sd = result.sdata as SessData;
-                sd.Ccid = dc["ccid"];
-                sd.Name = dc["name"];
-            }
-
-            // write response
-            response.content = new BaseContent() { id = dc["id"] };
-            if (result != null) {
-                response.content.errcode = 0;
-                response.content.errmsg = "update " + ep.ToString();
-            } else {
-                response.content.errcode = 1;
-                response.content.errmsg = "cannot find " + ep.ToString();
-            }
-            response.raw_data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response.content));
+            sd.IsAdmin = bool.Parse((string)dc["admin"]);
+            sd.ConnTime = DateTime.Now;
         }
     }
 }

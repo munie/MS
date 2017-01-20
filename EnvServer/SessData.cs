@@ -5,10 +5,11 @@ using System.Text;
 
 namespace EnvServer {
     class SessData {
-        public string Ccid { get; set; }
-        public string Name { get; set; }
-        public DateTime TimeConn { get; set; }
+        public DateTime ConnTime { get; set; }
         public bool IsAdmin { get; set; }
         public System.Timers.Timer Timer { get; set; }
+
+        public string Ccid { get; set; }
+        public string Name { get; set; }
     }
 }

@@ -96,6 +96,7 @@ namespace EnvClient.Env {
                         ClientUnit client = new ClientUnit() {
                             RemoteEP = new IPEndPoint(IPAddress.Parse(((string)item["remoteip"]).Split(':')[0]),
                                 Int32.Parse(((string)item["remoteip"]).Split(':')[1])),
+                            ConnectTime = DateTime.Parse((string)item["conntime"]),
                         };
                         uidata.ClientTable.Add(client);
                     }
@@ -137,6 +138,7 @@ namespace EnvClient.Env {
                     ClientUnit client = new ClientUnit() {
                         RemoteEP = new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
                             Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])),
+                        ConnectTime = DateTime.Parse((string)tmp["conntime"]),
                     };
                     uidata.ClientTable.Add(client);
                 }
@@ -189,9 +191,12 @@ namespace EnvClient.Env {
 
         public void Login()
         {
-            string request = @"{'id':'core.sessdetail'}";
             sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(sess, Encoding.UTF8.GetBytes(request));
+                sessctl.SendSession(sess, Encoding.UTF8.GetBytes("{'id':'core.sesslogin', 'admin':'true'}"));
+            }));
+
+            sessctl.BeginInvoke(new Action(() => {
+                sessctl.SendSession(sess, Encoding.UTF8.GetBytes("{'id':'core.sessdetail'}"));
             }));
         }
     }

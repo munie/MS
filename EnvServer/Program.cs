@@ -2,25 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.Net;
 
 namespace EnvServer {
     class Program {
+        private static readonly string CONF_PATH = AppDomain.CurrentDomain.BaseDirectory + "EnvServer.xml";
+        private static readonly string SERVER_CONF_NODE = "/configuration/server";
+
+        private static string serverip = "127.0.0.1";
+        private static int serverport = 2000;
+
         static void Main(string[] args)
         {
             InitLog4net();
             InitCore();
         }
 
-        static private void InitLog4net()
+        private static void InitLog4net()
         {
-            var config = new System.IO.FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvServer.xml");
+            var config = new System.IO.FileInfo(CONF_PATH);
             log4net.Config.XmlConfigurator.Configure(config);
         }
 
-        static private void InitCore()
+        private static void InitCore()
         {
-            mnn.misc.glue.CoreBase core = new mnn.misc.glue.CoreBase();
-            core.sessctl.MakeListen(new System.Net.IPEndPoint(0, 2000));
+            Core core = new Core();
+
+            if (System.IO.File.Exists(CONF_PATH)) {
+                try {
+                    XmlDocument xdoc = new XmlDocument();
+                    xdoc.Load(CONF_PATH);
+
+                    XmlNode node = xdoc.SelectSingleNode(SERVER_CONF_NODE);
+                    serverip = node.Attributes["ipaddress"].Value;
+                    serverport = int.Parse(node.Attributes["port"].Value);
+                } catch (Exception ex) {
+                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Program));
+                    log.Error("error when parsing config file.", ex);
+                }
+            }
+
+            core.sessctl.MakeListen(new IPEndPoint(IPAddress.Parse(serverip), serverport));
             core.RunForever();
         }
     }
