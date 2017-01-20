@@ -25,7 +25,6 @@ namespace EnvClient.Unit
         private double timerInterval;       // 单位为秒，启动定时器时需乘1000
         private string timerCommand;
 
-        public string ID { get; set; }
         public string Name { get; set; }
         public string Protocol { get; set; }
         public string IpAddress { get; set; }

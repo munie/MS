@@ -22,6 +22,7 @@ namespace mnn.net {
         public IPEndPoint rep { get; private set; }
         public bool eof { get; /*private*/ set; }
         public DateTime tick { get; private set; }
+        public DateTime conntime { get; private set; }
 
         private byte[] rdata;
         private int rdata_max = 8192;
@@ -42,6 +43,7 @@ namespace mnn.net {
             rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint;
             eof = false;
             tick = DateTime.Now;
+            conntime = tick;
 
             rdata = new byte[rdata_max];
             wdata = new byte[wdata_max];

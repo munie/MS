@@ -5,7 +5,7 @@
     <Window.Resources>
         <CollectionViewSource x:Key='clients' Source="{Binding Path=ClientTable}">
             <CollectionViewSource.GroupDescriptions>
-                <PropertyGroupDescription PropertyName="ServerName" />
+                <PropertyGroupDescription PropertyName="ServerPort" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
     </Window.Resources>
@@ -44,8 +44,8 @@
             </ListView.View>
             <ListView.ContextMenu>
                 <ContextMenu StaysOpen="true">
-                    <MenuItem Header="启动监听" Click="MenuItem_StartListener_Click"/>
-                    <MenuItem Header="关闭监听" Click="MenuItem_StopListener_Click"/>
+                    <MenuItem Header="开启端口" Click="MenuItem_OpenPort_Click"/>
+                    <MenuItem Header="关闭端口" Click="MenuItem_ClosePort_Click"/>
                     <Separator></Separator>
                     <MenuItem Header="启动定时器" Click="MenuItem_StartTimer_Click"/>
                     <MenuItem Header="停止定时器" Click="MenuItem_StopTimer_Click"/>
@@ -114,6 +114,8 @@
                 <GridView>
                     <GridViewColumn Header="客户端IP" Width="140"
                                     DisplayMemberBinding="{Binding Path=RemoteEP}" />
+                    <GridViewColumn Header="心跳时间" Width="150"
+                                    DisplayMemberBinding="{Binding Path=TickTime}" />
                     <GridViewColumn Header="创建时间" Width="150"
                                     DisplayMemberBinding="{Binding Path=ConnectTime}" />
                     <GridViewColumn Header="CCID" Width="155"

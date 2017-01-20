@@ -14,8 +14,9 @@ namespace EnvClient.Unit
         private string id;
         private string name;
         private IPEndPoint remoteEP;
-        private string serverID;
         private string serverName;
+        private int serverPort;
+        private DateTime tickTime;
         private DateTime connectTime;
 
         public string ID
@@ -47,16 +48,6 @@ namespace EnvClient.Unit
                     PropertyChanged(this, new PropertyChangedEventArgs("RemoteIP"));
             }
         }
-        public string ServerID
-        {
-            get { return serverID; }
-            set
-            {
-                serverID = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ServerID"));
-            }
-        }
         public string ServerName
         {
             get { return serverName; }
@@ -65,6 +56,26 @@ namespace EnvClient.Unit
                 serverName = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("ServerName"));
+            }
+        }
+        public int ServerPort
+        {
+            get { return serverPort; }
+            set
+            {
+                serverPort = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ServerPort"));
+            }
+        }
+        public DateTime TickTime
+        {
+            get { return tickTime; }
+            set
+            {
+                tickTime = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("TickTime"));
             }
         }
         public DateTime ConnectTime

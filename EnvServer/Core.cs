@@ -26,7 +26,8 @@ namespace EnvServer {
                 type = sess.type.ToString(),
                 localip = sess.lep.ToString(),
                 remoteip = sess.rep == null ? "" : sess.rep.ToString(),
-                conntime = DateTime.Now.ToString(),
+                tick = sess.tick,
+                conntime = sess.conntime,
             };
 
             foreach (var item in sessctl.GetSessionTable()) {
@@ -65,7 +66,11 @@ namespace EnvServer {
                     type = item.type.ToString(),
                     localip = item.lep.ToString(),
                     remoteip = item.rep == null ? "" : item.rep.ToString(),
-                    conntime = sd != null ? sd.ConnTime.ToString() : DateTime.MinValue.ToString(),
+                    tick = item.tick,
+                    conntime = item.conntime,
+                    parentport = sd != null ? sd.ParentPort : 0,
+                    ccid = sd != null ? sd.Ccid : "",
+                    name = sd != null ? sd.Name : "",
                 });
             }
 
@@ -85,8 +90,10 @@ namespace EnvServer {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            sd.IsAdmin = bool.Parse((string)dc["admin"]);
-            sd.ConnTime = DateTime.Now;
+            sd.IsAdmin = bool.Parse(dc["admin"]);
+            sd.Ccid = dc["ccid"];
+            sd.Name = dc["name"];
+            sd.ParentPort = sess.lep.Port;
         }
     }
 }

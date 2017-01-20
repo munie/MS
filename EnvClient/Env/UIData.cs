@@ -141,7 +141,6 @@ namespace EnvClient.Env
             client.RemoteEP = rep;
             foreach (var item in ServerTable) {
                 if (item.Port.Equals(lep.Port)) {
-                    client.ServerID = item.ID;
                     client.ServerName = item.Name;
                     break;
                 }

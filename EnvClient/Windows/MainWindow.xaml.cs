@@ -116,7 +116,8 @@ namespace EnvClient.Windows
 
             // run backend
             backend.Run();
-            backend.Login();
+            backend.SessLoginRequest();
+            backend.SessDetailRequest();
         }
 
         // Events for itself ==================================================================
@@ -154,18 +155,28 @@ namespace EnvClient.Windows
             }
         }
 
-        private void MenuItem_StartListener_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_OpenPort_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                    continue;
+            using (InputDialog input = new InputDialog()) {
+                input.Owner = this;
+                input.Title = "开启端口";
+                input.textBlock1.Text = "名称";
+                input.textBlock2.Text = "端口";
+                input.textBox1.Text = "XX服务";
+                input.textBox1.Focus();
+                input.textBox1.Select(input.textBox1.Text.Length, 0);
+
+                if (input.ShowDialog() == false)
+                    return;
+
+                backend.SessOpenRequest("listen", int.Parse(input.textBox2.Text));
             }
         }
 
-        private void MenuItem_StopListener_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_ClosePort_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                    continue;
-            }
+            foreach (ServerUnit item in lstViewServer.SelectedItems)
+                backend.SessCloseRequest("listen", item.IpAddress, item.Port);
         }
 
         private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
@@ -232,6 +243,7 @@ namespace EnvClient.Windows
                     return;
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
+                    backend.SessSendRequest("accept", item.RemoteEP.Address.ToString(), item.RemoteEP.Port, input.textBox1.Text);
 
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
@@ -244,8 +256,8 @@ namespace EnvClient.Windows
 
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
-            foreach (ClientUnit item in lstViewClient.SelectedItems) {
-            }
+            foreach (ClientUnit item in lstViewClient.SelectedItems)
+                backend.SessCloseRequest("accept", item.RemoteEP.Address.ToString(), item.RemoteEP.Port);
         }
 
         private void MenuItem_MsgClear_Click(object sender, RoutedEventArgs e)

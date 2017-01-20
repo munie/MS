@@ -5,7 +5,7 @@ using System.Text;
 
 namespace EnvServer {
     class SessData {
-        public DateTime ConnTime { get; set; }
+        public int ParentPort { get; set; }
         public bool IsAdmin { get; set; }
         public System.Timers.Timer Timer { get; set; }
 

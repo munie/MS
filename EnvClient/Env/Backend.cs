@@ -38,6 +38,29 @@ namespace EnvClient.Env {
             uidata = new UIData();
         }
 
+        public void Run()
+        {
+            System.Timers.Timer timer = new System.Timers.Timer(30 * 1000);
+            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
+                SessDetailRequest();
+            });
+            timer.Start();
+
+            System.Threading.Thread thread = new System.Threading.Thread(() => {
+                while (true) {
+                    try {
+                        sessctl.Exec(1000);
+                        servctl.Exec();
+                    } catch (Exception ex) {
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Backend));
+                        log.Error("Exception thrown out by core thread.", ex);
+                    }
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
         // session events =======================================================
 
         private void OnSessParse(object sender, SockSess sess)
@@ -70,7 +93,6 @@ namespace EnvClient.Env {
             }
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-
                 uidata.ServerTable.Clear();
                 uidata.ClientTable.Clear();
                 foreach (var item in jo["data"]) {
@@ -78,7 +100,10 @@ namespace EnvClient.Env {
                         ServerUnit server = new ServerUnit() {
                             IpAddress = ((string)item["localip"]).Split(':')[0],
                             Port = Int32.Parse(((string)item["localip"]).Split(':')[1]),
+                            Name = (string)item["name"],
                         };
+                        if (serverport == server.Port)
+                            server.Name = "core basic";
                         uidata.ServerTable.Add(server);
                     }
 
@@ -86,7 +111,11 @@ namespace EnvClient.Env {
                         ClientUnit client = new ClientUnit() {
                             RemoteEP = new IPEndPoint(IPAddress.Parse(((string)item["remoteip"]).Split(':')[0]),
                                 Int32.Parse(((string)item["remoteip"]).Split(':')[1])),
+                            TickTime = DateTime.Parse((string)item["tick"]),
                             ConnectTime = DateTime.Parse((string)item["conntime"]),
+                            ID = (string)item["ccid"],
+                            Name = (string)item["name"],
+                            ServerPort = (int)item["parentport"],
                         };
                         uidata.ClientTable.Add(client);
                     }
@@ -110,6 +139,7 @@ namespace EnvClient.Env {
                     ClientUnit client = new ClientUnit() {
                         RemoteEP = new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
                             Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])),
+                        TickTime = DateTime.Parse((string)tmp["tick"]),
                         ConnectTime = DateTime.Parse((string)tmp["conntime"]),
                     };
                     uidata.ClientTable.Add(client);
@@ -143,33 +173,69 @@ namespace EnvClient.Env {
             }));
         }
 
-        // methods ==============================================================
+        // requests ==============================================================
 
-        public void Run()
+        public void SessLoginRequest()
         {
-            System.Threading.Thread thread = new System.Threading.Thread(() => {
-                while (true) {
-                    try {
-                        sessctl.Exec(1000);
-                        servctl.Exec();
-                    } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Backend));
-                        log.Error("Exception thrown out by core thread.", ex);
-                    }
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
+            object req = new {
+                id = "service.sesslogin",
+                admin = "true",
+                name = "envclient",
+                ccid = "envclient",
+            };
+
+            sessctl.BeginInvoke(new Action(() => {
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+            }));
         }
 
-        public void Login()
+        public void SessDetailRequest()
         {
             sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sesslogin', 'admin':'true'}"));
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
             }));
+        }
+
+        public void SessOpenRequest(string type, int port)
+        {
+            object req = new {
+                id = "service.sessopen",
+                type = type,
+                ip = "0",
+                port = port,
+            };
 
             sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+            }));
+        }
+
+        public void SessCloseRequest(string type, string ip, int port)
+        {
+            object req = new {
+                id = "service.sessclose",
+                type = type,
+                ip = ip,
+                port = port,
+            };
+
+            sessctl.BeginInvoke(new Action(() => {
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+            }));
+        }
+
+        public void SessSendRequest(string type, string ip, int port, string msg)
+        {
+            object req = new {
+                id = "service.sesssend",
+                type = type,
+                ip = ip,
+                port = port,
+                data = msg,
+            };
+
+            sessctl.BeginInvoke(new Action(() => {
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
             }));
         }
     }
