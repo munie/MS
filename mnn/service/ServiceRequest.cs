@@ -6,7 +6,7 @@ using System.Net;
 
 namespace mnn.service {
     public enum ServiceRequestContentMode {
-        unknown = 0x2421,   // $! => unknown
+        none = 0x2421,   // $! => none
         binary = 0x2422,    // $" => default
         text = 0x2323,      // ## => text/plain
         uri = 0x2324,       // #$ => text/url
@@ -28,12 +28,12 @@ namespace mnn.service {
         private static ServiceRequestContentMode CheckContentMode(byte[] raw)
         {
             if (raw.Length < 2)
-                return ServiceRequestContentMode.unknown;
+                return ServiceRequestContentMode.none;
             else {
                 int tmp = raw[0] + (raw[1] << 8);
 
                 if (!Enum.IsDefined(typeof(ServiceRequestContentMode), tmp))
-                    tmp = (int)ServiceRequestContentMode.unknown;
+                    tmp = (int)ServiceRequestContentMode.none;
 
                 return (ServiceRequestContentMode)tmp;
             }
@@ -62,7 +62,7 @@ namespace mnn.service {
                     retval.InnerParse(raw);
                     break;
                 
-                case ServiceRequestContentMode.unknown:
+                case ServiceRequestContentMode.none:
                 default:
                     retval = new UnknownRequest();
                     retval.InnerParse(raw);
@@ -82,7 +82,7 @@ namespace mnn.service {
     public class UnknownRequest : ServiceRequest {
         protected override void InnerParse(byte[] raw)
         {
-            content_mode = ServiceRequestContentMode.unknown;
+            content_mode = ServiceRequestContentMode.none;
             packlen = raw.Length;
             raw_data = raw;
             user_data = null;

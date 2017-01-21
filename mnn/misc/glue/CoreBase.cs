@@ -176,7 +176,7 @@ namespace mnn.misc.glue {
 
         protected virtual void OnServBeforeDo(ref ServiceRequest request)
         {
-            if (request.content_mode != ServiceRequestContentMode.unknown) {
+            if (request.content_mode != ServiceRequestContentMode.none) {
                 try {
                     byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.raw_data));
                     result = EncryptSym.AESDecrypt(result);

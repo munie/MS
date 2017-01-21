@@ -101,6 +101,8 @@ namespace SockMaster {
 
         protected override void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
+            base.DefaultService(request, ref response);
+
             string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
                 + " => " + (request.user_data as SockSessNew).lep.ToString() + ")\n";
             log += SockConvert.ParseBytesToString(request.raw_data) + "\n\n";
@@ -111,16 +113,14 @@ namespace SockMaster {
 
         protected override void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
-            // get param string & parse to dictionary
-            string msg = Encoding.UTF8.GetString(request.raw_data);
-            if (!msg.Contains('?')) return;
-            msg = msg.Substring(msg.IndexOf('?') + 1);
-            IDictionary<string, string> dc = SockConvert.ParseUrlQueryParam(msg);
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
 
-            SockOpen(dc["id"], sockType, ep);
+            SockOpen(dc["sockid"], sockType, ep);
         }
 
         private void SockOpen(string id, SockType sockType, IPEndPoint ep)

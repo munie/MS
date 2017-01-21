@@ -20,6 +20,7 @@ using System.Xml;
 using System.Net.Sockets;
 using mnn.net;
 using mnn.service;
+using Newtonsoft.Json;
 
 namespace SockMaster
 {
@@ -130,14 +131,14 @@ namespace SockMaster
             sock.State = SockState.Opening;
 
             IPEndPoint ep = sock.Type == SockType.listen ? sock.Lep : sock.Rep;
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockopen"
-                + "?type=" + sock.Type.ToString()
-                + "&ip=" + ep.Address.ToString()
-                + "&port=" + ep.Port.ToString()
-                + "&id=" + sock.ID);
-            UriRequest.InsertHeader(ref buffer);
-
-            client.wfifo.Append(buffer);
+            object req = new {
+                id = "service.sessopen",
+                type = sock.Type.ToString(),
+                ip = ep.Address.ToString(),
+                port = ep.Port,
+                sockid = sock.ID,
+            };
+            client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -148,14 +149,14 @@ namespace SockMaster
             sock.State = SockState.Closing;
 
             IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
-            byte[] buffer = Encoding.UTF8.GetBytes("/center/sockclose"
-                + "?type=" + sock.Type.ToString()
-                + "&ip=" + ep.Address.ToString()
-                + "&port=" + ep.Port.ToString()
-                + "&id=" + sock.ID);
-            UriRequest.InsertHeader(ref buffer);
-
-            client.wfifo.Append(buffer);
+            object req = new {
+                id = "service.sessclose",
+                type = sock.Type.ToString(),
+                ip = ep.Address.ToString(),
+                port = ep.Port,
+                sockid = sock.ID,
+            };
+            client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -300,23 +301,21 @@ namespace SockMaster
             // 发送所有选中的命令，目前只支持发送第一条命令...
             foreach (CmdUnit item in lstViewCmd.SelectedItems) {
                 // init data which is sended out to remote ep
-                byte[] data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
-                if (item.Encrypt)
-                    data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(data)));
-                if (item.ContentMode != ServiceRequestContentMode.unknown)
-                    UriRequest.InsertHeader(ref data);
+                byte[] raw_data = SockConvert.ParseCmdstrToBytes(item.Cmd, '#');
+                string str_data = Convert.ToBase64String(raw_data);
+                //if (item.Encrypt)
+                //    raw_data = Encoding.UTF8.GetBytes(Convert.ToBase64String(EncryptSym.AESEncrypt(raw_data)));
 
                 // add internal header just for translating in SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
-                byte[] buffer = Encoding.UTF8.GetBytes("/center/socksend"
-                    + "?type=" + sock.Type.ToString()
-                    + "&ip=" + ep.Address.ToString()
-                    + "&port=" + ep.Port.ToString()
-                    + "&data=");
-                buffer = buffer.Concat(data).ToArray();
-                UriRequest.InsertHeader(ref buffer);
-
-                client.wfifo.Append(buffer);
+                object req = new {
+                    id = "service.sesssend",
+                    type = sock.Type.ToString(),
+                    ip = ep.Address.ToString(),
+                    port = ep.Port,
+                    data = str_data,
+                };
+                client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
                 break;
             }
         }

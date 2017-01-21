@@ -17,10 +17,10 @@ namespace mnn.misc.glue {
             sesstab = new List<SockSessNew>();
 
             servctl = new ServiceCore();
-            servctl.RegisterDefaultService("core.default", DefaultService);
-            servctl.RegisterService("center.sessopen", SessOpenService);
-            servctl.RegisterService("center.sessclose", SessCloseService);
-            servctl.RegisterService("center.sesssend", SessSendService);
+            servctl.RegisterDefaultService("service.default", DefaultService);
+            servctl.RegisterService("service.sessopen", SessOpenService);
+            servctl.RegisterService("service.sessclose", SessCloseService);
+            servctl.RegisterService("service.sesssend", SessSendService);
         }
 
         protected SockSessServer MakeListen(IPEndPoint ep)
@@ -84,12 +84,20 @@ namespace mnn.misc.glue {
         protected virtual void OnRecvEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
-            ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Take());
-            request.user_data = sess;
-            ServiceResponse response = new ServiceResponse();
 
-            servctl.DoService(request, ref response);
-            sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            while (sess.rfifo.Size() != 0) {
+                ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Peek());
+                if (request.packlen == 0)
+                    break;
+
+                sess.rfifo.Skip(request.packlen);
+                request.user_data = sess;
+                ServiceResponse response = new ServiceResponse();
+
+                servctl.DoService(request, ref response);
+                if (response.id != "unknown")
+                    sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
         }
 
         // Center Service
@@ -109,9 +117,8 @@ namespace mnn.misc.glue {
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
 
-            response.id = dc["id"];
             try {
                 SockSessNew sess = null;
                 if (sockType == SockType.listen)
@@ -124,7 +131,6 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "can't open " + ep.ToString();
             }
-            response.data = "";
         }
 
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
@@ -134,10 +140,9 @@ namespace mnn.misc.glue {
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
-            response.id = dc["id"];
             if (sess != null) {
                 sess.Close();
                 response.errcode = 0;
@@ -146,7 +151,6 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "can't find " + ep.ToString();
             }
-            response.data = "";
         }
 
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
@@ -156,19 +160,17 @@ namespace mnn.misc.glue {
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
-            response.id = dc["id"];
             if (sess != null) {
-                sess.wfifo.Append(Encoding.UTF8.GetBytes(dc["data"]));
+                sess.wfifo.Append(Convert.FromBase64String(dc["data"]));
                 response.errcode = 0;
                 response.errmsg = "send to " + ep.ToString();
             } else {
                 response.errcode = 0;
                 response.errmsg = "can't find " + ep.ToString();
             }
-            response.data = "";
         }
     }
 }
