@@ -129,7 +129,7 @@ namespace EnvConsole.Env
         {
             foreach (var item in ServerTable) {
                 if (item.IpAddress.Equals(ip) && item.Port == port) {
-                    item.ListenState = ServerUnit.TimerStateStoped;
+                    item.ListenState = ServerUnit.ListenStateStoped;
                     break;
                 }
             }

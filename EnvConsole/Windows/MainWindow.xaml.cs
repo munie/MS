@@ -158,10 +158,6 @@ namespace EnvConsole.Windows
                     server.AutoRun = bool.Parse(item.Attributes["autorun"].Value);
                     server.CanStop = bool.Parse(item.Attributes["canstop"].Value);
                     server.ListenState = ServerUnit.ListenStateStoped;
-                    server.TimerState = server.Target == ServerTarget.center
-                        ? ServerUnit.TimerStateDisable : ServerUnit.TimerStateStoped;
-                    server.TimerInterval = 0;
-                    server.TimerCommand = "";
                     uidata.ServerTable.Add(server);
                 }
             } catch (Exception ex) {
@@ -436,88 +432,6 @@ namespace EnvConsole.Windows
                         continue;
 
                     item.Port = int.Parse(input.textBox2.Text);
-                }
-            }
-        }
-
-        private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnit.TimerStateStarted ||
-                    item.TimerState == ServerUnit.TimerStateDisable ||
-                    item.TimerInterval <= 0 || item.TimerCommand == "")
-                    continue;
-
-                item.TimerState = ServerUnit.TimerStateStarted;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null) {
-                        SessData sdata = sess.sdata as SessData;
-                        if (sdata == null) return;
-
-                        if (sdata.Timer != null)
-                            sdata.Timer.Close();
-                        sdata.Timer = new System.Timers.Timer(server.TimerInterval * 1000);
-                        sdata.Timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) =>
-                            core.sessctl.BeginInvoke(new Action(() => {
-                                core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(server.TimerCommand));
-                            }))
-                        );
-                        sdata.Timer.Start();
-                    }
-                }));
-            }
-        }
-
-        private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnit.TimerStateStoped ||
-                    item.TimerState == ServerUnit.TimerStateDisable)
-                    continue;
-
-                item.TimerState = ServerUnit.TimerStateStoped;
-
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null) {
-                        SessData sdata = sess.sdata as SessData;
-                        if (sdata == null || sdata.Timer == null) return;
-
-                        sdata.Timer.Stop();
-                        sdata.Timer.Close();
-                    }
-                }));
-            }
-        }
-
-        private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
-        {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "设置定时器";
-                input.textBlock1.Text = "命令";
-                input.textBlock2.Text = "时间间隔";
-                input.textBox1.Text = "!A0#";
-                input.textBox2.Focus();
-
-                if (input.ShowDialog() == false)
-                    return;
-
-                foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                    if (item.TimerState == ServerUnit.TimerStateStarted)
-                        continue;
-
-                    item.TimerCommand = input.textBox1.Text;
-                    if (input.textBox2.Text != "")
-                        item.TimerInterval = Convert.ToDouble(input.textBox2.Text);
                 }
             }
         }

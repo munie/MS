@@ -60,9 +60,6 @@ namespace EnvConsole.Env {
                 sess.sdata = new SessData() {
                     Ccid = "",
                     Name = "",
-                    TimeConn = DateTime.Now,
-                    IsAdmin = false,
-                    Timer = null,
                 };
             }
         }
@@ -101,7 +98,7 @@ namespace EnvConsole.Env {
                 sb.Append("{"
                     + "\"dev\":\"" + item.lep.Port + "\","
                     + "\"ip\":\"" + item.rep.ToString() + "\","
-                    + "\"time\":\"" + sd.TimeConn + "\","
+                    + "\"time\":\"" + item.conntime + "\","
                     + "\"ccid\":\"" + sd.Ccid + "\","
                     + "\"name\":\"" + sd.Name + "\""
                     + "}");

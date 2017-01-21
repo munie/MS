@@ -58,7 +58,6 @@
     <Compile Include="Core.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SessData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\mnn\mnn.csproj">

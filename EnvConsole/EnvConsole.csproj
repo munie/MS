@@ -71,7 +71,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Env\SessData.cs" />
     <Compile Include="Env\TextBoxAppender.cs" />
     <Compile Include="Unit\ClientUnit.cs" />
     <Page Include="Windows\InputDialog.xaml">

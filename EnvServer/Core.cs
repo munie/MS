@@ -7,6 +7,7 @@ using mnn.net;
 using mnn.service;
 using mnn.module;
 using mnn.misc.glue;
+using mnn.misc.env;
 using Newtonsoft.Json;
 
 namespace EnvServer {

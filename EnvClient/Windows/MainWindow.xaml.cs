@@ -187,53 +187,6 @@ namespace EnvClient.Windows
                 backend.SessCloseRequest("listen", item.IpAddress, item.Port);
         }
 
-        private void MenuItem_StartTimer_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnit.TimerStateStarted ||
-                    item.TimerState == ServerUnit.TimerStateDisable ||
-                    item.TimerInterval <= 0 || item.TimerCommand == "")
-                    continue;
-
-                item.TimerState = ServerUnit.TimerStateStarted;
-            }
-        }
-
-        private void MenuItem_StopTimer_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                if (item.TimerState == ServerUnit.TimerStateStoped ||
-                    item.TimerState == ServerUnit.TimerStateDisable)
-                    continue;
-
-                item.TimerState = ServerUnit.TimerStateStoped;
-            }
-        }
-
-        private void MenuItem_SetTimer_Click(object sender, RoutedEventArgs e)
-        {
-            using (InputDialog input = new InputDialog()) {
-                input.Owner = this;
-                input.Title = "设置定时器";
-                input.textBlock1.Text = "命令";
-                input.textBlock2.Text = "时间间隔";
-                input.textBox1.Text = "!A0#";
-                input.textBox2.Focus();
-
-                if (input.ShowDialog() == false)
-                    return;
-
-                foreach (ServerUnit item in lstViewServer.SelectedItems) {
-                    if (item.TimerState == ServerUnit.TimerStateStarted)
-                        continue;
-
-                    item.TimerCommand = input.textBox1.Text;
-                    if (input.textBox2.Text != "")
-                        item.TimerInterval = Convert.ToDouble(input.textBox2.Text);
-                }
-            }
-        }
-
         private void MenuItem_ClientSendMessage_Click(object sender, RoutedEventArgs e)
         {
             using (InputDialog input = new InputDialog()) {

@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="misc\env\SessData.cs" />
     <Compile Include="misc\glue\AtCmd.cs" />
     <Compile Include="misc\glue\CoreBaseNew.cs" />
     <Compile Include="misc\glue\TimeOut.cs" />
