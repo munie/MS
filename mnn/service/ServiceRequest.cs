@@ -71,6 +71,11 @@ namespace mnn.service {
 
             return retval;
         }
+
+        public static ServiceRequest Parse(string raw)
+        {
+            return Parse(Encoding.UTF8.GetBytes(raw));
+        }
     }
 
     [Serializable]

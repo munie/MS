@@ -34,6 +34,7 @@ namespace mnn.misc.glue {
             // init modctl
             modctl = new ModuleCtl();
             modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
+            modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
 
             // init filtctl
             filtctl = new ServiceCore();
@@ -48,10 +49,11 @@ namespace mnn.misc.glue {
             servctl.RegisterService("service.moduledel", ModuleDelService);
             servctl.RegisterService("service.moduleload", ModuleLoadService);
             servctl.RegisterService("service.moduleunload", ModuleUnloadService);
-            servctl.RegisterService("service.sessdetail", SessDetailService);
+            servctl.RegisterService("service.moduledetail", ModuleDetailService);
             servctl.RegisterService("service.sessopen", SessOpenService);
             servctl.RegisterService("service.sessclose", SessCloseService);
             servctl.RegisterService("service.sesssend", SessSendService);
+            servctl.RegisterService("service.sessdetail", SessDetailService);
         }
 
         public virtual void Run()
@@ -86,6 +88,8 @@ namespace mnn.misc.glue {
             module.module_load += new Module.ModuleEvent(OnModuleLoad);
             module.module_unload += new Module.ModuleEvent(OnModuleUnload);
         }
+
+        protected virtual void OnModuleCtlDelete(object sender, Module module) { }
 
         protected virtual void OnModuleLoad(Module module)
         {
@@ -246,10 +250,12 @@ namespace mnn.misc.glue {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            modctl.Del(dc["modname"]);
+            Module module = modctl.GetModule(dc["name"]);
+            if (module != null)
+                modctl.Del(module);
 
             response.errcode = 0;
-            response.errmsg = dc["modname"] + " deleted";
+            response.errmsg = dc["name"] + " deleted";
         }
 
         protected virtual void ModuleLoadService(ServiceRequest request, ref ServiceResponse response)
@@ -257,7 +263,7 @@ namespace mnn.misc.glue {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            Module module = modctl.GetModule(dc["modname"]);
+            Module module = modctl.GetModule(dc["name"]);
             bool loadstat = true;
             try {
                 module.Load();
@@ -269,14 +275,14 @@ namespace mnn.misc.glue {
             if (module != null) {
                 if (loadstat) {
                     response.errcode = 0;
-                    response.errmsg = dc["modname"] + " loaded";
+                    response.errmsg = dc["name"] + " loaded";
                 } else {
                     response.errcode = 2;
-                    response.errmsg = "failed to load " + dc["modname"];
+                    response.errmsg = "failed to load " + dc["name"];
                 }
             } else {
                 response.errcode = 1;
-                response.errmsg = "cannot find " + dc["modname"];
+                response.errmsg = "cannot find " + dc["name"];
             }
         }
 
@@ -285,26 +291,26 @@ namespace mnn.misc.glue {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
 
-            Module module = modctl.GetModule(dc["modname"]);
+            Module module = modctl.GetModule(dc["name"]);
             module.Unload();
 
             if (module != null) {
                 response.errcode = 0;
-                response.errmsg = dc["modname"] + " loaded";
+                response.errmsg = dc["name"] + " loaded";
             } else {
                 response.errcode = 1;
-                response.errmsg = "cannot find " + dc["modname"];
+                response.errmsg = "cannot find " + dc["name"];
             }
         }
 
-        protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void ModuleDetailService(ServiceRequest request, ref ServiceResponse response)
         {
             List<object> pack = new List<object>();
-            foreach (var item in sessctl.GetSessionTable()) {
+            foreach (var item in modctl.GetModules()) {
                 pack.Add(new {
-                    type = item.type.ToString(),
-                    localip = item.lep.ToString(),
-                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                    name = item.AssemblyName,
+                    version = item.Version,
+                    state = item.State.ToString(),
                 });
             }
 
@@ -389,6 +395,20 @@ namespace mnn.misc.glue {
                 response.errcode = 1;
                 response.errmsg = "cannot find " + ep.ToString();
             }
+        }
+
+        protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
+        {
+            List<object> pack = new List<object>();
+            foreach (var item in sessctl.GetSessionTable()) {
+                pack.Add(new {
+                    type = item.type.ToString(),
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                });
+            }
+
+            response.data = pack;
         }
     }
 }

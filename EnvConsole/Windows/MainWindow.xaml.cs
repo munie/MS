@@ -24,6 +24,7 @@ using mnn.service;
 using mnn.module;
 using EnvConsole.Env;
 using EnvConsole.Unit;
+using Newtonsoft.Json;
 
 namespace EnvConsole.Windows
 {
@@ -190,8 +191,13 @@ namespace EnvConsole.Windows
             if (Directory.Exists(EnvConst.Module_PATH)) {
                 foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
                     string str = item.Substring(item.LastIndexOf("\\") + 1);
-                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll"))
-                        core.modctl.Add(item);
+                    if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
+                        object req = new {
+                            id = "service.moduleadd",
+                            filepath = item,
+                        };
+                        core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                    }
                 }
             }
         }
@@ -203,34 +209,40 @@ namespace EnvConsole.Windows
             module.module_load += new Module.ModuleEvent(OnModuleLoadOrUnload);
             module.module_unload += new Module.ModuleEvent(OnModuleLoadOrUnload);
 
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(module.AssemblyPath);
-            ModuleUnit unit = new ModuleUnit();
-            unit.FilePath = module.AssemblyPath;
-            unit.FileName = module.AssemblyName;
-            unit.FileVersion = fvi.FileVersion;
-            unit.FileComment = fvi.Comments;
-            unit.ModuleState = module.State.ToString();
-            uidata.ModuleTable.Add(unit);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(module.AssemblyPath);
+                ModuleUnit unit = new ModuleUnit();
+                unit.FilePath = module.AssemblyPath;
+                unit.FileName = module.AssemblyName;
+                unit.FileVersion = fvi.FileVersion;
+                unit.FileComment = fvi.Comments;
+                unit.ModuleState = module.State.ToString();
+                uidata.ModuleTable.Add(unit);
+            }));
         }
 
         private void OnModuleCtlDelete(object sender, Module module)
         {
-            foreach (var item in uidata.ModuleTable) {
-                if (item.FileName == module.AssemblyName) {
-                    uidata.ModuleTable.Remove(item);
-                    break;
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                foreach (var item in uidata.ModuleTable) {
+                    if (item.FileName == module.AssemblyName) {
+                        uidata.ModuleTable.Remove(item);
+                        break;
+                    }
                 }
-            }
+            }));
         }
 
         private void OnModuleLoadOrUnload(Module module)
         {
-            foreach (var item in uidata.ModuleTable) {
-                if (item.FileName == module.AssemblyName) {
-                    item.ModuleState = module.State.ToString();
-                    break;
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                foreach (var item in uidata.ModuleTable) {
+                    if (item.FileName == module.AssemblyName) {
+                        item.ModuleState = module.State.ToString();
+                        break;
+                    }
                 }
-            }
+            }));
         }
 
         // Session Event ==================================================================================
@@ -320,8 +332,13 @@ namespace EnvConsole.Windows
             openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             openFileDialog.FileName = "";
 
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                core.modctl.Add(openFileDialog.FileName);
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                object req = new {
+                    id = "service.moduleadd",
+                    filepath = openFileDialog.FileName,
+                };
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+            }
         }
 
         private void MenuItem_DelModule_Click(object sender, RoutedEventArgs e)
@@ -334,9 +351,11 @@ namespace EnvConsole.Windows
 
             // 卸载操作
             foreach (var item in handles) {
-                Module module = core.modctl.GetModule(item.FileName);
-                if (module != null)
-                    core.modctl.Del(module);
+                object req = new {
+                    id = "service.moduledel",
+                    name = item.FileName,
+                };
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -344,9 +363,11 @@ namespace EnvConsole.Windows
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
                 if (item.ModuleState.Equals(ModuleState.Unload.ToString())) {
-                    Module module = core.modctl.GetModule(item.FileName);
-                    if (module != null)
-                        module.Load();
+                    object req = new {
+                        id = "service.moduleload",
+                        name = item.FileName,
+                    };
+                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 }
             }
         }
@@ -355,9 +376,11 @@ namespace EnvConsole.Windows
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
                 if (item.ModuleState.Equals(ModuleState.Loaded.ToString())) {
-                    Module module = core.modctl.GetModule(item.FileName);
-                    if (module != null)
-                        module.Unload();
+                    object req = new {
+                        id = "service.moduleunload",
+                        name = item.FileName,
+                    };
+                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 }
             }
         }
@@ -368,14 +391,13 @@ namespace EnvConsole.Windows
                 if (item.ListenState == ServerUnit.ListenStateStarted)
                     continue;
 
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // make listen
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess == null)
-                        sess = core.sessctl.MakeListen(ep);
-                }));
+                object req = new {
+                    id = "service.sessopen",
+                    type = "listen",
+                    ip = item.IpAddress,
+                    port = item.Port,
+                };
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -385,14 +407,13 @@ namespace EnvConsole.Windows
                 if (item.ListenState == ServerUnit.ListenStateStoped || !item.CanStop)
                     continue;
 
-                var server = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(server.IpAddress), server.Port);
-                    SockSess sess = core.sessctl.FindSession(SockType.listen, ep, null);
-                    if (sess != null)
-                        core.sessctl.DelSession(sess);
-                }));
+                object req = new {
+                    id = "service.sessclose",
+                    type = "listen",
+                    ip = item.IpAddress,
+                    port = item.Port,
+                };
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -518,14 +539,14 @@ namespace EnvConsole.Windows
                     return;
 
                 foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                    var client = item;
-                    var msg = input.textBox1.Text;
-                    core.sessctl.BeginInvoke(new Action(() => {
-                        // find and send msg to session
-                        SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
-                        if (sess != null)
-                            core.sessctl.SendSession(sess, Encoding.UTF8.GetBytes(msg));
-                    }));
+                    object req = new {
+                        id = "service.sesssend",
+                        type = "accept",
+                        ip = item.RemoteEP.Address.ToString(),
+                        port = item.RemoteEP.Port,
+                        data = input.textBox1.Text,
+                    };
+                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
 
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
@@ -539,13 +560,13 @@ namespace EnvConsole.Windows
         private void MenuItem_ClientClose_Click(object sender, RoutedEventArgs e)
         {
             foreach (ClientUnit item in lstViewClient.SelectedItems) {
-                var client = item;
-                core.sessctl.BeginInvoke(new Action(() => {
-                    // find and delete session
-                    SockSess sess = core.sessctl.FindSession(SockType.accept, null, client.RemoteEP);
-                    if (sess != null)
-                        core.sessctl.DelSession(sess);
-                }));
+                object req = new {
+                    id = "service.sessclose",
+                    type = "accept",
+                    ip = item.RemoteEP.Address.ToString(),
+                    port = item.RemoteEP.Port,
+                };
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 

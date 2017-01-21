@@ -23,6 +23,7 @@ namespace mnn.module {
         private AppDomainProxy proxy;
         public string AssemblyPath { get; private set; }
         public string AssemblyName { get; private set; }
+        public string Version { get; private set; }
         public ModuleState State { get; private set; }
         public List<ModuleCall> ModuleCallTable { get; private set; }
 
@@ -34,6 +35,7 @@ namespace mnn.module {
         {
             AssemblyPath = filepath;
             AssemblyName = Path.GetFileName(filepath);
+            Version = System.Diagnostics.FileVersionInfo.GetVersionInfo(AssemblyPath).FileVersion;
             State = ModuleState.Unload;
             ModuleCallTable = new List<ModuleCall>();
             module_load = null;

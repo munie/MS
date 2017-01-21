@@ -118,12 +118,20 @@ namespace EnvClient.Windows
             backend.Run();
             backend.SessLoginRequest();
             backend.SessDetailRequest();
+            backend.ModuleDetailRequest();
         }
 
         // Events for itself ==================================================================
 
         private void MenuItem_AddModule_Click(object sender, RoutedEventArgs e)
         {
+            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+
+            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            openFileDialog.FileName = "";
+
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                backend.ModuleAddRequest(openFileDialog.FileName);
         }
 
         private void MenuItem_DelModule_Click(object sender, RoutedEventArgs e)
@@ -135,23 +143,23 @@ namespace EnvClient.Windows
                 handles.Add(item);
 
             // 卸载操作
-            foreach (var item in handles) {
-            }
+            foreach (var item in handles)
+                backend.ModuleDelRequest(item.FileName);
         }
 
         private void MenuItem_LoadModule_Click(object sender, RoutedEventArgs e)
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
-                if (item.ModuleState.Equals(ModuleState.Unload.ToString())) {
-                }
+                if (item.ModuleState.Equals(ModuleState.Unload.ToString()))
+                    backend.ModuleLoadRequest(item.FileName);
             }
         }
 
         private void MenuItem_UnloadModule_Click(object sender, RoutedEventArgs e)
         {
             foreach (ModuleUnit item in lstViewModule.SelectedItems) {
-                if (item.ModuleState.Equals(ModuleState.Loaded.ToString())) {
-                }
+                if (item.ModuleState.Equals(ModuleState.Loaded.ToString()))
+                    backend.ModuleUnloadRequest(item.FileName);
             }
         }
 

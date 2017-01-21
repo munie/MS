@@ -16,7 +16,82 @@ namespace EnvServer {
             servctl.RegisterService("service.sesslogin", SessLoginService);
         }
 
-        // Session Event ==================================================================================
+        // Module Event =====================================================================
+
+        protected override void OnModuleCtlAdd(object sender, Module module)
+        {
+            base.OnModuleCtlAdd(sender, module);
+
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.moduleadd";
+            response.data = new {
+                name = module.AssemblyName,
+                version = module.Version,
+                state = module.State.ToString(),
+            };
+
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
+        }
+
+        protected override void OnModuleCtlDelete(object sender, Module module)
+        {
+            base.OnModuleCtlDelete(sender, module);
+
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.moduledelete";
+            response.data = new {
+                name = module.AssemblyName,
+                state = module.State.ToString(),
+            };
+
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
+        }
+
+        protected override void OnModuleLoad(Module module)
+        {
+            base.OnModuleLoad(module);
+
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.moduleupdate";
+            response.data = new {
+                name = module.AssemblyName,
+                state = module.State.ToString(),
+            };
+
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
+        }
+
+        protected override void OnModuleUnload(Module module)
+        {
+            base.OnModuleUnload(module);
+
+            ServiceResponse response = new ServiceResponse();
+            response.id = "notice.moduleupdate";
+            response.data = new {
+                name = module.AssemblyName,
+                state = module.State.ToString(),
+            };
+
+            foreach (var item in sessctl.GetSessionTable()) {
+                SessData sd = item.sdata as SessData;
+                if (sd != null && sd.IsAdmin)
+                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
+        }
+
+        // Session Event ====================================================================
 
         protected override void OnSessCreate(object sender, SockSess sess)
         {
