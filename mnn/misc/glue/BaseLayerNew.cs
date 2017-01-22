@@ -10,6 +10,10 @@ using Newtonsoft.Json;
 namespace mnn.misc.glue {
     public class BaseLayerNew : ServiceLayer {
         protected List<SockSessNew> sesstab;
+        public delegate void SockSessOpenDelegate(object sender, SockSessNew sess);
+        public delegate void SockSessCloseDelegate(object sender, SockSessNew sess);
+        public SockSessOpenDelegate sess_open_event;
+        public SockSessCloseDelegate sess_close_event;
 
         public BaseLayerNew()
         {
@@ -19,64 +23,36 @@ namespace mnn.misc.glue {
             servctl.RegisterService("service.sesssend", SessSendService);
 
             sesstab = new List<SockSessNew>();
+            sess_open_event = null;
+            sess_close_event = null;
         }
 
-        protected SockSessServer MakeListen(IPEndPoint ep)
+        protected override void OnServDone(ServiceRequest request, ServiceResponse response)
         {
-            SockSessServer server = new SockSessServer();
-            server.Listen(ep);
-            server.close_event += new SockSessDelegate(OnCloseEvent);
-            server.accept_event += new SockSessServerDelegate(OnAcceptEvent);
-
-            sesstab.Add(server);
-            return server;
-        }
-
-        protected SockSessClient MakeConnect(IPEndPoint ep)
-        {
-            SockSessClient client = new SockSessClient();
-            client.Connect(ep);
-            client.close_event += new SockSessDelegate(OnCloseEvent);
-            client.recv_event += new SockSessDelegate(OnRecvEvent);
-
-            sesstab.Add(client);
-            return client;
-        }
-
-        protected SockSessNew FindSockSessFromSessGroup(SockType sockType, IPEndPoint ep)
-        {
-            IEnumerable<SockSessNew> subset = null;
-            switch (sockType) {
-                case SockType.listen:
-                case SockType.connect:
-                    subset = from s in sesstab where s.lep.Equals(ep) select s;
-                    break;
-                case SockType.accept:
-                    subset = from s in sesstab where s.rep != null && s.rep.Equals(ep) select s;
-                    break;
-                default:
-                    break;
-            }
-
-            if (subset != null && subset.Count() != 0)
-                return subset.First();
-            else
-                return null;
+            SockSessNew sess = request.user_data as SockSessNew;
+            if (sess != null)
+                sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
         }
 
         // SockSess Event
 
         protected virtual void OnAcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.close_event += new SockSessDelegate(OnCloseEvent);
-            sess.recv_event += new SockSessDelegate(OnRecvEvent);
+            sess.close_event += new SockSessNew.SockSessDelegate(OnCloseEvent);
+            sess.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
             sesstab.Add(sess);
+
+            if (sess_open_event != null)
+                sess_open_event(this, sess);
         }
 
         protected virtual void OnCloseEvent(object sender)
         {
             SockSessNew sess = sender as SockSessNew;
             sesstab.Remove(sess);
+
+            if (sess_close_event != null)
+                sess_close_event(this, sess);
         }
 
         protected virtual void OnRecvEvent(object sender)
@@ -90,10 +66,7 @@ namespace mnn.misc.glue {
 
                 sess.rfifo.Skip(request.packlen);
                 request.user_data = sess;
-                ServiceResponse response = new ServiceResponse();
-
-                servctl.DoService(request, ref response);
-                sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+                servctl.AddRequest(request);
             }
         }
 
@@ -114,6 +87,10 @@ namespace mnn.misc.glue {
                     sess = MakeListen(ep);
                 else
                     sess = MakeConnect(ep);
+
+                if (sess_open_event != null)
+                    sess_open_event(this, sess);
+
                 response.errcode = 0;
                 response.errmsg = dc["type"] + " " + ep.ToString();
             } catch (Exception) {
@@ -134,6 +111,7 @@ namespace mnn.misc.glue {
 
             if (sess != null) {
                 sess.Close();
+
                 response.errcode = 0;
                 response.errmsg = "shutdown " + ep.ToString();
             } else {
@@ -160,6 +138,51 @@ namespace mnn.misc.glue {
                 response.errcode = 0;
                 response.errmsg = "can't find " + ep.ToString();
             }
+        }
+
+        // Methods
+
+        public SockSessServer MakeListen(IPEndPoint ep)
+        {
+            SockSessServer server = new SockSessServer();
+            server.Listen(ep);
+            server.close_event += new SockSessNew.SockSessDelegate(OnCloseEvent);
+            server.accept_event += new SockSessServer.SockSessServerDelegate(OnAcceptEvent);
+
+            sesstab.Add(server);
+            return server;
+        }
+
+        protected SockSessClient MakeConnect(IPEndPoint ep)
+        {
+            SockSessClient client = new SockSessClient();
+            client.Connect(ep);
+            client.close_event += new SockSessNew.SockSessDelegate(OnCloseEvent);
+            client.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
+
+            sesstab.Add(client);
+            return client;
+        }
+
+        protected SockSessNew FindSockSessFromSessGroup(SockType sockType, IPEndPoint ep)
+        {
+            IEnumerable<SockSessNew> subset = null;
+            switch (sockType) {
+                case SockType.listen:
+                case SockType.connect:
+                    subset = from s in sesstab where s.lep.Equals(ep) select s;
+                    break;
+                case SockType.accept:
+                    subset = from s in sesstab where s.rep != null && s.rep.Equals(ep) select s;
+                    break;
+                default:
+                    break;
+            }
+
+            if (subset != null && subset.Count() != 0)
+                return subset.First();
+            else
+                return null;
         }
     }
 }

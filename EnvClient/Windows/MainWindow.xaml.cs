@@ -22,7 +22,7 @@ using mnn.net;
 using mnn.misc.env;
 using mnn.service;
 using mnn.module;
-using EnvClient.Env;
+using EnvClient.Backend;
 using EnvClient.Unit;
 
 namespace EnvClient.Windows
@@ -36,7 +36,7 @@ namespace EnvClient.Windows
         public static readonly string CONF_NAME = "EnvClient.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
 
-        private Backend backend;
+        private Core backend;
 
         public MainWindow()
         {
@@ -98,7 +98,7 @@ namespace EnvClient.Windows
         private void InitBackend()
         {
             // init dataui
-            backend = new Backend();
+            backend = new Core();
 
             // data bingding with dataui
             DataContext = new {

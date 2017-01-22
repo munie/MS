@@ -63,13 +63,12 @@
     <Compile Include="CmdInputDialog.xaml.cs">
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CmdUnit.cs" />
-    <Compile Include="Core.cs" />
-    <Compile Include="DataUI.cs" />
+    <Compile Include="Backend\CmdUnit.cs" />
+    <Compile Include="Backend\UIData.cs" />
     <Compile Include="SockInputDialog.xaml.cs">
       <DependentUpon>SockInputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SockUnit.cs" />
+    <Compile Include="Backend\SockUnit.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>

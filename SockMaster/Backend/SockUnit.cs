@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using mnn.net;
 
-namespace SockMaster {
+namespace SockMaster.Backend {
     public enum SockState {
         //None = 0,
         Opening = 1,

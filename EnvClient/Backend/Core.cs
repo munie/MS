@@ -12,8 +12,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using EnvClient.Unit;
 
-namespace EnvClient.Env {
-    class Backend : ServiceLayer {
+namespace EnvClient.Backend {
+    class Core : ServiceLayer {
         // sessctl
         public SessCtl sessctl;
         private string serverip = "127.0.0.1";
@@ -22,7 +22,7 @@ namespace EnvClient.Env {
         // uidata
         public UIData uidata;
 
-        public Backend()
+        public Core()
         {
             servctl.RegisterService("notice.sesscreate", SessCreateNotice);
             servctl.RegisterService("notice.sessdelete", SessDeleteNotice);
@@ -59,7 +59,7 @@ namespace EnvClient.Env {
                         sessctl.Exec(1000);
                         servctl.Exec(0);
                     } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Backend));
+                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
                         log.Error("Exception thrown out by core thread.", ex);
                     }
                 }
@@ -265,7 +265,7 @@ namespace EnvClient.Env {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
             if ((int)jo["errcode"] != 0) {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Backend));
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
                 return;
             }
@@ -353,7 +353,7 @@ namespace EnvClient.Env {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
             if ((int)jo["errcode"] != 0) {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Backend));
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
                 logger.Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
                 return;
             }

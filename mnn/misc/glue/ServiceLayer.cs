@@ -64,9 +64,7 @@ namespace mnn.misc.glue {
             }
         }
 
-        protected virtual void OnServDone(ServiceRequest request, ServiceResponse response)
-        {
-        }
+        protected virtual void OnServDone(ServiceRequest request, ServiceResponse response) { }
 
         // Service =========================================================================
 

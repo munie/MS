@@ -9,9 +9,6 @@ using System.Runtime.InteropServices;
 using mnn.util;
 
 namespace mnn.net {
-    public delegate void SockSessDelegate(object sender);
-    public delegate void SockSessServerDelegate(object sender, SockSessAccept sess);
-
     public class SockSessNew : IExecable {
         private const int BASE_STALL = 60 * 12;
 
@@ -37,6 +34,7 @@ namespace mnn.net {
         public Fifo<byte> wfifo { get; private set; }
         public object sdata { get; set; }
 
+        public delegate void SockSessDelegate(object sender);
         public SockSessDelegate recv_event { get; set; }
         public SockSessDelegate close_event { get; set; }
 
@@ -141,6 +139,7 @@ namespace mnn.net {
 
     public class SockSessServer : SockSessNew {
         public List<SockSessAccept> childs { get; private set; }
+        public delegate void SockSessServerDelegate(object sender, SockSessAccept sess);
         public SockSessServerDelegate accept_event { get; set; }
 
         public SockSessServer()

@@ -8,9 +8,9 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Net;
 using System.Reflection;
-using EnvClient.Unit;
+using EnvConsole.Unit;
 
-namespace EnvClient.Env
+namespace EnvConsole.Backend
 {
     class UIData : INotifyPropertyChanged
     {
@@ -119,6 +119,7 @@ namespace EnvClient.Env
         {
             foreach (var item in ServerTable) {
                 if (item.IpAddress.Equals(ip) && item.Port == port) {
+                    item.ListenState = ServerUnit.ListenStateStarted;
                     break;
                 }
             }
@@ -128,6 +129,7 @@ namespace EnvClient.Env
         {
             foreach (var item in ServerTable) {
                 if (item.IpAddress.Equals(ip) && item.Port == port) {
+                    item.ListenState = ServerUnit.ListenStateStoped;
                     break;
                 }
             }
@@ -141,6 +143,7 @@ namespace EnvClient.Env
             client.RemoteEP = rep;
             foreach (var item in ServerTable) {
                 if (item.Port.Equals(lep.Port)) {
+                    client.ServerID = item.ID;
                     client.ServerName = item.Name;
                     break;
                 }

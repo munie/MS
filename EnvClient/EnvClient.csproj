@@ -68,7 +68,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Env\Backend.cs" />
+    <Compile Include="Backend\Core.cs" />
     <Compile Include="Unit\ClientUnit.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />
@@ -80,8 +80,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Env\TextBoxAppender.cs" />
-    <Compile Include="Env\UIData.cs" />
+    <Compile Include="Backend\TextBoxAppender.cs" />
+    <Compile Include="Backend\UIData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

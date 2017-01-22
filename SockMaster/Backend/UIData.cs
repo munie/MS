@@ -7,22 +7,12 @@ using System.Collections.ObjectModel;
 using System.Net;
 using mnn.net;
 
-namespace SockMaster {
-    class DataUI : INotifyPropertyChanged {
+namespace SockMaster.Backend {
+    class UIData : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
-
-        // center port
-        private int port;
-        public int Port
-        {
-            get { return port; }
-            set
-            {
-                port = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Port"));
-            }
-        }
+        
+        // cmd table
+        public ObservableCollection<CmdUnit> CmdTable { get; set; }
 
         // socket information
         public ObservableCollection<SockUnit> SockUnitGroup { get; set; }
@@ -69,8 +59,9 @@ namespace SockMaster {
             }
         }
 
-        public DataUI()
+        public UIData()
         {
+            CmdTable = new ObservableCollection<CmdUnit>();
             SockUnitGroup = new ObservableCollection<SockUnit>();
             currentAcceptCount = 0;
             historyAcceptOpenCount = 0;
@@ -128,10 +119,10 @@ namespace SockMaster {
             }));
         }
 
-        public void OpenSockUnit(string id, IPEndPoint lep, IPEndPoint rep)
+        public void OpenSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                SockUnit unit = FindSockUnit(id);
+                SockUnit unit = FindSockUnit(type, lep, rep);
                 if (unit == null) return;
                 unit.Lep = lep;
                 unit.Rep = rep;
@@ -172,7 +163,7 @@ namespace SockMaster {
             if (type == SockType.listen)
                 subset = from s in SockUnitGroup where s.Type == type && s.Lep.Equals(lep) select s;
             else if (type == SockType.connect)
-                subset = from s in SockUnitGroup where s.Type == type && s.Lep != null && s.Lep.Equals(lep) select s;
+                subset = from s in SockUnitGroup where s.Type == type && s.Rep.Equals(rep) select s;
             else if (type == SockType.accept) {
                 foreach (var item in SockUnitGroup) {
                     subset = from s in item.Childs where s.Rep.Equals(rep) select s;

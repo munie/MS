@@ -14,7 +14,7 @@ namespace UnitTestMnn {
         {
             SockSessServer server = new SockSessServer();
             server.Listen(new IPEndPoint(0, 5964));
-            server.accept_event += new SockSessServerDelegate(AcceptEvent);
+            server.accept_event += new SockSessServer.SockSessServerDelegate(AcceptEvent);
         }
 
         [TestMethod]
@@ -22,7 +22,7 @@ namespace UnitTestMnn {
         {
             SockSessClient client = new SockSessClient();
             client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3002));
-            client.recv_event += new SockSessDelegate(RecvEvent);
+            client.recv_event += new SockSessNew.SockSessDelegate(RecvEvent);
             client.wfifo.Append(Encoding.UTF8.GetBytes("Hello SockSessClient"));
         }
 
@@ -34,7 +34,7 @@ namespace UnitTestMnn {
 
         void AcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.recv_event += new SockSessDelegate(RecvEvent);
+            sess.recv_event += new SockSessNew.SockSessDelegate(RecvEvent);
         }
 
         void RecvEvent(object sender)

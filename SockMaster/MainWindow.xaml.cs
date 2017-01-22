@@ -18,9 +18,11 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Xml;
 using System.Net.Sockets;
+using Newtonsoft.Json;
 using mnn.net;
 using mnn.service;
-using Newtonsoft.Json;
+using mnn.misc.glue;
+using SockMaster.Backend;
 
 namespace SockMaster
 {
@@ -29,62 +31,22 @@ namespace SockMaster
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string CONF_NAME = "SockMaster.xml";
+        private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
+
+        private UIData uidata;
+        private BaseLayerNew core;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            Initailize();
             InitailizeWindowName();
             InitailizeStatusBar();
-        }
 
-        private static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string CONF_NAME = "SockMaster.xml";
-        private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        private ObservableCollection<CmdUnit> cmdTable;
-        private SockSessClient client;
-
-        private void Initailize()
-        {
-            // init core
-            Core core = new Core();
-
-            // init cmdtable
-            cmdTable = new ObservableCollection<CmdUnit>();
-            try {
-                if (File.Exists(BASE_DIR + CONF_NAME) == false) {
-                    System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
-                    return;
-                }
-
-                XmlDocument doc = new XmlDocument();
-                doc.Load(BASE_DIR + CONF_NAME);
-
-                foreach (XmlNode item in doc.SelectNodes("/configuration/commands/cmditem")) {
-                    CmdUnit cmd = new CmdUnit();
-                    cmd.ID = item.Attributes["id"].Value;
-                    cmd.Name = item.Attributes["name"].Value;
-                    cmd.Cmd = item.Attributes["content"].Value;
-                    cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
-                    cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), item.Attributes["content-mode"].Value);
-                    cmdTable.Add(cmd);
-                }
-            } catch (Exception) {
-                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
-            }
-
-            // init tcp
-            client = new SockSessClient();
-            client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), core.DataUI.Port));
-            client.recv_event += new SockSessDelegate((s) => { (s as SockSessClient).rfifo.Take(); });
-            this.txtPromote.Text += " At " + core.DataUI.Port;
-
-            // init context
-            DataContext = new { SockTable = core.DataUI.SockUnitGroup, CmdTable = cmdTable, DataUI = core.DataUI };
-            core.DataUI.MsgBox = this.txtBoxMsg;
-            this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
-            this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
-            this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
+            Initailize();
+            Config();
         }
 
         private void InitailizeWindowName()
@@ -106,8 +68,7 @@ namespace SockMaster
             DateTime startTime = DateTime.Now;
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
-            timer.Tick += new EventHandler((s, ea) =>
-            {
+            timer.Tick += new EventHandler((s, ea) => {
                 txtTimeRun.Text = "运行时间 " + DateTime.Now.Subtract(startTime).ToString(@"dd\-hh\:mm\:ss");
 
                 long memory = GC.GetTotalMemory(false) / 1000;
@@ -119,6 +80,133 @@ namespace SockMaster
                     txtMemoryDiff.Text = "-" + diff;
             });
             timer.Start();
+        }
+
+        private void Initailize()
+        {
+            // uidata
+            uidata = new UIData();
+            DataContext = new { SockTable = uidata.SockUnitGroup, CmdTable = uidata.CmdTable, DataUI = uidata };
+            uidata.MsgBox = this.txtBoxMsg;
+            this.currentAcceptCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
+            this.historyAcceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
+            this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
+
+            // init core
+            core = new BaseLayerNew();
+            core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            core.servctl.RegisterDefaultService("service.default", DefaultService);
+            core.sess_open_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
+            core.sess_close_event += new BaseLayerNew.SockSessCloseDelegate(OnSessClose);
+            core.Run();
+        }
+
+        public void Config()
+        {
+            if (File.Exists(BASE_DIR + CONF_NAME) == false) {
+                System.Windows.MessageBox.Show(CONF_NAME + ": can't find it.");
+                return;
+            }
+
+            try {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(BASE_DIR + CONF_NAME);
+
+                // cmdtable
+                foreach (XmlNode item in doc.SelectNodes("/configuration/commands/cmditem")) {
+                    CmdUnit cmd = new CmdUnit();
+                    cmd.ID = item.Attributes["id"].Value;
+                    cmd.Name = item.Attributes["name"].Value;
+                    cmd.Cmd = item.Attributes["content"].Value;
+                    cmd.Encrypt = bool.Parse(item.Attributes["encrypt"].Value);
+                    cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), item.Attributes["content-mode"].Value);
+                    uidata.CmdTable.Add(cmd);
+                }
+
+                /// sockunit
+                foreach (XmlNode item in doc.SelectNodes("/configuration/sockets/sockitem")) {
+                    string[] str = item.Attributes["ep"].Value.Split(':');
+                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(str[0]), int.Parse(str[1]));
+                    SockType sockType = (SockType)Enum.Parse(typeof(SockType), item.Attributes["type"].Value);
+                    SockUnit sockUnit = new SockUnit() {
+                        ID = item.Attributes["id"].Value,
+                        Name = item.Attributes["name"].Value,
+                        Type = sockType,
+                        Lep = sockType == SockType.listen ? ep : null,
+                        Rep = sockType == SockType.connect ? ep : null,
+                        State = SockState.Closed,
+                        Autorun = bool.Parse(item.Attributes["autorun"].Value),
+                    };
+                    uidata.AddSockUnit(sockUnit);
+
+                    if (sockUnit.Autorun) {
+                        object req = new {
+                            id = "service.sessopen",
+                            type = sockType.ToString(),
+                            ip = ep.Address.ToString(),
+                            port = ep.Port,
+                            sockid = sockUnit.ID,
+                        };
+                        core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                    }
+                }
+            } catch (Exception) {
+                System.Windows.MessageBox.Show(CONF_NAME + ": syntax error.");
+            }
+        }
+
+        // new baselayer event
+
+        private void OnServDone(ServiceRequest request, ServiceResponse response)
+        {
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+
+            SockType type = Enum.Parse(typeof(SockType), dc["type"]);
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
+
+            if (response.id == "service.sessopen" && response.errcode != 0)
+                uidata.CloseSockUnit(type, ep, ep);
+        }
+
+        private void OnSessOpen(object sender, SockSessNew sess)
+        {
+            if (sess is SockSessServer) {
+                uidata.OpenSockUnit(SockType.listen, sess.lep, sess.rep);
+            } else if (sess is SockSessClient) {
+                uidata.OpenSockUnit(SockType.connect, sess.lep, sess.rep);
+            } else if (sess is SockSessAccept) {
+                SockUnit sockUnit = new SockUnit() {
+                    ID = "at" + sess.rep.ToString(),
+                    Name = "accept",
+                    Type = SockType.accept,
+                    Lep = sess.lep,
+                    Rep = sess.rep,
+                    State = SockState.Opened,
+                };
+                uidata.AddSockUnit(sockUnit);
+            }
+        }
+
+        private void OnSessClose(object sender, SockSessNew sess)
+        {
+            if (sess is SockSessServer)
+                uidata.CloseSockUnit(SockType.listen, sess.lep, sess.rep);
+            else if (sess is SockSessClient)
+                uidata.CloseSockUnit(SockType.connect, sess.lep, sess.rep);
+            else/* if (sess is SockSessAccept)*/
+                uidata.DelSockUnit(SockType.accept, sess.lep, sess.rep);
+        }
+
+        // default service
+
+        private void DefaultService(ServiceRequest request, ref ServiceResponse response)
+        {
+            string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
+                + " => " + (request.user_data as SockSessNew).lep.ToString() + ")\n";
+            log += SockConvert.ParseBytesToString(request.raw_data) + "\n\n";
+
+            uidata.Logger(log);
         }
 
         // Menu methods for TreeView =============================================================
@@ -138,7 +226,7 @@ namespace SockMaster
                 port = ep.Port,
                 sockid = sock.ID,
             };
-            client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+            core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -156,7 +244,7 @@ namespace SockMaster
                 port = ep.Port,
                 sockid = sock.ID,
             };
-            client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+            core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -247,8 +335,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(Core.CONF_PATH)) {
-                doc.Load(Core.CONF_PATH);
+            if (File.Exists(CONF_PATH)) {
+                doc.Load(CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/sockets");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -271,7 +359,7 @@ namespace SockMaster
                 config.AppendChild(sockitem);
             }
 
-            doc.Save(Core.CONF_PATH);
+            doc.Save(CONF_PATH);
         }
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -315,7 +403,7 @@ namespace SockMaster
                     port = ep.Port,
                     data = str_data,
                 };
-                client.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
+                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 break;
             }
         }
@@ -395,8 +483,8 @@ namespace SockMaster
                 cmd.Name = input.textBoxName.Text;
                 cmd.Cmd = input.textBoxCmd.Text;
                 cmd.Encrypt = input.checkBoxEncrypt.IsChecked == true ? true : false;
-                cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString()); 
-                cmdTable.Add(cmd);
+                cmd.ContentMode = (ServiceRequestContentMode)Enum.Parse(typeof(ServiceRequestContentMode), input.comboBoxContentMode.SelectedItem.ToString());
+                uidata.CmdTable.Add(cmd);
             }
         }
 
@@ -408,7 +496,7 @@ namespace SockMaster
                 tmp.Add(item);
 
             foreach (var item in tmp)
-                cmdTable.Remove(item);
+                uidata.CmdTable.Remove(item);
         }
 
         private void MenuItem_CmdSave_Click(object sender, RoutedEventArgs e)
@@ -416,8 +504,8 @@ namespace SockMaster
             XmlDocument doc = new XmlDocument();
             XmlNode config;
 
-            if (File.Exists(Core.CONF_PATH)) {
-                doc.Load(Core.CONF_PATH);
+            if (File.Exists(CONF_PATH)) {
+                doc.Load(CONF_PATH);
                 config = doc.SelectSingleNode("/configuration/commands");
             } else {
                 doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", ""));
@@ -428,7 +516,7 @@ namespace SockMaster
             }
 
             config.RemoveAll();
-            foreach (var item in cmdTable) {
+            foreach (var item in uidata.CmdTable) {
                 XmlElement cmd = doc.CreateElement("cmditem");
                 cmd.SetAttribute("id", item.ID);
                 cmd.SetAttribute("name", item.Name);
@@ -438,7 +526,7 @@ namespace SockMaster
                 config.AppendChild(cmd);
             }
 
-            doc.Save(Core.CONF_PATH);
+            doc.Save(CONF_PATH);
         }
 
         //private void MenuItem_CmdOpen_Click(object sender, RoutedEventArgs e)

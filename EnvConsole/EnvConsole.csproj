@@ -71,7 +71,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Env\TextBoxAppender.cs" />
+    <Compile Include="Backend\TextBoxAppender.cs" />
     <Compile Include="Unit\ClientUnit.cs" />
     <Page Include="Windows\InputDialog.xaml">
       <SubType>Designer</SubType>
@@ -85,8 +85,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Env\Core.cs" />
-    <Compile Include="Env\UIData.cs" />
+    <Compile Include="Backend\Core.cs" />
+    <Compile Include="Backend\UIData.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
     <Compile Include="Unit\ServerUnit.cs" />
     <Compile Include="Windows\InputDialog.xaml.cs">

@@ -6,7 +6,7 @@ using System.ComponentModel;
 using mnn.net;
 using mnn.service;
 
-namespace SockMaster {
+namespace SockMaster.Backend {
     public class CmdUnit : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
 
