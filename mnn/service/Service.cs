@@ -146,7 +146,7 @@ namespace mnn.service {
             }
         }
 
-        public void Exec()
+        public void Exec(int next)
         {
             try {
                 ServiceRequest request = null;
@@ -154,8 +154,10 @@ namespace mnn.service {
                     if (request_queue.Count != 0) // Any() is not thread safe
                         request = request_queue.Dequeue();
                 }
-                if (request == null)
+                if (request == null) {
+                    System.Threading.Thread.Sleep(next);
                     return;
+                }
 
                 ServiceResponse response = new ServiceResponse();
                 if (serv_before_do != null)

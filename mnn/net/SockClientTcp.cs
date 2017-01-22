@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using mnn.service;
+using mnn.util;
 
 namespace mnn.net {
     public delegate void SockClientTcpSendCallback(string s);

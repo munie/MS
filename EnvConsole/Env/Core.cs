@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace EnvConsole.Env {
-    class Core : CoreBase {
+    class Core : BaseLayer {
         public Core()
         {
             // start nodejs

@@ -5,7 +5,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace mnn.net {
+namespace mnn.util {
     public static class EncryptSym {
         private static readonly string KEY128 = @"$MU#ERu{*90Q3,CR";
         //private static readonly string KEY256 = @"$MU#ERu{*90Q3,CR.'P:q@#l)1XE,w$T";

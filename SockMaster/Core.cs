@@ -10,7 +10,7 @@ using mnn.net;
 using mnn.service;
 
 namespace SockMaster {
-    class Core : CoreBaseNew {
+    class Core : BaseLayerNew {
         public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string CONF_NAME = "SockMaster.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
@@ -69,9 +69,7 @@ namespace SockMaster {
 
         protected override void OnAcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.close_event += new SockSessDelegate(OnCloseEvent);
-            sess.recv_event += new SockSessDelegate(OnRecvEvent);
-            sesstab.Add(sess);
+            base.OnAcceptEvent(sender, sess);
 
             SockUnit sockUnit = new SockUnit() {
                 ID = "at" + sess.rep.ToString(),

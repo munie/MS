@@ -11,7 +11,7 @@ using mnn.misc.env;
 using Newtonsoft.Json;
 
 namespace EnvServer {
-    public class Core : CoreBase {
+    public class Core : BaseLayer {
         public Core()
         {
             servctl.RegisterService("service.sesslogin", SessLoginService);

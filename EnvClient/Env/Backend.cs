@@ -7,24 +7,31 @@ using System.Net;
 using System.Diagnostics;
 using mnn.net;
 using mnn.service;
+using mnn.misc.glue;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using EnvClient.Unit;
 
 namespace EnvClient.Env {
-    class Backend {
+    class Backend : ServiceLayer {
         // sessctl
         public SessCtl sessctl;
         private string serverip = "127.0.0.1";
         private int serverport = 2000;
         private SockSess envserver;
-        // servctl
-        private ServiceCore servctl;
         // uidata
         public UIData uidata;
 
         public Backend()
         {
+            servctl.RegisterService("notice.sesscreate", SessCreateNotice);
+            servctl.RegisterService("notice.sessdelete", SessDeleteNotice);
+            servctl.RegisterService("service.sessdetail", SessDetailResponse);
+            servctl.RegisterService("notice.moduleadd", ModuleAddNotice);
+            servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice);
+            servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice);
+            servctl.RegisterService("service.moduledetail", ModuleDetailResponse);
+
             sessctl = new SessCtl();
             sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
@@ -35,19 +42,10 @@ namespace EnvClient.Env {
                 System.Threading.Thread.CurrentThread.Abort();
             }
 
-            servctl = new ServiceCore();
-            servctl.RegisterService("notice.sesscreate", SessCreateNotice);
-            servctl.RegisterService("notice.sessdelete", SessDeleteNotice);
-            servctl.RegisterService("service.sessdetail", SessDetailResponse);
-            servctl.RegisterService("notice.moduleadd", ModuleAddNotice);
-            servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice);
-            servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice);
-            servctl.RegisterService("service.moduledetail", ModuleDetailResponse);
-
             uidata = new UIData();
         }
 
-        public void Run()
+        public new void Run()
         {
             System.Timers.Timer timer = new System.Timers.Timer(30 * 1000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
@@ -59,7 +57,7 @@ namespace EnvClient.Env {
                 while (true) {
                     try {
                         sessctl.Exec(1000);
-                        servctl.Exec();
+                        servctl.Exec(0);
                     } catch (Exception ex) {
                         log4net.ILog log = log4net.LogManager.GetLogger(typeof(Backend));
                         log.Error("Exception thrown out by core thread.", ex);

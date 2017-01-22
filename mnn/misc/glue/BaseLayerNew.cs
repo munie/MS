@@ -8,19 +8,17 @@ using mnn.service;
 using Newtonsoft.Json;
 
 namespace mnn.misc.glue {
-    public class CoreBaseNew {
+    public class BaseLayerNew : ServiceLayer {
         protected List<SockSessNew> sesstab;
-        protected ServiceCore servctl;
 
-        public CoreBaseNew()
+        public BaseLayerNew()
         {
-            sesstab = new List<SockSessNew>();
-
-            servctl = new ServiceCore();
             servctl.RegisterDefaultService("service.default", DefaultService);
             servctl.RegisterService("service.sessopen", SessOpenService);
             servctl.RegisterService("service.sessclose", SessCloseService);
             servctl.RegisterService("service.sesssend", SessSendService);
+
+            sesstab = new List<SockSessNew>();
         }
 
         protected SockSessServer MakeListen(IPEndPoint ep)
@@ -95,20 +93,11 @@ namespace mnn.misc.glue {
                 ServiceResponse response = new ServiceResponse();
 
                 servctl.DoService(request, ref response);
-                if (response.id != "unknown")
-                    sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+                sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
             }
         }
 
         // Center Service
-
-        protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
-        {
-            response.id = "unknown";
-            response.errcode = 10024;
-            response.errmsg = "unknown request";
-            response.data = "";
-        }
 
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
