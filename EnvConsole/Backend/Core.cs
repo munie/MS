@@ -72,7 +72,7 @@ namespace EnvConsole.Backend {
 
             string logmsg = "(" + (request.user_data as SockSess).rep.ToString()
                 + " => " + "*.*.*.*" + ")" + Environment.NewLine;
-            logmsg += "\tRequest: " + Encoding.UTF8.GetString(request.raw_data) + Environment.NewLine;
+            logmsg += "\tRequest: " + (string)request.data + Environment.NewLine;
             logmsg += "\tRespond: " + JsonConvert.SerializeObject(response);
 
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
@@ -87,7 +87,7 @@ namespace EnvConsole.Backend {
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
@@ -121,7 +121,7 @@ namespace EnvConsole.Backend {
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -151,7 +151,7 @@ namespace EnvConsole.Backend {
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
@@ -190,7 +190,7 @@ namespace EnvConsole.Backend {
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session
             SockSess sess = null;
@@ -236,7 +236,7 @@ namespace EnvConsole.Backend {
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // update sess data
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));

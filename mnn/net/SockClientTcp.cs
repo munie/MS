@@ -132,7 +132,6 @@ namespace mnn.net {
         {
             url = EncryptSym.AESEncrypt(url);
             byte[] buffer = Encoding.UTF8.GetBytes(url);
-            UriRequest.InsertHeader(ref buffer);
 
             this.Send(buffer, method);
         }

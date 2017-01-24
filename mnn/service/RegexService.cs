@@ -11,11 +11,8 @@ namespace mnn.service {
 
         public override bool IsMatch(ServiceRequest request)
         {
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
             System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex(id);
-            if (regex.IsMatch(dc["id"]))
+            if (regex.IsMatch(request.id))
                 return true;
             else
                 return false;

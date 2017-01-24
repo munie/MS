@@ -159,6 +159,12 @@ namespace mnn.net {
             ExecPoll.Add(this);
         }
 
+        public void Broadcast(byte[] msg)
+        {
+            foreach (var item in childs)
+                item.wfifo.Append(msg);
+        }
+
         public override void ExecOnce(int next)
         {
             // accept

@@ -193,7 +193,7 @@ namespace EnvClient.Backend {
 
         private void OnSessParse(object sender, SockSess sess)
         {
-            // init request & response
+            // init request
             ServiceRequest request = ServiceRequest.Parse(sess.RfifoTake());
             request.user_data = sess;
 
@@ -212,7 +212,7 @@ namespace EnvClient.Backend {
 
         private void SessCreateNotice(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var tmp = jo["data"];
@@ -236,7 +236,7 @@ namespace EnvClient.Backend {
 
         private void SessDeleteNotice(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var tmp = jo["data"];
@@ -262,7 +262,7 @@ namespace EnvClient.Backend {
 
         private void SessDetailResponse(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             if ((int)jo["errcode"] != 0) {
                 log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
@@ -303,7 +303,7 @@ namespace EnvClient.Backend {
 
         private void ModuleAddNotice(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var tmp = jo["data"];
@@ -318,7 +318,7 @@ namespace EnvClient.Backend {
 
         private void ModuleDeleteNotice(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var tmp = jo["data"];
@@ -334,7 +334,7 @@ namespace EnvClient.Backend {
 
         private void ModuleUpdateNotice(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var tmp = jo["data"];
@@ -350,7 +350,7 @@ namespace EnvClient.Backend {
 
         private void ModuleDetailResponse(ServiceRequest request, ref ServiceResponse response)
         {
-            JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
+            JObject jo = JObject.Parse((string)request.data);
 
             if ((int)jo["errcode"] != 0) {
                 log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)

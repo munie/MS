@@ -303,7 +303,7 @@ namespace EnvConsole.Windows
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess result = core.sessctl.FindSession(SockType.accept, null, ep);

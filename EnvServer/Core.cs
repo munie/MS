@@ -164,7 +164,7 @@ namespace EnvServer {
             SessData sd = sess.sdata as SessData;
 
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             sd.IsAdmin = bool.Parse(dc["admin"]);
             sd.Ccid = dc["ccid"];

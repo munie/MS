@@ -160,7 +160,7 @@ namespace SockMaster
         private void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             SockType type = Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -203,10 +203,20 @@ namespace SockMaster
         private void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
             string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
-                + " => " + (request.user_data as SockSessNew).lep.ToString() + ")\n";
-            log += SockConvert.ParseBytesToString(request.raw_data) + "\n\n";
+                + " => " + (request.user_data as SockSessNew).lep.ToString() + ")" + Environment.NewLine;
 
+            if (request is BinaryRequest)
+                log += SockConvert.ParseBytesToString(Encoding.UTF8.GetBytes((string)request.data));
+            else if (request is JsonRequest)
+                log += (string)request.data;
+            else if (request is UnknownRequest)
+                log += SockConvert.ParseBytesToString((byte[])request.data);
+
+            log += Environment.NewLine + Environment.NewLine;
             uidata.Logger(log);
+
+            response = null;
+            //throw new Exception("bad request");
         }
 
         // Menu methods for TreeView =============================================================

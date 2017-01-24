@@ -89,9 +89,11 @@ namespace mnn.service {
                 foreach (var item in services) {
                     if (item.IsMatch(request)) {
                         item.AddRequest(request);
-                        break;
+                        return;
                     }
                 }
+                if (default_service != null)
+                    default_service.AddRequest(request);
             } finally {
                 services_lock.ExitWriteLock();
             }
@@ -105,6 +107,8 @@ namespace mnn.service {
 
             foreach (var item in tmpservtab)
                 item.DoService();
+
+            default_service.DoService();
         }
     }
 }

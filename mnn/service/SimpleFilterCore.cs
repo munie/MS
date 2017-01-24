@@ -88,17 +88,8 @@ namespace mnn.service {
             while (matched_filters.Count != 0) {
                 var filter = matched_filters.Dequeue();
 
-                // backup user_data as it may not serializable
-                object swap = request.user_data;
-                request.user_data = null;
-
                 filter.DoServiceDirect(request, ref response);
-
                 request = response.data as ServiceRequest;
-                if (request != null)
-                    request.user_data = swap;
-                else
-                    break;
             }
         }
 
@@ -108,11 +99,8 @@ namespace mnn.service {
                 while (request_queue.Count != 0) {
                     var request = request_queue.Dequeue();
 
-                    IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                        <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
                     ServiceResponse response = new ServiceResponse() {
-                        id = dc["id"],
+                        id = request.id,
                         errcode = 0,
                         errmsg = "",
                         data = "",

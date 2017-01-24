@@ -29,7 +29,7 @@ namespace mnn.misc.glue {
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             SockSessNew sess = request.user_data as SockSessNew;
-            if (sess != null)
+            if (sess != null && response != null)
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
         }
 
@@ -75,7 +75,7 @@ namespace mnn.misc.glue {
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -102,7 +102,7 @@ namespace mnn.misc.glue {
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -123,14 +123,17 @@ namespace mnn.misc.glue {
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
             SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
 
             if (sess != null) {
-                sess.wfifo.Append(Convert.FromBase64String(dc["data"]));
+                if (sess is SockSessServer)
+                    (sess as SockSessServer).Broadcast(Convert.FromBase64String(dc["data"]));
+                else
+                    sess.wfifo.Append(Convert.FromBase64String(dc["data"]));
                 response.errcode = 0;
                 response.errmsg = "send to " + ep.ToString();
             } else {
@@ -177,6 +180,19 @@ namespace mnn.misc.glue {
                 default:
                     break;
             }
+
+            if (subset != null && subset.Count() != 0)
+                return subset.First();
+            else
+                return null;
+        }
+
+        protected SockSessNew FindSockSessFromSessGroup(IPEndPoint lep, IPEndPoint rep)
+        {
+            IEnumerable<SockSessNew> subset = from s in sesstab
+                                              where s.lep.Equals(lep)
+                                              && s.rep != null && s.rep.Equals(rep)
+                                              select s;
 
             if (subset != null && subset.Count() != 0)
                 return subset.First();

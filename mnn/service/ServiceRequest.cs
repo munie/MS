@@ -3,72 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace mnn.service {
-    public enum ServiceRequestContentMode {
-        none = 0x2421,   // $! => none
-        binary = 0x2422,    // $" => default
-        text = 0x2323,      // ## => text/plain
-        uri = 0x2324,       // #$ => text/url
-        json = 0x277b,      // {' => text/json
-        json2 = 0x227b,      // {" => text/json
-    }
-
     [Serializable]
     public abstract class ServiceRequest {
-        public /*short*/ ServiceRequestContentMode content_mode { get; protected set; }
-        public /*short*/ int packlen { get; protected set; }
-        public byte[] raw_data { get; set; }
-        public object user_data { get; set; }
+        public string id { get; protected set; }
+        public int packlen { get; protected set; }
+        public object data { get; protected set; }
+        [NonSerialized]
+        public object user_data;
 
-        protected abstract void InnerParse(byte[] raw);
-
-        // Methods ==================================================================
-
-        private static ServiceRequestContentMode CheckContentMode(byte[] raw)
-        {
-            if (raw.Length < 2)
-                return ServiceRequestContentMode.none;
-            else {
-                int tmp = raw[0] + (raw[1] << 8);
-
-                if (!Enum.IsDefined(typeof(ServiceRequestContentMode), tmp))
-                    tmp = (int)ServiceRequestContentMode.none;
-
-                return (ServiceRequestContentMode)tmp;
-            }
-        }
+        public abstract bool IsMatch(byte[] raw);
+        public abstract void Unpack(byte[] raw);
+        public abstract void Pack(ref byte[] buffer);
 
         public static ServiceRequest Parse(byte[] raw)
         {
-            ServiceRequest retval = null;
-            ServiceRequestContentMode mode = CheckContentMode(raw);
+            ServiceRequest retval = new UnknownRequest();
+            BinaryRequest binary = new BinaryRequest();
+            JsonRequest json = new JsonRequest();
 
-            switch (mode) {
-                case ServiceRequestContentMode.binary:
-                    retval = new BinaryRequest();
-                    retval.InnerParse(raw);
-                    break;
+            if (binary.IsMatch(raw))
+                retval = binary;
+            else if (json.IsMatch(raw))
+                retval = json;
 
-                case ServiceRequestContentMode.text:
-                case ServiceRequestContentMode.uri:
-                    retval = new UriRequest();
-                    retval.InnerParse(raw);
-                    break;
-
-                case ServiceRequestContentMode.json:
-                case ServiceRequestContentMode.json2:
-                    retval = new JsonRequest();
-                    retval.InnerParse(raw);
-                    break;
-                
-                case ServiceRequestContentMode.none:
-                default:
-                    retval = new UnknownRequest();
-                    retval.InnerParse(raw);
-                    break;
-            }
-
+            retval.Unpack(raw);
             return retval;
         }
 
@@ -80,71 +41,64 @@ namespace mnn.service {
 
     [Serializable]
     public class UnknownRequest : ServiceRequest {
-        protected override void InnerParse(byte[] raw)
+        public override bool IsMatch(byte[] raw)
         {
-            content_mode = ServiceRequestContentMode.none;
+            throw new NotImplementedException();
+        }
+
+        public override void Unpack(byte[] raw)
+        {
             packlen = raw.Length;
-            raw_data = raw;
-            user_data = null;
+            data = raw;
+            id = "";
+        }
+
+        public override void Pack(ref byte[] buffer)
+        {
+            throw new NotImplementedException();
         }
     }
 
     [Serializable]
     public class BinaryRequest : ServiceRequest {
-        private static readonly int CONTENT_MODE_BYTES = 2;
-        private static readonly int BINARY_LENGTH_BYTES = 2;
+        private static readonly int MAGIC = 0x0512;
+        private static readonly int MAGIC_BYTES = 2;
+        private static readonly int PACKLEN_BYTES = 2;
+        private static readonly int ID_BYTES = 2;
 
-        protected override void InnerParse(byte[] raw)
+        public override bool IsMatch(byte[] raw)
         {
-            content_mode = ServiceRequestContentMode.binary;
-            user_data = null;
+            if (raw.Length < 4)
+                return false;
 
-            if (raw.Length < 4) {
-                this.packlen = 0;
-                this.raw_data = new byte[0];
-            } else {
-                this.packlen = System.Math.Min(raw[2] + (raw[3] << 8), raw.Length);
-                this.raw_data = raw.Take(this.packlen).Skip(CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES).ToArray();
-            }
+            if (raw[0] + (raw[1] << 8) != MAGIC)
+                return false;
+
+            return true;
         }
 
-        public static void InsertHeader(ref byte[] buffer)
+        public override void Unpack(byte[] raw)
         {
-            int mode = (int)ServiceRequestContentMode.binary;
+            if (raw.Length < 4)
+                throw new Exception("raw package's length must larger than 4");
 
-            int len = CONTENT_MODE_BYTES + BINARY_LENGTH_BYTES + buffer.Length;
-            buffer = new byte[] { (byte)(mode & 0xff), (byte)(mode >> 8 & 0xff),
-                        (byte)(len & 0xff), (byte)(len >> 8 & 0xff) }
-                .Concat(buffer).ToArray();
-        }
-    }
+            if (raw[0] + (raw[1] << 8) != MAGIC)
+                throw new Exception("magic check failed, not a binary package");
 
-    [Serializable]
-    public class UriRequest : ServiceRequest {
-        private static readonly int CONTENT_MODE_BYTES = 2;
-        private static readonly int TEXT_LENGTH_BYTES = 4;
+            int len = raw[2] + (raw[3] << 8);
+            if (len < raw.Length)
+                throw new Exception("this binary package isn't integrity");
 
-        protected override void InnerParse(byte[] raw)
-        {
-            content_mode = ServiceRequestContentMode.uri;
-            user_data = null;
-
-            byte[] tmp = raw.Skip(CONTENT_MODE_BYTES).Take(TEXT_LENGTH_BYTES).ToArray();
-            this.packlen = int.Parse(Encoding.ASCII.GetString(tmp)); // ascii is better
-            this.raw_data = raw.Take(this.packlen).Skip(CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES).ToArray();
+            packlen = len;
+            data = raw.Skip(MAGIC_BYTES + PACKLEN_BYTES).ToArray();
+            id = Encoding.UTF8.GetString((data as byte[]).Take(ID_BYTES).ToArray());
         }
 
-        public static void InsertHeader(ref byte[] buffer)
+        public override void Pack(ref byte[] buffer)
         {
-            int mode = (int)ServiceRequestContentMode.binary;
-
-            int len = CONTENT_MODE_BYTES + TEXT_LENGTH_BYTES + buffer.Length;
-            len += 10000;
-            byte[] len_byte = Encoding.ASCII.GetBytes(len.ToString());
-            len_byte = len_byte.Skip(len_byte.Length - 4).ToArray();
-            buffer = new byte[] { (byte)(mode & 0xff), (byte)(mode >> 8 & 0xff),
-                        len_byte[0], len_byte[1], len_byte[2], len_byte[3] }
-                .Concat(buffer).ToArray();
+            int len = MAGIC_BYTES + PACKLEN_BYTES + ID_BYTES + buffer.Length;
+            buffer = new byte[] { (byte)(MAGIC & 0xff), (byte)(MAGIC >> 8 & 0xff),
+                (byte)(len & 0xff), (byte)(len >> 8 & 0xff) }.Concat(buffer).ToArray();
         }
     }
 
@@ -152,41 +106,58 @@ namespace mnn.service {
     public class JsonRequest : ServiceRequest {
         private static readonly int PARSE_FAIL_MAX_LEN = 1024;
 
-        protected override void InnerParse(byte[] raw)
+        public override bool IsMatch(byte[] raw)
         {
-            content_mode = ServiceRequestContentMode.json;
-            user_data = null;
+            int whitespace_len = 0;
+            while (Char.IsWhiteSpace((Char)raw[whitespace_len++]))
+                ;
+            whitespace_len--;
 
-            __InnerParse(raw);
+            if (raw[whitespace_len] != '{')
+                return false;
+            else
+                return true;
         }
 
-        private void __InnerParse(byte[] raw)
+        public override void Unpack(byte[] raw)
         {
-            if (raw[0] != '{') return;
+            int whitespace_len = 0;
+            while (Char.IsWhiteSpace((Char)raw[whitespace_len++]))
+                ;
+            whitespace_len--;
 
-            for (int i = 1, count = 1; i < raw.Length; i++) {
-                if (raw[i] == '{') {
+            if (raw[whitespace_len] != '{')
+                throw new Exception("it's not a json package");
+
+            byte[] new_raw = raw.Skip(whitespace_len).ToArray();
+
+            for (int i = 0, count = 0; i < new_raw.Length; i++) {
+                if (new_raw[i] == '{') {
                     count++;
-                } else if (raw[i] == '}') {
+                } else if (new_raw[i] == '}') {
                     if (--count == 0) {
-                        packlen = i + 1;
-                        raw_data = raw.Take(i+1).ToArray();
-                        // skip \r\n
-                        while (++i < raw.Length && (raw[i] == '\r' || raw[i] == '\n'))
-                            packlen++;
+                        packlen = whitespace_len + i + 1;
+                        data = Encoding.UTF8.GetString(new_raw.Take(i + 1).ToArray());
+
+                        JObject jo = JObject.Parse((string)data);
+                        id = (string)jo["id"];
                         return;
                     }
                 }
             }
 
             // parse failed, truncate if length of raw is greater than PARSE_FAIL_MAX_LEN
-            if (raw.Length > PARSE_FAIL_MAX_LEN) {
+            if (raw.Length > PARSE_FAIL_MAX_LEN)
                 packlen = raw.Length;
-                raw_data = raw;
-            } else {
+            else
                 packlen = 0;
-                raw_data = new byte[0];
-            }
+            data = "{}";
+            id = "";
+        }
+
+        public override void Pack(ref byte[] buffer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

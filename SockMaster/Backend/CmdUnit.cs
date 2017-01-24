@@ -7,6 +7,12 @@ using mnn.net;
 using mnn.service;
 
 namespace SockMaster.Backend {
+    public enum ServiceRequestContentMode {
+        none = 0,
+        binary = 1,
+        json = 2,
+    }
+
     public class CmdUnit : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
 

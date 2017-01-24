@@ -45,7 +45,7 @@ namespace mnn.misc.glue {
 
         protected virtual void OnSessParse(object sender, SockSess sess)
         {
-            // init request & response
+            // init request
             ServiceRequest request = ServiceRequest.Parse(sess.RfifoTake());
             request.user_data = sess;
 
@@ -65,7 +65,7 @@ namespace mnn.misc.glue {
         protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session and open
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -89,7 +89,7 @@ namespace mnn.misc.glue {
         protected virtual void SessCloseService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
@@ -117,7 +117,7 @@ namespace mnn.misc.glue {
         protected virtual void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             // find session
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));

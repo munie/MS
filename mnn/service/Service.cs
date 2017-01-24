@@ -36,10 +36,7 @@ namespace mnn.service {
 
         public virtual bool IsMatch(ServiceRequest request)
         {
-            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-            if (id.Equals(dc["id"]))
+            if (id.Equals(request.id))
                 return true;
             else
                 return false;
@@ -61,11 +58,8 @@ namespace mnn.service {
             while (request_queue.Count != 0) {
                 var request = request_queue.Dequeue();
 
-                IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                        <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
                 ServiceResponse response = new ServiceResponse() {
-                    id = dc["id"],
+                    id = request.id,
                     errcode = 0,
                     errmsg = "",
                     data = "",

@@ -54,16 +54,9 @@ namespace mnn.misc.glue {
                 var filter = item; // I dislike closure here
                 filtctl.RegisterFilter(filter.Key,
                     (ServiceRequest request, ref ServiceResponse response) => {
-                        // backup user_data as it may not serializable
-                        object swap = request.user_data;
-                        request.user_data = null;
-
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(filter.Value, ref args);
                         response = args[1] as ServiceResponse;
-
-                        // recover user_data
-                        request.user_data = swap;
                     });
             }
 
@@ -78,16 +71,9 @@ namespace mnn.misc.glue {
                 var service = item; // I dislike closure here
                 servctl.RegisterService(service.Key,
                     (ServiceRequest request, ref ServiceResponse response) => {
-                        // backup user_data as it may not serializable
-                        object swap = request.user_data;
-                        request.user_data = null;
-
                         object[] args = new object[] { request, response };
                         module.Invoke(service.Value, ref args);
                         response = args[1] as ServiceResponse;
-
-                        // recover user_data
-                        request.user_data = swap;
                     });
             }
         }
@@ -113,7 +99,7 @@ namespace mnn.misc.glue {
         protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             Module module = modctl.Add(dc["filepath"]);
 
@@ -129,7 +115,7 @@ namespace mnn.misc.glue {
         protected virtual void ModuleDelService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             Module module = modctl.GetModule(dc["name"]);
             if (module != null)
@@ -142,7 +128,7 @@ namespace mnn.misc.glue {
         protected virtual void ModuleLoadService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             Module module = modctl.GetModule(dc["name"]);
             bool loadstat = true;
@@ -170,7 +156,7 @@ namespace mnn.misc.glue {
         protected virtual void ModuleUnloadService(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
+                <Dictionary<string, dynamic>>((string)request.data);
 
             Module module = modctl.GetModule(dc["name"]);
             module.Unload();

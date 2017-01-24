@@ -60,14 +60,14 @@ namespace mnn.misc.glue {
 
         protected virtual void OnServiceBefore(ref ServiceRequest request)
         {
-            if (request.content_mode == ServiceRequestContentMode.uri) {
-                try {
-                    byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString(request.raw_data));
-                    result = EncryptSym.AESDecrypt(result);
-                    if (result != null)
-                        request.raw_data = result;
-                } catch (Exception) { }
-            }
+            //if (request is UnknownRequest) {
+            //    try {
+            //        byte[] result = Convert.FromBase64String(Encoding.UTF8.GetString((byte[])request.data));
+            //        result = EncryptSym.AESDecrypt(result);
+            //        if (result != null)
+            //            request.data = result;
+            //    } catch (Exception) { }
+            //}
         }
 
         protected virtual void OnServiceDone(ServiceRequest request, ServiceResponse response) { }
@@ -76,17 +76,12 @@ namespace mnn.misc.glue {
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            if (request.content_mode == ServiceRequestContentMode.json) {
-                IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
-                    <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));
-
-                if (((string)dc["id"]).StartsWith("service.")) {
-                    response.id = "unknown";
-                    response.errcode = 10024;
-                    response.errmsg = "unknown request";
-                } else {
-                    throw new Exception("bad request");
-                }
+            if (request.id.StartsWith("service.")) {
+                response.id = "unknown";
+                response.errcode = 10024;
+                response.errmsg = "unknown request";
+            } else {
+                throw new Exception("bad request");
             }
         }
     }
