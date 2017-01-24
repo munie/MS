@@ -81,8 +81,8 @@ namespace mnn.net {
                     sock.SendTimeout = 1000; // important
                 }
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
-                log.Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Error(String.Format("Connect to {0} failed.", toep.ToString()), ex);
             }
 
             if (method == null) {
@@ -109,8 +109,8 @@ namespace mnn.net {
                                 retval = Encoding.UTF8.GetString(tmp.Take(nread).ToArray());
                         }
                     } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
-                        log.Error("Exception in critical section.", ex);
+                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                            .Error("Exception in critical section.", ex);
                         return;
                     } finally {
                         mutex.ReleaseMutex();
@@ -121,8 +121,8 @@ namespace mnn.net {
                             .Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                         method.Method.Invoke(method.Target, new object[] { str.Last() });
                     } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(SockClientTcp));
-                        log.Error("Exception of invoking anonymous method.", ex);
+                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                            .Error("Exception of invoking anonymous method.", ex);
                     }
                 });
             }

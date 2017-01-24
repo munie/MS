@@ -44,10 +44,7 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception) {
-                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                //log.Error("Exception of sending msg to client.", ex);
-            }
+            } catch (Exception) { }
         }
 
         protected void SendClientMsg(string ip, int port, string msg, SockClientTcpSendCallback method = null)
@@ -56,10 +53,7 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception) {
-                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                //log.Error("Exception of sending msg to client.", ex);
-            }
+            } catch (Exception) { }
         }
 
         protected void SendClientMsgByCcid(string ccid, string msg, SockClientTcpSendCallback method = null)
@@ -68,10 +62,7 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception) {
-                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                //log.Error("Exception of sending msg to client.", ex);
-            }
+            } catch (Exception) { }
         }
 
         protected void SendClientUpdate(string ip, int port, string ccid, string name, SockClientTcpSendCallback method = null)
@@ -80,10 +71,7 @@ namespace mnn.misc.env {
 
             try {
                 tcp.SendEncryptUrl(url, method);
-            } catch (Exception) {
-                //log4net.ILog log = log4net.LogManager.GetLogger(typeof(EnvModule));
-                //log.Error("Exception of sending msg to client.", ex);
-            }
+            } catch (Exception) { }
         }
     }
 }

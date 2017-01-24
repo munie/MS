@@ -55,6 +55,9 @@
     <Compile Include="misc\glue\BaseLayerNew.cs" />
     <Compile Include="misc\glue\ServiceLayer.cs" />
     <Compile Include="misc\glue\TimeOut.cs" />
+    <Compile Include="service\RegexService.cs" />
+    <Compile Include="service\SimpleFilterCore.cs" />
+    <Compile Include="service\SimpleServiceCore.cs" />
     <Compile Include="util\ExecPoll.cs" />
     <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />

@@ -38,8 +38,8 @@ namespace EnvServer {
                     serverip = node.Attributes["ipaddress"].Value;
                     serverport = int.Parse(node.Attributes["port"].Value);
                 } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(Program));
-                    log.Error("error when parsing config file.", ex);
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                        .Error("error when parsing config file.", ex);
                 }
             }
 

@@ -45,14 +45,14 @@ namespace mnn.misc.glue {
 
             // register filters
             foreach (var item in filttab as IDictionary<string, string>) {
-                if (!module.CheckMethod(item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
-                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseLayer));
-                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
+                if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                        .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
                     continue;
                 }
 
                 var filter = item; // I dislike closure here
-                filtctl.RegisterService(filter.Key,
+                filtctl.RegisterFilter(filter.Key,
                     (ServiceRequest request, ref ServiceResponse response) => {
                         // backup user_data as it may not serializable
                         object swap = request.user_data;
@@ -60,21 +60,18 @@ namespace mnn.misc.glue {
 
                         object[] args = new object[] { request, response };
                         bool retval = (bool)module.Invoke(filter.Value, ref args);
+                        response = args[1] as ServiceResponse;
 
-                        ServiceRequest newrep = response.data as ServiceRequest;
-                        if (newrep != null) {
-                            // recover user_data
-                            newrep.user_data = swap;
-                            servctl.AddRequest(newrep);
-                        }
+                        // recover user_data
+                        request.user_data = swap;
                     });
             }
 
             // register services
             foreach (var item in servtab as IDictionary<string, string>) {
-                if (!module.CheckMethod(item.Value, typeof(ServiceDelegate).GetMethod("Invoke"))) {
-                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseLayer));
-                    logger.Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
+                if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                        .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
                     continue;
                 }
 
@@ -91,12 +88,6 @@ namespace mnn.misc.glue {
 
                         // recover user_data
                         request.user_data = swap;
-
-                        string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                            + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
-                        logmsg += Encoding.UTF8.GetString(request.raw_data);
-                        log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseLayer));
-                        logger.Info(logmsg);
                     });
             }
         }
@@ -110,11 +101,11 @@ namespace mnn.misc.glue {
 
             // deregister filter
             foreach (var item in filttab as IDictionary<string, string>)
-                filtctl.DeregisterService(item.Key);
+                filtctl.UnregisterFilter(item.Key);
 
             // deregister service
             foreach (var item in servtab as IDictionary<string, string>)
-                servctl.DeregisterService(item.Key);
+                servctl.UnregisterService(item.Key);
         }
 
         // Service =========================================================================

@@ -94,7 +94,7 @@ namespace SockMaster
 
             // init core
             core = new BaseLayerNew();
-            core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
             core.servctl.RegisterDefaultService("service.default", DefaultService);
             core.sess_open_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
             core.sess_close_event += new BaseLayerNew.SockSessCloseDelegate(OnSessClose);
@@ -157,7 +157,7 @@ namespace SockMaster
 
         // new baselayer event
 
-        private void OnServDone(ServiceRequest request, ServiceResponse response)
+        private void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>(Encoding.UTF8.GetString(request.raw_data));

@@ -7,19 +7,17 @@ using mnn.util;
 
 namespace mnn.misc.glue {
     public class ServiceLayer : IRunable {
-        public ServiceCore filtctl;
-        public ServiceCore servctl;
+        public SimpleFilterCore filtctl;
+        public SimpleServiceCore servctl;
 
         public ServiceLayer()
         {
-            // init filtctl
-            filtctl = new ServiceCore();
-            filtctl.RegisterDefaultService("filter.default", DefaultFilter);
+            filtctl = new SimpleFilterCore();
+            filtctl.filter_done += new Service.ServiceDoneDelegate(OnFilterDone);
 
-            // init servctl
-            servctl = new ServiceCore();
-            servctl.serv_before_do += new ServiceDoBeforeDelegate(OnServBeforeDo);
-            servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            servctl = new SimpleServiceCore();
+            servctl.service_before += new Service.ServiceBeforeDelegate(OnServiceBefore);
+            servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
             servctl.RegisterDefaultService("service.default", DefaultService);
         }
 
@@ -38,21 +36,29 @@ namespace mnn.misc.glue {
                 try {
                     Exec();
                 } catch (Exception ex) {
-                    log4net.ILog log = log4net.LogManager.GetLogger(typeof(BaseLayer));
-                    log.Error("Exception thrown out by core thread.", ex);
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                        .Error("Exception thrown out by core thread.", ex);
                 }
             }
         }
 
         protected virtual void Exec()
         {
-            filtctl.Exec(0);
-            servctl.Exec(1000);
+            filtctl.Exec();
+            servctl.Exec();
         }
 
         // Service Event ==================================================================================
 
-        protected virtual void OnServBeforeDo(ref ServiceRequest request)
+        protected virtual void OnFilterDone(ServiceRequest request, ServiceResponse response)
+        {
+            ServiceRequest new_request = response.data as ServiceRequest;
+
+            if (new_request != null)
+                servctl.AddRequest(new_request);
+        }
+
+        protected virtual void OnServiceBefore(ref ServiceRequest request)
         {
             if (request.content_mode == ServiceRequestContentMode.uri) {
                 try {
@@ -64,14 +70,9 @@ namespace mnn.misc.glue {
             }
         }
 
-        protected virtual void OnServDone(ServiceRequest request, ServiceResponse response) { }
+        protected virtual void OnServiceDone(ServiceRequest request, ServiceResponse response) { }
 
         // Service =========================================================================
-
-        protected virtual void DefaultFilter(ServiceRequest request, ref ServiceResponse response)
-        {
-            servctl.AddRequest(request);
-        }
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {

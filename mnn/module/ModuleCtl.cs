@@ -44,8 +44,8 @@ namespace mnn.module {
                             if (FuncModuleCallReturn != null)
                                 FuncModuleCallReturn(call);
                         } catch (Exception ex) {
-                            log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
-                            log.Error("Exception of invoking assembly method.", ex);
+                            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                                .Error("Exception of invoking assembly method.", ex);
                         } finally {
                             item.ModuleCallTable.Remove(call);
                             module_call_count--;
@@ -67,8 +67,8 @@ namespace mnn.module {
                     module_add(this, module);
                 return module;
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(ModuleCtl));
-                log.Error("load " + filepath + " failed", ex);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Error("load " + filepath + " failed", ex);
                 return null;
             }
         }

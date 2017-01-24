@@ -29,8 +29,8 @@ namespace EnvConsole.Backend {
             try {
                 process.Start();
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
-                log.Error("Start nodejs failed.", ex);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Error("Start nodejs failed.", ex);
                 //Thread.CurrentThread.Abort();
             }
             System.Windows.Application.Current.Exit += new System.Windows.ExitEventHandler((s, e) =>
@@ -75,8 +75,7 @@ namespace EnvConsole.Backend {
             logmsg += "\tRequest: " + Encoding.UTF8.GetString(request.raw_data) + Environment.NewLine;
             logmsg += "\tRespond: " + JsonConvert.SerializeObject(response);
 
-            log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-            logger.Info(logmsg);
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
         }
 
         private void ClientListService(ServiceRequest request, ref ServiceResponse response)
@@ -179,8 +178,7 @@ namespace EnvConsole.Backend {
                     + " => " + sess.rep.ToString() + ")" + Environment.NewLine;
                 logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(logmsg);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
             }
         }
 
@@ -226,8 +224,7 @@ namespace EnvConsole.Backend {
                     + " => " + sess.rep.ToString() + ")" + Environment.NewLine;
                 logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info(logmsg);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
             }
         }
 

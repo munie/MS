@@ -209,8 +209,7 @@ namespace EnvClient.Windows
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
 
-                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainWindow));
-                    logger.Info(logmsg);
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
                 }
             }
         }

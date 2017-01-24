@@ -57,10 +57,10 @@ namespace EnvClient.Backend {
                 while (true) {
                     try {
                         sessctl.Exec(1000);
-                        servctl.Exec(0);
+                        servctl.Exec();
                     } catch (Exception ex) {
-                        log4net.ILog log = log4net.LogManager.GetLogger(typeof(Core));
-                        log.Error("Exception thrown out by core thread.", ex);
+                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                            .Error("Exception thrown out by core thread.", ex);
                     }
                 }
             });
@@ -265,8 +265,8 @@ namespace EnvClient.Backend {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
             if ((int)jo["errcode"] != 0) {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
                 return;
             }
 
@@ -353,8 +353,8 @@ namespace EnvClient.Backend {
             JObject jo = JObject.Parse(Encoding.UTF8.GetString(request.raw_data));
 
             if ((int)jo["errcode"] != 0) {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(Core));
-                logger.Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
                 return;
             }
 

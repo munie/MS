@@ -109,7 +109,7 @@ namespace EnvConsole.Windows
             core.sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
 
             // register events of servctl & register a service
-            core.servctl.serv_done += new ServiceDoneDelegate(OnServDone);
+            core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
             core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService);
         }
 
@@ -161,9 +161,8 @@ namespace EnvConsole.Windows
                     uidata.ServerTable.Add(server);
                 }
             } catch (Exception ex) {
-                log4net.ILog log = log4net.LogManager.GetLogger(typeof(MainWindow));
-                log.Error("Exception of reading configure file.", ex);
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": syntax error.");
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Error("Exception of reading configure file.", ex);
             }
 
             // autorun
@@ -291,7 +290,7 @@ namespace EnvConsole.Windows
 
         // Service Event ==================================================================================
 
-        private void OnServDone(ServiceRequest request, ServiceResponse response)
+        private void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             /// ** update DataUI
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
@@ -465,8 +464,7 @@ namespace EnvConsole.Windows
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
 
-                    log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainWindow));
-                    logger.Info(logmsg);
+                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType).Info(logmsg);
                 }
             }
         }

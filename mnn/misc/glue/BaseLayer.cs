@@ -28,11 +28,10 @@ namespace mnn.misc.glue {
         protected override void Exec()
         {
             sessctl.Exec(1000);
-            filtctl.Exec(0);
-            servctl.Exec(0);
+            base.Exec();
         }
 
-        protected override void OnServDone(ServiceRequest request, ServiceResponse response)
+        protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             sessctl.BeginInvoke(new Action(() =>
             {

@@ -17,7 +17,6 @@ namespace mnn.misc.glue {
 
         public BaseLayerNew()
         {
-            servctl.RegisterDefaultService("service.default", DefaultService);
             servctl.RegisterService("service.sessopen", SessOpenService);
             servctl.RegisterService("service.sessclose", SessCloseService);
             servctl.RegisterService("service.sesssend", SessSendService);
@@ -27,7 +26,7 @@ namespace mnn.misc.glue {
             sess_close_event = null;
         }
 
-        protected override void OnServDone(ServiceRequest request, ServiceResponse response)
+        protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             SockSessNew sess = request.user_data as SockSessNew;
             if (sess != null)
