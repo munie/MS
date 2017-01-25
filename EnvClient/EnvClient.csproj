@@ -69,9 +69,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Backend\Core.cs" />
-    <Compile Include="Unit\ClientUnit.cs" />
+    <Compile Include="Unit\AcceptUnit.cs" />
     <Compile Include="Unit\ModuleUnit.cs" />
-    <Compile Include="Unit\ServerUnit.cs" />
+    <Compile Include="Unit\ListenUnit.cs" />
     <Compile Include="Windows\InputDialog.xaml.cs">
       <DependentUpon>InputDialog.xaml</DependentUpon>
     </Compile>

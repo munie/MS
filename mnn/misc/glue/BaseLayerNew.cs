@@ -8,26 +8,37 @@ using mnn.service;
 using Newtonsoft.Json;
 
 namespace mnn.misc.glue {
-    public class BaseLayerNew : ServiceLayer {
+    public class BaseLayerNew : ModulizedServiceLayer {
         protected List<SockSessNew> sesstab;
+        private SockSessGroupState sessstate;
         public delegate void SockSessOpenDelegate(object sender, SockSessNew sess);
         public delegate void SockSessCloseDelegate(object sender, SockSessNew sess);
-        public SockSessOpenDelegate sess_open_event;
+        public SockSessOpenDelegate sess_listen_event;
+        public SockSessOpenDelegate sess_accept_event;
+        public SockSessOpenDelegate sess_connect_event;
         public SockSessCloseDelegate sess_close_event;
 
         public BaseLayerNew()
         {
-            servctl.RegisterService("service.sessopen", SessOpenService);
+            servctl.RegisterService("service.sesslisten", SessListenService);
+            servctl.RegisterService("service.sessconnect", SessConnectService);
             servctl.RegisterService("service.sessclose", SessCloseService);
             servctl.RegisterService("service.sesssend", SessSendService);
+            servctl.RegisterService("service.sessdetail", SessDetailService);
+            servctl.RegisterService("service.sessgroupstate", SessGroupStateService);
 
             sesstab = new List<SockSessNew>();
-            sess_open_event = null;
+            sessstate = new SockSessGroupState();
+            sess_listen_event = null;
+            sess_accept_event = null;
+            sess_connect_event = null;
             sess_close_event = null;
         }
 
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
+            sessstate.PackDecrease();
+
             SockSessNew sess = request.user_data as SockSessNew;
             if (sess != null && response != null)
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
@@ -41,8 +52,10 @@ namespace mnn.misc.glue {
             sess.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
             sesstab.Add(sess);
 
-            if (sess_open_event != null)
-                sess_open_event(this, sess);
+            if (sess_accept_event != null)
+                sess_accept_event(this, sess);
+
+            sessstate.AcceptIncrease();
         }
 
         protected virtual void OnCloseEvent(object sender)
@@ -52,6 +65,13 @@ namespace mnn.misc.glue {
 
             if (sess_close_event != null)
                 sess_close_event(this, sess);
+
+            if (sess is SockSessAccept)
+                sessstate.AcceptDecrease();
+            else if (sess is SockSessServer)
+                sessstate.ListenCount--;
+            else if (sess is SockSessClient)
+                sessstate.ConnectCount--;
         }
 
         protected virtual void OnRecvEvent(object sender)
@@ -66,35 +86,45 @@ namespace mnn.misc.glue {
                 sess.rfifo.Skip(request.packlen);
                 request.user_data = sess;
                 servctl.AddRequest(request);
+                sessstate.PackIncrease();
             }
         }
 
         // Center Service
 
-        protected virtual void SessOpenService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void SessListenService(ServiceRequest request, ref ServiceResponse response)
         {
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
 
             try {
-                SockSessNew sess = null;
-                if (sockType == SockType.listen)
-                    sess = MakeListen(ep);
-                else
-                    sess = MakeConnect(ep);
-
-                if (sess_open_event != null)
-                    sess_open_event(this, sess);
-
+                SockSessNew sess = MakeListen(ep);
                 response.errcode = 0;
-                response.errmsg = dc["type"] + " " + ep.ToString();
+                response.errmsg = "listen at " + ep.ToString();
             } catch (Exception) {
                 response.errcode = 1;
-                response.errmsg = "can't open " + ep.ToString();
+                response.errmsg = "can't listen at " + ep.ToString();
+            }
+        }
+
+        protected virtual void SessConnectService(ServiceRequest request, ref ServiceResponse response)
+        {
+            // parse to dictionary
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>((string)request.data);
+
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
+
+            try {
+                SockSessNew sess = MakeConnect(ep);
+                response.errcode = 0;
+                response.errmsg = "connect to " + ep.ToString();
+            } catch (Exception) {
+                response.errcode = 1;
+                response.errmsg = "can't connect to " + ep.ToString();
             }
         }
 
@@ -104,18 +134,15 @@ namespace mnn.misc.glue {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
-            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
+            SockSessNew sess = FindSockSessFromSessGroup(dc["sessid"]);
 
             if (sess != null) {
                 sess.Close();
-
                 response.errcode = 0;
-                response.errmsg = "shutdown " + ep.ToString();
+                response.errmsg = "shutdown " + dc["sessid"];
             } else {
                 response.errcode = 1;
-                response.errmsg = "can't find " + ep.ToString();
+                response.errmsg = "can't find " + dc["sessid"];
             }
         }
 
@@ -125,9 +152,7 @@ namespace mnn.misc.glue {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            SockType sockType = (SockType)Enum.Parse(typeof(SockType), dc["type"]);
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
-            SockSessNew sess = FindSockSessFromSessGroup(sockType, ep);
+            SockSessNew sess = FindSockSessFromSessGroup(dc["sessid"]);
 
             if (sess != null) {
                 if (sess is SockSessServer)
@@ -135,11 +160,33 @@ namespace mnn.misc.glue {
                 else
                     sess.wfifo.Append(Convert.FromBase64String(dc["data"]));
                 response.errcode = 0;
-                response.errmsg = "send to " + ep.ToString();
+                response.errmsg = "send to " + dc["sessid"];
             } else {
                 response.errcode = 0;
-                response.errmsg = "can't find " + ep.ToString();
+                response.errmsg = "can't find " + dc["sessid"];
             }
+        }
+
+        protected virtual void SessDetailService(ServiceRequest request, ref ServiceResponse response)
+        {
+            List<object> pack = new List<object>();
+            foreach (var item in sesstab) {
+                pack.Add(new {
+                    sessid = item.id,
+                    type = item.GetType().Name,
+                    localip = item.lep.ToString(),
+                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                    tick = item.tick,
+                    conntime = item.conntime,
+                });
+            }
+
+            response.data = pack;
+        }
+
+        protected virtual void SessGroupStateService(ServiceRequest request, ref ServiceResponse response)
+        {
+            response.data = sessstate;
         }
 
         // Methods
@@ -151,7 +198,11 @@ namespace mnn.misc.glue {
             server.close_event += new SockSessNew.SockSessDelegate(OnCloseEvent);
             server.accept_event += new SockSessServer.SockSessServerDelegate(OnAcceptEvent);
 
+            if (sess_listen_event != null)
+                sess_listen_event(this, server);
+
             sesstab.Add(server);
+            sessstate.ListenCount++;
             return server;
         }
 
@@ -162,42 +213,22 @@ namespace mnn.misc.glue {
             client.close_event += new SockSessNew.SockSessDelegate(OnCloseEvent);
             client.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
 
+            if (sess_connect_event != null)
+                sess_connect_event(this, client);
+
             sesstab.Add(client);
+            sessstate.ConnectCount++;
             return client;
         }
 
-        protected SockSessNew FindSockSessFromSessGroup(SockType sockType, IPEndPoint ep)
+        protected SockSessNew FindSockSessFromSessGroup(string sessid)
         {
-            IEnumerable<SockSessNew> subset = null;
-            switch (sockType) {
-                case SockType.listen:
-                case SockType.connect:
-                    subset = from s in sesstab where s.lep.Equals(ep) select s;
-                    break;
-                case SockType.accept:
-                    subset = from s in sesstab where s.rep != null && s.rep.Equals(ep) select s;
-                    break;
-                default:
-                    break;
+            foreach (var item in sesstab) {
+                if (item.id.Equals(sessid))
+                    return item;
             }
 
-            if (subset != null && subset.Count() != 0)
-                return subset.First();
-            else
-                return null;
-        }
-
-        protected SockSessNew FindSockSessFromSessGroup(IPEndPoint lep, IPEndPoint rep)
-        {
-            IEnumerable<SockSessNew> subset = from s in sesstab
-                                              where s.lep.Equals(lep)
-                                              && s.rep != null && s.rep.Equals(rep)
-                                              select s;
-
-            if (subset != null && subset.Count() != 0)
-                return subset.First();
-            else
-                return null;
+            return null;
         }
     }
 }

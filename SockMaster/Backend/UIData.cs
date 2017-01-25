@@ -119,13 +119,14 @@ namespace SockMaster.Backend {
             }));
         }
 
-        public void OpenSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep)
+        public void OpenSockUnit(SockType type, IPEndPoint lep, IPEndPoint rep, string sessid)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 SockUnit unit = FindSockUnit(type, lep, rep);
                 if (unit == null) return;
                 unit.Lep = lep;
                 unit.Rep = rep;
+                unit.SESSID = sessid;
                 unit.State = SockState.Opened;
             }));
         }
@@ -153,6 +154,11 @@ namespace SockMaster.Backend {
             foreach (var item in SockUnitGroup) {
                 if (item.ID.Equals(id))
                     return item;
+
+                foreach (var child in item.Childs) {
+                    if (child.ID.Equals(id))
+                        return item;
+                }
             }
             return null;
         }

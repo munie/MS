@@ -6,12 +6,13 @@ using System.ComponentModel;
 
 namespace EnvClient.Unit
 {
-    public class ServerUnit : INotifyPropertyChanged
+    public class ListenUnit : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private int port;
 
+        public string ID { get; set; }
         public string Name { get; set; }
         public string Protocol { get; set; }
         public string IpAddress { get; set; }

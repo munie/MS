@@ -261,7 +261,7 @@ namespace EnvConsole.Windows
                 if (!subset.Any()) {
                     if (sess.sdata == null)
                         sess.sdata = new SessData();
-                    (sess.sdata as SessData).IsAdmin = true;
+                    (sess.sdata as SessData).Admin = true;
                 }
             }
         }

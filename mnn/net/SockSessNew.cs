@@ -14,7 +14,9 @@ namespace mnn.net {
 
         protected Socket sock;
         protected bool eof;
-        private DateTime tick;
+        public string id;
+        public DateTime tick;
+        public DateTime conntime;
         private int stall;
 
         public IPEndPoint lep { get { return (IPEndPoint)sock.LocalEndPoint; } }
@@ -47,7 +49,9 @@ namespace mnn.net {
         {
             this.sock = sock;
             this.eof = false;
+            this.id = Guid.NewGuid().ToString();
             this.tick = DateTime.Now;
+            this.conntime = tick;
             this.stall = stall;
 
             rfifo = new Fifo<byte>();
@@ -94,7 +98,8 @@ namespace mnn.net {
 
             try {
                 sock.Send(wfifo.Take(), SocketFlags.None);
-            } catch (Exception) {
+            } catch (Exception ex) {
+                log4net.LogManager.GetLogger("").Info("", ex);
                 eof = true;
             }
         }

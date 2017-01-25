@@ -14,14 +14,13 @@ namespace EnvClient.Backend
 {
     class UIData : INotifyPropertyChanged
     {
-        public ObservableCollection<ServerUnit> ServerTable { get; set; }
-        public ObservableCollection<ClientUnit> ClientTable { get; set; }
+        public ObservableCollection<ListenUnit> ListenTable { get; set; }
+        public ObservableCollection<AcceptUnit> AcceptTable { get; set; }
         public ObservableCollection<ModuleUnit> ModuleTable { get; set; }
-        public ReaderWriterLock RwlockModuleTable { get; set; }
+        private ReaderWriterLock moduleTableLock { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        // currentAcceptCount
         private int currentAcceptCount;
         public int CurrentAcceptCount
         {
@@ -34,7 +33,6 @@ namespace EnvClient.Backend
             }
         }
 
-        // historyAcceptOpenCount
         private int historyAcceptOpenCount;
         public int HistoryAcceptOpenCount
         {
@@ -47,7 +45,6 @@ namespace EnvClient.Backend
             }
         }
 
-        // historyAcceptCloseCount
         private int historyAcceptCloseCount;
         public int HistoryAcceptCloseCount
         {
@@ -60,7 +57,6 @@ namespace EnvClient.Backend
             }
         }
 
-        // currentPackCount
         private int currentPackCount;
         public int CurrentPackCount
         {
@@ -73,7 +69,6 @@ namespace EnvClient.Backend
             }
         }
 
-        // historyPackFetchedCount
         private int historyPackFetchedCount;
         public int HistoryPackFetchedCount
         {
@@ -86,7 +81,6 @@ namespace EnvClient.Backend
             }
         }
 
-        // historyPackParsedCount
         private int historyPackParsedCount;
         public int HistoryPackParsedCount
         {
@@ -101,97 +95,17 @@ namespace EnvClient.Backend
 
         public UIData()
         {
-            ServerTable = new ObservableCollection<ServerUnit>();
-            ClientTable = new ObservableCollection<ClientUnit>();
+            ListenTable = new ObservableCollection<ListenUnit>();
+            AcceptTable = new ObservableCollection<AcceptUnit>();
             ModuleTable = new ObservableCollection<ModuleUnit>();
-            RwlockModuleTable = new ReaderWriterLock();
+            moduleTableLock = new ReaderWriterLock();
 
-            //log = new StringBuilder();
             currentAcceptCount = 0;
             historyAcceptOpenCount = 0;
             historyAcceptCloseCount = 0;
             currentPackCount = 0;
             historyPackFetchedCount = 0;
             historyPackParsedCount = 0;
-        }
-
-        public void ServerStarted(string ip, int port)
-        {
-            foreach (var item in ServerTable) {
-                if (item.IpAddress.Equals(ip) && item.Port == port) {
-                    break;
-                }
-            }
-        }
-
-        public void ServerStoped(string ip, int port)
-        {
-            foreach (var item in ServerTable) {
-                if (item.IpAddress.Equals(ip) && item.Port == port) {
-                    break;
-                }
-            }
-        }
-
-        public void ClientAdded(IPEndPoint lep, IPEndPoint rep)
-        {
-            ClientUnit client = new ClientUnit();
-            client.ID = "";
-            client.Name = "";
-            client.RemoteEP = rep;
-            foreach (var item in ServerTable) {
-                if (item.Port.Equals(lep.Port)) {
-                    client.ServerName = item.Name;
-                    break;
-                }
-            }
-            client.ConnectTime = DateTime.Now;
-
-            ClientTable.Add(client);
-            CurrentAcceptCount++;
-            HistoryAcceptOpenCount++;
-        }
-
-        public void ClientDeleted(IPEndPoint rep)
-        {
-            var subset = from s in ClientTable where s.RemoteEP.Equals(rep) select s;
-            if (!subset.Any())
-                return;
-
-            ClientTable.Remove(subset.First());
-            CurrentAcceptCount--;
-            HistoryAcceptCloseCount++;
-        }
-
-        public void ClientUpdated(IPEndPoint rep, string fieldName, object value)
-        {
-            Type t = typeof(ClientUnit);
-            PropertyInfo propertyInfo = t.GetProperty(fieldName);
-
-            var subset = from s in this.ClientTable
-                            where s.RemoteEP.Equals(rep)
-                            select s;
-
-            if (subset.Any())
-                propertyInfo.SetValue(subset.First(), value, null);
-        }
-
-        public void PackRecved()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                CurrentPackCount++;
-                HistoryPackFetchedCount++;
-            }));
-        }
-
-        public void PackParsed()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                CurrentPackCount--;
-                HistoryPackParsedCount++;
-            }));
         }
     }
 }

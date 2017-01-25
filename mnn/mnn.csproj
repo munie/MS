@@ -55,6 +55,7 @@
     <Compile Include="misc\glue\BaseLayerNew.cs" />
     <Compile Include="misc\glue\ServiceLayer.cs" />
     <Compile Include="misc\glue\TimeOut.cs" />
+    <Compile Include="net\SockSessGroupState.cs" />
     <Compile Include="service\RegexService.cs" />
     <Compile Include="service\SimpleFilterCore.cs" />
     <Compile Include="service\SimpleServiceCore.cs" />

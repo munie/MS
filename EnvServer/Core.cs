@@ -11,9 +11,14 @@ using mnn.misc.env;
 using Newtonsoft.Json;
 
 namespace EnvServer {
-    public class Core : BaseLayer {
+    public class Core : BaseLayerNew {
         public Core()
         {
+            sess_listen_event += new SockSessOpenDelegate(OnSessCreate);
+            sess_accept_event += new SockSessOpenDelegate(OnSessCreate);
+            sess_connect_event += new SockSessOpenDelegate(OnSessCreate);
+            sess_close_event += new SockSessCloseDelegate(OnSessDelete);
+
             servctl.RegisterService("service.sesslogin", SessLoginService);
         }
 
@@ -31,11 +36,7 @@ namespace EnvServer {
                 state = module.State.ToString(),
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
         protected override void OnModuleCtlDelete(object sender, Module module)
@@ -49,11 +50,7 @@ namespace EnvServer {
                 state = module.State.ToString(),
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
         protected override void OnModuleLoad(Module module)
@@ -67,11 +64,7 @@ namespace EnvServer {
                 state = module.State.ToString(),
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
         protected override void OnModuleUnload(Module module)
@@ -85,49 +78,55 @@ namespace EnvServer {
                 state = module.State.ToString(),
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
         // Session Event ====================================================================
 
-        protected override void OnSessCreate(object sender, SockSess sess)
+        protected void OnSessCreate(object sender, SockSessNew sess)
         {
+            log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            if (sess is SockSessServer)
+                log.Info(String.Format("Session #L listened at {0}.", sess.lep.ToString()));
+            else if (sess is SockSessAccept)
+                log.Info(String.Format("Session #A accepted to {0}.", sess.lep.ToString()));
+            else// if (sess is SockSessClient)
+                log.Info(String.Format("Session #C connected to {0}.", sess.lep.ToString()));
+
             ServiceResponse response = new ServiceResponse();
-            response.id = "notice.sesscreate";
+            if (sess is SockSessServer)
+                response.id = "notice.sesslisten";
+            else if (sess is SockSessAccept)
+                response.id = "notice.sessaccept";
+            else// if (sess is SockSessClient)
+                response.id = "notice.sessconnect";
             response.data = new {
-                type = sess.type.ToString(),
+                sessid = sess.id,
+                type = sess.GetType().Name,
                 localip = sess.lep.ToString(),
-                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+                remoteip = sess.rep == null ? "0:0" : sess.rep.ToString(),
                 tick = sess.tick,
                 conntime = sess.conntime,
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
-        protected override void OnSessDelete(object sender, SockSess sess)
+        protected void OnSessDelete(object sender, SockSessNew sess)
         {
+            log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            if (sess is SockSessServer)
+                log.Info(String.Format("Session #* deleted from {0}.", sess.lep.ToString()));
+            else
+                log.Info(String.Format("Session #* deleted from {0}.", sess.rep.ToString()));
+
             ServiceResponse response = new ServiceResponse();
-            response.id = "notice.sessdelete";
+            response.id = "notice.sessclose";
             response.data = new {
-                type = sess.type.ToString(),
-                localip = sess.lep.ToString(),
-                remoteip = sess.rep == null ? "" : sess.rep.ToString(),
+                sessid = sess.id,
             };
 
-            foreach (var item in sessctl.GetSessionTable()) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.IsAdmin)
-                    sessctl.SendSession(item, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
-            }
+            NoticeAdmin(response);
         }
 
         // Service ==========================================================================
@@ -136,17 +135,18 @@ namespace EnvServer {
         {
             // make pack of session detail
             List<object> pack = new List<object>();
-            foreach (var item in sessctl.GetSessionTable()) {
+            foreach (var item in sesstab) {
                 SessData sd = item.sdata as SessData;
                 pack.Add(new {
-                    type = item.type.ToString(),
+                    sessid = item.id,
+                    type = item.GetType().Name,
                     localip = item.lep.ToString(),
-                    remoteip = item.rep == null ? "" : item.rep.ToString(),
+                    remoteip = item.rep == null ? "0:0" : item.rep.ToString(),
                     tick = item.tick,
                     conntime = item.conntime,
-                    parentport = sd != null ? sd.ParentPort : 0,
                     ccid = sd != null ? sd.Ccid : "",
                     name = sd != null ? sd.Name : "",
+                    isadmin = sd != null ? sd.Admin.ToString() : "",
                 });
             }
 
@@ -155,7 +155,7 @@ namespace EnvServer {
 
         private void SessLoginService(ServiceRequest request, ref ServiceResponse response)
         {
-            SockSess sess = request.user_data as SockSess;
+            SockSessNew sess = request.user_data as SockSessNew;
             if (sess == null)
                 return;
 
@@ -166,10 +166,20 @@ namespace EnvServer {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            sd.IsAdmin = bool.Parse(dc["admin"]);
             sd.Ccid = dc["ccid"];
             sd.Name = dc["name"];
-            sd.ParentPort = sess.lep.Port;
+            sd.Admin = bool.Parse(dc["admin"]);
+        }
+
+        // Utilization
+
+        private void NoticeAdmin(ServiceResponse response)
+        {
+            foreach (var item in sesstab) {
+                SessData sd = item.sdata as SessData;
+                if (sd != null && sd.Admin)
+                    item.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            }
         }
     }
 }

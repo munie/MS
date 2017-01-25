@@ -21,6 +21,7 @@ namespace SockMaster.Backend {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private string id;
+        private string sessid;
         private string name;
         private SockType type;
         private IPEndPoint lep;
@@ -44,6 +45,16 @@ namespace SockMaster.Backend {
                 id = value;
                 if (PropertyChanged != null)
                     PropertyChanged(this, new PropertyChangedEventArgs("ID"));
+            }
+        }
+        public string SESSID
+        {
+            get { return sessid; }
+            set
+            {
+                sessid = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("SESSID"));
             }
         }
         public string Name

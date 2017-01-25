@@ -96,7 +96,9 @@ namespace SockMaster
             core = new BaseLayerNew();
             core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
             core.servctl.RegisterDefaultService("service.default", DefaultService);
-            core.sess_open_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
+            core.sess_listen_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
+            core.sess_connect_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
+            core.sess_accept_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
             core.sess_close_event += new BaseLayerNew.SockSessCloseDelegate(OnSessClose);
             core.Run();
         }
@@ -140,12 +142,13 @@ namespace SockMaster
                     uidata.AddSockUnit(sockUnit);
 
                     if (sockUnit.Autorun) {
+                        string id = "service.sesslisten";
+                        if (sockType == SockType.connect)
+                            id = "service.sessconnect";
                         object req = new {
-                            id = "service.sessopen",
-                            type = sockType.ToString(),
+                            id = id,
                             ip = ep.Address.ToString(),
                             port = ep.Port,
-                            sockid = sockUnit.ID,
                         };
                         core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                     }
@@ -162,22 +165,25 @@ namespace SockMaster
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            SockType type = Enum.Parse(typeof(SockType), dc["type"]);
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
 
-            if (response.id == "service.sessopen" && response.errcode != 0)
-                uidata.CloseSockUnit(type, ep, ep);
+            if (response.id == "service.sesslisten" && response.errcode != 0)
+                uidata.CloseSockUnit(SockType.listen, ep, ep);
+
+            if (response.id == "service.sessconnect" && response.errcode != 0)
+                uidata.CloseSockUnit(SockType.connect, ep, ep);
         }
 
         private void OnSessOpen(object sender, SockSessNew sess)
         {
             if (sess is SockSessServer) {
-                uidata.OpenSockUnit(SockType.listen, sess.lep, sess.rep);
+                uidata.OpenSockUnit(SockType.listen, sess.lep, sess.rep, sess.id);
             } else if (sess is SockSessClient) {
-                uidata.OpenSockUnit(SockType.connect, sess.lep, sess.rep);
+                uidata.OpenSockUnit(SockType.connect, sess.lep, sess.rep, sess.id);
             } else if (sess is SockSessAccept) {
                 SockUnit sockUnit = new SockUnit() {
                     ID = "at" + sess.rep.ToString(),
+                    SESSID = sess.id,
                     Name = "accept",
                     Type = SockType.accept,
                     Lep = sess.lep,
@@ -229,12 +235,13 @@ namespace SockMaster
             sock.State = SockState.Opening;
 
             IPEndPoint ep = sock.Type == SockType.listen ? sock.Lep : sock.Rep;
+            string id = "service.sesslisten";
+            if (sock.Type == SockType.connect)
+                id = "service.sessconnect";
             object req = new {
-                id = "service.sessopen",
-                type = sock.Type.ToString(),
+                id = id,
                 ip = ep.Address.ToString(),
                 port = ep.Port,
-                sockid = sock.ID,
             };
             core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
@@ -249,10 +256,7 @@ namespace SockMaster
             IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
             object req = new {
                 id = "service.sessclose",
-                type = sock.Type.ToString(),
-                ip = ep.Address.ToString(),
-                port = ep.Port,
-                sockid = sock.ID,
+                sessid = sock.SESSID,
             };
             core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
@@ -408,9 +412,7 @@ namespace SockMaster
                 IPEndPoint ep = sock.Type != SockType.accept ? sock.Lep : sock.Rep;
                 object req = new {
                     id = "service.sesssend",
-                    type = sock.Type.ToString(),
-                    ip = ep.Address.ToString(),
-                    port = ep.Port,
+                    sessid = sock.SESSID,
                     data = str_data,
                 };
                 core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));

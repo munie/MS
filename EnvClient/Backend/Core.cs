@@ -24,9 +24,11 @@ namespace EnvClient.Backend {
 
         public Core()
         {
-            servctl.RegisterService("notice.sesscreate", SessCreateNotice);
-            servctl.RegisterService("notice.sessdelete", SessDeleteNotice);
+            servctl.RegisterService("notice.sesslisten", SessListenNotice);
+            servctl.RegisterService("notice.sessaccept", SessAcceptNotice);
+            servctl.RegisterService("notice.sessclose", SessCloseNotice);
             servctl.RegisterService("service.sessdetail", SessDetailResponse);
+            servctl.RegisterService("service.sessgroupstate", SessGroupStateResponse);
             servctl.RegisterService("notice.moduleadd", ModuleAddNotice);
             servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice);
             servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice);
@@ -50,6 +52,7 @@ namespace EnvClient.Backend {
             System.Timers.Timer timer = new System.Timers.Timer(30 * 1000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
                 SessDetailRequest();
+                SessGroupStateRequest();
             });
             timer.Start();
 
@@ -84,12 +87,11 @@ namespace EnvClient.Backend {
             }));
         }
 
-        public void SessOpenRequest(string type, int port)
+        public void SessListenRequest(string ip, int port)
         {
             object req = new {
-                id = "service.sessopen",
-                type = type,
-                ip = "0",
+                id = "service.sesslisten",
+                ip = ip,
                 port = port,
             };
 
@@ -98,13 +100,11 @@ namespace EnvClient.Backend {
             }));
         }
 
-        public void SessCloseRequest(string type, string ip, int port)
+        public void SessCloseRequest(string sessid)
         {
             object req = new {
                 id = "service.sessclose",
-                type = type,
-                ip = ip,
-                port = port,
+                sessid = sessid,
             };
 
             sessctl.BeginInvoke(new Action(() => {
@@ -112,13 +112,11 @@ namespace EnvClient.Backend {
             }));
         }
 
-        public void SessSendRequest(string type, string ip, int port, string msg)
+        public void SessSendRequest(string sessid, string msg)
         {
             object req = new {
                 id = "service.sesssend",
-                type = type,
-                ip = ip,
-                port = port,
+                sessid = sessid,
                 data = msg,
             };
 
@@ -131,6 +129,13 @@ namespace EnvClient.Backend {
         {
             sessctl.BeginInvoke(new Action(() => {
                 sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
+            }));
+        }
+
+        public void SessGroupStateRequest()
+        {
+            sessctl.BeginInvoke(new Action(() => {
+                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessgroupstate'}"));
             }));
         }
 
@@ -210,51 +215,75 @@ namespace EnvClient.Backend {
 
         // services =============================================================
 
-        private void SessCreateNotice(ServiceRequest request, ref ServiceResponse response)
+        private void SessListenNotice(ServiceRequest request, ref ServiceResponse response)
         {
             JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                var tmp = jo["data"];
-                if ((string)tmp["type"] == "listen") {
-                    ServerUnit server = new ServerUnit() {
-                        IpAddress = ((string)tmp["localip"]).Split(':')[0],
-                        Port = Int32.Parse(((string)tmp["localip"]).Split(':')[1]),
-                    };
-                    uidata.ServerTable.Add(server);
-                } else if ((string)tmp["type"] == "accept") {
-                    ClientUnit client = new ClientUnit() {
-                        RemoteEP = new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
-                            Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])),
-                        TickTime = DateTime.Parse((string)tmp["tick"]),
-                        ConnectTime = DateTime.Parse((string)tmp["conntime"]),
-                    };
-                    uidata.ClientTable.Add(client);
-                }
+                var msg = jo["data"];
+                string sessid = (string)msg["sessid"];
+                string type = (string)msg["type"];
+                string laddress = ((string)msg["localip"]).Split(':')[0];
+                int lport = Int32.Parse(((string)msg["localip"]).Split(':')[1]);
+                string raddress = ((string)msg["remoteip"]).Split(':')[0];
+                int rport = Int32.Parse(((string)msg["remoteip"]).Split(':')[1]);
+                string tick = (string)msg["tick"];
+                string conntime = (string)msg["conntime"];
+
+                ListenUnit server = new ListenUnit() {
+                    ID = sessid,
+                    IpAddress = laddress,
+                    Port = lport,
+                };
+                uidata.ListenTable.Add(server);
             }));
         }
 
-        private void SessDeleteNotice(ServiceRequest request, ref ServiceResponse response)
+        private void SessAcceptNotice(ServiceRequest request, ref ServiceResponse response)
         {
             JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                var tmp = jo["data"];
-                if ((string)tmp["type"] == "listen") {
-                    foreach (var item in uidata.ServerTable) {
-                        if (item.IpAddress.Equals(((string)tmp["localip"]).Split(':')[0])
-                            && item.Port == Int32.Parse(((string)tmp["localip"]).Split(':')[1])) {
-                            uidata.ServerTable.Remove(item);
-                            break;
-                        }
+                var msg = jo["data"];
+                string sessid = (string)msg["sessid"];
+                string type = (string)msg["type"];
+                string laddress = ((string)msg["localip"]).Split(':')[0];
+                int lport = Int32.Parse(((string)msg["localip"]).Split(':')[1]);
+                string raddress = ((string)msg["remoteip"]).Split(':')[0];
+                int rport = Int32.Parse(((string)msg["remoteip"]).Split(':')[1]);
+                string tick = (string)msg["tick"];
+                string conntime = (string)msg["conntime"];
+
+                AcceptUnit client = new AcceptUnit() {
+                    ID = sessid,
+                    LocalEP = new IPEndPoint(IPAddress.Parse(laddress), lport),
+                    RemoteEP = new IPEndPoint(IPAddress.Parse(raddress), rport),
+                    TickTime = DateTime.Parse(tick),
+                    ConnTime = DateTime.Parse(conntime),
+                };
+                uidata.AcceptTable.Add(client);
+            }));
+        }
+
+        private void SessCloseNotice(ServiceRequest request, ref ServiceResponse response)
+        {
+            JObject jo = JObject.Parse((string)request.data);
+
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                var msg = jo["data"];
+                string sessid = (string)msg["sessid"];
+
+                foreach (var item in uidata.ListenTable) {
+                    if (item.ID.Equals(sessid)) {
+                        uidata.ListenTable.Remove(item);
+                        return;
                     }
-                } else if ((string)tmp["type"] == "accept") {
-                    foreach (var item in uidata.ClientTable) {
-                        if (item.RemoteEP.Equals(new IPEndPoint(IPAddress.Parse(((string)tmp["remoteip"]).Split(':')[0]),
-                            Int32.Parse(((string)tmp["remoteip"]).Split(':')[1])))) {
-                            uidata.ClientTable.Remove(item);
-                            break;
-                        }
+                }
+
+                foreach (var item in uidata.AcceptTable) {
+                    if (item.ID.Equals(sessid)) {
+                        uidata.AcceptTable.Remove(item);
+                        return;
                     }
                 }
             }));
@@ -271,33 +300,69 @@ namespace EnvClient.Backend {
             }
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                uidata.ServerTable.Clear();
-                uidata.ClientTable.Clear();
+                uidata.ListenTable.Clear();
+                uidata.AcceptTable.Clear();
                 foreach (var item in jo["data"]) {
-                    if ((string)item["type"] == "listen") {
-                        ServerUnit server = new ServerUnit() {
-                            IpAddress = ((string)item["localip"]).Split(':')[0],
-                            Port = Int32.Parse(((string)item["localip"]).Split(':')[1]),
-                            Name = (string)item["name"],
+                    string sessid = (string)item["sessid"];
+                    string type = (string)item["type"];
+                    string laddress = ((string)item["localip"]).Split(':')[0];
+                    int lport = Convert.ToInt32(((string)item["localip"]).Split(':')[1]);
+                    string raddress = ((string)item["remoteip"]).Split(':')[0];
+                    int rport = Convert.ToInt32(((string)item["remoteip"]).Split(':')[1]);
+                    string tick = (string)item["tick"];
+                    string conntime = (string)item["conntime"];
+                    string ccid = (string)item["ccid"];
+                    string name = (string)item["name"];
+                    bool admin = Convert.ToBoolean((string)item["admin"]);
+
+                    if (type == "SockSessServer") {
+                        ListenUnit server = new ListenUnit() {
+                            ID = sessid,
+                            IpAddress = laddress,
+                            Port = lport,
+                            Name = name,
                         };
                         if (serverport == server.Port)
-                            server.Name = "core basic";
-                        uidata.ServerTable.Add(server);
+                            server.Name = "EnvServer";
+                        uidata.ListenTable.Add(server);
                     }
 
-                    if ((string)item["type"] == "accept") {
-                        ClientUnit client = new ClientUnit() {
-                            RemoteEP = new IPEndPoint(IPAddress.Parse(((string)item["remoteip"]).Split(':')[0]),
-                                Int32.Parse(((string)item["remoteip"]).Split(':')[1])),
-                            TickTime = DateTime.Parse((string)item["tick"]),
-                            ConnectTime = DateTime.Parse((string)item["conntime"]),
-                            ID = (string)item["ccid"],
-                            Name = (string)item["name"],
-                            ServerPort = (int)item["parentport"],
+                    if (type == "SockSessAccept") {
+                        AcceptUnit client = new AcceptUnit() {
+                            ID = sessid,
+                            LocalEP = new IPEndPoint(IPAddress.Parse(laddress), lport),
+                            RemoteEP = new IPEndPoint(IPAddress.Parse(raddress), rport),
+                            TickTime = DateTime.Parse(tick),
+                            ConnTime = DateTime.Parse(conntime),
+                            CCID = ccid,
+                            Name = name,
+                            Admin = admin,
                         };
-                        uidata.ClientTable.Add(client);
+                        uidata.AcceptTable.Add(client);
                     }
                 }
+            }));
+        }
+
+        private void SessGroupStateResponse(ServiceRequest request, ref ServiceResponse response)
+        {
+            JObject jo = JObject.Parse((string)request.data);
+
+            if ((int)jo["errcode"] != 0) {
+                log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                    .Info((string)jo["id"] + ": " + (string)jo["errmsg"]);
+                return;
+            }
+
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                var msg = jo["data"];
+
+                uidata.CurrentAcceptCount = Convert.ToInt32((string)msg["CurrentAcceptCount"]);
+                uidata.HistoryAcceptOpenCount = Convert.ToInt32((string)msg["HistoryAcceptOpenCount"]);
+                uidata.HistoryAcceptCloseCount = Convert.ToInt32((string)msg["HistoryAcceptCloseCount"]);
+                uidata.CurrentPackCount = Convert.ToInt32((string)msg["CurrentPackCount"]);
+                uidata.HistoryPackFetchedCount = Convert.ToInt32((string)msg["HistoryPackFetchedCount"]);
+                uidata.HistoryPackParsedCount = Convert.ToInt32((string)msg["HistoryPackParsedCount"]);
             }));
         }
 
@@ -306,12 +371,12 @@ namespace EnvClient.Backend {
             JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                var tmp = jo["data"];
+                var msg = jo["data"];
 
                 ModuleUnit unit = new ModuleUnit();
-                unit.FileName = (string)tmp["name"];
-                unit.FileVersion = (string)tmp["version"];
-                unit.ModuleState = (string)tmp["state"];
+                unit.FileName = (string)msg["name"];
+                unit.FileVersion = (string)msg["version"];
+                unit.ModuleState = (string)msg["state"];
                 uidata.ModuleTable.Add(unit);
             }));
         }
@@ -321,10 +386,10 @@ namespace EnvClient.Backend {
             JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                var tmp = jo["data"];
+                var msg = jo["data"];
 
                 foreach (var item in uidata.ModuleTable) {
-                    if (item.FileName.Equals((string)tmp["name"])) {
+                    if (item.FileName.Equals((string)msg["name"])) {
                         uidata.ModuleTable.Remove(item);
                         break;
                     }
@@ -337,11 +402,11 @@ namespace EnvClient.Backend {
             JObject jo = JObject.Parse((string)request.data);
 
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                var tmp = jo["data"];
+                var msg = jo["data"];
 
                 foreach (var item in uidata.ModuleTable) {
-                    if (item.FileName.Equals((string)tmp["name"])) {
-                        item.ModuleState = (string)tmp["state"];
+                    if (item.FileName.Equals((string)msg["name"])) {
+                        item.ModuleState = (string)msg["state"];
                         break;
                     }
                 }

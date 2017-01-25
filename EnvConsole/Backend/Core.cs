@@ -83,7 +83,7 @@ namespace EnvConsole.Backend {
             // check if admin
             SockSess sess = request.user_data as SockSess;
             SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            if (sdata == null || !sdata.Admin) return;
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
@@ -117,7 +117,7 @@ namespace EnvConsole.Backend {
         {
             // check if admin
             SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            if (sdata == null || !sdata.Admin) return;
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
@@ -147,7 +147,7 @@ namespace EnvConsole.Backend {
         {
             // check if admin
             SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            if (sdata == null || !sdata.Admin) return;
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
@@ -186,7 +186,7 @@ namespace EnvConsole.Backend {
         {
             // check if admin
             SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            if (sdata == null || !sdata.Admin) return;
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
@@ -232,7 +232,7 @@ namespace EnvConsole.Backend {
         {
             // check if admin
             SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.IsAdmin) return;
+            if (sdata == null || !sdata.Admin) return;
 
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject

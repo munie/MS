@@ -43,7 +43,7 @@ namespace EnvServer {
                 }
             }
 
-            mnn.net.SockSess sess = core.sessctl.MakeListen(new IPEndPoint(IPAddress.Parse(serverip), serverport));
+            core.MakeListen(new IPEndPoint(IPAddress.Parse(serverip), serverport));
             core.RunForever();
         }
     }
