@@ -36,7 +36,7 @@ namespace SockMaster
         private static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
 
         private UIData uidata;
-        private BaseLayerNew core;
+        private BaseLayer core;
 
         public MainWindow()
         {
@@ -93,13 +93,13 @@ namespace SockMaster
             this.historyAcceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
 
             // init core
-            core = new BaseLayerNew();
+            core = new BaseLayer();
             core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
             core.servctl.RegisterDefaultService("service.default", DefaultService);
-            core.sess_listen_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
-            core.sess_connect_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
-            core.sess_accept_event += new BaseLayerNew.SockSessOpenDelegate(OnSessOpen);
-            core.sess_close_event += new BaseLayerNew.SockSessCloseDelegate(OnSessClose);
+            core.sess_listen_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
+            core.sess_connect_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
+            core.sess_accept_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
+            core.sess_close_event += new BaseLayer.SockSessCloseDelegate(OnSessClose);
             core.Run();
         }
 
@@ -174,7 +174,7 @@ namespace SockMaster
                 uidata.CloseSockUnit(SockType.connect, ep, ep);
         }
 
-        private void OnSessOpen(object sender, SockSessNew sess)
+        private void OnSessOpen(object sender, SockSess sess)
         {
             if (sess is SockSessServer) {
                 uidata.OpenSockUnit(SockType.listen, sess.lep, sess.rep, sess.id);
@@ -194,7 +194,7 @@ namespace SockMaster
             }
         }
 
-        private void OnSessClose(object sender, SockSessNew sess)
+        private void OnSessClose(object sender, SockSess sess)
         {
             if (sess is SockSessServer)
                 uidata.CloseSockUnit(SockType.listen, sess.lep, sess.rep);
@@ -208,8 +208,8 @@ namespace SockMaster
 
         private void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            string log = DateTime.Now + " (" + (request.user_data as SockSessNew).rep.ToString()
-                + " => " + (request.user_data as SockSessNew).lep.ToString() + ")" + Environment.NewLine;
+            string log = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
+                + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
 
             if (request is BinaryRequest)
                 log += SockConvert.ParseBytesToString(Encoding.UTF8.GetBytes((string)request.data));

@@ -49,12 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="misc\env\SessData.cs" />
-    <Compile Include="misc\glue\AtCmd.cs" />
+    <Compile Include="misc\AtCmd.cs" />
     <Compile Include="misc\glue\IRunable.cs" />
     <Compile Include="misc\glue\ModulizedServiceLayer.cs" />
-    <Compile Include="misc\glue\BaseLayerNew.cs" />
+    <Compile Include="misc\glue\BaseLayer.cs" />
     <Compile Include="misc\glue\ServiceLayer.cs" />
-    <Compile Include="misc\glue\TimeOut.cs" />
+    <Compile Include="misc\TimeOut.cs" />
     <Compile Include="net\SockSessGroupState.cs" />
     <Compile Include="service\RegexService.cs" />
     <Compile Include="service\SimpleFilterCore.cs" />
@@ -71,7 +71,7 @@
     <Compile Include="module\ModuleCtl.cs" />
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="misc\glue\BaseLayer.cs" />
+    <Compile Include="misc\glue\BaseLayerDeprecated.cs" />
     <Compile Include="util\Fifo.cs" />
     <Compile Include="net\SockClientTcp.cs" />
     <Compile Include="service\ServiceRequest.cs" />
@@ -90,7 +90,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="net\SockConvert.cs" />
     <Compile Include="net\deprecated\SockPack.cs" />
-    <Compile Include="net\SockSess.cs" />
+    <Compile Include="net\deprecated\SockSess.cs" />
     <Compile Include="util\ConvertUtil.cs" />
     <Compile Include="util\CrcUtil.cs" />
     <Compile Include="util\DegreeUtil.cs" />

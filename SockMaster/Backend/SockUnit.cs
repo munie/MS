@@ -9,6 +9,12 @@ using System.Net.Sockets;
 using mnn.net;
 
 namespace SockMaster.Backend {
+    public enum SockType {
+        listen = 0,
+        connect = 1,
+        accept = 2,
+    }
+
     public enum SockState {
         //None = 0,
         Opening = 1,

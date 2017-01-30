@@ -34,7 +34,7 @@ namespace EnvClient.Backend {
 
             try {
                 envclient = new SockSessClient();
-                envclient.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
+                envclient.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
                 envclient.Connect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
             } catch (Exception ex) {
                 System.Windows.MessageBox.Show("failed to connect to server." + Environment.NewLine + ex.ToString());
@@ -175,7 +175,7 @@ namespace EnvClient.Backend {
 
         protected virtual void OnRecvEvent(object sender)
         {
-            SockSessNew sess = sender as SockSessNew;
+            SockSess sess = sender as SockSess;
 
             while (sess.rfifo.Size() != 0) {
                 ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Peek());

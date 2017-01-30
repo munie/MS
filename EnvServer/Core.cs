@@ -11,7 +11,7 @@ using mnn.misc.env;
 using Newtonsoft.Json;
 
 namespace EnvServer {
-    public class Core : BaseLayerNew {
+    public class Core : BaseLayer {
         public Core()
         {
             sess_listen_event += new SockSessOpenDelegate(OnSessCreate);
@@ -83,7 +83,7 @@ namespace EnvServer {
 
         // Session Event ====================================================================
 
-        protected void OnSessCreate(object sender, SockSessNew sess)
+        protected void OnSessCreate(object sender, SockSess sess)
         {
             log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             if (sess is SockSessServer)
@@ -112,7 +112,7 @@ namespace EnvServer {
             NoticeAdmin(response);
         }
 
-        protected void OnSessDelete(object sender, SockSessNew sess)
+        protected void OnSessDelete(object sender, SockSess sess)
         {
             log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             if (sess is SockSessServer)
@@ -155,7 +155,7 @@ namespace EnvServer {
 
         private void SessLoginService(ServiceRequest request, ref ServiceResponse response)
         {
-            SockSessNew sess = request.user_data as SockSessNew;
+            SockSess sess = request.user_data as SockSess;
             if (sess == null)
                 return;
 

@@ -18,7 +18,7 @@ using System.IO;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Xml;
-using mnn.net;
+using mnn.net.deprecated;
 using mnn.misc.env;
 using mnn.service;
 using mnn.module;

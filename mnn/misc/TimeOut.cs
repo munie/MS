@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn.misc.glue {
+namespace mnn.misc {
     public class TimeOut {
         public DateTime TheTimeOut { get; protected set; }
         public Delegate Func { get; private set; }

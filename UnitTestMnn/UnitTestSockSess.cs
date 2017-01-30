@@ -22,7 +22,7 @@ namespace UnitTestMnn {
         {
             SockSessClient client = new SockSessClient();
             client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3002));
-            client.recv_event += new SockSessNew.SockSessDelegate(RecvEvent);
+            client.recv_event += new SockSess.SockSessDelegate(RecvEvent);
             client.wfifo.Append(Encoding.UTF8.GetBytes("Hello SockSessClient"));
         }
 
@@ -34,12 +34,12 @@ namespace UnitTestMnn {
 
         void AcceptEvent(object sender, SockSessAccept sess)
         {
-            sess.recv_event += new SockSessNew.SockSessDelegate(RecvEvent);
+            sess.recv_event += new SockSess.SockSessDelegate(RecvEvent);
         }
 
         void RecvEvent(object sender)
         {
-            SockSessNew sess = sender as SockSessNew;
+            SockSess sess = sender as SockSess;
             string msg = Encoding.UTF8.GetString(sess.rfifo.Take());
             Console.Write(msg);
         }

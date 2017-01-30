@@ -9,7 +9,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Net;
 using mnn.misc.glue;
-using mnn.net;
+using mnn.net.deprecated;
 using mnn.misc.env;
 using mnn.service;
 using mnn.module;
@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace EnvConsole.Backend {
-    class Core : BaseLayer {
+    class Core : BaseLayerDeprecated {
         public Core()
         {
             // start nodejs
