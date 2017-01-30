@@ -14,12 +14,10 @@ using EnvClient.Unit;
 
 namespace EnvClient.Backend {
     class Core : ServiceLayer {
-        // sessctl
-        public SessCtl sessctl;
         private string serverip = "127.0.0.1";
         private int serverport = 2000;
-        private SockSess envserver;
-        // uidata
+        public SockSessClient envclient;
+
         public UIData uidata;
 
         public Core()
@@ -34,41 +32,31 @@ namespace EnvClient.Backend {
             servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice);
             servctl.RegisterService("service.moduledetail", ModuleDetailResponse);
 
-            sessctl = new SessCtl();
-            sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
-            sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
-            sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
-            envserver = sessctl.AddConnect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
-            if (envserver == null) {
-                System.Windows.MessageBox.Show("failed to connect to server.");
+            try {
+                envclient = new SockSessClient();
+                envclient.recv_event += new SockSessNew.SockSessDelegate(OnRecvEvent);
+                envclient.Connect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
+            } catch (Exception ex) {
+                System.Windows.MessageBox.Show("failed to connect to server." + Environment.NewLine + ex.ToString());
                 System.Threading.Thread.CurrentThread.Abort();
             }
 
             uidata = new UIData();
-        }
 
-        public new void Run()
-        {
             System.Timers.Timer timer = new System.Timers.Timer(30 * 1000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, ea) => {
                 SessDetailRequest();
                 SessGroupStateRequest();
             });
             timer.Start();
+        }
 
-            System.Threading.Thread thread = new System.Threading.Thread(() => {
-                while (true) {
-                    try {
-                        sessctl.Exec(1000);
-                        servctl.Exec(0);
-                    } catch (Exception ex) {
-                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
-                            .Error("Exception thrown out by core thread.", ex);
-                    }
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
+        protected override void Exec()
+        {
+            lock (envclient)
+                envclient.DoSocket(1000);
+            filtctl.Exec();
+            servctl.Exec();
         }
 
         // requests ==============================================================
@@ -82,9 +70,8 @@ namespace EnvClient.Backend {
                 ccid = "envclient",
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void SessListenRequest(string ip, int port)
@@ -95,9 +82,8 @@ namespace EnvClient.Backend {
                 port = port,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void SessCloseRequest(string sessid)
@@ -107,9 +93,8 @@ namespace EnvClient.Backend {
                 sessid = sessid,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void SessSendRequest(string sessid, string msg)
@@ -120,23 +105,20 @@ namespace EnvClient.Backend {
                 data = msg,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void SessDetailRequest()
         {
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"));
         }
 
         public void SessGroupStateRequest()
         {
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.sessgroupstate'}"));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes("{'id':'service.sessgroupstate'}"));
         }
 
         public void ModuleAddRequest(string filepath)
@@ -146,9 +128,8 @@ namespace EnvClient.Backend {
                 filepath = filepath,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void ModuleDelRequest(string name)
@@ -158,9 +139,8 @@ namespace EnvClient.Backend {
                 name = name,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void ModuleLoadRequest(string name)
@@ -170,9 +150,8 @@ namespace EnvClient.Backend {
                 name = name,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void ModuleUnloadRequest(string name)
@@ -182,36 +161,32 @@ namespace EnvClient.Backend {
                 name = name,
             };
 
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)));
         }
 
         public void ModuleDetailRequest()
         {
-            sessctl.BeginInvoke(new Action(() => {
-                sessctl.SendSession(envserver, Encoding.UTF8.GetBytes("{'id':'service.moduledetail'}"));
-            }));
+            lock (envclient)
+                envclient.wfifo.Append(Encoding.UTF8.GetBytes("{'id':'service.moduledetail'}"));
         }
 
         // session events =======================================================
 
-        private void OnSessParse(object sender, SockSess sess)
+        protected virtual void OnRecvEvent(object sender)
         {
-            // init request
-            ServiceRequest request = ServiceRequest.Parse(sess.RfifoTake());
-            request.user_data = sess;
+            SockSessNew sess = sender as SockSessNew;
 
-            // rfifo skip
-            sess.RfifoSkip(request.packlen);
+            while (sess.rfifo.Size() != 0) {
+                ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Peek());
+                if (request.packlen == 0)
+                    break;
 
-            // add request to service core
-            servctl.AddRequest(request);
+                sess.rfifo.Skip(request.packlen);
+                request.user_data = sess;
+                servctl.AddRequest(request);
+            }
         }
-
-        private void OnSessCreate(object sender, SockSess sess) { }
-
-        private void OnSessDelete(object sender, SockSess sess) { }
 
         // services =============================================================
 

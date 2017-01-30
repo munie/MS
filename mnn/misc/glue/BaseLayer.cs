@@ -27,8 +27,9 @@ namespace mnn.misc.glue {
 
         protected override void Exec()
         {
-            sessctl.Exec(1000);
-            base.Exec();
+            sessctl.Exec(100);
+            filtctl.Exec();
+            servctl.Exec();
         }
 
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)

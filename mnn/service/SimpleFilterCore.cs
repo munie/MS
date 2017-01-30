@@ -93,9 +93,11 @@ namespace mnn.service {
             }
         }
 
-        public void Exec()
+        public int Exec()
         {
             lock (request_queue) {
+                int retval = request_queue.Count;
+
                 while (request_queue.Count != 0) {
                     var request = request_queue.Dequeue();
 
@@ -109,7 +111,9 @@ namespace mnn.service {
                     DoFilter(request, ref response);
                     if (filter_done != null)
                         filter_done(request, response);
-                }   
+                }
+
+                return retval;
             }
         }
     }
