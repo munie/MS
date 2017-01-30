@@ -141,7 +141,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\mnn\mnn.csproj">
+    <ProjectReference Include="..\..\mnn\mnn.csproj">
       <Project>{4298E664-3238-45B4-8CDD-BA6764A3F2FF}</Project>
       <Name>mnn</Name>
     </ProjectReference>
