@@ -60,7 +60,7 @@ namespace EnvClient.Backend {
                 while (true) {
                     try {
                         sessctl.Exec(1000);
-                        servctl.Exec();
+                        servctl.Exec(0);
                     } catch (Exception ex) {
                         log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
                             .Error("Exception thrown out by core thread.", ex);

@@ -89,9 +89,9 @@ namespace EnvServer {
             if (sess is SockSessServer)
                 log.Info(String.Format("Session #L listened at {0}.", sess.lep.ToString()));
             else if (sess is SockSessAccept)
-                log.Info(String.Format("Session #A accepted to {0}.", sess.lep.ToString()));
+                log.Info(String.Format("Session #A accepted to {0}.", sess.rep.ToString()));
             else// if (sess is SockSessClient)
-                log.Info(String.Format("Session #C connected to {0}.", sess.lep.ToString()));
+                log.Info(String.Format("Session #C connected to {0}.", sess.rep.ToString()));
 
             ServiceResponse response = new ServiceResponse();
             if (sess is SockSessServer)

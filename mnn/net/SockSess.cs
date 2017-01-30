@@ -364,9 +364,9 @@ namespace mnn.net {
             if (sess.type == SockType.listen)
                 log.Info(String.Format("Session #L listened at {0}.", sess.lep.ToString()));
             else if (sess.type == SockType.accept)
-                log.Info(String.Format("Session #A accepted to {0}.", sess.lep.ToString()));
+                log.Info(String.Format("Session #A accepted to {0}.", sess.rep.ToString()));
             else// if (sess.type == SockType.connect)
-                log.Info(String.Format("Session #C connected to {0}.", sess.lep.ToString()));
+                log.Info(String.Format("Session #C connected to {0}.", sess.rep.ToString()));
         }
 
         private void DeleteSession(SockSess sess)

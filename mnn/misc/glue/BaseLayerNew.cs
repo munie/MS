@@ -35,6 +35,14 @@ namespace mnn.misc.glue {
             sess_close_event = null;
         }
 
+        protected override void Exec()
+        {
+            foreach (var item in sesstab.ToList())
+                item.DoSocket(0);
+
+            base.Exec();
+        }
+
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
             sessstate.PackDecrease();

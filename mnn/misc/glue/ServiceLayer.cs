@@ -45,7 +45,7 @@ namespace mnn.misc.glue {
         protected virtual void Exec()
         {
             filtctl.Exec();
-            servctl.Exec();
+            servctl.Exec(1000);
         }
 
         // Service Event ==================================================================================

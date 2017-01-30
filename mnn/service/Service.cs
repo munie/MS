@@ -13,6 +13,7 @@ namespace mnn.service {
         public string id { get; private set; }
         private ServiceHandlerDelegate func;
         private Queue<ServiceRequest> request_queue;
+        public int request_count { get { return request_queue.Count; } }
 
         public ServiceBeforeDelegate service_before;
         public ServiceDoneDelegate service_done;

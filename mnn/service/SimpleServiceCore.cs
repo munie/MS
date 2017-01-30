@@ -99,16 +99,24 @@ namespace mnn.service {
             }
         }
 
-        public void Exec()
+        public void Exec(int next)
         {
             services_lock.EnterReadLock();
             var tmpservtab = services.ToList();
             services_lock.ExitReadLock();
 
-            foreach (var item in tmpservtab)
+            int request_amount = 0;
+
+            foreach (var item in tmpservtab) {
+                request_amount += item.request_count;
                 item.DoService();
+            }
 
             default_service.DoService();
+            request_amount += default_service.request_count;
+
+            if (request_amount == 0)
+                Thread.Sleep(next);
         }
     }
 }

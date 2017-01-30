@@ -9,15 +9,16 @@ using System.Runtime.InteropServices;
 using mnn.util;
 
 namespace mnn.net {
-    public class SockSessNew : IExecable {
+    public class SockSessNew {
         private const int BASE_STALL = 60 * 12;
 
         protected Socket sock;
-        protected bool eof;
-        public string id;
-        public DateTime tick;
-        public DateTime conntime;
+        private bool eof;
         private int stall;
+        public DateTime tick;
+
+        public string id { get; private set; }
+        public DateTime conntime { get; private set; }
 
         public IPEndPoint lep { get { return (IPEndPoint)sock.LocalEndPoint; } }
         public IPEndPoint rep
@@ -49,10 +50,11 @@ namespace mnn.net {
         {
             this.sock = sock;
             this.eof = false;
-            this.id = Guid.NewGuid().ToString();
-            this.tick = DateTime.Now;
-            this.conntime = tick;
             this.stall = stall;
+            this.tick = DateTime.Now;
+
+            this.id = Guid.NewGuid().ToString();
+            this.conntime = tick;
 
             rfifo = new Fifo<byte>();
             wfifo = new Fifo<byte>();
@@ -60,18 +62,6 @@ namespace mnn.net {
 
             recv_event = null;
             close_event = null;
-            ExecPoll.Add(this);
-        }
-
-        private void RealClose()
-        {
-            if (close_event != null)
-                close_event(this);
-            try {
-                sock.Shutdown(SocketShutdown.Both);
-            } catch (Exception) { }
-            sock.Close();
-            ExecPoll.Remove(this);
         }
 
         private void Recv()
@@ -104,12 +94,32 @@ namespace mnn.net {
             }
         }
 
-        private void Alive()
+        private void RealClose()
+        {
+            if (close_event != null)
+                close_event(this);
+            try {
+                sock.Shutdown(SocketShutdown.Both);
+            } catch (Exception) { }
+            sock.Close();
+        }
+
+        public void Close()
+        {
+            eof = true;
+        }
+
+        public bool IsClosed()
+        {
+            return eof;
+        }
+
+        private void MakeAlive()
         {
             this.tick = DateTime.Now;
         }
 
-        private bool IsAlive()
+        public bool IsAlive()
         {
             if (DateTime.Now.Subtract(tick).TotalSeconds > stall)
                 return false;
@@ -117,28 +127,23 @@ namespace mnn.net {
                 return true;
         }
 
-        public virtual void ExecOnce(int next)
+        public virtual void DoSocket(int next)
         {
             // recv
             if (sock.Poll(next, SelectMode.SelectRead)) {
-                this.Alive();
+                this.MakeAlive();
                 this.Recv();
             }
 
             // send
             if (sock.Poll(next, SelectMode.SelectWrite)) {
-                this.Alive();
+                this.MakeAlive();
                 this.Send();
             }
 
             // close
-            if (!IsAlive() || eof)
+            if (!IsAlive() || IsClosed())
                 this.RealClose();
-        }
-
-        public void Close()
-        {
-            eof = true;
         }
     }
 
@@ -151,7 +156,6 @@ namespace mnn.net {
         {
             childs = new List<SockSessAccept>();
             accept_event = null;
-            ExecPoll.Remove(this);
         }
 
         public void Listen(IPEndPoint ep)
@@ -161,7 +165,6 @@ namespace mnn.net {
 
             sock.Bind(ep);
             sock.Listen(100);
-            ExecPoll.Add(this);
         }
 
         public void Broadcast(byte[] msg)
@@ -170,7 +173,7 @@ namespace mnn.net {
                 item.wfifo.Append(msg);
         }
 
-        public override void ExecOnce(int next)
+        public override void DoSocket(int next)
         {
             // accept
             if (sock.Poll(next, SelectMode.SelectRead)) {
@@ -194,11 +197,10 @@ namespace mnn.net {
                 wfifo.Take();
 
             // close
-            if (eof) {
+            if (IsClosed()) {
                 if (close_event != null)
                     close_event(this);
                 sock.Close();
-                ExecPoll.Remove(this);
             }
         }
 
