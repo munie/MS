@@ -19,7 +19,7 @@ namespace EnvServer {
             sess_connect_event += new SockSessOpenDelegate(OnSessCreate);
             sess_close_event += new SockSessCloseDelegate(OnSessDelete);
 
-            servctl.RegisterService("service.sesslogin", SessLoginService);
+            servctl.RegisterService("service.sesslogin", LoginService);
         }
 
         // Module Event =====================================================================
@@ -83,7 +83,7 @@ namespace EnvServer {
 
         // Session Event ====================================================================
 
-        protected void OnSessCreate(object sender, SockSess sess)
+        private void OnSessCreate(object sender, SockSess sess)
         {
             log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             if (sess is SockSessServer)
@@ -112,7 +112,7 @@ namespace EnvServer {
             NoticeAdmin(response);
         }
 
-        protected void OnSessDelete(object sender, SockSess sess)
+        private void OnSessDelete(object sender, SockSess sess)
         {
             log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             if (sess is SockSessServer)
@@ -129,7 +129,7 @@ namespace EnvServer {
             NoticeAdmin(response);
         }
 
-        // Service ==========================================================================
+        // SockSess Service =================================================================
 
         protected override void SessDetailService(ServiceRequest request, ref ServiceResponse response)
         {
@@ -153,7 +153,9 @@ namespace EnvServer {
             response.data = pack;
         }
 
-        private void SessLoginService(ServiceRequest request, ref ServiceResponse response)
+        // Core Service =====================================================================
+
+        private void LoginService(ServiceRequest request, ref ServiceResponse response)
         {
             SockSess sess = request.user_data as SockSess;
             if (sess == null)
@@ -171,7 +173,7 @@ namespace EnvServer {
             sd.Admin = bool.Parse(dc["admin"]);
         }
 
-        // Utilization
+        // Utilization ======================================================================
 
         private void NoticeAdmin(ServiceResponse response)
         {

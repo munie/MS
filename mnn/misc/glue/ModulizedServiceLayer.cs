@@ -26,7 +26,7 @@ namespace mnn.misc.glue {
             servctl.RegisterService("service.moduledetail", ModuleDetailService);
         }
 
-        // Module Event ==================================================================================
+        // Module Event ============================================================================
 
         protected virtual void OnModuleCtlAdd(object sender, Module module)
         {
@@ -94,7 +94,7 @@ namespace mnn.misc.glue {
                 servctl.UnregisterService(item.Key);
         }
 
-        // Service =========================================================================
+        // Module Service ==========================================================================
 
         protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
         {

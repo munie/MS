@@ -52,7 +52,7 @@ namespace mnn.misc.glue {
                 sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
         }
 
-        // SockSess Event
+        // SockSess Event ======================================================================
 
         protected virtual void OnAcceptEvent(object sender, SockSessAccept sess)
         {
@@ -98,7 +98,7 @@ namespace mnn.misc.glue {
             }
         }
 
-        // Center Service
+        // SockSess Service ====================================================================
 
         protected virtual void SessListenService(ServiceRequest request, ref ServiceResponse response)
         {
@@ -197,7 +197,7 @@ namespace mnn.misc.glue {
             response.data = sessstate;
         }
 
-        // Methods
+        // SockSess Interface ==================================================================
 
         public SockSessServer MakeListen(IPEndPoint ep)
         {
@@ -214,7 +214,7 @@ namespace mnn.misc.glue {
             return server;
         }
 
-        protected SockSessClient MakeConnect(IPEndPoint ep)
+        public SockSessClient MakeConnect(IPEndPoint ep)
         {
             SockSessClient client = new SockSessClient();
             client.Connect(ep);

@@ -49,7 +49,7 @@ namespace mnn.misc.glue {
             servctl.Exec();
         }
 
-        // Service Event ==================================================================================
+        // Service Event ===========================================================================
 
         protected virtual void OnFilterDone(ServiceRequest request, ServiceResponse response)
         {
@@ -73,7 +73,7 @@ namespace mnn.misc.glue {
 
         protected virtual void OnServiceDone(ServiceRequest request, ServiceResponse response) { }
 
-        // Service =========================================================================
+        // Default Service =========================================================================
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
