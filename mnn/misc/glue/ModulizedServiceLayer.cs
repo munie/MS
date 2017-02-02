@@ -32,66 +32,78 @@ namespace mnn.misc.glue {
         {
             module.module_load += new Module.ModuleEvent(OnModuleLoad);
             module.module_unload += new Module.ModuleEvent(OnModuleUnload);
+
+            module.Load();
         }
 
         protected virtual void OnModuleCtlDelete(object sender, Module module) { }
 
         protected virtual void OnModuleLoad(Module module)
         {
-            // get services and filters
-            object[] nil_args = new object[0];
-            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
-            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            if (module.CheckInterface(new string[] { typeof(IModuleService).FullName })) {
+                object[] nil_args = new object[0];
+                object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
 
-            // register filters
-            foreach (var item in filttab as IDictionary<string, string>) {
-                if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
-                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
-                        .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
-                    continue;
+                // register services
+                foreach (var item in servtab as IDictionary<string, string>) {
+                    if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
+                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                            .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
+                        continue;
+                    }
+
+                    var service = item; // I dislike closure here
+                    servctl.RegisterService(service.Key,
+                        (ServiceRequest request, ref ServiceResponse response) => {
+                            object[] args = new object[] { request, response };
+                            module.Invoke(service.Value, ref args);
+                            response = args[1] as ServiceResponse;
+                        });
                 }
-
-                var filter = item; // I dislike closure here
-                filtctl.RegisterFilter(filter.Key,
-                    (ServiceRequest request, ref ServiceResponse response) => {
-                        object[] args = new object[] { request, response };
-                        bool retval = (bool)module.Invoke(filter.Value, ref args);
-                        response = args[1] as ServiceResponse;
-                    });
             }
 
-            // register services
-            foreach (var item in servtab as IDictionary<string, string>) {
-                if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
-                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
-                        .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
-                    continue;
-                }
+            if (module.CheckInterface(new string[] { typeof(IModuleFilter).FullName })) {
+                object[] nil_args = new object[0];
+                object filttab = module.Invoke(typeof(IModuleFilter).FullName, IModuleFilterSymbols.GET_FILTER_TABLE, ref nil_args);
 
-                var service = item; // I dislike closure here
-                servctl.RegisterService(service.Key,
-                    (ServiceRequest request, ref ServiceResponse response) => {
-                        object[] args = new object[] { request, response };
-                        module.Invoke(service.Value, ref args);
-                        response = args[1] as ServiceResponse;
-                    });
+                // register filters
+                foreach (var item in filttab as IDictionary<string, string>) {
+                    if (!module.CheckMethod(item.Value, typeof(Service.ServiceHandlerDelegate).GetMethod("Invoke"))) {
+                        log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
+                            .Warn(String.Format("can't found {0} in {1}", item.Value, module.ToString()));
+                        continue;
+                    }
+
+                    var filter = item; // I dislike closure here
+                    filtctl.RegisterFilter(filter.Key,
+                        (ServiceRequest request, ref ServiceResponse response) => {
+                            object[] args = new object[] { request, response };
+                            bool retval = (bool)module.Invoke(filter.Value, ref args);
+                            response = args[1] as ServiceResponse;
+                        });
+                }
             }
         }
 
         protected virtual void OnModuleUnload(Module module)
         {
-            // get services and filters
-            object[] nil_args = new object[0];
-            object filttab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_FILTER_TABLE, ref nil_args);
-            object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
+            if (module.CheckInterface(new string[] { typeof(IModuleService).FullName })) {
+                object[] nil_args = new object[0];
+                object servtab = module.Invoke(typeof(IModuleService).FullName, IModuleServiceSymbols.GET_SERVICE_TABLE, ref nil_args);
 
-            // deregister filter
-            foreach (var item in filttab as IDictionary<string, string>)
-                filtctl.UnregisterFilter(item.Key);
+                // unregister service
+                foreach (var item in servtab as IDictionary<string, string>)
+                    servctl.UnregisterService(item.Key);
+            }
 
-            // deregister service
-            foreach (var item in servtab as IDictionary<string, string>)
-                servctl.UnregisterService(item.Key);
+            if (module.CheckInterface(new string[] { typeof(IModuleFilter).FullName })) {
+                object[] nil_args = new object[0];
+                object filttab = module.Invoke(typeof(IModuleFilter).FullName, IModuleFilterSymbols.GET_FILTER_TABLE, ref nil_args);
+
+                // unregister filter
+                foreach (var item in filttab as IDictionary<string, string>)
+                    filtctl.UnregisterFilter(item.Key);
+            }
         }
 
         // Module Service ==========================================================================

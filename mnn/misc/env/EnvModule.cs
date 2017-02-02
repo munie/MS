@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 using mnn.module;
 using mnn.net;
+using Newtonsoft.Json;
 
 namespace mnn.misc.env {
     public abstract  class EnvModule : IModule {
@@ -14,13 +15,17 @@ namespace mnn.misc.env {
         protected abstract string LogPrefix { get; }
         protected abstract string ErrLogPrefix { get; }
 
-        public EnvModule()
+        public EnvModule() { }
+
+        // IModule ========================================================================
+
+        public virtual void Init()
         {
             XmlDocument xdoc = new XmlDocument();
             xdoc.Load(EnvConst.CONF_PATH);
 
             foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
-                if (item.Attributes["target"].Value == "center" && item.Attributes["protocol"].Value == "tcp") {
+                if (item.Attributes["protocol"].Value == "tcp") {
                     tcp = new SockClientTcp(new IPEndPoint(
                             IPAddress.Parse(item.Attributes["ipaddress"].Value),
                             int.Parse(item.Attributes["port"].Value)
@@ -30,48 +35,37 @@ namespace mnn.misc.env {
             }
         }
 
-        // IModule ========================================================================
-
-        public virtual void Init() { }
-
-        public virtual void Final() { tcp.Dispose(); }
+        public virtual void Final()
+        {
+            tcp.Dispose();
+        }
 
         // Private Tools ===========================================================================
 
-        protected void SendClientClose(string ip, int port, SockClientTcpSendCallback method = null)
+        public void SessCloseRequest(string sessid, SockClientTcpSendCallback method = null)
         {
-            string url = "/center/clientclose" + "?ip=" + ip + "&port=" + port;
+            object req = new {
+                id = "service.sessclose",
+                sessid = sessid,
+            };
 
-            try {
-                tcp.SendEncryptUrl(url, method);
-            } catch (Exception) { }
+            tcp.Send(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)), method);
         }
 
-        protected void SendClientMsg(string ip, int port, string msg, SockClientTcpSendCallback method = null)
+        public void SessSendRequest(string sessid, string msg, SockClientTcpSendCallback method = null)
         {
-            string url = "/center/clientsend" + "?ip=" + ip + "&port=" + port + "&data=" + msg;
+            object req = new {
+                id = "service.sesssend",
+                sessid = sessid,
+                data = msg,
+            };
 
-            try {
-                tcp.SendEncryptUrl(url, method);
-            } catch (Exception) { }
+            tcp.Send(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req)), method);
         }
 
-        protected void SendClientMsgByCcid(string ccid, string msg, SockClientTcpSendCallback method = null)
+        public void SessDetailRequest(SockClientTcpSendCallback method = null)
         {
-            string url = "/center/clientsendbyccid" + "?ccid=" + ccid + "&data=" + msg;
-
-            try {
-                tcp.SendEncryptUrl(url, method);
-            } catch (Exception) { }
-        }
-
-        protected void SendClientUpdate(string ip, int port, string ccid, string name, SockClientTcpSendCallback method = null)
-        {
-            string url = "/center/clientupdate" + "?ip=" + ip + "&port=" + port + "&ccid=" + ccid + "&name=" + name;
-
-            try {
-                tcp.SendEncryptUrl(url, method);
-            } catch (Exception) { }
+            tcp.Send(Encoding.UTF8.GetBytes("{'id':'service.sessdetail'}"), method);
         }
     }
 }

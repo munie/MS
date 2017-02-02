@@ -20,7 +20,7 @@ namespace mnn.misc.env {
         /// </summary>
         public static readonly string CONF_NAME = "EnvConsole.xml";
         public static readonly string CONF_PATH = BASE_DIR + CONF_NAME;
-        public static readonly string CONF_SERVER = "/configuration/servers/server";
+        public static readonly string CONF_SERVER = "/configuration/server";
         public static readonly string CONF_TIMER = "/configuration/timers/timer";
 
         /// <summary>

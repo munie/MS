@@ -6,11 +6,9 @@ using System.Text;
 namespace mnn.service {
     public class IModuleServiceSymbols {
         public static readonly string GET_SERVICE_TABLE = "GetServiceTable";
-        public static readonly string GET_FILTER_TABLE = "GetFilterTable";
     }
 
     public interface IModuleService {
         IDictionary<string, string> GetServiceTable();
-        IDictionary<string, string> GetFilterTable();
     }
 }

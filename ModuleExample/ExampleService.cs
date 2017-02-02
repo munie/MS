@@ -5,8 +5,8 @@ using System.Text;
 using mnn.module;
 using mnn.service;
 
-namespace ModuleTest {
-	public class TestService : IModule, IModuleService {
+namespace ModuleExample {
+	public class ExampleService : IModule, IModuleService, IModuleFilter {
 		public void Init()
 		{
 		}
@@ -23,6 +23,11 @@ namespace ModuleTest {
             return retval;
         }
 
+		public void HelloService(ServiceRequest request, ref ServiceResponse response)
+		{
+			response.data = "hello world";
+		}
+
         public IDictionary<string, string> GetFilterTable()
         {
             Dictionary<string, string> retval = new Dictionary<string, string>();
@@ -30,11 +35,6 @@ namespace ModuleTest {
 
             return retval;
         }
-
-		public void HelloService(ServiceRequest request, ref ServiceResponse response)
-		{
-			response.data = "hello world";
-		}
 
         public void DoFilter(ServiceRequest request, ref ServiceResponse response)
         {

@@ -55,7 +55,7 @@ namespace mnn.module {
             }
         }
 
-        public Module Add(string filepath, bool loadAfterAdded = true)
+        public Module Add(string filepath, bool loadAfterAdded = false)
         {
             try {
                 Module module = new Module(filepath);

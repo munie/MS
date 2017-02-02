@@ -55,6 +55,7 @@
     <Compile Include="misc\glue\BaseLayer.cs" />
     <Compile Include="misc\glue\ServiceLayer.cs" />
     <Compile Include="misc\TimeOut.cs" />
+    <Compile Include="module\IModuleService.cs" />
     <Compile Include="net\SockSessGroupState.cs" />
     <Compile Include="service\RegexService.cs" />
     <Compile Include="service\SimpleFilterCore.cs" />
@@ -62,7 +63,7 @@
     <Compile Include="util\ExecPoll.cs" />
     <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
-    <Compile Include="module\IModuleService.cs" />
+    <Compile Include="module\IModuleFilter.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />
     <Compile Include="misc\env\MsgKey.cs" />
     <Compile Include="module\AppDomainProxy.cs" />
