@@ -103,7 +103,7 @@ namespace mnn.misc.glue {
 
                 sess.rfifo.Skip(request.packlen);
                 request.sessdata = sess.sdata as Dictionary<string, string>;
-                servctl.AddRequest(request);
+                filtctl.AddRequest(request);
                 sessstate.PackIncrease();
             }
         }

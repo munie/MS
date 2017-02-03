@@ -77,7 +77,7 @@ namespace mnn.misc.glue {
                     filtctl.RegisterFilter(filter.Key,
                         (ServiceRequest request, ref ServiceResponse response) => {
                             object[] args = new object[] { request, response };
-                            bool retval = (bool)module.Invoke(filter.Value, ref args);
+                            module.Invoke(filter.Value, ref args);
                             request.sessdata = (args[0] as ServiceRequest).sessdata;
                             response = args[1] as ServiceResponse;
                         });

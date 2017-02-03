@@ -8,7 +8,7 @@ namespace mnn.misc.env {
         /// <summary>
         /// 回复心跳指令
         /// </summary>
-        public static readonly string ReplyHeartBeat = "*OK#";
+        public static readonly string OK = "*OK#";
 
         /// <summary>
         /// 测试指令
