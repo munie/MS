@@ -80,7 +80,7 @@ namespace mnn.service {
                     service_done(request, response);
             } catch (Exception ex) {
                 log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
-                    .Warn("error in handling service", ex);
+                    .Warn("error in handling service " + request.id, ex);
             }
         }
     }

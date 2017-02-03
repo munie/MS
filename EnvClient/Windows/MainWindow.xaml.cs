@@ -178,6 +178,9 @@ namespace EnvClient.Windows
                 if (input.ShowDialog() == false)
                     return;
 
+                if (String.IsNullOrEmpty(input.textBox2.Text))
+                    return;
+
                 backend.SessListenRequest("0", int.Parse(input.textBox2.Text));
             }
         }

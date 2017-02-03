@@ -60,27 +60,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="CmdInputDialog.xaml.cs">
+    <Compile Include="Windows\CmdInputDialog.xaml.cs">
       <DependentUpon>CmdInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Backend\CmdUnit.cs" />
     <Compile Include="Backend\UIData.cs" />
-    <Compile Include="SockInputDialog.xaml.cs">
+    <Compile Include="Windows\SockInputDialog.xaml.cs">
       <DependentUpon>SockInputDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Backend\SockUnit.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Page Include="CmdInputDialog.xaml">
+    <Page Include="Windows\CmdInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SockInputDialog.xaml">
+    <Page Include="Windows\SockInputDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TrialWindow.xaml">
+    <Page Include="Windows\TrialWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -88,11 +88,11 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TrialWindow.xaml.cs">
+    <Compile Include="Windows\TrialWindow.xaml.cs">
       <DependentUpon>TrialWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
