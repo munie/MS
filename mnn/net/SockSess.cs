@@ -13,13 +13,6 @@ namespace mnn.net {
         private const int BASE_STALL = 60 * 12;
 
         protected Socket sock;
-        private bool eof;
-        private int stall;
-        public DateTime tick;
-
-        public string id { get; private set; }
-        public DateTime conntime { get; private set; }
-
         public IPEndPoint lep { get { return (IPEndPoint)sock.LocalEndPoint; } }
         public IPEndPoint rep
         {
@@ -32,6 +25,12 @@ namespace mnn.net {
                 }
             }
         }
+
+        private bool eof;
+        private int stall;
+        public DateTime tick { get; set; }
+        public DateTime conntime { get; private set; }
+        public string id { get; private set; }
 
         public Fifo<byte> rfifo { get; private set; }
         public Fifo<byte> wfifo { get; private set; }

@@ -25,6 +25,7 @@ namespace ModuleExample {
 
 		public void HelloService(ServiceRequest request, ref ServiceResponse response)
 		{
+            request.sessdata["ccid"] = "ccid123456";
 			response.data = "hello world";
 		}
 

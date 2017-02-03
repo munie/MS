@@ -48,7 +48,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="misc\env\SessData.cs" />
     <Compile Include="misc\AtCmd.cs" />
     <Compile Include="misc\glue\IRunable.cs" />
     <Compile Include="misc\glue\ModulizedServiceLayer.cs" />
@@ -61,7 +60,6 @@
     <Compile Include="service\SimpleFilterCore.cs" />
     <Compile Include="service\SimpleServiceCore.cs" />
     <Compile Include="util\ExecPoll.cs" />
-    <Compile Include="misc\env\EnvConst.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
     <Compile Include="module\IModuleFilter.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />

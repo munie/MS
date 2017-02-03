@@ -47,15 +47,25 @@ namespace mnn.misc.glue {
         {
             sessstate.PackDecrease();
 
-            SockSess sess = request.user_data as SockSess;
-            if (sess != null && response != null)
-                sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+            Dictionary<string, string> sd = request.sessdata;
+            if (sd != null && response != null) {
+                SockSess sess = FindSockSessFromSessGroup(sd["sessid"]);
+                if (sess != null) {
+                    sess.sdata = request.sessdata;
+                    sess.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+                }
+            }
         }
 
         // SockSess Event ======================================================================
 
         protected virtual void OnAcceptEvent(object sender, SockSessAccept sess)
         {
+            Dictionary<string, string> sd = new Dictionary<string, string>();
+            sd.Add("sessid", sess.id);
+            sd.Add("lep", sess.lep.ToString());
+            sd.Add("rep", sess.rep.ToString());
+            sess.sdata = sd;
             sess.close_event += new SockSess.SockSessDelegate(OnCloseEvent);
             sess.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
             sesstab.Add(sess);
@@ -92,7 +102,7 @@ namespace mnn.misc.glue {
                     break;
 
                 sess.rfifo.Skip(request.packlen);
-                request.user_data = sess;
+                request.sessdata = sess.sdata as Dictionary<string, string>;
                 servctl.AddRequest(request);
                 sessstate.PackIncrease();
             }

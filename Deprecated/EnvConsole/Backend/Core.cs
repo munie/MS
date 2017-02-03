@@ -52,25 +52,13 @@ namespace EnvConsole.Backend {
             servctl.RegisterService("core.clientupdate", ClientUpdateService);
         }
 
-        // Session Event ==========================================================================
-
-        protected override void OnSessCreate(object sender, SockSess sess)
-        {
-            if (sess.type == SockType.accept && sess.sdata == null) {
-                sess.sdata = new SessData() {
-                    Ccid = "",
-                    Name = "",
-                };
-            }
-        }
-
         // Center Service =========================================================================
 
         protected override void SessSendService(ServiceRequest request, ref ServiceResponse response)
         {
             base.SessSendService(request, ref response);
 
-            string logmsg = "(" + (request.user_data as SockSess).rep.ToString()
+            string logmsg = "(" + request.sessdata["rep"]
                 + " => " + "*.*.*.*" + ")" + Environment.NewLine;
             logmsg += "\tRequest: " + (string)request.data + Environment.NewLine;
             logmsg += "\tRespond: " + JsonConvert.SerializeObject(response);
@@ -80,26 +68,25 @@ namespace EnvConsole.Backend {
 
         private void ClientListService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check if admin
-            SockSess sess = request.user_data as SockSess;
-            SessData sdata = sess.sdata as SessData;
-            if (sdata == null || !sdata.Admin) return;
-
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
             StringBuilder sb = new StringBuilder();
             foreach (var item in sessctl.GetSessionTable()) {
-                if (item.type != SockType.accept) continue;
-                SessData sd = item.sdata as SessData;
-                if (String.IsNullOrEmpty(sd.Ccid)) continue;
+                if (item.type != SockType.accept)
+                    continue;
+
+                Dictionary<string, string> sd = item.sdata as Dictionary<string, string>;
+                if (!sd.ContainsKey("ccid") || String.IsNullOrEmpty(sd["ccid"]))
+                    continue;
+
                 sb.Append("{"
                     + "\"dev\":\"" + item.lep.Port + "\","
                     + "\"ip\":\"" + item.rep.ToString() + "\","
                     + "\"time\":\"" + item.conntime + "\","
-                    + "\"ccid\":\"" + sd.Ccid + "\","
-                    + "\"name\":\"" + sd.Name + "\""
+                    + "\"ccid\":\"" + sd["ccid"] + "\","
+                    + "\"name\":\"" + sd["name"] + "\""
                     + "}");
             }
             sb.Insert(0, '[');
@@ -115,10 +102,6 @@ namespace EnvConsole.Backend {
 
         private void ClientCloseService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check if admin
-            SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.Admin) return;
-
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
@@ -145,10 +128,6 @@ namespace EnvConsole.Backend {
 
         private void ClientSendService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check if admin
-            SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.Admin) return;
-
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
@@ -174,7 +153,7 @@ namespace EnvConsole.Backend {
 
             // log
             if (sess != null) {
-                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + request.sessdata["rep"]
                     + " => " + sess.rep.ToString() + ")" + Environment.NewLine;
                 logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
@@ -184,10 +163,6 @@ namespace EnvConsole.Backend {
 
         private void ClientSendByCcidService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check if admin
-            SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.Admin) return;
-
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
@@ -196,8 +171,8 @@ namespace EnvConsole.Backend {
             SockSess sess = null;
             foreach (var item in sessctl.GetSessionTable()) {
                 if (item.type != SockType.accept) continue;
-                SessData sd = item.sdata as SessData;
-                if (sd.Ccid == dc["ccid"]) {
+                Dictionary<string, string> sd = item.sdata as Dictionary<string, string>;
+                if (sd.ContainsKey("ccid") && sd["ccid"] == dc["ccid"]) {
                     sess = item; // take last one as result, so comment "break" at next line
                     //break;
                 }
@@ -220,7 +195,7 @@ namespace EnvConsole.Backend {
 
             // log
             if (sess != null) {
-                string logmsg = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
+                string logmsg = DateTime.Now + " (" + request.sessdata["rep"]
                     + " => " + sess.rep.ToString() + ")" + Environment.NewLine;
                 logmsg += Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(dc["data"]));
 
@@ -230,10 +205,6 @@ namespace EnvConsole.Backend {
 
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {
-            // check if admin
-            SessData sdata = (request.user_data as SockSess).sdata as SessData;
-            if (sdata == null || !sdata.Admin) return;
-
             // parse to dictionary
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
@@ -242,9 +213,9 @@ namespace EnvConsole.Backend {
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), int.Parse(dc["port"]));
             SockSess sess = sessctl.FindSession(SockType.accept, null, ep);
             if (sess != null) {
-                SessData sd = sess.sdata as SessData;
-                sd.Ccid = dc["ccid"];
-                sd.Name = dc["name"];
+                Dictionary<string, string> sd = sess.sdata as Dictionary<string, string>;
+                sd["ccid"] = dc["ccid"];
+                sd["name"] = dc["name"];
             }
 
             // write response

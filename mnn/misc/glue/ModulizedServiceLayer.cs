@@ -32,8 +32,6 @@ namespace mnn.misc.glue {
         {
             module.module_load += new Module.ModuleEvent(OnModuleLoad);
             module.module_unload += new Module.ModuleEvent(OnModuleUnload);
-
-            module.Load();
         }
 
         protected virtual void OnModuleCtlDelete(object sender, Module module) { }
@@ -57,6 +55,7 @@ namespace mnn.misc.glue {
                         (ServiceRequest request, ref ServiceResponse response) => {
                             object[] args = new object[] { request, response };
                             module.Invoke(service.Value, ref args);
+                            request.sessdata = (args[0] as ServiceRequest).sessdata;
                             response = args[1] as ServiceResponse;
                         });
                 }
@@ -79,6 +78,7 @@ namespace mnn.misc.glue {
                         (ServiceRequest request, ref ServiceResponse response) => {
                             object[] args = new object[] { request, response };
                             bool retval = (bool)module.Invoke(filter.Value, ref args);
+                            request.sessdata = (args[0] as ServiceRequest).sessdata;
                             response = args[1] as ServiceResponse;
                         });
                 }
@@ -114,6 +114,7 @@ namespace mnn.misc.glue {
                 <Dictionary<string, dynamic>>((string)request.data);
 
             Module module = modctl.Add(dc["filepath"]);
+            module.Load();
 
             if (module != null) {
                 response.errcode = 0;

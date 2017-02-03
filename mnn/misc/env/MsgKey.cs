@@ -47,5 +47,10 @@ namespace mnn.misc.env {
         /// 时间
         /// </summary>
         public static readonly string TIME = "TIME";
+
+        /// <summary>
+        /// 流量
+        /// </summary>
+        public static readonly string FLOW_TOTAL = "flow_total";
     }
 }

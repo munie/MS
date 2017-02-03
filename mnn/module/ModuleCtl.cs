@@ -59,12 +59,12 @@ namespace mnn.module {
         {
             try {
                 Module module = new Module(filepath);
-                if (loadAfterAdded)
-                    module.Load();
                 modtab.Add(module);
-
                 if (module_add != null)
                     module_add(this, module);
+
+                if (loadAfterAdded)
+                    module.Load();
                 return module;
             } catch (Exception ex) {
                 log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)

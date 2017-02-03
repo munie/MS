@@ -33,6 +33,12 @@ namespace EnvConsole.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly string BASE_DIR = System.AppDomain.CurrentDomain.BaseDirectory;
+        public static readonly string CONF_PATH = BASE_DIR + "EnvConsole.xml";
+        public static readonly string CONF_SERVER = "/configuration/servers/server";
+        public static readonly string CONF_TIMER = "/configuration/timers/timer";
+        public static readonly string Module_PATH = BASE_DIR + "modules";
+
         private UIData uidata;
         private Core core;
 
@@ -84,7 +90,7 @@ namespace EnvConsole.Windows
 
         private void InitLog4net()
         {
-            var config = new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "EnvConsole.xml");
+            var config = new FileInfo(CONF_PATH);
             log4net.Config.XmlConfigurator.ConfigureAndWatch(config);
 
             var textBoxAppender = new TextBoxAppender();
@@ -137,17 +143,17 @@ namespace EnvConsole.Windows
 
         private void ConfigDataUI()
         {
-            if (File.Exists(EnvConst.CONF_PATH) == false) {
-                System.Windows.MessageBox.Show(EnvConst.CONF_NAME + ": can't find it.");
+            if (File.Exists(CONF_PATH) == false) {
+                System.Windows.MessageBox.Show(CONF_PATH + ": can't find it.");
                 Thread.CurrentThread.Abort();
             }
 
             try {
                 XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(EnvConst.CONF_PATH);
+                xdoc.Load(CONF_PATH);
 
                 // Server Config
-                foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
+                foreach (XmlNode item in xdoc.SelectNodes(CONF_SERVER)) {
                     ServerUnit server = new ServerUnit();
                     server.ID = item.Attributes["id"].Value;
                     server.Name = item.Attributes["name"].Value;
@@ -183,8 +189,8 @@ namespace EnvConsole.Windows
             }
 
             // load all modules from directory "DataHandles"
-            if (Directory.Exists(EnvConst.Module_PATH)) {
-                foreach (var item in Directory.GetFiles(EnvConst.Module_PATH)) {
+            if (Directory.Exists(Module_PATH)) {
+                foreach (var item in Directory.GetFiles(Module_PATH)) {
                     string str = item.Substring(item.LastIndexOf("\\") + 1);
                     if (str.Contains("Module") && str.ToLower().EndsWith(".dll")) {
                         object req = new {
@@ -253,17 +259,6 @@ namespace EnvConsole.Windows
                 if (sess.type == SockType.listen)
                     uidata.ServerStarted(sess.lep.Address.ToString(), sess.lep.Port);
             }));
-
-            if (sess.type == SockType.listen) {
-                var subset = from s in uidata.ServerTable
-                             where s.Target == ServerTarget.center && s.Port == sess.lep.Port
-                             select s;
-                if (!subset.Any()) {
-                    if (sess.sdata == null)
-                        sess.sdata = new SessData();
-                    (sess.sdata as SessData).Admin = true;
-                }
-            }
         }
 
         private void OnSessDelete(object sender, SockSess sess)

@@ -208,8 +208,8 @@ namespace SockMaster
 
         private void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {
-            string log = DateTime.Now + " (" + (request.user_data as SockSess).rep.ToString()
-                + " => " + (request.user_data as SockSess).lep.ToString() + ")" + Environment.NewLine;
+            string log = DateTime.Now + " (" + request.sessdata["rep"]
+                + " => " + request.sessdata["lep"] + ")" + Environment.NewLine;
 
             if (request is BinaryRequest)
                 log += SockConvert.ParseBytesToString(Encoding.UTF8.GetBytes((string)request.data));

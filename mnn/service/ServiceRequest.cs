@@ -11,8 +11,7 @@ namespace mnn.service {
         public string id { get; protected set; }
         public int packlen { get; protected set; }
         public object data { get; protected set; }
-        [NonSerialized]
-        public object user_data;
+        public Dictionary<string, string> sessdata { get; set; }
 
         public abstract bool IsMatch(byte[] raw);
         public abstract void Unpack(byte[] raw);

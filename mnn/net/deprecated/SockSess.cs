@@ -18,11 +18,23 @@ namespace mnn.net.deprecated {
     public class SockSess {
         public Socket sock { get; private set; }
         public SockType type { get; private set; }
-        public IPEndPoint lep { get; private set; }
-        public IPEndPoint rep { get; private set; }
+        public IPEndPoint lep { get { return (IPEndPoint)sock.LocalEndPoint; } }
+        public IPEndPoint rep
+        {
+            get
+            {
+                try {
+                    return (IPEndPoint)sock.RemoteEndPoint;
+                } catch {
+                    return null;
+                }
+            }
+        }
+
         public bool eof { get; /*private*/ set; }
         public DateTime tick { get; private set; }
         public DateTime conntime { get; private set; }
+        public string id { get; private set; }
 
         private byte[] rdata;
         private int rdata_max = 8192;
@@ -39,11 +51,10 @@ namespace mnn.net.deprecated {
         {
             this.type = type;
             this.sock = sock;
-            lep = sock.LocalEndPoint as IPEndPoint;
-            rep = type == SockType.listen ? null : sock.RemoteEndPoint as IPEndPoint;
             eof = false;
             tick = DateTime.Now;
             conntime = tick;
+            id = Guid.NewGuid().ToString();
 
             rdata = new byte[rdata_max];
             wdata = new byte[wdata_max];
@@ -305,6 +316,18 @@ namespace mnn.net.deprecated {
                     child.WfifoSet(data);
             } else
                 sess.WfifoSet(data);
+        }
+
+        public SockSess FindSession(string sessid)
+        {
+            ThreadCheck(false);
+
+            foreach (var item in sess_table) {
+                if (item.id.Equals(sessid))
+                    return item;
+            }
+
+            return null;
         }
 
         public SockSess FindSession(SockType type, IPEndPoint lep, IPEndPoint rep)

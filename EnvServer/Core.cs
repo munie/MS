@@ -136,7 +136,7 @@ namespace EnvServer {
             // make pack of session detail
             List<object> pack = new List<object>();
             foreach (var item in sesstab) {
-                SessData sd = item.sdata as SessData;
+                Dictionary<string, string> sd = item.sdata as Dictionary<string, string>;
                 pack.Add(new {
                     sessid = item.id,
                     type = item.GetType().Name,
@@ -144,9 +144,9 @@ namespace EnvServer {
                     remoteip = item.rep == null ? "0:0" : item.rep.ToString(),
                     tick = item.tick,
                     conntime = item.conntime,
-                    ccid = sd != null ? sd.Ccid : "",
-                    name = sd != null ? sd.Name : "",
-                    isadmin = sd != null ? sd.Admin.ToString() : "",
+                    ccid = sd != null && sd.ContainsKey("ccid") ? sd["ccid"] : "",
+                    name = sd != null && sd.ContainsKey("name") ? sd["name"] : "",
+                    admin = sd != null && sd.ContainsKey("admin") ? sd["admin"] : "false",
                 });
             }
 
@@ -157,20 +157,16 @@ namespace EnvServer {
 
         private void LoginService(ServiceRequest request, ref ServiceResponse response)
         {
-            SockSess sess = request.user_data as SockSess;
-            if (sess == null)
+            if (request.sessdata == null)
                 return;
-
-            if (sess.sdata == null)
-                sess.sdata = new SessData();
-            SessData sd = sess.sdata as SessData;
 
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
-            sd.Ccid = dc["ccid"];
-            sd.Name = dc["name"];
-            sd.Admin = bool.Parse(dc["admin"]);
+            request.sessdata["ccid"] = dc["ccid"];
+            request.sessdata["name"] = dc["name"];
+            if (dc.ContainsKey("admin"))
+                request.sessdata["admin"] = dc["admin"];
         }
 
         // Utilization ======================================================================
@@ -178,8 +174,8 @@ namespace EnvServer {
         private void NoticeAdmin(ServiceResponse response)
         {
             foreach (var item in sesstab) {
-                SessData sd = item.sdata as SessData;
-                if (sd != null && sd.Admin)
+                Dictionary<string, string> sd = item.sdata as Dictionary<string, string>;
+                if (sd != null && sd.ContainsKey("admin") && sd["admin"] == "true")
                     item.wfifo.Append(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
             }
         }

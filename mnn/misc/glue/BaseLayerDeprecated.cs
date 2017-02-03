@@ -34,11 +34,16 @@ namespace mnn.misc.glue {
 
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
         {
+            if (request.sessdata == null)
+                return;
+
             sessctl.BeginInvoke(new Action(() =>
             {
-                SockSess sess = request.user_data as SockSess;
-                if (sess != null)
+                SockSess sess = sessctl.FindSession(request.sessdata["sessid"]);
+                if (sess != null) {
+                    sess.sdata = request.sessdata;
                     sessctl.SendSession(sess, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response)));
+                }
             }));
         }
 
@@ -48,7 +53,10 @@ namespace mnn.misc.glue {
         {
             // init request
             ServiceRequest request = ServiceRequest.Parse(sess.RfifoTake());
-            request.user_data = sess;
+            request.sessdata = sess.sdata as Dictionary<string, string>;
+            request.sessdata["sessid"] = sess.id;
+            request.sessdata["lep"] = sess.lep.ToString();
+            request.sessdata["rep"] = sess.rep.ToString();
 
             // rfifo skip
             sess.RfifoSkip(request.packlen);
@@ -57,7 +65,16 @@ namespace mnn.misc.glue {
             filtctl.AddRequest(request);
         }
 
-        protected virtual void OnSessCreate(object sender, SockSess sess) { }
+        protected virtual void OnSessCreate(object sender, SockSess sess)
+        {
+            if (sess.type == SockType.accept) {
+                Dictionary<string, string> sd = new Dictionary<string, string>();
+                sd.Add("sessid", sess.id);
+                sd.Add("lep", sess.lep.ToString());
+                sd.Add("rep", sess.rep.ToString());
+                sess.sdata = sd;
+            }
+        }
 
         protected virtual void OnSessDelete(object sender, SockSess sess) { }
 

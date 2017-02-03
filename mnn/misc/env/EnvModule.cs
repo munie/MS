@@ -22,9 +22,9 @@ namespace mnn.misc.env {
         public virtual void Init()
         {
             XmlDocument xdoc = new XmlDocument();
-            xdoc.Load(EnvConst.CONF_PATH);
+            xdoc.Load(AppDomain.CurrentDomain.BaseDirectory + "EnvServer.xml");
 
-            foreach (XmlNode item in xdoc.SelectNodes(EnvConst.CONF_SERVER)) {
+            foreach (XmlNode item in xdoc.SelectNodes("/configuration/server")) {
                 if (item.Attributes["protocol"].Value == "tcp") {
                     tcp = new SockClientTcp(new IPEndPoint(
                             IPAddress.Parse(item.Attributes["ipaddress"].Value),
