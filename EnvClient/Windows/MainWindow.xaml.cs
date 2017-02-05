@@ -107,12 +107,12 @@ namespace EnvClient.Windows
                 ModuleTable = backend.uidata.ModuleTable,
                 DataUI = backend.uidata
             };
-            this.currentClientCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentAcceptCount"));
-            this.historyClientOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptOpenCount"));
-            this.historyClientCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryAcceptCloseCount"));
-            this.currentPackCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.CurrentPackCount"));
-            this.historyPackFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackFetchedCount"));
-            this.historyPackParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.HistoryPackParsedCount"));
+            this.acceptOpenCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.AcceptOpenCount"));
+            this.acceptTotalCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.AcceptTotalCount"));
+            this.acceptCloseCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.AcceptCloseCount"));
+            this.packFetchedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.PackFetchedCount"));
+            this.packTotalCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.PackTotalCount"));
+            this.packParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.PackParsedCount"));
 
             // run backend
             backend.Run();

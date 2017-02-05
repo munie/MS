@@ -41,15 +41,15 @@ namespace EnvConsole.Backend {
             });
 
             // servctl register
-            servctl.RegisterDefaultService("core.default", DefaultService);
-            servctl.RegisterService("core.sessopen", SessOpenService);
-            servctl.RegisterService("core.sessclose", SessCloseService);
-            servctl.RegisterService("core.sesssend", SessSendService);
-            servctl.RegisterService("core.clientlist", ClientListService);
-            servctl.RegisterService("core.clentclose", ClientCloseService);
-            servctl.RegisterService("core.clientsend", ClientSendService);
-            servctl.RegisterService("core.clientsendbyccid", ClientSendByCcidService);
-            servctl.RegisterService("core.clientupdate", ClientUpdateService);
+            servctl.RegisterDefaultService("core.default", DefaultService, OnServiceDone);
+            servctl.RegisterService("core.sessopen", SessOpenService, OnServiceDone);
+            servctl.RegisterService("core.sessclose", SessCloseService, OnServiceDone);
+            servctl.RegisterService("core.sesssend", SessSendService, OnServiceDone);
+            servctl.RegisterService("core.clientlist", ClientListService, OnServiceDone);
+            servctl.RegisterService("core.clentclose", ClientCloseService, OnServiceDone);
+            servctl.RegisterService("core.clientsend", ClientSendService, OnServiceDone);
+            servctl.RegisterService("core.clientsendbyccid", ClientSendByCcidService, OnServiceDone);
+            servctl.RegisterService("core.clientupdate", ClientUpdateService, OnServiceDone);
         }
 
         // Center Service =========================================================================

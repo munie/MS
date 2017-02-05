@@ -21,75 +21,75 @@ namespace EnvClient.Backend
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private int currentAcceptCount;
-        public int CurrentAcceptCount
+        private int acceptOpenCount;
+        public int AcceptOpenCount
         {
-            get { return currentAcceptCount; }
+            get { return acceptOpenCount; }
             set
             {
-                currentAcceptCount = value;
+                acceptOpenCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("CurrentAcceptCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("AcceptOpenCount"));
             }
         }
 
-        private int historyAcceptOpenCount;
-        public int HistoryAcceptOpenCount
+        private int acceptCloseCount;
+        public int AcceptCloseCount
         {
-            get { return historyAcceptOpenCount; }
+            get { return acceptCloseCount; }
             set
             {
-                historyAcceptOpenCount = value;
+                acceptCloseCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("HistoryAcceptOpenCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("AcceptCloseCount"));
             }
         }
 
-        private int historyAcceptCloseCount;
-        public int HistoryAcceptCloseCount
+        private int acceptTotalCount;
+        public int AcceptTotalCount
         {
-            get { return historyAcceptCloseCount; }
+            get { return acceptTotalCount; }
             set
             {
-                historyAcceptCloseCount = value;
+                acceptTotalCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("HistoryAcceptCloseCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("AcceptTotalCount"));
             }
         }
 
-        private int currentPackCount;
-        public int CurrentPackCount
+        private int packFetchedCount;
+        public int PackFetchedCount
         {
-            get { return currentPackCount; }
+            get { return packFetchedCount; }
             set
             {
-                currentPackCount = value;
+                packFetchedCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("CurrentPackCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("PackFetchedCount"));
             }
         }
 
-        private int historyPackFetchedCount;
-        public int HistoryPackFetchedCount
+        private int packParsedCount;
+        public int PackParsedCount
         {
-            get { return historyPackFetchedCount; }
+            get { return packParsedCount; }
             set
             {
-                historyPackFetchedCount = value;
+                packParsedCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("HistoryPackFetchedCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("PackParsedCount"));
             }
         }
 
-        private int historyPackParsedCount;
-        public int HistoryPackParsedCount
+        private int packTotalCount;
+        public int PackTotalCount
         {
-            get { return historyPackParsedCount; }
+            get { return packTotalCount; }
             set
             {
-                historyPackParsedCount = value;
+                packTotalCount = value;
                 if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("HistoryPackParsedCount"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("PackTotalCount"));
             }
         }
 
@@ -100,12 +100,12 @@ namespace EnvClient.Backend
             ModuleTable = new ObservableCollection<ModuleUnit>();
             moduleTableLock = new ReaderWriterLock();
 
-            currentAcceptCount = 0;
-            historyAcceptOpenCount = 0;
-            historyAcceptCloseCount = 0;
-            currentPackCount = 0;
-            historyPackFetchedCount = 0;
-            historyPackParsedCount = 0;
+            acceptOpenCount = 0;
+            acceptTotalCount = 0;
+            acceptCloseCount = 0;
+            packFetchedCount = 0;
+            packTotalCount = 0;
+            packParsedCount = 0;
         }
     }
 }

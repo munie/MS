@@ -19,7 +19,7 @@ namespace EnvServer {
             sess_connect_event += new SockSessOpenDelegate(OnSessCreate);
             sess_close_event += new SockSessCloseDelegate(OnSessDelete);
 
-            servctl.RegisterService("service.sesslogin", LoginService);
+            servctl.RegisterService("service.sesslogin", LoginService, OnServiceDone);
         }
 
         // Module Event =====================================================================

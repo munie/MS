@@ -19,11 +19,11 @@ namespace mnn.misc.glue {
             modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
             modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
 
-            servctl.RegisterService("service.moduleadd", ModuleAddService);
-            servctl.RegisterService("service.moduledel", ModuleDelService);
-            servctl.RegisterService("service.moduleload", ModuleLoadService);
-            servctl.RegisterService("service.moduleunload", ModuleUnloadService);
-            servctl.RegisterService("service.moduledetail", ModuleDetailService);
+            servctl.RegisterService("service.moduleadd", ModuleAddService, OnServiceDone);
+            servctl.RegisterService("service.moduledel", ModuleDelService, OnServiceDone);
+            servctl.RegisterService("service.moduleload", ModuleLoadService, OnServiceDone);
+            servctl.RegisterService("service.moduleunload", ModuleUnloadService, OnServiceDone);
+            servctl.RegisterService("service.moduledetail", ModuleDetailService, OnServiceDone);
         }
 
         // Module Event ============================================================================
@@ -57,7 +57,7 @@ namespace mnn.misc.glue {
                             module.Invoke(service.Value, ref args);
                             request.sessdata = (args[0] as ServiceRequest).sessdata;
                             response = args[1] as ServiceResponse;
-                        });
+                        }, OnServiceDone);
                 }
             }
 
@@ -80,7 +80,7 @@ namespace mnn.misc.glue {
                             module.Invoke(filter.Value, ref args);
                             request.sessdata = (args[0] as ServiceRequest).sessdata;
                             response = args[1] as ServiceResponse;
-                        });
+                        }, OnServiceDone);
                 }
             }
         }

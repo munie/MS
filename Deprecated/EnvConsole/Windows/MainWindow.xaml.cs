@@ -112,11 +112,9 @@ namespace EnvConsole.Windows
             // register events of sessctl
             core.sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             core.sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
-            core.sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
 
             // register events of servctl & register a service
-            core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
-            core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService);
+            core.servctl.RegisterService("MainWindow.clientupdate", ClientUpdateService, null);
         }
 
         private void InitDataUI()
@@ -274,25 +272,7 @@ namespace EnvConsole.Windows
             }));
         }
 
-        private void OnSessParse(object sender, SockSess sess)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                uidata.PackRecved();
-            }));
-        }
-
         // Service Event ==================================================================================
-
-        private void OnServiceDone(ServiceRequest request, ServiceResponse response)
-        {
-            /// ** update DataUI
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                uidata.PackParsed();
-            }));
-        }
 
         private void ClientUpdateService(ServiceRequest request, ref ServiceResponse response)
         {

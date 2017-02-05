@@ -22,15 +22,15 @@ namespace EnvClient.Backend {
 
         public Core()
         {
-            servctl.RegisterService("notice.sesslisten", SessListenNotice);
-            servctl.RegisterService("notice.sessaccept", SessAcceptNotice);
-            servctl.RegisterService("notice.sessclose", SessCloseNotice);
-            servctl.RegisterService("service.sessdetail", SessDetailResponse);
-            servctl.RegisterService("service.sessgroupstate", SessGroupStateResponse);
-            servctl.RegisterService("notice.moduleadd", ModuleAddNotice);
-            servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice);
-            servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice);
-            servctl.RegisterService("service.moduledetail", ModuleDetailResponse);
+            servctl.RegisterService("notice.sesslisten", SessListenNotice, OnServiceDone);
+            servctl.RegisterService("notice.sessaccept", SessAcceptNotice, OnServiceDone);
+            servctl.RegisterService("notice.sessclose", SessCloseNotice, OnServiceDone);
+            servctl.RegisterService("service.sessdetail", SessDetailResponse, OnServiceDone);
+            servctl.RegisterService("service.sessgroupstate", SessGroupStateResponse, OnServiceDone);
+            servctl.RegisterService("notice.moduleadd", ModuleAddNotice, OnServiceDone);
+            servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice, OnServiceDone);
+            servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice, OnServiceDone);
+            servctl.RegisterService("service.moduledetail", ModuleDetailResponse, OnServiceDone);
 
             try {
                 envclient = new SockSessClient();
@@ -331,12 +331,12 @@ namespace EnvClient.Backend {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                 var msg = jo["data"];
 
-                uidata.CurrentAcceptCount = Convert.ToInt32((string)msg["CurrentAcceptCount"]);
-                uidata.HistoryAcceptOpenCount = Convert.ToInt32((string)msg["HistoryAcceptOpenCount"]);
-                uidata.HistoryAcceptCloseCount = Convert.ToInt32((string)msg["HistoryAcceptCloseCount"]);
-                uidata.CurrentPackCount = Convert.ToInt32((string)msg["CurrentPackCount"]);
-                uidata.HistoryPackFetchedCount = Convert.ToInt32((string)msg["HistoryPackFetchedCount"]);
-                uidata.HistoryPackParsedCount = Convert.ToInt32((string)msg["HistoryPackParsedCount"]);
+                uidata.AcceptOpenCount = Convert.ToInt32((string)msg["AcceptOpenCount"]);
+                uidata.AcceptCloseCount = Convert.ToInt32((string)msg["AcceptCloseCount"]);
+                uidata.AcceptTotalCount = Convert.ToInt32((string)msg["AcceptTotalCount"]);
+                uidata.PackFetchedCount = Convert.ToInt32((string)msg["PackFetchedCount"]);
+                uidata.PackParsedCount = Convert.ToInt32((string)msg["PackParsedCount"]);
+                uidata.PackTotalCount = Convert.ToInt32((string)msg["PackTotalCount"]);
             }));
         }
 

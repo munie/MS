@@ -18,13 +18,13 @@ namespace mnn.service {
         public ServiceBeforeDelegate service_before;
         public ServiceDoneDelegate service_done;
 
-        public Service(string id, ServiceHandlerDelegate func)
+        public Service(string id, ServiceHandlerDelegate func, ServiceDoneDelegate done)
         {
             this.id = id;
             this.func = func;
             request_queue = new Queue<ServiceRequest>();
             service_before = null;
-            service_done = null;
+            service_done = done;
         }
 
         public bool Equals(Service serv)

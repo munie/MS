@@ -19,10 +19,10 @@ namespace mnn.misc.glue {
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
 
-            servctl.RegisterService("service.sessopen", SessOpenService);
-            servctl.RegisterService("service.sessclose", SessCloseService);
-            servctl.RegisterService("service.sesssend", SessSendService);
-            servctl.RegisterService("service.sessdetail", SessDetailService);
+            servctl.RegisterService("service.sessopen", SessOpenService, OnServiceDone);
+            servctl.RegisterService("service.sessclose", SessCloseService, OnServiceDone);
+            servctl.RegisterService("service.sesssend", SessSendService, OnServiceDone);
+            servctl.RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
         }
 
         protected override void Exec()

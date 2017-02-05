@@ -10,45 +10,29 @@ namespace mnn.service {
         private List<Service> services;
         private ReaderWriterLockSlim services_lock;
 
-        public Service.ServiceBeforeDelegate service_before;
-        public Service.ServiceDoneDelegate service_done;
+        public int current_request_count { get; set; }
+        public int handled_request_count { get; set; }
 
         public SimpleServiceCore()
         {
             default_service = null;
             services = new List<Service>();
             services_lock = new ReaderWriterLockSlim();
-
-            service_before = null;
-            service_done = null;
-        }
-
-        // Service Event ==================================================================================
-
-        protected virtual void OnServiceBefore(ref ServiceRequest request)
-        {
-            if (service_before != null)
-                service_before(ref request);
-        }
-
-        protected virtual void OnServiceDone(ServiceRequest request, ServiceResponse response)
-        {
-            if (service_done != null)
-                service_done(request, response);
+            handled_request_count = 0;
         }
 
         // Register =============================================================================
 
-        public void RegisterDefaultService(string id, Service.ServiceHandlerDelegate func)
+        public void RegisterDefaultService(string id, Service.ServiceHandlerDelegate func,
+            Service.ServiceDoneDelegate done)
         {
             lock (this) {
-                default_service = new Service(id, func);
-                default_service.service_before += new Service.ServiceBeforeDelegate(OnServiceBefore);
-                default_service.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
+                default_service = new Service(id, func, done);
             }
         }
 
-        public int RegisterService(string id, Service.ServiceHandlerDelegate func)
+        public int RegisterService(string id, Service.ServiceHandlerDelegate func,
+            Service.ServiceDoneDelegate done)
         {
             try {
                 services_lock.EnterWriteLock();
@@ -57,10 +41,8 @@ namespace mnn.service {
                 if (subset.Any()) {
                     return 1;
                 } else {
-                    Service serv = new Service(id, func);
+                    Service serv = new Service(id, func, done);
                     services.Add(serv);
-                    serv.service_before += new Service.ServiceBeforeDelegate(OnServiceBefore);
-                    serv.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
                     return 0;
                 }
             } finally {
@@ -80,6 +62,30 @@ namespace mnn.service {
             services_lock.ExitWriteLock();
         }
 
+        public void AddServiceDone(string id, Service.ServiceDoneDelegate done)
+        {
+            services_lock.EnterWriteLock();
+            foreach (var item in services) {
+                if (item.id.Equals(id)) {
+                    item.service_done += done;
+                    break;
+                }
+            }
+            services_lock.ExitWriteLock();
+        }
+
+        public void DelServiceDone(string id, Service.ServiceDoneDelegate done)
+        {
+            services_lock.EnterWriteLock();
+            foreach (var item in services) {
+                if (item.id.Equals(id)) {
+                    item.service_done -= done;
+                    break;
+                }
+            }
+            services_lock.ExitWriteLock();
+        }
+
         // Request ==============================================================================
 
         public void AddRequest(ServiceRequest request)
@@ -89,11 +95,14 @@ namespace mnn.service {
                 foreach (var item in services) {
                     if (item.IsMatch(request)) {
                         item.AddRequest(request);
+                        current_request_count++;
                         return;
                     }
                 }
-                if (default_service != null)
+                if (default_service != null) {
+                    current_request_count++;
                     default_service.AddRequest(request);
+                }
             } finally {
                 services_lock.ExitWriteLock();
             }
@@ -112,9 +121,10 @@ namespace mnn.service {
                 item.DoService();
             }
 
-            default_service.DoService();
             request_amount += default_service.request_count;
+            default_service.DoService();
 
+            handled_request_count += request_amount;
             return request_amount;
         }
     }

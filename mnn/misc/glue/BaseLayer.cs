@@ -20,12 +20,12 @@ namespace mnn.misc.glue {
 
         public BaseLayer()
         {
-            servctl.RegisterService("service.sesslisten", SessListenService);
-            servctl.RegisterService("service.sessconnect", SessConnectService);
-            servctl.RegisterService("service.sessclose", SessCloseService);
-            servctl.RegisterService("service.sesssend", SessSendService);
-            servctl.RegisterService("service.sessdetail", SessDetailService);
-            servctl.RegisterService("service.sessgroupstate", SessGroupStateService);
+            servctl.RegisterService("service.sesslisten", SessListenService, OnServiceDone);
+            servctl.RegisterService("service.sessconnect", SessConnectService, OnServiceDone);
+            servctl.RegisterService("service.sessclose", SessCloseService, OnServiceDone);
+            servctl.RegisterService("service.sesssend", SessSendService, OnServiceDone);
+            servctl.RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
+            servctl.RegisterService("service.sessgroupstate", SessGroupStateService, OnServiceDone);
 
             sesstab = new List<SockSess>();
             sessstate = new SockSessGroupState();

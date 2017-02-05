@@ -94,8 +94,9 @@ namespace SockMaster
 
             // init core
             core = new BaseLayer();
-            core.servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
-            core.servctl.RegisterDefaultService("service.default", DefaultService);
+            core.servctl.AddServiceDone("service.sesslisten", OnSessListenDone);
+            core.servctl.AddServiceDone("service.sessconnect", OnSessConnectDone);
+            core.servctl.RegisterDefaultService("service.default", DefaultService, null);
             core.sess_listen_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_connect_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_accept_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
@@ -160,17 +161,25 @@ namespace SockMaster
 
         // new baselayer event
 
-        private void OnServiceDone(ServiceRequest request, ServiceResponse response)
+        private void OnSessListenDone(ServiceRequest request, ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
 
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
 
-            if (response.id == "service.sesslisten" && response.errcode != 0)
+            if (response.errcode != 0)
                 uidata.CloseSockUnit(SockType.listen, ep, ep);
+        }
 
-            if (response.id == "service.sessconnect" && response.errcode != 0)
+        private void OnSessConnectDone(ServiceRequest request, ServiceResponse response)
+        {
+            IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
+                <Dictionary<string, dynamic>>((string)request.data);
+
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(dc["ip"]), Convert.ToInt32(dc["port"]));
+
+            if (response.errcode != 0)
                 uidata.CloseSockUnit(SockType.connect, ep, ep);
         }
 

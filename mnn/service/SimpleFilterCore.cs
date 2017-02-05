@@ -25,7 +25,8 @@ namespace mnn.service {
 
         // Register =============================================================================
 
-        public int RegisterFilter(string id, Service.ServiceHandlerDelegate func)
+        public int RegisterFilter(string id, Service.ServiceHandlerDelegate func,
+            Service.ServiceDoneDelegate done)
         {
             try {
                 filters_lock.EnterWriteLock();
@@ -34,7 +35,7 @@ namespace mnn.service {
                 if (subset.Any()) {
                     return 1;
                 } else {
-                    filters.Add(new RegexService(id, func));
+                    filters.Add(new RegexService(id, func, done));
                     return 0;
                 }
             } finally {

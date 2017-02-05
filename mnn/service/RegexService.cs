@@ -5,8 +5,8 @@ using System.Text;
 
 namespace mnn.service {
     public class RegexService : Service {
-        public RegexService(string id, ServiceHandlerDelegate func)
-            : base(id, func)
+        public RegexService(string id, ServiceHandlerDelegate func, ServiceDoneDelegate done)
+            : base(id, func, done)
         { }
 
         public override bool IsMatch(ServiceRequest request)

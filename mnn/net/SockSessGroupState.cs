@@ -7,35 +7,33 @@ namespace mnn.net {
     public class SockSessGroupState {
         public int ListenCount { get; set; }
         public int ConnectCount { get; set; }
-        public int CurrentAcceptCount { get; set; }
-        public int HistoryAcceptOpenCount { get; set; }
-        public int HistoryAcceptCloseCount { get; set; }
-        public int CurrentPackCount { get; set; }
-        public int HistoryPackFetchedCount { get; set; }
-        public int HistoryPackParsedCount { get; set; }
+        public int AcceptOpenCount { get; set; }
+        public int AcceptCloseCount { get; set; }
+        public int AcceptTotalCount { get { return AcceptOpenCount + AcceptCloseCount; } }
+        public int PackFetchedCount { get; set; }
+        public int PackParsedCount { get; set; }
+        public int PackTotalCount { get { return PackFetchedCount + PackParsedCount; } }
 
         public void AcceptIncrease()
         {
-            CurrentAcceptCount++;
-            HistoryAcceptOpenCount++;
+            AcceptOpenCount++;
         }
 
         public void AcceptDecrease()
         {
-            CurrentAcceptCount--;
-            HistoryAcceptCloseCount++;
+            AcceptOpenCount--;
+            AcceptCloseCount++;
         }
 
         public void PackIncrease()
         {
-            CurrentPackCount++;
-            HistoryPackFetchedCount++;
+            PackFetchedCount++;
         }
 
         public void PackDecrease()
         {
-            CurrentPackCount--;
-            HistoryPackParsedCount++;
+            PackFetchedCount--;
+            PackParsedCount++;
         }
     }
 }

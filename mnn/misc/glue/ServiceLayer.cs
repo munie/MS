@@ -16,9 +16,7 @@ namespace mnn.misc.glue {
             filtctl.filter_done += new Service.ServiceDoneDelegate(OnFilterDone);
 
             servctl = new SimpleServiceCore();
-            servctl.service_before += new Service.ServiceBeforeDelegate(OnServiceBefore);
-            servctl.service_done += new Service.ServiceDoneDelegate(OnServiceDone);
-            servctl.RegisterDefaultService("service.default", DefaultService);
+            servctl.RegisterDefaultService("service.default", DefaultService, OnServiceDone);
         }
 
         public void Run()

@@ -142,22 +142,22 @@
                 <TextBlock x:Name="blockMemoryDiff" Width="40">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="currentClientCount">0</TextBlock>
+                <TextBlock x:Name="acceptOpenCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyClientOpenCount">0</TextBlock>
+                <TextBlock x:Name="acceptTotalCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyClientCloseCount">0</TextBlock>
+                <TextBlock x:Name="acceptCloseCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="currentPackCount">0</TextBlock>
+                <TextBlock x:Name="packFetchedCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyPackFetchedCount">0</TextBlock>
+                <TextBlock x:Name="packTotalCount">0</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
-                <TextBlock x:Name="historyPackParsedCount">0</TextBlock>
+                <TextBlock x:Name="packParsedCount">0</TextBlock>
             </StatusBarItem>
         </StatusBar>
 
