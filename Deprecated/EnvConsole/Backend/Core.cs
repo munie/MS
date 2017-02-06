@@ -41,10 +41,6 @@ namespace EnvConsole.Backend {
             });
 
             // servctl register
-            servctl.RegisterDefaultService("core.default", DefaultService, OnServiceDone);
-            servctl.RegisterService("core.sessopen", SessOpenService, OnServiceDone);
-            servctl.RegisterService("core.sessclose", SessCloseService, OnServiceDone);
-            servctl.RegisterService("core.sesssend", SessSendService, OnServiceDone);
             servctl.RegisterService("core.clientlist", ClientListService, OnServiceDone);
             servctl.RegisterService("core.clentclose", ClientCloseService, OnServiceDone);
             servctl.RegisterService("core.clientsend", ClientSendService, OnServiceDone);

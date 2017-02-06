@@ -195,7 +195,7 @@ namespace EnvConsole.Windows
                             id = "service.moduleadd",
                             filepath = item,
                         };
-                        core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                        core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                     }
                 }
             }
@@ -307,7 +307,7 @@ namespace EnvConsole.Windows
                     id = "service.moduleadd",
                     filepath = openFileDialog.FileName,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -325,7 +325,7 @@ namespace EnvConsole.Windows
                     id = "service.moduledel",
                     name = item.FileName,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -337,7 +337,7 @@ namespace EnvConsole.Windows
                         id = "service.moduleload",
                         name = item.FileName,
                     };
-                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                    core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 }
             }
         }
@@ -350,7 +350,7 @@ namespace EnvConsole.Windows
                         id = "service.moduleunload",
                         name = item.FileName,
                     };
-                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                    core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 }
             }
         }
@@ -367,7 +367,7 @@ namespace EnvConsole.Windows
                     ip = item.IpAddress,
                     port = item.Port,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -383,7 +383,7 @@ namespace EnvConsole.Windows
                     ip = item.IpAddress,
                     port = item.Port,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 
@@ -434,7 +434,7 @@ namespace EnvConsole.Windows
                         port = item.RemoteEP.Port,
                         data = input.textBox1.Text,
                     };
-                    core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                    core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
 
                     string logmsg = "(" + "localhost" + " => " + item.RemoteEP.ToString() + ")" + Environment.NewLine;
                     logmsg += "\t" + input.textBox1.Text;
@@ -453,7 +453,7 @@ namespace EnvConsole.Windows
                     ip = item.RemoteEP.Address.ToString(),
                     port = item.RemoteEP.Port,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
             }
         }
 

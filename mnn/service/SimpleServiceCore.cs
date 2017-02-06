@@ -13,21 +13,21 @@ namespace mnn.service {
         public int current_request_count { get; set; }
         public int handled_request_count { get; set; }
 
-        public SimpleServiceCore()
+        public SimpleServiceCore(Service.ServiceHandlerDelegate func, Service.ServiceDoneDelegate done)
         {
-            default_service = null;
+            default_service = new Service("service.default", func, done);
             services = new List<Service>();
             services_lock = new ReaderWriterLockSlim();
+            current_request_count = 0;
             handled_request_count = 0;
         }
 
         // Register =============================================================================
 
-        public void RegisterDefaultService(string id, Service.ServiceHandlerDelegate func,
-            Service.ServiceDoneDelegate done)
+        public void ReplaceDefaultService(Service.ServiceHandlerDelegate func, Service.ServiceDoneDelegate done)
         {
             lock (this) {
-                default_service = new Service(id, func, done);
+                default_service = new Service("service.default", func, done);
             }
         }
 
@@ -88,21 +88,20 @@ namespace mnn.service {
 
         // Request ==============================================================================
 
-        public void AddRequest(ServiceRequest request)
+        public void AddServiceRequest(ServiceRequest request)
         {
+            current_request_count++;
+
             try {
                 services_lock.EnterWriteLock();
                 foreach (var item in services) {
                     if (item.IsMatch(request)) {
                         item.AddRequest(request);
-                        current_request_count++;
                         return;
                     }
                 }
-                if (default_service != null) {
-                    current_request_count++;
+                if (default_service != null)
                     default_service.AddRequest(request);
-                }
             } finally {
                 services_lock.ExitWriteLock();
             }

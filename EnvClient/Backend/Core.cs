@@ -183,7 +183,7 @@ namespace EnvClient.Backend {
                     break;
 
                 sess.rfifo.Skip(request.packlen);
-                servctl.AddRequest(request);
+                servctl.AddServiceRequest(request);
             }
         }
 

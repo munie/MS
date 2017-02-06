@@ -96,7 +96,7 @@ namespace SockMaster
             core = new BaseLayer();
             core.servctl.AddServiceDone("service.sesslisten", OnSessListenDone);
             core.servctl.AddServiceDone("service.sessconnect", OnSessConnectDone);
-            core.servctl.RegisterDefaultService("service.default", DefaultService, null);
+            core.servctl.ReplaceDefaultService(DefaultService, null);
             core.sess_listen_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_connect_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_accept_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
@@ -151,7 +151,7 @@ namespace SockMaster
                             ip = ep.Address.ToString(),
                             port = ep.Port,
                         };
-                        core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                        core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                     }
                 }
             } catch (Exception) {
@@ -252,7 +252,7 @@ namespace SockMaster
                 ip = ep.Address.ToString(),
                 port = ep.Port,
             };
-            core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+            core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -267,7 +267,7 @@ namespace SockMaster
                 id = "service.sessclose",
                 sessid = sock.SESSID,
             };
-            core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+            core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -424,7 +424,7 @@ namespace SockMaster
                     sessid = sock.SESSID,
                     data = str_data,
                 };
-                core.servctl.AddRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 break;
             }
         }

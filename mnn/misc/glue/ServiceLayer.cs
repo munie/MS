@@ -15,8 +15,7 @@ namespace mnn.misc.glue {
             filtctl = new SimpleFilterCore();
             filtctl.filter_done += new Service.ServiceDoneDelegate(OnFilterDone);
 
-            servctl = new SimpleServiceCore();
-            servctl.RegisterDefaultService("service.default", DefaultService, OnServiceDone);
+            servctl = new SimpleServiceCore(DefaultService, OnServiceDone);
         }
 
         public void Run()
@@ -54,7 +53,7 @@ namespace mnn.misc.glue {
             ServiceRequest new_request = response.data as ServiceRequest;
 
             if (new_request != null)
-                servctl.AddRequest(new_request);
+                servctl.AddServiceRequest(new_request);
         }
 
         protected virtual void OnServiceBefore(ref ServiceRequest request)
