@@ -41,11 +41,11 @@ namespace EnvConsole.Backend {
             });
 
             // servctl register
-            servctl.RegisterService("core.clientlist", ClientListService, OnServiceDone);
-            servctl.RegisterService("core.clentclose", ClientCloseService, OnServiceDone);
-            servctl.RegisterService("core.clientsend", ClientSendService, OnServiceDone);
-            servctl.RegisterService("core.clientsendbyccid", ClientSendByCcidService, OnServiceDone);
-            servctl.RegisterService("core.clientupdate", ClientUpdateService, OnServiceDone);
+            RegisterService("core.clientlist", ClientListService, OnServiceDone);
+            RegisterService("core.clentclose", ClientCloseService, OnServiceDone);
+            RegisterService("core.clientsend", ClientSendService, OnServiceDone);
+            RegisterService("core.clientsendbyccid", ClientSendByCcidService, OnServiceDone);
+            RegisterService("core.clientupdate", ClientUpdateService, OnServiceDone);
         }
 
         // Center Service =========================================================================

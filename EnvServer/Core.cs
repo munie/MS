@@ -19,7 +19,7 @@ namespace EnvServer {
             sess_connect_event += new SockSessOpenDelegate(OnSessCreate);
             sess_close_event += new SockSessCloseDelegate(OnSessDelete);
 
-            servctl.RegisterService("service.sesslogin", LoginService, OnServiceDone);
+            RegisterService("service.sesslogin", LoginService, OnServiceDone);
         }
 
         // Module Event =====================================================================
@@ -88,18 +88,18 @@ namespace EnvServer {
             log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             if (sess is SockSessServer)
                 log.Info(String.Format("Session #L listened at {0}.", sess.lep.ToString()));
-            else if (sess is SockSessAccept)
-                log.Info(String.Format("Session #A accepted to {0}.", sess.rep.ToString()));
-            else// if (sess is SockSessClient)
+            else if (sess is SockSessClient)
                 log.Info(String.Format("Session #C connected to {0}.", sess.rep.ToString()));
+            else
+                log.Info(String.Format("Session #A accepted to {0}.", sess.rep.ToString()));
 
             ServiceResponse response = new ServiceResponse();
             if (sess is SockSessServer)
                 response.id = "notice.sesslisten";
-            else if (sess is SockSessAccept)
-                response.id = "notice.sessaccept";
-            else// if (sess is SockSessClient)
+            else if (sess is SockSessClient)
                 response.id = "notice.sessconnect";
+            else
+                response.id = "notice.sessaccept";
             response.data = new {
                 sessid = sess.id,
                 type = sess.GetType().Name,

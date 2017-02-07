@@ -22,20 +22,21 @@ namespace EnvClient.Backend {
 
         public Core()
         {
-            servctl.RegisterService("notice.sesslisten", SessListenNotice, OnServiceDone);
-            servctl.RegisterService("notice.sessaccept", SessAcceptNotice, OnServiceDone);
-            servctl.RegisterService("notice.sessclose", SessCloseNotice, OnServiceDone);
-            servctl.RegisterService("service.sessdetail", SessDetailResponse, OnServiceDone);
-            servctl.RegisterService("service.sessgroupstate", SessGroupStateResponse, OnServiceDone);
-            servctl.RegisterService("notice.moduleadd", ModuleAddNotice, OnServiceDone);
-            servctl.RegisterService("notice.moduledelete", ModuleDeleteNotice, OnServiceDone);
-            servctl.RegisterService("notice.moduleupdate", ModuleUpdateNotice, OnServiceDone);
-            servctl.RegisterService("service.moduledetail", ModuleDetailResponse, OnServiceDone);
+            RegisterService("notice.sesslisten", SessListenNotice, OnServiceDone);
+            RegisterService("notice.sessaccept", SessAcceptNotice, OnServiceDone);
+            RegisterService("notice.sessclose", SessCloseNotice, OnServiceDone);
+            RegisterService("service.sessdetail", SessDetailResponse, OnServiceDone);
+            RegisterService("service.sessgroupstate", SessGroupStateResponse, OnServiceDone);
+            RegisterService("notice.moduleadd", ModuleAddNotice, OnServiceDone);
+            RegisterService("notice.moduledelete", ModuleDeleteNotice, OnServiceDone);
+            RegisterService("notice.moduleupdate", ModuleUpdateNotice, OnServiceDone);
+            RegisterService("service.moduledetail", ModuleDetailResponse, OnServiceDone);
 
             try {
                 envclient = new SockSessClient();
                 envclient.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
                 envclient.Connect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
+                mnn.util.Loop.default_loop.Add(envclient);
             } catch (Exception ex) {
                 System.Windows.MessageBox.Show("failed to connect to server." + Environment.NewLine + ex.ToString());
                 System.Threading.Thread.CurrentThread.Abort();
@@ -49,14 +50,6 @@ namespace EnvClient.Backend {
                 SessGroupStateRequest();
             });
             timer.Start();
-        }
-
-        protected override void Exec()
-        {
-            lock (envclient)
-                envclient.DoSocket(1000);
-            filtctl.Exec();
-            servctl.Exec();
         }
 
         // requests ==============================================================
@@ -173,17 +166,15 @@ namespace EnvClient.Backend {
 
         // session events =======================================================
 
-        protected virtual void OnRecvEvent(object sender)
+        protected virtual void OnRecvEvent(SockSess sess)
         {
-            SockSess sess = sender as SockSess;
-
             while (sess.rfifo.Size() != 0) {
                 ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Peek());
                 if (request.packlen == 0)
                     break;
 
                 sess.rfifo.Skip(request.packlen);
-                servctl.AddServiceRequest(request);
+                AddServiceRequest(request);
             }
         }
 
@@ -301,7 +292,7 @@ namespace EnvClient.Backend {
                         uidata.ListenTable.Add(server);
                     }
 
-                    if (type == "SockSessAccept") {
+                    if (type == "SockSess") {
                         AcceptUnit client = new AcceptUnit() {
                             ID = sessid,
                             LocalEP = new IPEndPoint(IPAddress.Parse(laddress), lport),

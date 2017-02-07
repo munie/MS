@@ -44,7 +44,7 @@ namespace EnvServer {
             }
 
             core.MakeListen(new IPEndPoint(IPAddress.Parse(serverip), serverport));
-            core.RunForever();
+            core.Run();
         }
     }
 }

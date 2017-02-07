@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 
 namespace mnn.service {
-    public class Service {
+    public class Service : mnn.util.IExecable {
         public delegate void ServiceHandlerDelegate(ServiceRequest request, ref ServiceResponse response);
         public delegate void ServiceBeforeDelegate(ref ServiceRequest request);
         public delegate void ServiceDoneDelegate(ServiceRequest request, ServiceResponse response);
@@ -82,6 +82,16 @@ namespace mnn.service {
                 log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
                     .Warn("error in handling service " + request.id, ex);
             }
+        }
+
+        public void DoExec()
+        {
+            DoService();
+        }
+
+        public bool IsClosed()
+        {
+            return false;
         }
     }
 }

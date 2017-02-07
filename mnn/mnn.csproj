@@ -57,9 +57,7 @@
     <Compile Include="module\IModuleService.cs" />
     <Compile Include="net\SockSessGroupState.cs" />
     <Compile Include="service\RegexService.cs" />
-    <Compile Include="service\SimpleFilterCore.cs" />
-    <Compile Include="service\SimpleServiceCore.cs" />
-    <Compile Include="util\ExecPoll.cs" />
+    <Compile Include="util\Loop.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
     <Compile Include="module\IModuleFilter.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />

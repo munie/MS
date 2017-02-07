@@ -94,14 +94,16 @@ namespace SockMaster
 
             // init core
             core = new BaseLayer();
-            core.servctl.AddServiceDone("service.sesslisten", OnSessListenDone);
-            core.servctl.AddServiceDone("service.sessconnect", OnSessConnectDone);
-            core.servctl.ReplaceDefaultService(DefaultService, null);
+            core.AddServiceDone("service.sesslisten", OnSessListenDone);
+            core.AddServiceDone("service.sessconnect", OnSessConnectDone);
+            core.ReplaceDefaultService(DefaultService, null);
             core.sess_listen_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_connect_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_accept_event += new BaseLayer.SockSessOpenDelegate(OnSessOpen);
             core.sess_close_event += new BaseLayer.SockSessCloseDelegate(OnSessClose);
-            core.Run();
+            Thread thread = new Thread(() => { core.Run(); });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         public void Config()
@@ -151,7 +153,7 @@ namespace SockMaster
                             ip = ep.Address.ToString(),
                             port = ep.Port,
                         };
-                        core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                        core.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                     }
                 }
             } catch (Exception) {
@@ -189,7 +191,7 @@ namespace SockMaster
                 uidata.OpenSockUnit(SockType.listen, sess.lep, sess.rep, sess.id);
             } else if (sess is SockSessClient) {
                 uidata.OpenSockUnit(SockType.connect, sess.lep, sess.rep, sess.id);
-            } else if (sess is SockSessAccept) {
+            } else {
                 SockUnit sockUnit = new SockUnit() {
                     ID = "at" + sess.rep.ToString(),
                     SESSID = sess.id,
@@ -209,7 +211,7 @@ namespace SockMaster
                 uidata.CloseSockUnit(SockType.listen, sess.lep, sess.rep);
             else if (sess is SockSessClient)
                 uidata.CloseSockUnit(SockType.connect, sess.lep, sess.rep);
-            else/* if (sess is SockSessAccept)*/
+            else
                 uidata.DelSockUnit(SockType.accept, sess.lep, sess.rep);
         }
 
@@ -252,7 +254,7 @@ namespace SockMaster
                 ip = ep.Address.ToString(),
                 port = ep.Port,
             };
-            core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+            core.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockClose_Click(object sender, RoutedEventArgs e)
@@ -267,7 +269,7 @@ namespace SockMaster
                 id = "service.sessclose",
                 sessid = sock.SESSID,
             };
-            core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+            core.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
         }
 
         private void MenuItem_SockEdit_Click(object sender, RoutedEventArgs e)
@@ -424,7 +426,7 @@ namespace SockMaster
                     sessid = sock.SESSID,
                     data = str_data,
                 };
-                core.servctl.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
+                core.AddServiceRequest(ServiceRequest.Parse(JsonConvert.SerializeObject(req)));
                 break;
             }
         }

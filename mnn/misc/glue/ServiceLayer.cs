@@ -6,44 +6,100 @@ using mnn.service;
 using mnn.util;
 
 namespace mnn.misc.glue {
-    public class ServiceLayer : IRunable {
-        public SimpleFilterCore filtctl;
-        public SimpleServiceCore servctl;
+    public class ServiceLayer {
+        private List<Service> filttab;
+        private Service default_filter;
+
+        private List<Service> servtab;
+        private Service default_service;
 
         public ServiceLayer()
         {
-            filtctl = new SimpleFilterCore();
-            filtctl.filter_done += new Service.ServiceDoneDelegate(OnFilterDone);
+            filttab = new List<Service>();
+            default_filter = new Service("filter.defualt", DefaultFilter, OnFilterDone);
+            Loop.default_loop.Add(default_filter);
 
-            servctl = new SimpleServiceCore(DefaultService, OnServiceDone);
+            servtab = new List<Service>();
+            default_service = new Service("service.defualt", DefaultService, OnServiceDone);
+            Loop.default_loop.Add(default_service);
         }
 
         public void Run()
         {
-            System.Threading.Thread thread = new System.Threading.Thread(() => {
-                RunForever();
-            });
-            thread.IsBackground = true;
-            thread.Start();
+            Loop.default_loop.Run();
         }
 
-        public void RunForever()
+        public void RegisterService(string id, Service.ServiceHandlerDelegate func,
+                Service.ServiceDoneDelegate done)
         {
-            while (true) {
-                try {
-                    Exec();
-                } catch (Exception ex) {
-                    log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType)
-                        .Error("Exception thrown out by core thread.", ex);
+            Service serv = new Service(id, func, done);
+            servtab.Add(serv);
+            Loop.default_loop.Add(serv);
+        }
+
+        public void UnregisterService(string id)
+        {
+            foreach (var item in servtab) {
+                if (item.id.Equals(id)) {
+                    servtab.Remove(item);
+                    break;
                 }
             }
         }
 
-        protected virtual void Exec()
+        public void RegisterFilter(string id, Service.ServiceHandlerDelegate func,
+                Service.ServiceDoneDelegate done)
         {
-            if (filtctl.Exec() == 0)
-                System.Threading.Thread.Sleep(100);
-            servctl.Exec();
+            Service filter = new Service(id, func, done);
+            filttab.Add(filter);
+            Loop.default_loop.Add(filter);
+        }
+
+        public void UnregisterFilter(string id)
+        {
+            foreach (var item in filttab) {
+                if (item.id.Equals(id)) {
+                    filttab.Remove(item);
+                    break;
+                }
+            }
+        }
+
+        public void ReplaceDefaultService(Service.ServiceHandlerDelegate func, Service.ServiceDoneDelegate done)
+        {
+            default_service = new Service("service.default", func, done);
+        }
+
+        public void AddServiceDone(string id, Service.ServiceDoneDelegate done)
+        {
+            foreach (var item in servtab) {
+                if (item.id.Equals(id)) {
+                    item.service_done += done;
+                    break;
+                }
+            }
+        }
+
+        public void DelServiceDone(string id, Service.ServiceDoneDelegate done)
+        {
+            foreach (var item in servtab) {
+                if (item.id.Equals(id)) {
+                    item.service_done -= done;
+                    break;
+                }
+            }
+        }
+
+        public void AddServiceRequest(ServiceRequest request)
+        {
+            foreach (var item in filttab) {
+                if (item.IsMatch(request)) {
+                    item.AddRequest(request);
+                    return;
+                }
+            }
+            if (default_filter != null)
+                default_filter.AddRequest(request);
         }
 
         // Service Event ===========================================================================
@@ -52,8 +108,16 @@ namespace mnn.misc.glue {
         {
             ServiceRequest new_request = response.data as ServiceRequest;
 
-            if (new_request != null)
-                servctl.AddServiceRequest(new_request);
+            if (new_request != null) {
+                foreach (var item in servtab) {
+                    if (item.IsMatch(request)) {
+                        item.AddRequest(request);
+                        return;
+                    }
+                }
+                if (default_service != null)
+                    default_service.AddRequest(request);
+            }
         }
 
         protected virtual void OnServiceBefore(ref ServiceRequest request)
@@ -71,6 +135,11 @@ namespace mnn.misc.glue {
         protected virtual void OnServiceDone(ServiceRequest request, ServiceResponse response) { }
 
         // Default Service =========================================================================
+
+        protected virtual void DefaultFilter(ServiceRequest request, ref ServiceResponse response)
+        {
+            response.data = request;
+        }
 
         protected virtual void DefaultService(ServiceRequest request, ref ServiceResponse response)
         {

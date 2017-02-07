@@ -19,11 +19,11 @@ namespace mnn.misc.glue {
             modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
             modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
 
-            servctl.RegisterService("service.moduleadd", ModuleAddService, OnServiceDone);
-            servctl.RegisterService("service.moduledel", ModuleDelService, OnServiceDone);
-            servctl.RegisterService("service.moduleload", ModuleLoadService, OnServiceDone);
-            servctl.RegisterService("service.moduleunload", ModuleUnloadService, OnServiceDone);
-            servctl.RegisterService("service.moduledetail", ModuleDetailService, OnServiceDone);
+            RegisterService("service.moduleadd", ModuleAddService, OnServiceDone);
+            RegisterService("service.moduledel", ModuleDelService, OnServiceDone);
+            RegisterService("service.moduleload", ModuleLoadService, OnServiceDone);
+            RegisterService("service.moduleunload", ModuleUnloadService, OnServiceDone);
+            RegisterService("service.moduledetail", ModuleDetailService, OnServiceDone);
         }
 
         // Module Event ============================================================================
@@ -51,7 +51,7 @@ namespace mnn.misc.glue {
                     }
 
                     var service = item; // I dislike closure here
-                    servctl.RegisterService(service.Key,
+                    RegisterService(service.Key,
                         (ServiceRequest request, ref ServiceResponse response) => {
                             object[] args = new object[] { request, response };
                             module.Invoke(service.Value, ref args);
@@ -74,7 +74,7 @@ namespace mnn.misc.glue {
                     }
 
                     var filter = item; // I dislike closure here
-                    filtctl.RegisterFilter(filter.Key,
+                    RegisterFilter(filter.Key,
                         (ServiceRequest request, ref ServiceResponse response) => {
                             object[] args = new object[] { request, response };
                             module.Invoke(filter.Value, ref args);
@@ -93,7 +93,7 @@ namespace mnn.misc.glue {
 
                 // unregister service
                 foreach (var item in servtab as IDictionary<string, string>)
-                    servctl.UnregisterService(item.Key);
+                    UnregisterService(item.Key);
             }
 
             if (module.CheckInterface(new string[] { typeof(IModuleFilter).FullName })) {
@@ -102,7 +102,7 @@ namespace mnn.misc.glue {
 
                 // unregister filter
                 foreach (var item in filttab as IDictionary<string, string>)
-                    filtctl.UnregisterFilter(item.Key);
+                    UnregisterFilter(item.Key);
             }
         }
 

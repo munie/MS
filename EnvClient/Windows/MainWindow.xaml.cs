@@ -115,7 +115,9 @@ namespace EnvClient.Windows
             this.packParsedCount.SetBinding(TextBlock.TextProperty, new Binding("DataUI.PackParsedCount"));
 
             // run backend
-            backend.Run();
+            Thread thread = new Thread(() => { backend.Run(); });
+            thread.IsBackground = true;
+            thread.Start();
             backend.SessLoginRequest();
             backend.SessDetailRequest();
             backend.SessGroupStateRequest();

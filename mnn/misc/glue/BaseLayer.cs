@@ -20,12 +20,12 @@ namespace mnn.misc.glue {
 
         public BaseLayer()
         {
-            servctl.RegisterService("service.sesslisten", SessListenService, OnServiceDone);
-            servctl.RegisterService("service.sessconnect", SessConnectService, OnServiceDone);
-            servctl.RegisterService("service.sessclose", SessCloseService, OnServiceDone);
-            servctl.RegisterService("service.sesssend", SessSendService, OnServiceDone);
-            servctl.RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
-            servctl.RegisterService("service.sessgroupstate", SessGroupStateService, OnServiceDone);
+            RegisterService("service.sesslisten", SessListenService, OnServiceDone);
+            RegisterService("service.sessconnect", SessConnectService, OnServiceDone);
+            RegisterService("service.sessclose", SessCloseService, OnServiceDone);
+            RegisterService("service.sesssend", SessSendService, OnServiceDone);
+            RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
+            RegisterService("service.sessgroupstate", SessGroupStateService, OnServiceDone);
 
             sesstab = new List<SockSess>();
             sessstate = new SockSessGroupState();
@@ -33,14 +33,6 @@ namespace mnn.misc.glue {
             sess_accept_event = null;
             sess_connect_event = null;
             sess_close_event = null;
-        }
-
-        protected override void Exec()
-        {
-            foreach (var item in sesstab.ToList())
-                item.DoSocket(0);
-
-            base.Exec();
         }
 
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
@@ -59,19 +51,22 @@ namespace mnn.misc.glue {
 
         // SockSess Event ======================================================================
 
-        protected virtual void OnAcceptEvent(object sender, SockSessAccept sess)
+        protected virtual void OnAcceptEvent(SockSessServer server)
         {
+            SockSess accept = server.Accept();
+            mnn.util.Loop.default_loop.Add(accept);
+
             Dictionary<string, string> sd = new Dictionary<string, string>();
-            sd.Add("sessid", sess.id);
-            sd.Add("lep", sess.lep.ToString());
-            sd.Add("rep", sess.rep.ToString());
-            sess.sdata = sd;
-            sess.close_event += new SockSess.SockSessDelegate(OnCloseEvent);
-            sess.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
-            sesstab.Add(sess);
+            sd.Add("sessid", accept.id);
+            sd.Add("lep", accept.lep.ToString());
+            sd.Add("rep", accept.rep.ToString());
+            accept.sdata = sd;
+            accept.close_event += new SockSess.SockSessDelegate(OnCloseEvent);
+            accept.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
+            sesstab.Add(accept);
 
             if (sess_accept_event != null)
-                sess_accept_event(this, sess);
+                sess_accept_event(this, accept);
 
             sessstate.AcceptIncrease();
         }
@@ -84,18 +79,16 @@ namespace mnn.misc.glue {
             if (sess_close_event != null)
                 sess_close_event(this, sess);
 
-            if (sess is SockSessAccept)
-                sessstate.AcceptDecrease();
-            else if (sess is SockSessServer)
+            if (sess is SockSessServer)
                 sessstate.ListenCount--;
             else if (sess is SockSessClient)
                 sessstate.ConnectCount--;
+            else
+                sessstate.AcceptDecrease();
         }
 
-        protected virtual void OnRecvEvent(object sender)
+        protected virtual void OnRecvEvent(SockSess sess)
         {
-            SockSess sess = sender as SockSess;
-
             while (sess.rfifo.Size() != 0) {
                 ServiceRequest request = ServiceRequest.Parse(sess.rfifo.Peek());
                 if (request.packlen == 0)
@@ -103,7 +96,7 @@ namespace mnn.misc.glue {
 
                 sess.rfifo.Skip(request.packlen);
                 request.sessdata = sess.sdata as Dictionary<string, string>;
-                filtctl.AddRequest(request);
+                AddServiceRequest(request);
                 sessstate.PackIncrease();
             }
         }
@@ -173,9 +166,7 @@ namespace mnn.misc.glue {
             SockSess sess = FindSockSessFromSessGroup(dc["sessid"]);
 
             if (sess != null) {
-                if (sess is SockSessServer)
-                    (sess as SockSessServer).Broadcast(Convert.FromBase64String(dc["data"]));
-                else
+                if (!(sess is SockSessServer))
                     sess.wfifo.Append(Convert.FromBase64String(dc["data"]));
                 response.errcode = 0;
                 response.errmsg = "send to " + dc["sessid"];
@@ -212,13 +203,14 @@ namespace mnn.misc.glue {
         public SockSessServer MakeListen(IPEndPoint ep)
         {
             SockSessServer server = new SockSessServer();
-            server.Listen(ep);
+            server.Bind(ep);
+            server.Listen(100, OnAcceptEvent);
             server.close_event += new SockSess.SockSessDelegate(OnCloseEvent);
-            server.accept_event += new SockSessServer.SockSessServerDelegate(OnAcceptEvent);
 
             if (sess_listen_event != null)
                 sess_listen_event(this, server);
 
+            mnn.util.Loop.default_loop.Add(server);
             sesstab.Add(server);
             sessstate.ListenCount++;
             return server;
@@ -234,6 +226,7 @@ namespace mnn.misc.glue {
             if (sess_connect_event != null)
                 sess_connect_event(this, client);
 
+            mnn.util.Loop.default_loop.Add(client);
             sesstab.Add(client);
             sessstate.ConnectCount++;
             return client;

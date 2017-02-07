@@ -18,18 +18,16 @@ namespace mnn.misc.glue {
             sessctl.sess_parse += new SessCtl.SessDelegate(OnSessParse);
             sessctl.sess_create += new SessCtl.SessDelegate(OnSessCreate);
             sessctl.sess_delete += new SessCtl.SessDelegate(OnSessDelete);
+            System.Threading.Thread thread = new System.Threading.Thread(() => {
+                while (true) { sessctl.Exec(100); }
+            });
+            thread.IsBackground = true;
+            thread.Start();
 
-            servctl.RegisterService("service.sessopen", SessOpenService, OnServiceDone);
-            servctl.RegisterService("service.sessclose", SessCloseService, OnServiceDone);
-            servctl.RegisterService("service.sesssend", SessSendService, OnServiceDone);
-            servctl.RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
-        }
-
-        protected override void Exec()
-        {
-            sessctl.Exec(100);
-            filtctl.Exec();
-            servctl.Exec();
+            RegisterService("service.sessopen", SessOpenService, OnServiceDone);
+            RegisterService("service.sessclose", SessCloseService, OnServiceDone);
+            RegisterService("service.sesssend", SessSendService, OnServiceDone);
+            RegisterService("service.sessdetail", SessDetailService, OnServiceDone);
         }
 
         protected override void OnServiceDone(ServiceRequest request, ServiceResponse response)
@@ -62,7 +60,7 @@ namespace mnn.misc.glue {
             sess.RfifoSkip(request.packlen);
 
             // add request to service core
-            filtctl.AddRequest(request);
+            AddServiceRequest(request);
         }
 
         protected virtual void OnSessCreate(object sender, SockSess sess)

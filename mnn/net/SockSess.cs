@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using mnn.util;
 
 namespace mnn.net {
-    public class SockSess {
+    public class SockSess : IExecable {
         private const int BASE_STALL = 60 * 12;
 
         protected Socket sock;
@@ -36,7 +36,7 @@ namespace mnn.net {
         public Fifo<byte> wfifo { get; private set; }
         public object sdata { get; set; }
 
-        public delegate void SockSessDelegate(object sender);
+        public delegate void SockSessDelegate(SockSess sess);
         public SockSessDelegate recv_event { get; set; }
         public SockSessDelegate close_event { get; set; }
 
@@ -144,51 +144,51 @@ namespace mnn.net {
             if (!IsAlive() || IsClosed())
                 this.RealClose();
         }
+
+        public void DoExec()
+        {
+            DoSocket(1000);
+        }
     }
 
     public class SockSessServer : SockSess {
-        public List<SockSessAccept> childs { get; private set; }
-        public delegate void SockSessServerDelegate(object sender, SockSessAccept sess);
-        public SockSessServerDelegate accept_event { get; set; }
+        public delegate void AcceptDelegate(SockSessServer sever);
+        public AcceptDelegate accept_event { get; set; }
 
         public SockSessServer()
         {
-            childs = new List<SockSessAccept>();
             accept_event = null;
         }
 
-        public void Listen(IPEndPoint ep)
+        public void Bind(IPEndPoint ep)
         {
             if (!VerifyEndPointsValid(ep))
                 throw new Exception("Specified ep is in using by another application...");
 
             sock.Bind(ep);
-            sock.Listen(100);
         }
 
-        public void Broadcast(byte[] msg)
+        public void Listen(int backlog, AcceptDelegate on_accept)
         {
-            foreach (var item in childs)
-                item.wfifo.Append(msg);
+            sock.Listen(backlog);
+            accept_event += on_accept;
+        }
+
+        public SockSess Accept()
+        {
+            // get socket
+            Socket accept_sock = sock.Accept();
+            accept_sock.SendTimeout = 1000;
+            // init accept_sess
+            return new SockSess(accept_sock);
         }
 
         public override void DoSocket(int next)
         {
             // accept
             if (sock.Poll(next, SelectMode.SelectRead)) {
-                // get socket
-                Socket accept_sock = sock.Accept();
-                accept_sock.SendTimeout = 1000;
-                // init accept_sess
-                SockSessAccept accept_sess = new SockSessAccept(accept_sock, this);
-                accept_sess.close_event += new SockSessDelegate((s) => {
-                    if (s as SockSessAccept != null)
-                        childs.Remove(s as SockSessAccept);
-                });
-                childs.Add(accept_sess);
-                // raise accept event
                 if (accept_event != null)
-                    accept_event(this, accept_sess);
+                    accept_event(this);
             }
 
             // send
@@ -225,16 +225,6 @@ namespace mnn.net {
         }
     }
 
-    public class SockSessAccept : SockSess {
-        public SockSessServer parent { get; private set; }
-
-        public SockSessAccept(Socket sock, SockSessServer parent)
-            : base(sock)
-        {
-            this.parent = parent;
-        }
-    }
-
     public class SockSessClient : SockSess {
         private byte[] KeepAliveTime
         {
@@ -248,6 +238,7 @@ namespace mnn.net {
                 return inOptionValues;
             }
         }
+        public delegate void ConnectDelegate(SockSessClient sess, int status, string strerr);
 
         public SockSessClient()
             : base(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), int.MaxValue)
@@ -259,5 +250,22 @@ namespace mnn.net {
             sock.Connect(ep);
             sock.IOControl(IOControlCode.KeepAliveValues, KeepAliveTime, null);
         }
+
+        //public void Connect(IPEndPoint ep, ConnectDelegate on_connect)
+        //{
+        //    int status = 0;
+        //    string strerr = "";
+
+        //    try {
+        //        sock.Connect(ep);
+        //        sock.IOControl(IOControlCode.KeepAliveValues, KeepAliveTime, null);
+        //    } catch (Exception ex) {
+        //        status = -1;
+        //        strerr = ex.ToString();
+        //    }
+
+        //    if (on_connect != null)
+        //        on_connect(this, status, strerr);
+        //}
     }
 }

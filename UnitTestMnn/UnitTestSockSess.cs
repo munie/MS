@@ -5,41 +5,32 @@ using System.Net;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using mnn.net;
+using mnn.util;
 
 namespace UnitTestMnn {
     [TestClass]
     public class UnitTestSockSess {
         [TestMethod]
-        public void TestSockSessServer()
+        public void SockSessServerTest()
         {
             SockSessServer server = new SockSessServer();
-            server.Listen(new IPEndPoint(0, 5964));
-            server.accept_event += new SockSessServer.SockSessServerDelegate(AcceptEvent);
+            Loop.default_loop.Add(server);
+
+            server.Bind(new IPEndPoint(0, 5964));
+            server.Listen(100, OnAccept);
+
+            Loop.default_loop.Run();
         }
 
-        [TestMethod]
-        public void TestSockSessClient()
+        void OnAccept(SockSessServer server)
         {
-            SockSessClient client = new SockSessClient();
-            client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3002));
-            client.recv_event += new SockSess.SockSessDelegate(RecvEvent);
-            client.wfifo.Append(Encoding.UTF8.GetBytes("Hello SockSessClient"));
+            SockSess accept = server.Accept();
+            accept.recv_event += new SockSess.SockSessDelegate(OnRecv);
+            Loop.default_loop.Add(accept);
         }
 
-        [TestMethod]
-        public void TestRun()
+        void OnRecv(SockSess sess)
         {
-            while (true) Thread.Sleep(1000);
-        }
-
-        void AcceptEvent(object sender, SockSessAccept sess)
-        {
-            sess.recv_event += new SockSess.SockSessDelegate(RecvEvent);
-        }
-
-        void RecvEvent(object sender)
-        {
-            SockSess sess = sender as SockSess;
             string msg = Encoding.UTF8.GetString(sess.rfifo.Take());
             Console.Write(msg);
         }
