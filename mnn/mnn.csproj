@@ -49,15 +49,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="misc\AtCmd.cs" />
-    <Compile Include="misc\glue\IRunable.cs" />
-    <Compile Include="misc\glue\ModulizedServiceLayer.cs" />
-    <Compile Include="misc\glue\BaseLayer.cs" />
-    <Compile Include="misc\glue\ServiceLayer.cs" />
+    <Compile Include="glue\IExecable.cs" />
+    <Compile Include="glue\ModulizedServiceLayer.cs" />
+    <Compile Include="glue\BaseLayer.cs" />
+    <Compile Include="glue\ServiceLayer.cs" />
     <Compile Include="misc\TimeOut.cs" />
     <Compile Include="module\IModuleService.cs" />
     <Compile Include="net\SockSessGroupState.cs" />
     <Compile Include="service\RegexService.cs" />
-    <Compile Include="util\Loop.cs" />
+    <Compile Include="glue\Loop.cs" />
     <Compile Include="misc\env\EnvModule.cs" />
     <Compile Include="module\IModuleFilter.cs" />
     <Compile Include="misc\env\MsgCmd.cs" />
@@ -68,7 +68,7 @@
     <Compile Include="module\ModuleCtl.cs" />
     <Compile Include="misc\serial\AsyncSerailPort.cs" />
     <Compile Include="misc\serial\AsyncSerailPortEventArgs.cs" />
-    <Compile Include="misc\glue\BaseLayerDeprecated.cs" />
+    <Compile Include="glue\BaseLayerDeprecated.cs" />
     <Compile Include="util\Fifo.cs" />
     <Compile Include="net\SockClientTcp.cs" />
     <Compile Include="service\ServiceRequest.cs" />

@@ -5,11 +5,10 @@ using System.Text;
 using mnn.module;
 using mnn.service;
 using mnn.net;
-using mnn.misc.glue;
 using mnn.misc.env;
 using Newtonsoft.Json;
 
-namespace mnn.misc.glue {
+namespace mnn.glue {
     public class ModulizedServiceLayer : ServiceLayer {
         public ModuleCtl modctl;
 

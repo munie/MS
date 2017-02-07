@@ -21,7 +21,7 @@ using System.Net.Sockets;
 using Newtonsoft.Json;
 using mnn.net;
 using mnn.service;
-using mnn.misc.glue;
+using mnn.glue;
 using SockMaster.Backend;
 
 namespace SockMaster

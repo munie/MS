@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using mnn.net;
-using mnn.util;
+using mnn.glue;
 
 namespace UnitTestMnn {
     [TestClass]

@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Net;
-using mnn.misc.glue;
+using mnn.glue;
 using mnn.net.deprecated;
 using mnn.misc.env;
 using mnn.service;

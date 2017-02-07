@@ -4,12 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace mnn.util {
-    public interface IExecable {
-        bool IsClosed();
-        void DoExec();
-    }
-
+namespace mnn.glue {
     public class Loop {
         public static Loop default_loop = new Loop();
 

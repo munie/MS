@@ -7,7 +7,7 @@ using mnn.net;
 using mnn.service;
 using Newtonsoft.Json;
 
-namespace mnn.misc.glue {
+namespace mnn.glue {
     public class BaseLayer : ModulizedServiceLayer {
         protected List<SockSess> sesstab;
         private SockSessGroupState sessstate;
@@ -54,7 +54,7 @@ namespace mnn.misc.glue {
         protected virtual void OnAcceptEvent(SockSessServer server)
         {
             SockSess accept = server.Accept();
-            mnn.util.Loop.default_loop.Add(accept);
+            Loop.default_loop.Add(accept);
 
             Dictionary<string, string> sd = new Dictionary<string, string>();
             sd.Add("sessid", accept.id);
@@ -210,7 +210,7 @@ namespace mnn.misc.glue {
             if (sess_listen_event != null)
                 sess_listen_event(this, server);
 
-            mnn.util.Loop.default_loop.Add(server);
+            Loop.default_loop.Add(server);
             sesstab.Add(server);
             sessstate.ListenCount++;
             return server;
@@ -226,7 +226,7 @@ namespace mnn.misc.glue {
             if (sess_connect_event != null)
                 sess_connect_event(this, client);
 
-            mnn.util.Loop.default_loop.Add(client);
+            Loop.default_loop.Add(client);
             sesstab.Add(client);
             sessstate.ConnectCount++;
             return client;

@@ -7,7 +7,7 @@ using System.Net;
 using System.Diagnostics;
 using mnn.net;
 using mnn.service;
-using mnn.misc.glue;
+using mnn.glue;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using EnvClient.Unit;
@@ -36,7 +36,7 @@ namespace EnvClient.Backend {
                 envclient = new SockSessClient();
                 envclient.recv_event += new SockSess.SockSessDelegate(OnRecvEvent);
                 envclient.Connect(new IPEndPoint(IPAddress.Parse(serverip), serverport));
-                mnn.util.Loop.default_loop.Add(envclient);
+                Loop.default_loop.Add(envclient);
             } catch (Exception ex) {
                 System.Windows.MessageBox.Show("failed to connect to server." + Environment.NewLine + ex.ToString());
                 System.Threading.Thread.CurrentThread.Abort();

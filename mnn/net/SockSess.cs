@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using mnn.util;
 
 namespace mnn.net {
-    public class SockSess : IExecable {
+    public class SockSess : mnn.glue.IExecable {
         private const int BASE_STALL = 60 * 12;
 
         protected Socket sock;

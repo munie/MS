@@ -8,7 +8,7 @@ using mnn.service;
 using mnn.module;
 using Newtonsoft.Json;
 
-namespace mnn.misc.glue {
+namespace mnn.glue {
     public class BaseLayerDeprecated : ModulizedServiceLayer {
         public SessCtl sessctl;
 
