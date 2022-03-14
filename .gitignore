@@ -1,5 +1,8 @@
 // .gitignore
 
+.vs/
+.vscode/
+
 bin/
 obj/
 tmp/
