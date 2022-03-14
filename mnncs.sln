@@ -3,17 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mnn", "mnn\mnn.csproj", "{0022AE14-2596-47DF-B86B-D73E1B5DD789}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mnn", "mnn\mnn.csproj", "{0022AE14-2596-47DF-B86B-D73E1B5DD789}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockAttack", "SockAttack\SockAttack.csproj", "{00649316-50D8-4FE8-8742-C222EC1401FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SockAttack", "SockAttack\SockAttack.csproj", "{00649316-50D8-4FE8-8742-C222EC1401FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SockMaster", "SockMaster\SockMaster.csproj", "{9E41FFE0-0746-4BCD-8620-C04B7FBB25B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SockMaster", "SockMaster\SockMaster.csproj", "{9E41FFE0-0746-4BCD-8620-C04B7FBB25B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvServer", "EnvServer\EnvServer.csproj", "{04B01B62-36DA-4456-AB60-753A5E7688C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnvServer", "EnvServer\EnvServer.csproj", "{04B01B62-36DA-4456-AB60-753A5E7688C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvClient", "EnvClient\EnvClient.csproj", "{E06A06E6-33FB-4A34-9046-C44A6A5AC2AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnvClient", "EnvClient\EnvClient.csproj", "{E06A06E6-33FB-4A34-9046-C44A6A5AC2AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleExample", "ModuleExample\ModuleExample.csproj", "{2895BB5E-D9DD-4154-80F2-7A4D59045E78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModuleExample", "ModuleExample\ModuleExample.csproj", "{2895BB5E-D9DD-4154-80F2-7A4D59045E78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaDemo", "AvaloniaDemo\AvaloniaDemo.csproj", "{A2C00EFD-2EE4-45D1-A77F-2078887162AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{2895BB5E-D9DD-4154-80F2-7A4D59045E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2895BB5E-D9DD-4154-80F2-7A4D59045E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2895BB5E-D9DD-4154-80F2-7A4D59045E78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2C00EFD-2EE4-45D1-A77F-2078887162AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2C00EFD-2EE4-45D1-A77F-2078887162AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2C00EFD-2EE4-45D1-A77F-2078887162AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2C00EFD-2EE4-45D1-A77F-2078887162AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
