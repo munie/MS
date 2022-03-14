@@ -128,13 +128,13 @@ namespace EnvClient.Windows
 
         private void MenuItem_AddModule_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            //System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
 
-            openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
-            openFileDialog.FileName = "";
+            //openFileDialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            //openFileDialog.FileName = "";
 
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                backend.ModuleAddRequest(openFileDialog.FileName);
+            //if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            //    backend.ModuleAddRequest(openFileDialog.FileName);
         }
 
         private void MenuItem_DelModule_Click(object sender, RoutedEventArgs e)

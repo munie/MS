@@ -18,7 +18,7 @@ namespace mnn.glue {
             modctl.module_add += new ModuleCtl.ModuleCtlEvent(OnModuleCtlAdd);
             modctl.module_delete += new ModuleCtl.ModuleCtlEvent(OnModuleCtlDelete);
 
-            RegisterService("service.moduleadd", ModuleAddService, OnServiceDone);
+            RegisterService("service.moduleadd", AtModuleAdd, OnServiceDone);
             RegisterService("service.moduledel", ModuleDelService, OnServiceDone);
             RegisterService("service.moduleload", ModuleLoadService, OnServiceDone);
             RegisterService("service.moduleunload", ModuleUnloadService, OnServiceDone);
@@ -107,7 +107,7 @@ namespace mnn.glue {
 
         // Module Service ==========================================================================
 
-        protected virtual void ModuleAddService(ServiceRequest request, ref ServiceResponse response)
+        protected virtual void AtModuleAdd(ServiceRequest request, ref ServiceResponse response)
         {
             IDictionary<string, dynamic> dc = Newtonsoft.Json.JsonConvert.DeserializeObject
                 <Dictionary<string, dynamic>>((string)request.data);
